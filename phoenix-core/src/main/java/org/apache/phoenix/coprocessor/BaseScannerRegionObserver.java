@@ -57,6 +57,7 @@ import org.apache.phoenix.util.ScanUtil;
 import org.apache.phoenix.util.ServerUtil;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.hadoop.hbase.regionserver.ScannerContext;
 
 
 abstract public class BaseScannerRegionObserver extends BaseRegionObserver {
@@ -262,9 +263,9 @@ abstract public class BaseScannerRegionObserver extends BaseRegionObserver {
             }
 
             @Override
-            public boolean next(List<Cell> result, int limit) throws IOException {
+            public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
                 try {
-                    return s.next(result, limit);
+                    return s.next(result, scannerContext);
                 } catch (Throwable t) {
                     ServerUtil.throwIOException(c.getEnvironment().getRegion().getRegionNameAsString(), t);
                     return false; // impossible
@@ -324,9 +325,9 @@ abstract public class BaseScannerRegionObserver extends BaseRegionObserver {
             }
 
             @Override
-            public boolean nextRaw(List<Cell> result, int limit) throws IOException {
+            public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
                 try {
-                    boolean next = s.nextRaw(result, limit);
+                    boolean next = s.nextRaw(result, scannerContext);
                     if (result.size() == 0) {
                         return next;
                     }
@@ -386,6 +387,10 @@ abstract public class BaseScannerRegionObserver extends BaseRegionObserver {
             @Override
             public long getMaxResultSize() {
                 return s.getMaxResultSize();
+            }
+            @Override
+            public int getBatch() {
+                return s.getBatch();
             }
         };
     }

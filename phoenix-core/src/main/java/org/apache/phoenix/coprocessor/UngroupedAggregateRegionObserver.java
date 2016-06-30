@@ -469,6 +469,11 @@ public class UngroupedAggregateRegionObserver extends BaseScannerRegionObserver{
             public long getMaxResultSize() {
             	return scan.getMaxResultSize();
             }
+
+            @Override
+            public int getBatch() {
+              return scan.getBatch();
+            }
         };
         return scanner;
     }

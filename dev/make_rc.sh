@@ -28,7 +28,7 @@ echo "Starting...";sleep 2s
 # Set directory variables
 DIR_ROOT="$(cd $(dirname \"$1\");pwd)/.."
 cd $DIR_ROOT
-PHOENIX="4.4.0-HBase-1.0"
+PHOENIX="4.4.0-cdh-5.4.4"
 DIR_REL_BASE=$DIR_ROOT/release
 DIR_REL_ROOT=$DIR_REL_BASE/phoenix-$PHOENIX
 DIR_REL_BIN=phoenix-$PHOENIX-bin

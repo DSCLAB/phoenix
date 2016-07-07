@@ -65,6 +65,8 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sun.istack.NotNull;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Put;
 import static org.apache.phoenix.monitoring.PhoenixMetrics.SizeMetric.MUTATION_BYTES;
 import static org.apache.phoenix.monitoring.PhoenixMetrics.SizeMetric.MUTATION_BATCH_SIZE;
 import static org.apache.phoenix.monitoring.PhoenixMetrics.SizeMetric.MUTATION_COMMIT_TIME;
@@ -335,13 +337,37 @@ public class MutationState implements SQLCloseable {
     private static void logMutationSize(HTableInterface htable, List<Mutation> mutations, PhoenixConnection connection) {
         long byteSize = 0;
         int keyValueCount = 0;
+        
+        long putCount = 0;
+        long putSize = 0;
+        long putKvs = 0;
+        
+        long deleteCount = 0;
+        long deleteSize = 0;
+        long deleteKvs = 0;
         if (PhoenixMetrics.isMetricsEnabled() || logger.isDebugEnabled()) {
             for (Mutation mutation : mutations) {
                 byteSize += mutation.heapSize();
+                keyValueCount += mutation.size();
+                if (mutation instanceof Put) {
+                  ++putCount;
+                  putSize += mutation.heapSize();
+                  putKvs += mutation.size();
+                }
+                if (mutation instanceof Delete) {
+                  ++deleteCount;
+                  deleteSize += mutation.heapSize();
+                  deleteKvs += mutation.size();
+                }
             }
             MUTATION_BYTES.update(byteSize);
             if (logger.isDebugEnabled()) {
-                logger.debug(LogUtil.addCustomAnnotations("Sending " + mutations.size() + " mutations for " + Bytes.toString(htable.getTableName()) + " with " + keyValueCount + " key values of total size " + byteSize + " bytes", connection));
+                logger.debug(LogUtil.addCustomAnnotations("Sending " + mutations.size() + " mutations (" + putCount + " PUTs and " + deleteCount + " DELETEs)"
+                  + " for " + Bytes.toString(htable.getTableName())
+                  + " with " + keyValueCount + " key values (" + putKvs + " PUT KVs and " + deleteKvs + " DELETE KVs)"
+                  + " of total size "
+                  + byteSize + " bytes (" + putSize + " PUT bytes and " + deleteSize + " DELETE bytes)",
+                  connection));
             }
         }
     }

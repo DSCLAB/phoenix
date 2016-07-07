@@ -412,8 +412,11 @@ public class MetaDataClient {
         do {
             final byte[] schemaBytes = PVarchar.INSTANCE.toBytes(schemaName);
             final byte[] tableBytes = PVarchar.INSTANCE.toBytes(tableName);
+            final long startTime = System.currentTimeMillis();
             result = connection.getQueryServices().getTable(tenantId, schemaBytes, tableBytes, tableTimestamp, clientTimeStamp);
-
+            if (logger.isDebugEnabled()) {
+              logger.debug("took " + (System.currentTimeMillis() - startTime) + " ms to get " + tableName + " table from the SYSTEM.CATALOG table");
+            }
             if (SYSTEM_CATALOG_SCHEMA.equals(schemaName)) {
                 return result;
             }

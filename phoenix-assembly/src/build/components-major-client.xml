@@ -29,6 +29,9 @@
       <unpack>true</unpack>
       <!-- save these dependencies to the top-level -->
       <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>org.apache.hadoop:hadoop-core</exclude>
+      </excludes>
       <!-- Maybe a blacklist is easier? -->
       <includes>
         <!-- We use a newer version of guava than HBase - this might be an issue? -->

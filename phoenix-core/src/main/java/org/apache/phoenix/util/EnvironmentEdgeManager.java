@@ -24,6 +24,7 @@ package org.apache.phoenix.util;
  * defer to the delegate on invocation.
  */
 public class EnvironmentEdgeManager {
+
   private static volatile EnvironmentEdge delegate = new DefaultEnvironmentEdge();
 
   private EnvironmentEdgeManager() {
@@ -63,8 +64,8 @@ public class EnvironmentEdgeManager {
   }
 
   /**
-   * Defers to the delegate and calls the
-   * {@link EnvironmentEdge#currentTime()} method.
+   * Defers to the delegate and calls the {@link EnvironmentEdge#currentTime()}
+   * method.
    *
    * @return current time in millis according to the delegate.
    */

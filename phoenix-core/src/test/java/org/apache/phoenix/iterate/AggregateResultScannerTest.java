@@ -55,114 +55,111 @@ import org.apache.phoenix.util.AssertResults;
 import org.apache.phoenix.util.PropertiesUtil;
 import org.junit.Test;
 
-
-
 public class AggregateResultScannerTest extends BaseConnectionlessQueryTest {
-    private final static byte[] A = Bytes.toBytes("a");
-    private final static byte[] B = Bytes.toBytes("b");
 
-    @Test
-    public void testAggregatingMergeSort() throws Throwable {
-        Tuple[] results1 = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),
-            };
-        Tuple[] results2 = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L)))
-            };
-        Tuple[] results3 = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),
-                new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),
-            };
-        Tuple[] results4 = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),
-            };
-        final List<PeekingResultIterator>results = new ArrayList<PeekingResultIterator>(Arrays.asList(new PeekingResultIterator[] {
-                new MaterializedResultIterator(Arrays.asList(results1)), 
-                new MaterializedResultIterator(Arrays.asList(results2)), 
-                new MaterializedResultIterator(Arrays.asList(results3)), 
-                new MaterializedResultIterator(Arrays.asList(results4))}));
+  private final static byte[] A = Bytes.toBytes("a");
+  private final static byte[] B = Bytes.toBytes("b");
 
-        Tuple[] expectedResults = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(3L))),
-                new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(2L))),
-            };
+  @Test
+  public void testAggregatingMergeSort() throws Throwable {
+    Tuple[] results1 = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),};
+    Tuple[] results2 = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L)))
+    };
+    Tuple[] results3 = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),
+      new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),};
+    Tuple[] results4 = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(1L))),};
+    final List<PeekingResultIterator> results = new ArrayList<PeekingResultIterator>(Arrays.asList(new PeekingResultIterator[]{
+      new MaterializedResultIterator(Arrays.asList(results1)),
+      new MaterializedResultIterator(Arrays.asList(results2)),
+      new MaterializedResultIterator(Arrays.asList(results3)),
+      new MaterializedResultIterator(Arrays.asList(results4))}));
 
-        PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
-        PhoenixStatement statement = new PhoenixStatement(pconn);
-        StatementContext context = new StatementContext(statement, null, new Scan(), new SequenceManager(statement));
-        AggregationManager aggregationManager = context.getAggregationManager();
-        SumAggregateFunction func = new SumAggregateFunction(Arrays.<Expression>asList(new KeyValueColumnExpression(new PLongColumn() {
-            @Override
-            public PName getName() {
-                return SINGLE_COLUMN_NAME;
-            }
-            @Override
-            public PName getFamilyName() {
-                return SINGLE_COLUMN_FAMILY_NAME;
-            }
-            @Override
-            public int getPosition() {
-                return 0;
-            }
-            
-            @Override
-            public SortOrder getSortOrder() {
-            	return SortOrder.getDefault();
-            }
-            
-            @Override
-            public Integer getArraySize() {
-                return 0;
-            }
-            
-            @Override
-            public byte[] getViewConstant() {
-                return null;
-            }
-            
-            @Override
-            public boolean isViewReferenced() {
-                return false;
-            }
-            
-            @Override
-            public String getExpressionStr() {
-                return null;
-            }
-        })), null);
-        aggregationManager.setAggregators(new ClientAggregators(Collections.<SingleAggregateFunction>singletonList(func), 1));
-        ResultIterators iterators = new ResultIterators() {
+    Tuple[] expectedResults = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(3L))),
+      new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, PLong.INSTANCE.toBytes(2L))),};
 
-            @Override
-            public List<PeekingResultIterator> getIterators() throws SQLException {
-                return results;
-            }
+    PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
+    PhoenixStatement statement = new PhoenixStatement(pconn);
+    StatementContext context = new StatementContext(statement, null, new Scan(), new SequenceManager(statement));
+    AggregationManager aggregationManager = context.getAggregationManager();
+    SumAggregateFunction func = new SumAggregateFunction(Arrays.<Expression>asList(new KeyValueColumnExpression(new PLongColumn() {
+      @Override
+      public PName getName() {
+        return SINGLE_COLUMN_NAME;
+      }
 
-            @Override
-            public int size() {
-                return results.size();
-            }
+      @Override
+      public PName getFamilyName() {
+        return SINGLE_COLUMN_FAMILY_NAME;
+      }
 
-            @Override
-            public void explain(List<String> planSteps) {
-            }
+      @Override
+      public int getPosition() {
+        return 0;
+      }
 
-			@Override
-			public List<KeyRange> getSplits() {
-				return Collections.emptyList();
-			}
+      @Override
+      public SortOrder getSortOrder() {
+        return SortOrder.getDefault();
+      }
 
-			@Override
-			public List<List<Scan>> getScans() {
-				return Collections.emptyList();
-			}
+      @Override
+      public Integer getArraySize() {
+        return 0;
+      }
 
-            @Override
-            public void close() throws SQLException {
-            }
-            
-        };
-        ResultIterator scanner = new GroupedAggregatingResultIterator(new MergeSortRowKeyResultIterator(iterators), aggregationManager.getAggregators());
-        AssertResults.assertResults(scanner, expectedResults);
-    }
+      @Override
+      public byte[] getViewConstant() {
+        return null;
+      }
+
+      @Override
+      public boolean isViewReferenced() {
+        return false;
+      }
+
+      @Override
+      public String getExpressionStr() {
+        return null;
+      }
+    })), null);
+    aggregationManager.setAggregators(new ClientAggregators(Collections.<SingleAggregateFunction>singletonList(func), 1));
+    ResultIterators iterators = new ResultIterators() {
+
+      @Override
+      public List<PeekingResultIterator> getIterators() throws SQLException {
+        return results;
+      }
+
+      @Override
+      public int size() {
+        return results.size();
+      }
+
+      @Override
+      public void explain(List<String> planSteps) {
+      }
+
+      @Override
+      public List<KeyRange> getSplits() {
+        return Collections.emptyList();
+      }
+
+      @Override
+      public List<List<Scan>> getScans() {
+        return Collections.emptyList();
+      }
+
+      @Override
+      public void close() throws SQLException {
+      }
+
+    };
+    ResultIterator scanner = new GroupedAggregatingResultIterator(new MergeSortRowKeyResultIterator(iterators), aggregationManager.getAggregators());
+    AssertResults.assertResults(scanner, expectedResults);
+  }
 }

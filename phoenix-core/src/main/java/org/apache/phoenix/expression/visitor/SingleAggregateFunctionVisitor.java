@@ -22,17 +22,16 @@ import java.util.Iterator;
 import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.SingleAggregateFunction;
 
-
-
 /**
- * 
+ *
  * Implementation of ExpressionVisitor where only SingleAggregateFunction
  * instances are visited
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class SingleAggregateFunctionVisitor extends StatelessTraverseAllExpressionVisitor<Void> {
-    @Override
-    abstract public Iterator<Expression> visitEnter(SingleAggregateFunction node);
+
+  @Override
+  abstract public Iterator<Expression> visitEnter(SingleAggregateFunction node);
 }

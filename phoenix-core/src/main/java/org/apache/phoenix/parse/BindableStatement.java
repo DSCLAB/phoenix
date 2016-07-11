@@ -19,8 +19,9 @@ package org.apache.phoenix.parse;
 
 import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
-
 public interface BindableStatement {
-    public int getBindCount();
-    public Operation getOperation();
+
+  public int getBindCount();
+
+  public Operation getOperation();
 }

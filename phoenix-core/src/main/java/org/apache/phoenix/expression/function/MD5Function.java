@@ -30,62 +30,66 @@ import org.apache.phoenix.schema.types.PBinary;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-@BuiltInFunction(name = MD5Function.NAME, args = { @Argument() })
+@BuiltInFunction(name = MD5Function.NAME, args = {
+  @Argument()})
 public class MD5Function extends ScalarFunction {
-    public static final String NAME = "MD5";
-    public static final Integer LENGTH = 16;
 
-    private final MessageDigest messageDigest;
+  public static final String NAME = "MD5";
+  public static final Integer LENGTH = 16;
 
-    public MD5Function() throws SQLException {
-        try {
-            messageDigest = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new SQLException(e);
-        }
+  private final MessageDigest messageDigest;
+
+  public MD5Function() throws SQLException {
+    try {
+      messageDigest = MessageDigest.getInstance("MD5");
+    } catch (NoSuchAlgorithmException e) {
+      throw new SQLException(e);
+    }
+  }
+
+  public MD5Function(List<Expression> children) throws SQLException {
+    super(children);
+    try {
+      messageDigest = MessageDigest.getInstance("MD5");
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!getChildExpression().evaluate(tuple, ptr)) {
+      return false;
     }
 
-    public MD5Function(List<Expression> children) throws SQLException {
-        super(children);
-        try {
-            messageDigest = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    // Update the digest value
+    messageDigest.update(ptr.get(), ptr.getOffset(), ptr.getLength());
+    // Get the digest bytes (note this resets the messageDigest as well)
+    ptr.set(messageDigest.digest());
+    return true;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!getChildExpression().evaluate(tuple, ptr)) { return false; }
+  @Override
+  public PDataType getDataType() {
+    return PBinary.INSTANCE;
+  }
 
-        // Update the digest value
-        messageDigest.update(ptr.get(), ptr.getOffset(), ptr.getLength());
-        // Get the digest bytes (note this resets the messageDigest as well)
-        ptr.set(messageDigest.digest());
-        return true;
-    }
+  @Override
+  public Integer getMaxLength() {
+    return LENGTH;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PBinary.INSTANCE;
-    }
+  @Override
+  public boolean isNullable() {
+    return getChildExpression().isNullable();
+  }
 
-    @Override
-    public Integer getMaxLength() {
-        return LENGTH;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public boolean isNullable() {
-        return getChildExpression().isNullable();
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

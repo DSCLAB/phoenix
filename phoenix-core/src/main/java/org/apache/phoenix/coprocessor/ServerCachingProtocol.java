@@ -26,35 +26,41 @@ import org.apache.hadoop.io.Writable;
 import org.apache.phoenix.memory.MemoryManager.MemoryChunk;
 
 /**
- * 
- * EndPoint coprocessor to send a cache to a region server.
- * Used for:
- * a) hash joins, to send the smaller side of the join to each region server
- * b) secondary indexes, to send the necessary meta data to each region server
- * 
+ *
+ * EndPoint coprocessor to send a cache to a region server. Used for: a) hash
+ * joins, to send the smaller side of the join to each region server b)
+ * secondary indexes, to send the necessary meta data to each region server
+ *
  * @since 0.1
  */
 public interface ServerCachingProtocol {
-    public static interface ServerCacheFactory extends Writable {
-        public Closeable newCache(ImmutableBytesWritable cachePtr, MemoryChunk chunk) throws SQLException;
-    }
-    /**
-     * Add the cache to the region server cache.  
-     * @param tenantId the tenantId or null if not applicable
-     * @param cacheId unique identifier of the cache
-     * @param cachePtr pointer to the byte array of the cache
-     * @param cacheFactory factory that converts from byte array to object representation on the server side
-     * @return true on success and otherwise throws
-     * @throws SQLException 
-     */
-    public boolean addServerCache(byte[] tenantId, byte[] cacheId, ImmutableBytesWritable cachePtr, ServerCacheFactory cacheFactory) throws SQLException;
-    /**
-     * Remove the cache from the region server cache.  Called upon completion of
-     * the operation when cache is no longer needed.
-     * @param tenantId the tenantId or null if not applicable
-     * @param cacheId unique identifier of the cache
-     * @return true on success and otherwise throws
-     * @throws SQLException 
-     */
-    public boolean removeServerCache(byte[] tenantId, byte[] cacheId) throws SQLException;
+
+  public static interface ServerCacheFactory extends Writable {
+
+    public Closeable newCache(ImmutableBytesWritable cachePtr, MemoryChunk chunk) throws SQLException;
+  }
+
+  /**
+   * Add the cache to the region server cache.
+   *
+   * @param tenantId the tenantId or null if not applicable
+   * @param cacheId unique identifier of the cache
+   * @param cachePtr pointer to the byte array of the cache
+   * @param cacheFactory factory that converts from byte array to object
+   * representation on the server side
+   * @return true on success and otherwise throws
+   * @throws SQLException
+   */
+  public boolean addServerCache(byte[] tenantId, byte[] cacheId, ImmutableBytesWritable cachePtr, ServerCacheFactory cacheFactory) throws SQLException;
+
+  /**
+   * Remove the cache from the region server cache. Called upon completion of
+   * the operation when cache is no longer needed.
+   *
+   * @param tenantId the tenantId or null if not applicable
+   * @param cacheId unique identifier of the cache
+   * @return true on success and otherwise throws
+   * @throws SQLException
+   */
+  public boolean removeServerCache(byte[] tenantId, byte[] cacheId) throws SQLException;
 }

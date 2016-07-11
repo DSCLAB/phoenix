@@ -34,27 +34,27 @@ import com.google.common.collect.Lists;
  */
 public class ColumnInfoToStringEncoderDecoderTest {
 
-    @Test
-    public void testEncode() {
-        final ColumnInfo columnInfo = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
-        final String encodedColumnInfo = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo));
-        assertEquals(columnInfo.toString(),encodedColumnInfo);
-    }
-    
-    @Test
-    public void testDecode() {
-        final ColumnInfo columnInfo = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
-        final String encodedColumnInfo = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo));
-        assertEquals(columnInfo.toString(),encodedColumnInfo);
-    }
-    
-    @Test
-    public void testEncodeDecodeWithNulls() {
-        final ColumnInfo columnInfo1 = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
-        final ColumnInfo columnInfo2 = null;
-        final String columnInfoStr = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo1,columnInfo2));
-        final List<ColumnInfo> decodedColumnInfo = ColumnInfoToStringEncoderDecoder.decode(columnInfoStr);
-        assertEquals(1,decodedColumnInfo.size()); 
-    }
+  @Test
+  public void testEncode() {
+    final ColumnInfo columnInfo = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
+    final String encodedColumnInfo = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo));
+    assertEquals(columnInfo.toString(), encodedColumnInfo);
+  }
+
+  @Test
+  public void testDecode() {
+    final ColumnInfo columnInfo = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
+    final String encodedColumnInfo = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo));
+    assertEquals(columnInfo.toString(), encodedColumnInfo);
+  }
+
+  @Test
+  public void testEncodeDecodeWithNulls() {
+    final ColumnInfo columnInfo1 = new ColumnInfo("col1", PVarchar.INSTANCE.getSqlType());
+    final ColumnInfo columnInfo2 = null;
+    final String columnInfoStr = ColumnInfoToStringEncoderDecoder.encode(Lists.newArrayList(columnInfo1, columnInfo2));
+    final List<ColumnInfo> decodedColumnInfo = ColumnInfoToStringEncoderDecoder.decode(columnInfoStr);
+    assertEquals(1, decodedColumnInfo.size());
+  }
 
 }

@@ -27,31 +27,33 @@ import com.google.common.collect.ImmutableSortedMap;
  * statistics object.
  */
 public interface PTableStats {
-    public static final PTableStats EMPTY_STATS = new PTableStats() {
-        @Override
-        public SortedMap<byte[], GuidePostsInfo> getGuidePosts() {
-            return ImmutableSortedMap.of();
-        }
 
-        @Override
-        public int getEstimatedSize() {
-            return 0;
-        }
+  public static final PTableStats EMPTY_STATS = new PTableStats() {
+    @Override
+    public SortedMap<byte[], GuidePostsInfo> getGuidePosts() {
+      return ImmutableSortedMap.of();
+    }
 
-        @Override
-        public long getTimestamp() {
-            return StatisticsCollector.NO_TIMESTAMP;
-        }
-    };
+    @Override
+    public int getEstimatedSize() {
+      return 0;
+    }
 
-    /**
-     * TODO: Change from TreeMap to Map
-     * Returns a tree map of the guide posts collected against a column family
-     * @return
-     */
-    SortedMap<byte[], GuidePostsInfo> getGuidePosts();
+    @Override
+    public long getTimestamp() {
+      return StatisticsCollector.NO_TIMESTAMP;
+    }
+  };
 
-    int getEstimatedSize();
-    
-    long getTimestamp();
+  /**
+   * TODO: Change from TreeMap to Map Returns a tree map of the guide posts
+   * collected against a column family
+   *
+   * @return
+   */
+  SortedMap<byte[], GuidePostsInfo> getGuidePosts();
+
+  int getEstimatedSize();
+
+  long getTimestamp();
 }

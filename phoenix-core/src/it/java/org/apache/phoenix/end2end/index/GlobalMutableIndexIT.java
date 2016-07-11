@@ -19,8 +19,8 @@ package org.apache.phoenix.end2end.index;
 
 public class GlobalMutableIndexIT extends BaseMutableIndexIT {
 
-    public GlobalMutableIndexIT() {
-        super(false);
-    }
+  public GlobalMutableIndexIT() {
+    super(false);
+  }
 
 }

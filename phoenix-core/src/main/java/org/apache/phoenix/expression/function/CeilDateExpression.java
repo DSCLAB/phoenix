@@ -24,52 +24,54 @@ import com.google.common.collect.Lists;
 import org.apache.phoenix.expression.Expression;
 
 /**
- * 
- * Class encapsulating ceil operation on {@link org.apache.phoenix.schema.types.PDataType#DATE}.
  *
- * 
+ * Class encapsulating ceil operation on
+ * {@link org.apache.phoenix.schema.types.PDataType#DATE}.
+ *
+ *
  * @since 3.0.0
  */
 public class CeilDateExpression extends RoundDateExpression {
-    
-    public CeilDateExpression() {}
-    
-    /**
-     * @param timeUnit - unit of time to round up to.
-     * Creates a {@link CeilDateExpression} with default multiplier of 1.
-     */
-    public static Expression create(Expression expr, TimeUnit timeUnit) throws SQLException {
-        return create(expr, timeUnit, 1);
-    }
-    
-    /**
-     * @param timeUnit - unit of time to round up to
-     * @param multiplier - determines the roll up window size.
-     * Create a {@link CeilDateExpression}. 
-     */
-    public static Expression create(Expression expr, TimeUnit timeUnit, int multiplier) throws SQLException {
-        Expression timeUnitExpr = getTimeUnitExpr(timeUnit);
-        Expression defaultMultiplierExpr = getMultiplierExpr(multiplier);
-        List<Expression> expressions = Lists.newArrayList(expr, timeUnitExpr, defaultMultiplierExpr);
-        return CeilDateExpression.create(expressions);
-    }
-    
-    public static Expression create(List<Expression> children) throws SQLException {
-        return new CeilDateExpression(children);
-    }
-    
-    CeilDateExpression(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    protected long getRoundUpAmount() {
-        return divBy - 1;
-    }
-    
-    @Override
-    public String getName() {
-        return CeilFunction.NAME;
-    }
+
+  public CeilDateExpression() {
+  }
+
+  /**
+   * @param timeUnit - unit of time to round up to. Creates a
+   * {@link CeilDateExpression} with default multiplier of 1.
+   */
+  public static Expression create(Expression expr, TimeUnit timeUnit) throws SQLException {
+    return create(expr, timeUnit, 1);
+  }
+
+  /**
+   * @param timeUnit - unit of time to round up to
+   * @param multiplier - determines the roll up window size. Create a
+   * {@link CeilDateExpression}.
+   */
+  public static Expression create(Expression expr, TimeUnit timeUnit, int multiplier) throws SQLException {
+    Expression timeUnitExpr = getTimeUnitExpr(timeUnit);
+    Expression defaultMultiplierExpr = getMultiplierExpr(multiplier);
+    List<Expression> expressions = Lists.newArrayList(expr, timeUnitExpr, defaultMultiplierExpr);
+    return CeilDateExpression.create(expressions);
+  }
+
+  public static Expression create(List<Expression> children) throws SQLException {
+    return new CeilDateExpression(children);
+  }
+
+  CeilDateExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected long getRoundUpAmount() {
+    return divBy - 1;
+  }
+
+  @Override
+  public String getName() {
+    return CeilFunction.NAME;
+  }
 
 }

@@ -26,10 +26,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 
- * Annotation to denote that a method is shadowing/hiding a 
- * public static method of one of the super classes in its 
- * ancestor tree. 
+ *
+ * Annotation to denote that a method is shadowing/hiding a public static method
+ * of one of the super classes in its ancestor tree.
  *
  * @since 4.1
  */
@@ -37,5 +36,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Documented
 public @interface Shadower {
-    Class classBeingShadowed();
+
+  Class classBeingShadowed();
 }

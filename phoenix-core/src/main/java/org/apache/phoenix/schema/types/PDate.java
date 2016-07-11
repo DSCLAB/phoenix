@@ -34,7 +34,7 @@ public class PDate extends PDataType<Date> {
 
   private PDate() {
     super("DATE", Types.DATE, Date.class,
-        new DateCodec(), 11); // After TIMESTAMP and DATE to ensure toLiteral finds those first
+            new DateCodec(), 11); // After TIMESTAMP and DATE to ensure toLiteral finds those first
   }
 
   @Override
@@ -83,8 +83,8 @@ public class PDate extends PDataType<Date> {
       return null;
     }
     if (equalsAny(actualType, PTimestamp.INSTANCE, PUnsignedTimestamp.INSTANCE, PDate.INSTANCE,
-        PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE, PLong.INSTANCE,
-        PUnsignedLong.INSTANCE)) {
+            PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE, PLong.INSTANCE,
+            PUnsignedLong.INSTANCE)) {
       return new Date(actualType.getCodec().decodeLong(b, o, sortOrder));
     } else if (actualType == PDecimal.INSTANCE) {
       BigDecimal bd = (BigDecimal) actualType.toObject(b, o, l, actualType, sortOrder);
@@ -96,8 +96,8 @@ public class PDate extends PDataType<Date> {
 
   @Override
   public boolean isCastableTo(PDataType targetType) {
-    return super.isCastableTo(targetType) ||
-            equalsAny(targetType, PDecimal.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE);
+    return super.isCastableTo(targetType)
+            || equalsAny(targetType, PDecimal.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE);
   }
 
   @Override
@@ -109,7 +109,7 @@ public class PDate extends PDataType<Date> {
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     if (value != null) {
       if (equalsAny(targetType, PUnsignedTimestamp.INSTANCE, PUnsignedDate.INSTANCE,
-          PUnsignedTime.INSTANCE)) {
+              PUnsignedTime.INSTANCE)) {
         return ((java.util.Date) value).getTime() >= 0;
       }
     }
@@ -148,27 +148,27 @@ public class PDate extends PDataType<Date> {
   }
 
   @Override
-    public String toStringLiteral(Object o, Format formatter) {
-        if (formatter == null) {
-            // If default formatter has not been overridden,
-            // use default one.
-            formatter = DateUtil.DEFAULT_DATE_FORMATTER;
-        }
-        return null == o ? String.valueOf(o) : "'"
-                + StringUtil.escapeStringConstant(super.toStringLiteral(o, formatter)) + "'";
+  public String toStringLiteral(Object o, Format formatter) {
+    if (formatter == null) {
+      // If default formatter has not been overridden,
+      // use default one.
+      formatter = DateUtil.DEFAULT_DATE_FORMATTER;
     }
+    return null == o ? String.valueOf(o) : "'"
+            + StringUtil.escapeStringConstant(super.toStringLiteral(o, formatter)) + "'";
+  }
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifier, Integer desiredMaxLength, Integer desiredScale,
-      SortOrder expectedModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifier, Integer desiredMaxLength, Integer desiredScale,
+          SortOrder expectedModifier) {
     if (ptr.getLength() > 0 && actualType == PTimestamp.INSTANCE
-        && actualModifier == expectedModifier) {
+            && actualModifier == expectedModifier) {
       ptr.set(ptr.get(), ptr.getOffset(), getByteSize());
       return;
     }
     super.coerceBytes(ptr, object, actualType, maxLength, scale, actualModifier, desiredMaxLength,
-        desiredScale, expectedModifier);
+            desiredScale, expectedModifier);
   }
 
   @Override

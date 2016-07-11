@@ -21,42 +21,42 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 import org.apache.phoenix.schema.PTableType;
 
 public class DropTableStatement extends MutableStatement {
-    private final TableName tableName;
-    private final boolean ifExists;
-    private final PTableType tableType;
-    private final boolean cascade;
-    
 
-    protected DropTableStatement(TableName tableName, PTableType tableType, boolean ifExists, boolean cascade) {
-        this.tableName = tableName;
-        this.tableType = tableType;
-        this.ifExists = ifExists;
-        this.cascade = cascade;
-    }
-    
-    @Override
-    public int getBindCount() {
-        return 0; // No binds for DROP
-    }
+  private final TableName tableName;
+  private final boolean ifExists;
+  private final PTableType tableType;
+  private final boolean cascade;
 
-    public TableName getTableName() {
-        return tableName;
-    }
+  protected DropTableStatement(TableName tableName, PTableType tableType, boolean ifExists, boolean cascade) {
+    this.tableName = tableName;
+    this.tableType = tableType;
+    this.ifExists = ifExists;
+    this.cascade = cascade;
+  }
 
-    public PTableType getTableType() {
-        return tableType;
-    }
+  @Override
+  public int getBindCount() {
+    return 0; // No binds for DROP
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
-    
-    public boolean cascade() {
-    	return cascade;
-    }
-    
-    @Override
-    public Operation getOperation() {
-        return Operation.DELETE;
-    }
+  public TableName getTableName() {
+    return tableName;
+  }
+
+  public PTableType getTableType() {
+    return tableType;
+  }
+
+  public boolean ifExists() {
+    return ifExists;
+  }
+
+  public boolean cascade() {
+    return cascade;
+  }
+
+  @Override
+  public Operation getOperation() {
+    return Operation.DELETE;
+  }
 }

@@ -48,98 +48,98 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class CsvUpsertExecutorTest extends BaseConnectionlessQueryTest {
 
-    private Connection conn;
-    private List<ColumnInfo> columnInfoList;
-    private PreparedStatement preparedStatement;
-    private CsvUpsertExecutor.UpsertListener upsertListener;
+  private Connection conn;
+  private List<ColumnInfo> columnInfoList;
+  private PreparedStatement preparedStatement;
+  private CsvUpsertExecutor.UpsertListener upsertListener;
 
-    private CsvUpsertExecutor upsertExecutor;
+  private CsvUpsertExecutor upsertExecutor;
 
-    @Before
-    public void setUp() throws SQLException {
-        columnInfoList = ImmutableList.of(
-                new ColumnInfo("ID", Types.BIGINT),
-                new ColumnInfo("NAME", Types.VARCHAR),
-                new ColumnInfo("AGE", Types.INTEGER),
-                new ColumnInfo("VALUES", PIntegerArray.INSTANCE.getSqlType()));
+  @Before
+  public void setUp() throws SQLException {
+    columnInfoList = ImmutableList.of(
+            new ColumnInfo("ID", Types.BIGINT),
+            new ColumnInfo("NAME", Types.VARCHAR),
+            new ColumnInfo("AGE", Types.INTEGER),
+            new ColumnInfo("VALUES", PIntegerArray.INSTANCE.getSqlType()));
 
-        preparedStatement = mock(PreparedStatement.class);
-        upsertListener = mock(CsvUpsertExecutor.UpsertListener.class);
-        conn = DriverManager.getConnection(getUrl());
-        upsertExecutor = new CsvUpsertExecutor(conn, columnInfoList, preparedStatement, upsertListener, ":");
-    }
+    preparedStatement = mock(PreparedStatement.class);
+    upsertListener = mock(CsvUpsertExecutor.UpsertListener.class);
+    conn = DriverManager.getConnection(getUrl());
+    upsertExecutor = new CsvUpsertExecutor(conn, columnInfoList, preparedStatement, upsertListener, ":");
+  }
 
-    @After
-    public void tearDown() throws SQLException {
-        conn.close();
-    }
+  @After
+  public void tearDown() throws SQLException {
+    conn.close();
+  }
 
-    @Test
-    public void testExecute() throws Exception {
-        upsertExecutor.execute(createCsvRecord("123,NameValue,42,1:2:3"));
+  @Test
+  public void testExecute() throws Exception {
+    upsertExecutor.execute(createCsvRecord("123,NameValue,42,1:2:3"));
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setObject(3, Integer.valueOf(42));
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setObject(3, Integer.valueOf(42));
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-    @Test
-    public void testExecute_TooFewFields() throws Exception {
-        CSVRecord csvRecordWithTooFewFields = createCsvRecord("123,NameValue");
-        upsertExecutor.execute(csvRecordWithTooFewFields);
+  @Test
+  public void testExecute_TooFewFields() throws Exception {
+    CSVRecord csvRecordWithTooFewFields = createCsvRecord("123,NameValue");
+    upsertExecutor.execute(csvRecordWithTooFewFields);
 
-        verify(upsertListener).errorOnRecord(eq(csvRecordWithTooFewFields), anyString());
-        verifyNoMoreInteractions(upsertListener);
-    }
+    verify(upsertListener).errorOnRecord(eq(csvRecordWithTooFewFields), anyString());
+    verifyNoMoreInteractions(upsertListener);
+  }
 
-    @Test
-    public void testExecute_TooManyFields() throws Exception {
-        CSVRecord csvRecordWithTooManyFields = createCsvRecord("123,NameValue,42,1:2:3,Garbage");
-        upsertExecutor.execute(csvRecordWithTooManyFields);
+  @Test
+  public void testExecute_TooManyFields() throws Exception {
+    CSVRecord csvRecordWithTooManyFields = createCsvRecord("123,NameValue,42,1:2:3,Garbage");
+    upsertExecutor.execute(csvRecordWithTooManyFields);
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setObject(3, Integer.valueOf(42));
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setObject(3, Integer.valueOf(42));
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-    @Test
-    public void testExecute_NullField() throws Exception {
-        upsertExecutor.execute(createCsvRecord("123,NameValue,,1:2:3"));
+  @Test
+  public void testExecute_NullField() throws Exception {
+    upsertExecutor.execute(createCsvRecord("123,NameValue,,1:2:3"));
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setNull(3, columnInfoList.get(2).getSqlType());
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setNull(3, columnInfoList.get(2).getSqlType());
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-    @Test
-    public void testExecute_InvalidType() throws Exception {
-        CSVRecord csvRecordWithInvalidType = createCsvRecord("123,NameValue,ThisIsNotANumber,1:2:3");
-        upsertExecutor.execute(csvRecordWithInvalidType);
+  @Test
+  public void testExecute_InvalidType() throws Exception {
+    CSVRecord csvRecordWithInvalidType = createCsvRecord("123,NameValue,ThisIsNotANumber,1:2:3");
+    upsertExecutor.execute(csvRecordWithInvalidType);
 
-        verify(upsertListener).errorOnRecord(eq(csvRecordWithInvalidType), anyString());
-        verifyNoMoreInteractions(upsertListener);
-    }
+    verify(upsertListener).errorOnRecord(eq(csvRecordWithInvalidType), anyString());
+    verifyNoMoreInteractions(upsertListener);
+  }
 
-    private CSVRecord createCsvRecord(String...columnValues) throws IOException {
-        String inputRecord = Joiner.on(',').join(columnValues);
-        return Iterables.getFirst(CSVParser.parse(inputRecord, CSVFormat.DEFAULT), null);
-    }
+  private CSVRecord createCsvRecord(String... columnValues) throws IOException {
+    String inputRecord = Joiner.on(',').join(columnValues);
+    return Iterables.getFirst(CSVParser.parse(inputRecord, CSVFormat.DEFAULT), null);
+  }
 }

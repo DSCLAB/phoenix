@@ -23,35 +23,32 @@ import java.util.NoSuchElementException;
 
 import org.apache.phoenix.expression.Expression;
 
-
-
-
 public abstract class TraverseAllExpressionVisitor<E> extends BaseExpressionVisitor<E> {
 
-    @Override
-    public Iterator<Expression> defaultIterator(Expression node) {
-        final List<Expression> children = node.getChildren();
-        return new Iterator<Expression>() {
-            private int position;
-            
-            @Override
-            public final boolean hasNext() {
-                return position < children.size();
-            }
+  @Override
+  public Iterator<Expression> defaultIterator(Expression node) {
+    final List<Expression> children = node.getChildren();
+    return new Iterator<Expression>() {
+      private int position;
 
-            @Override
-            public final Expression next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-                return children.get(position++);
-            }
+      @Override
+      public final boolean hasNext() {
+        return position < children.size();
+      }
 
-            @Override
-            public final void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
+      @Override
+      public final Expression next() {
+        if (!hasNext()) {
+          throw new NoSuchElementException();
+        }
+        return children.get(position++);
+      }
+
+      @Override
+      public final void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
 
 }

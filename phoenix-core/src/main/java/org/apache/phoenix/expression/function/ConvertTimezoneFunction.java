@@ -28,56 +28,56 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.joda.time.DateTimeZone;
 
 /**
- * Build in function CONVERT_TZ(date, 'timezone_from', 'timezone_to). Convert date from one timezone to
- * another
+ * Build in function CONVERT_TZ(date, 'timezone_from', 'timezone_to). Convert
+ * date from one timezone to another
  *
  */
 @FunctionParseNode.BuiltInFunction(name = ConvertTimezoneFunction.NAME, args = {
-    @FunctionParseNode.Argument(allowedTypes = { PDate.class }),
-    @FunctionParseNode.Argument(allowedTypes = { PVarchar.class }),
-    @FunctionParseNode.Argument(allowedTypes = { PVarchar.class })})
+  @FunctionParseNode.Argument(allowedTypes = {PDate.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class})})
 public class ConvertTimezoneFunction extends ScalarFunction {
 
-    public static final String NAME = "CONVERT_TZ";
+  public static final String NAME = "CONVERT_TZ";
 
-    public ConvertTimezoneFunction() {
+  public ConvertTimezoneFunction() {
+  }
+
+  public ConvertTimezoneFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!children.get(0).evaluate(tuple, ptr)) {
+      return false;
     }
+    long date = PDate.INSTANCE.getCodec().decodeLong(ptr, children.get(0).getSortOrder());
 
-    public ConvertTimezoneFunction(List<Expression> children) throws SQLException {
-        super(children);
+    if (!children.get(1).evaluate(tuple, ptr)) {
+      return false;
     }
+    DateTimeZone timezoneFrom = JodaTimezoneCache.getInstance(ptr);
 
-    @Override
-    public String getName() {
-        return NAME;
+    if (!children.get(2).evaluate(tuple, ptr)) {
+      return false;
     }
+    DateTimeZone timezoneTo = JodaTimezoneCache.getInstance(ptr);
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!children.get(0).evaluate(tuple, ptr)) {
-            return false;
-        }
-        long date = PDate.INSTANCE.getCodec().decodeLong(ptr, children.get(0).getSortOrder());
+    long convertedDate = date - timezoneFrom.getOffset(date) + timezoneTo.getOffset(date);
+    byte[] outBytes = new byte[8];
+    PDate.INSTANCE.getCodec().encodeLong(convertedDate, outBytes, 0);
+    ptr.set(outBytes);
+    return true;
+  }
 
-        if (!children.get(1).evaluate(tuple, ptr)) {
-            return false;
-        }
-        DateTimeZone timezoneFrom = JodaTimezoneCache.getInstance(ptr);
-
-        if (!children.get(2).evaluate(tuple, ptr)) {
-            return false;
-        }
-        DateTimeZone timezoneTo = JodaTimezoneCache.getInstance(ptr);
-
-        long convertedDate = date - timezoneFrom.getOffset(date) + timezoneTo.getOffset(date);
-        byte[] outBytes = new byte[8];
-        PDate.INSTANCE.getCodec().encodeLong(convertedDate, outBytes, 0);
-        ptr.set(outBytes);
-        return true;
-    }
-
-    @Override
-    public PDataType getDataType() {
-        return PDate.INSTANCE;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PDate.INSTANCE;
+  }
 }

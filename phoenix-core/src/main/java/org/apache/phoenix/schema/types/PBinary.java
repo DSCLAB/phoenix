@@ -90,7 +90,7 @@ public class PBinary extends PDataType<byte[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length, PDataType actualType,
-      SortOrder sortOrder, Integer maxLength, Integer scale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale) {
     if (!actualType.isCoercibleTo(this)) {
       throwConstraintViolationException(actualType, this);
     }
@@ -120,11 +120,10 @@ public class PBinary extends PDataType<byte[]> {
 
   @Override
   public boolean isSizeCompatible(ImmutableBytesWritable ptr, Object value, PDataType srcType,
-      Integer maxLength, Integer scale, Integer desiredMaxLength,
-      Integer desiredScale) {
-    if (ptr.getLength() != 0 && (
-        (srcType.equals(PVarbinary.INSTANCE) && ((String) value).length() != ptr.getLength()) ||
-            (maxLength != null && desiredMaxLength != null && maxLength > desiredMaxLength))) {
+          Integer maxLength, Integer scale, Integer desiredMaxLength,
+          Integer desiredScale) {
+    if (ptr.getLength() != 0 && ((srcType.equals(PVarbinary.INSTANCE) && ((String) value).length() != ptr.getLength())
+            || (maxLength != null && desiredMaxLength != null && maxLength > desiredMaxLength))) {
       return false;
     }
     return true;
@@ -184,7 +183,7 @@ public class PBinary extends PDataType<byte[]> {
 
   @Override
   public String toStringLiteral(Object o, Format formatter) {
-    return toStringLiteral((byte[])o, 0, ((byte[]) o).length, formatter);
+    return toStringLiteral((byte[]) o, 0, ((byte[]) o).length, formatter);
   }
 
   @Override

@@ -38,51 +38,52 @@ import org.apache.phoenix.schema.TableRef;
 import org.apache.phoenix.schema.types.PDataType;
 
 public class UnionCompiler {
-    private static final PName UNION_FAMILY_NAME = PNameFactory.newName("unionFamilyName");
-    private static final PName UNION_SCHEMA_NAME = PNameFactory.newName("unionSchemaName");
-    private static final PName UNION_TABLE_NAME = PNameFactory.newName("unionTableName");
 
-    public static List<QueryPlan> checkProjectionNumAndTypes(List<QueryPlan> selectPlans) throws SQLException {
-        QueryPlan plan = selectPlans.get(0);
-        int columnCount = plan.getProjector().getColumnCount();
-        List<? extends ColumnProjector> projectors = plan.getProjector().getColumnProjectors();
-        List<PDataType> selectTypes = new ArrayList<PDataType>();
-        for (ColumnProjector pro : projectors) {
-            selectTypes.add(pro.getExpression().getDataType());
-        }
+  private static final PName UNION_FAMILY_NAME = PNameFactory.newName("unionFamilyName");
+  private static final PName UNION_SCHEMA_NAME = PNameFactory.newName("unionSchemaName");
+  private static final PName UNION_TABLE_NAME = PNameFactory.newName("unionTableName");
 
-        for (int i = 1;  i < selectPlans.size(); i++) {     
-            plan = selectPlans.get(i);
-            if (columnCount !=plan.getProjector().getColumnCount()) {
-                throw new SQLExceptionInfo.Builder(SQLExceptionCode.SELECT_COLUMN_NUM_IN_UNIONALL_DIFFS).setMessage(".").build().buildException();
-            }
-            List<? extends ColumnProjector> pros =  plan.getProjector().getColumnProjectors();
-            for (int j = 0; j < columnCount; j++) {
-                PDataType type = pros.get(j).getExpression().getDataType();
-                if (!type.isCoercibleTo(selectTypes.get(j))) {
-                    throw new SQLExceptionInfo.Builder(SQLExceptionCode.SELECT_COLUMN_TYPE_IN_UNIONALL_DIFFS).setMessage(".").build().buildException();
-                }
-            }
-        }
-        return selectPlans;
+  public static List<QueryPlan> checkProjectionNumAndTypes(List<QueryPlan> selectPlans) throws SQLException {
+    QueryPlan plan = selectPlans.get(0);
+    int columnCount = plan.getProjector().getColumnCount();
+    List<? extends ColumnProjector> projectors = plan.getProjector().getColumnProjectors();
+    List<PDataType> selectTypes = new ArrayList<PDataType>();
+    for (ColumnProjector pro : projectors) {
+      selectTypes.add(pro.getExpression().getDataType());
     }
 
-    public static TableRef contructSchemaTable(PhoenixStatement statement, QueryPlan plan, List<AliasedNode> selectNodes) throws SQLException {
-        List<PColumn> projectedColumns = new ArrayList<PColumn>();
-        for (int i=0; i< plan.getProjector().getColumnCount(); i++) {
-            ColumnProjector colProj = plan.getProjector().getColumnProjector(i);
-            Expression sourceExpression = colProj.getExpression();
-            String name = selectNodes == null ? colProj.getName() : selectNodes.get(i).getAlias();
-            PColumnImpl projectedColumn = new PColumnImpl(PNameFactory.newName(name), UNION_FAMILY_NAME,
-                    sourceExpression.getDataType(), sourceExpression.getMaxLength(), sourceExpression.getScale(), sourceExpression.isNullable(),
-                    i, sourceExpression.getSortOrder(), 500, null, false, sourceExpression.toString());
-            projectedColumns.add(projectedColumn);
+    for (int i = 1; i < selectPlans.size(); i++) {
+      plan = selectPlans.get(i);
+      if (columnCount != plan.getProjector().getColumnCount()) {
+        throw new SQLExceptionInfo.Builder(SQLExceptionCode.SELECT_COLUMN_NUM_IN_UNIONALL_DIFFS).setMessage(".").build().buildException();
+      }
+      List<? extends ColumnProjector> pros = plan.getProjector().getColumnProjectors();
+      for (int j = 0; j < columnCount; j++) {
+        PDataType type = pros.get(j).getExpression().getDataType();
+        if (!type.isCoercibleTo(selectTypes.get(j))) {
+          throw new SQLExceptionInfo.Builder(SQLExceptionCode.SELECT_COLUMN_TYPE_IN_UNIONALL_DIFFS).setMessage(".").build().buildException();
         }
-        Long scn = statement.getConnection().getSCN();
-        PTable tempTable = PTableImpl.makePTable(statement.getConnection().getTenantId(), UNION_SCHEMA_NAME, UNION_TABLE_NAME, 
-                PTableType.SUBQUERY, null, HConstants.LATEST_TIMESTAMP, scn == null ? HConstants.LATEST_TIMESTAMP : scn, null, null, projectedColumns, null, null, null,
-                        true, null, null, null, true, true, true, null, null, null);
-        TableRef tableRef = new TableRef(null, tempTable, 0, false);
-        return tableRef;
+      }
     }
+    return selectPlans;
+  }
+
+  public static TableRef contructSchemaTable(PhoenixStatement statement, QueryPlan plan, List<AliasedNode> selectNodes) throws SQLException {
+    List<PColumn> projectedColumns = new ArrayList<PColumn>();
+    for (int i = 0; i < plan.getProjector().getColumnCount(); i++) {
+      ColumnProjector colProj = plan.getProjector().getColumnProjector(i);
+      Expression sourceExpression = colProj.getExpression();
+      String name = selectNodes == null ? colProj.getName() : selectNodes.get(i).getAlias();
+      PColumnImpl projectedColumn = new PColumnImpl(PNameFactory.newName(name), UNION_FAMILY_NAME,
+              sourceExpression.getDataType(), sourceExpression.getMaxLength(), sourceExpression.getScale(), sourceExpression.isNullable(),
+              i, sourceExpression.getSortOrder(), 500, null, false, sourceExpression.toString());
+      projectedColumns.add(projectedColumn);
+    }
+    Long scn = statement.getConnection().getSCN();
+    PTable tempTable = PTableImpl.makePTable(statement.getConnection().getTenantId(), UNION_SCHEMA_NAME, UNION_TABLE_NAME,
+            PTableType.SUBQUERY, null, HConstants.LATEST_TIMESTAMP, scn == null ? HConstants.LATEST_TIMESTAMP : scn, null, null, projectedColumns, null, null, null,
+            true, null, null, null, true, true, true, null, null, null);
+    TableRef tableRef = new TableRef(null, tempTable, 0, false);
+    return tableRef;
+  }
 }

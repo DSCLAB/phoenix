@@ -31,61 +31,61 @@ import com.google.common.collect.Lists;
 /**
  * A {@link DBWritable} class that reads and write records.
  *
- * 
+ *
  */
-public class PhoenixIndexDBWritable  implements DBWritable { 
-    
-    private List<ColumnInfo> columnMetadata;
-    
-    private List<Object> values;
-    
-    private int columnCount = -1;
-    
-    @Override
-    public void write(PreparedStatement statement) throws SQLException {
-       Preconditions.checkNotNull(values);
-       Preconditions.checkNotNull(columnMetadata);
-       for(int i = 0 ; i < values.size() ; i++) {
-           Object value = values.get(i);
-           ColumnInfo columnInfo = columnMetadata.get(i);
-           if(value == null) {
-               statement.setNull(i + 1, columnInfo.getSqlType());               
-           } else {
-               statement.setObject(i + 1, value , columnInfo.getSqlType());
-           }
-       }
-       
+public class PhoenixIndexDBWritable implements DBWritable {
+
+  private List<ColumnInfo> columnMetadata;
+
+  private List<Object> values;
+
+  private int columnCount = -1;
+
+  @Override
+  public void write(PreparedStatement statement) throws SQLException {
+    Preconditions.checkNotNull(values);
+    Preconditions.checkNotNull(columnMetadata);
+    for (int i = 0; i < values.size(); i++) {
+      Object value = values.get(i);
+      ColumnInfo columnInfo = columnMetadata.get(i);
+      if (value == null) {
+        statement.setNull(i + 1, columnInfo.getSqlType());
+      } else {
+        statement.setObject(i + 1, value, columnInfo.getSqlType());
+      }
     }
 
-    @Override
-    public void readFields(ResultSet resultSet) throws SQLException {
-        // we do this once per mapper.
-        if(columnCount == -1) {
-            this.columnCount = resultSet.getMetaData().getColumnCount();
-        }
-  
-        values = Lists.newArrayListWithCapacity(columnCount);
-        for(int i = 0 ; i < columnCount ; i++) {
-            Object value = resultSet.getObject(i + 1);
-            values.add(value);
-        }
-        
+  }
+
+  @Override
+  public void readFields(ResultSet resultSet) throws SQLException {
+    // we do this once per mapper.
+    if (columnCount == -1) {
+      this.columnCount = resultSet.getMetaData().getColumnCount();
     }
 
-    public List<ColumnInfo> getColumnMetadata() {
-        return columnMetadata;
+    values = Lists.newArrayListWithCapacity(columnCount);
+    for (int i = 0; i < columnCount; i++) {
+      Object value = resultSet.getObject(i + 1);
+      values.add(value);
     }
 
-    public void setColumnMetadata(List<ColumnInfo> columnMetadata) {
-        this.columnMetadata = columnMetadata;
-    }
+  }
 
-    public List<Object> getValues() {
-        return values;
-    }
+  public List<ColumnInfo> getColumnMetadata() {
+    return columnMetadata;
+  }
 
-    public void setValues(List<Object> values) {
-        this.values = values;
-    }
+  public void setColumnMetadata(List<ColumnInfo> columnMetadata) {
+    this.columnMetadata = columnMetadata;
+  }
+
+  public List<Object> getValues() {
+    return values;
+  }
+
+  public void setValues(List<Object> values) {
+    this.values = values;
+  }
 
 }

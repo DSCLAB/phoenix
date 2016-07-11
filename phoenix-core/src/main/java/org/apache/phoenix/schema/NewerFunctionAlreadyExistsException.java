@@ -20,20 +20,21 @@ package org.apache.phoenix.schema;
 import org.apache.phoenix.parse.PFunction;
 
 public class NewerFunctionAlreadyExistsException extends FunctionAlreadyExistsException {
-    private static final long serialVersionUID = 1L;
-    private final PFunction function;
 
-    public NewerFunctionAlreadyExistsException(String functionName) {
-        this(functionName, null);
-    }
+  private static final long serialVersionUID = 1L;
+  private final PFunction function;
 
-    public NewerFunctionAlreadyExistsException(String functionName, PFunction function) {
-        super(functionName);
-        this.function = function;
-    }
+  public NewerFunctionAlreadyExistsException(String functionName) {
+    this(functionName, null);
+  }
 
-    public PFunction getFunction() {
-        return this.function;
-    }
+  public NewerFunctionAlreadyExistsException(String functionName, PFunction function) {
+    super(functionName);
+    this.function = function;
+  }
+
+  public PFunction getFunction() {
+    return this.function;
+  }
 
 }

@@ -68,7 +68,7 @@ public class PUnsignedFloat extends PRealNumber<PFloat> {
       throw newIllegalDataException(this + " may not be null");
     }
     return this.getCodec().encodeFloat(((Number) object).floatValue(),
-        bytes, offset);
+            bytes, offset);
   }
 
   @Override
@@ -80,7 +80,7 @@ public class PUnsignedFloat extends PRealNumber<PFloat> {
       Float f = Float.parseFloat(value);
       if (f.floatValue() < 0) {
         throw newIllegalDataException("Value may not be negative("
-            + f + ")");
+                + f + ")");
       }
       return f;
     } catch (NumberFormatException e) {
@@ -97,7 +97,7 @@ public class PUnsignedFloat extends PRealNumber<PFloat> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Float v = (Float) PFloat.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeNumber(v);
     return v;
@@ -111,7 +111,7 @@ public class PUnsignedFloat extends PRealNumber<PFloat> {
   @Override
   public boolean isCoercibleTo(PDataType targetType) {
     return this.equals(targetType) || PUnsignedDouble.INSTANCE.isCoercibleTo(targetType) || PFloat.INSTANCE
-        .isCoercibleTo(targetType);
+            .isCoercibleTo(targetType);
   }
 
   @Override

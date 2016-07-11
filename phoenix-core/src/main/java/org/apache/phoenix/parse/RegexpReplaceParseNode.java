@@ -29,27 +29,27 @@ import org.apache.phoenix.query.QueryServices;
 import org.apache.phoenix.query.QueryServicesOptions;
 
 /**
- * Parse node corresponding to {@link RegexpReplaceFunction}. It also acts as a factory for creating
- * the right kind of RegexpReplaceFunction according to setting in
- * QueryServices.USE_BYTE_BASED_REGEX_ATTRIB
+ * Parse node corresponding to {@link RegexpReplaceFunction}. It also acts as a
+ * factory for creating the right kind of RegexpReplaceFunction according to
+ * setting in QueryServices.USE_BYTE_BASED_REGEX_ATTRIB
  */
 public class RegexpReplaceParseNode extends FunctionParseNode {
 
-    RegexpReplaceParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  RegexpReplaceParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public Expression create(List<Expression> children, StatementContext context)
-            throws SQLException {
-        QueryServices services = context.getConnection().getQueryServices();
-        boolean useByteBasedRegex =
-                services.getProps().getBoolean(QueryServices.USE_BYTE_BASED_REGEX_ATTRIB,
+  @Override
+  public Expression create(List<Expression> children, StatementContext context)
+          throws SQLException {
+    QueryServices services = context.getConnection().getQueryServices();
+    boolean useByteBasedRegex
+            = services.getProps().getBoolean(QueryServices.USE_BYTE_BASED_REGEX_ATTRIB,
                     QueryServicesOptions.DEFAULT_USE_BYTE_BASED_REGEX);
-        if (useByteBasedRegex) {
-            return new ByteBasedRegexpReplaceFunction(children);
-        } else {
-            return new StringBasedRegexpReplaceFunction(children);
-        }
+    if (useByteBasedRegex) {
+      return new ByteBasedRegexpReplaceFunction(children);
+    } else {
+      return new StringBasedRegexpReplaceFunction(children);
     }
+  }
 }

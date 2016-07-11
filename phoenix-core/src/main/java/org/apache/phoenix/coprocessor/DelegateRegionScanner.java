@@ -26,59 +26,59 @@ import org.apache.hadoop.hbase.regionserver.ScannerContext;
 
 public class DelegateRegionScanner implements RegionScanner {
 
-    protected final RegionScanner delegate;
+  protected final RegionScanner delegate;
 
-    public DelegateRegionScanner(RegionScanner scanner) {
-        this.delegate = scanner;
-    }
+  public DelegateRegionScanner(RegionScanner scanner) {
+    this.delegate = scanner;
+  }
 
-    @Override
-    public HRegionInfo getRegionInfo() {
-        return delegate.getRegionInfo();
-    }
+  @Override
+  public HRegionInfo getRegionInfo() {
+    return delegate.getRegionInfo();
+  }
 
-    @Override
-    public boolean isFilterDone() throws IOException {
-        return delegate.isFilterDone();
-    }
+  @Override
+  public boolean isFilterDone() throws IOException {
+    return delegate.isFilterDone();
+  }
 
-    @Override
-    public boolean reseek(byte[] row) throws IOException {
-        return delegate.reseek(row);
-    }
+  @Override
+  public boolean reseek(byte[] row) throws IOException {
+    return delegate.reseek(row);
+  }
 
-    @Override
-    public long getMvccReadPoint() {
-        return delegate.getMvccReadPoint();
-    }
+  @Override
+  public long getMvccReadPoint() {
+    return delegate.getMvccReadPoint();
+  }
 
-    @Override
-    public void close() throws IOException {
-        delegate.close();
-    }
+  @Override
+  public void close() throws IOException {
+    delegate.close();
+  }
 
-    public long getMaxResultSize() {
-        return delegate.getMaxResultSize();
-    }
+  public long getMaxResultSize() {
+    return delegate.getMaxResultSize();
+  }
 
-    public boolean next(List<Cell> arg0, ScannerContext scannerContext) throws IOException {
-        return delegate.next(arg0, scannerContext);
-    }
+  public boolean next(List<Cell> arg0, ScannerContext scannerContext) throws IOException {
+    return delegate.next(arg0, scannerContext);
+  }
 
-    public boolean next(List<Cell> arg0) throws IOException {
-        return delegate.next(arg0);
-    }
+  public boolean next(List<Cell> arg0) throws IOException {
+    return delegate.next(arg0);
+  }
 
-    public boolean nextRaw(List<Cell> arg0, ScannerContext scannerContext) throws IOException {
-        return delegate.nextRaw(arg0, scannerContext);
-    }
+  public boolean nextRaw(List<Cell> arg0, ScannerContext scannerContext) throws IOException {
+    return delegate.nextRaw(arg0, scannerContext);
+  }
 
-    public boolean nextRaw(List<Cell> arg0) throws IOException {
-        return delegate.nextRaw(arg0);
-    }
+  public boolean nextRaw(List<Cell> arg0) throws IOException {
+    return delegate.nextRaw(arg0);
+  }
 
-    @Override
-    public int getBatch() {
-        return delegate.getBatch();
-    }
+  @Override
+  public int getBatch() {
+    return delegate.getBatch();
+  }
 }

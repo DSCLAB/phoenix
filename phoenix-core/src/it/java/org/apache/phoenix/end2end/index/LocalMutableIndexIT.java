@@ -19,8 +19,8 @@ package org.apache.phoenix.end2end.index;
 
 public class LocalMutableIndexIT extends BaseMutableIndexIT {
 
-    public LocalMutableIndexIT() {
-        super(true);
-    }
+  public LocalMutableIndexIT() {
+    super(true);
+  }
 
 }

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.wal;
 
 import java.io.DataInput;
@@ -30,19 +29,21 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
 
 /**
- * Codec to encode/decode {@link KeyValue}s and {@link IndexedKeyValue}s within a {@link WALEdit}
+ * Codec to encode/decode {@link KeyValue}s and {@link IndexedKeyValue}s within
+ * a {@link WALEdit}
  */
 public class KeyValueCodec {
 
   /**
-   * KeyValue length marker specifying that its actually an {@link IndexedKeyValue} rather than a
-   * regular {@link KeyValue}.
+   * KeyValue length marker specifying that its actually an
+   * {@link IndexedKeyValue} rather than a regular {@link KeyValue}.
    */
   public static final int INDEX_TYPE_LENGTH_MARKER = -1;
 
   /**
-   * Read a {@link List} of {@link KeyValue} from the input stream - may contain regular
-   * {@link KeyValue}s or {@link IndexedKeyValue}s.
+   * Read a {@link List} of {@link KeyValue} from the input stream - may contain
+   * regular {@link KeyValue}s or {@link IndexedKeyValue}s.
+   *
    * @param in to read from
    * @return the next {@link KeyValue}s
    * @throws IOException if the next {@link KeyValue} cannot be read
@@ -60,8 +61,9 @@ public class KeyValueCodec {
   }
 
   /**
-   * Read a single {@link KeyValue} from the input stream - may either be a regular {@link KeyValue}
-   * or an {@link IndexedKeyValue}.
+   * Read a single {@link KeyValue} from the input stream - may either be a
+   * regular {@link KeyValue} or an {@link IndexedKeyValue}.
+   *
    * @param in to read from
    * @return the next {@link KeyValue}, if one is available
    * @throws IOException if the next {@link KeyValue} cannot be read
@@ -79,8 +81,10 @@ public class KeyValueCodec {
   }
 
   /**
-   * Write a {@link KeyValue} or an {@link IndexedKeyValue} to the output stream. These can be read
-   * back via {@link #readKeyValue(DataInput)} or {@link #readKeyValues(DataInput)}.
+   * Write a {@link KeyValue} or an {@link IndexedKeyValue} to the output
+   * stream. These can be read back via {@link #readKeyValue(DataInput)} or
+   * {@link #readKeyValues(DataInput)}.
+   *
    * @param out to write to
    * @param kv {@link KeyValue} to which to write
    * @throws IOException if there is an error writing
@@ -90,7 +94,7 @@ public class KeyValueCodec {
       out.writeInt(INDEX_TYPE_LENGTH_MARKER);
       ((IndexedKeyValue) kv).writeData(out);
     } else {
-        KeyValue.write(kv, out);
+      KeyValue.write(kv, out);
     }
   }
 }

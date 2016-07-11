@@ -19,20 +19,16 @@ package org.apache.phoenix.query;
 
 import org.apache.phoenix.util.ReadOnlyProps;
 
-
-
-
-
 /**
- * 
+ *
  * Real implementation of QueryServices for use in runtime and perf testing
  *
- * 
+ *
  * @since 0.1
  */
 public final class QueryServicesImpl extends BaseQueryServicesImpl {
-    
-    public QueryServicesImpl(ReadOnlyProps defaultProps) {
-        super(defaultProps, QueryServicesOptions.withDefaults());
-    }
+
+  public QueryServicesImpl(ReadOnlyProps defaultProps) {
+    super(defaultProps, QueryServicesOptions.withDefaults());
+  }
 }

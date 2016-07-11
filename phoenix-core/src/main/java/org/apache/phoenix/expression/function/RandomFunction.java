@@ -34,8 +34,9 @@ import org.apache.phoenix.schema.types.PDouble;
 import org.apache.phoenix.schema.types.PLong;
 
 /**
- * Random function that produces a unique value upon each invocation unless a seed is provided.
- * If a seed is provided the returned value is identical across each invocation for a single row, but different across multiple rows.
+ * Random function that produces a unique value upon each invocation unless a
+ * seed is provided. If a seed is provided the returned value is identical
+ * across each invocation for a single row, but different across multiple rows.
  * The seed must be a constant.
  * <p>
  * Example:
@@ -58,93 +59,97 @@ import org.apache.phoenix.schema.types.PLong;
  * 2 rows selected (0.098 seconds)
  * </pre>
  */
-@BuiltInFunction(name = RandomFunction.NAME, args = {@Argument(allowedTypes={PLong.class},defaultValue="null",isConstant=true)})
+@BuiltInFunction(name = RandomFunction.NAME, args = {
+  @Argument(allowedTypes = {PLong.class}, defaultValue = "null", isConstant = true)})
 public class RandomFunction extends ScalarFunction {
-    public static final String NAME = "RAND";
-    private Random random;
-    private boolean hasSeed;
-    private Double current;
 
-    public RandomFunction() {
-    }
+  public static final String NAME = "RAND";
+  private Random random;
+  private boolean hasSeed;
+  private Double current;
 
-    public RandomFunction(List<Expression> children) {
-        super(children);
-        init();
-    }
+  public RandomFunction() {
+  }
 
-    private void init() {
-        Number seed = (Number)((LiteralExpression)children.get(0)).getValue();
-        random = seed == null ? new Random() : new Random(seed.longValue());
-        hasSeed = seed != null;
-        current = null;
-    }
+  public RandomFunction(List<Expression> children) {
+    super(children);
+    init();
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        super.readFields(input);
-        init();
-    }
+  private void init() {
+    Number seed = (Number) ((LiteralExpression) children.get(0)).getValue();
+    random = seed == null ? new Random() : new Random(seed.longValue());
+    hasSeed = seed != null;
+    current = null;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (current == null) {
-            current = random.nextDouble();
-        }
-        ptr.set(PDouble.INSTANCE.toBytes(current));
-        return true;
-    }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    init();
+  }
 
-    // produce a new random value for each row
-    @Override
-    public void reset() {
-        super.reset();
-        current = null;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (current == null) {
+      current = random.nextDouble();
     }
+    ptr.set(PDouble.INSTANCE.toBytes(current));
+    return true;
+  }
 
-    @Override
-    public PDataType<?> getDataType() {
-        return PDouble.INSTANCE;
-    }
+  // produce a new random value for each row
+  @Override
+  public void reset() {
+    super.reset();
+    current = null;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType<?> getDataType() {
+    return PDouble.INSTANCE;
+  }
 
-    @Override
-    public Determinism getDeterminism() {
-        return hasSeed ? Determinism.PER_ROW : Determinism.PER_INVOCATION;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public boolean isStateless() {
-        return true;
-    }
+  @Override
+  public Determinism getDeterminism() {
+    return hasSeed ? Determinism.PER_ROW : Determinism.PER_INVOCATION;
+  }
 
-    // take the random object onto account
-    @Override
-    public int hashCode() {
-        int hashCode = super.hashCode();
-        return hasSeed ? hashCode : (hashCode + random.hashCode());
-    }
+  @Override
+  public boolean isStateless() {
+    return true;
+  }
 
-    // take the random object onto account, as otherwise we'll potentially collapse two
-    // RAND() calls into a single one.
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj) && (hasSeed || random.equals(((RandomFunction)obj).random));
-    }
+  // take the random object onto account
+  @Override
+  public int hashCode() {
+    int hashCode = super.hashCode();
+    return hasSeed ? hashCode : (hashCode + random.hashCode());
+  }
 
-    // make sure we do not show the default 'null' parameter
-    @Override
-    public final String toString() {
-        StringBuilder buf = new StringBuilder(getName() + "(");
-        if (!hasSeed) return buf.append(")").toString();
-        for (int i = 0; i < children.size() - 1; i++) {
-            buf.append(children.get(i) + ", ");
-        }
-        buf.append(children.get(children.size()-1) + ")");
-        return buf.toString();
+  // take the random object onto account, as otherwise we'll potentially collapse two
+  // RAND() calls into a single one.
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj) && (hasSeed || random.equals(((RandomFunction) obj).random));
+  }
+
+  // make sure we do not show the default 'null' parameter
+  @Override
+  public final String toString() {
+    StringBuilder buf = new StringBuilder(getName() + "(");
+    if (!hasSeed) {
+      return buf.append(")").toString();
     }
+    for (int i = 0; i < children.size() - 1; i++) {
+      buf.append(children.get(i) + ", ");
+    }
+    buf.append(children.get(children.size() - 1) + ")");
+    return buf.toString();
+  }
 }

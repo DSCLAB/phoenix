@@ -23,42 +23,56 @@ import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 /**
- * Interfaces to be implemented by classes that need to be "JDK7" compliant,
- * but also run in JDK6
+ * Interfaces to be implemented by classes that need to be "JDK7" compliant, but
+ * also run in JDK6
  */
 public final class Jdbc7Shim {
 
-    public interface Statement {  // Note: do not extend "regular" statement or else eclipse 3.7 complains
-        void closeOnCompletion() throws SQLException;
-        boolean isCloseOnCompletion() throws SQLException;
-    }
+  public interface Statement {  // Note: do not extend "regular" statement or else eclipse 3.7 complains
 
-    public interface CallableStatement extends Statement {
-        public <T> T getObject(int columnIndex, Class<T> type) throws SQLException;
-        public <T> T getObject(String columnLabel, Class<T> type) throws SQLException;
-    }
+    void closeOnCompletion() throws SQLException;
 
-    public interface Connection {
-         void setSchema(String schema) throws SQLException;
-         String getSchema() throws SQLException;
-         void abort(Executor executor) throws SQLException;
-         void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException;
-         int getNetworkTimeout() throws SQLException;
-    }
+    boolean isCloseOnCompletion() throws SQLException;
+  }
 
-    public interface ResultSet {
-         public <T> T getObject(int columnIndex, Class<T> type) throws SQLException;
-         public <T> T getObject(String columnLabel, Class<T> type) throws SQLException;
-    }
+  public interface CallableStatement extends Statement {
 
-    public interface DatabaseMetaData {
-        java.sql.ResultSet getPseudoColumns(String catalog, String schemaPattern,
-                             String tableNamePattern, String columnNamePattern)
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException;
+
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException;
+  }
+
+  public interface Connection {
+
+    void setSchema(String schema) throws SQLException;
+
+    String getSchema() throws SQLException;
+
+    void abort(Executor executor) throws SQLException;
+
+    void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException;
+
+    int getNetworkTimeout() throws SQLException;
+  }
+
+  public interface ResultSet {
+
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException;
+
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException;
+  }
+
+  public interface DatabaseMetaData {
+
+    java.sql.ResultSet getPseudoColumns(String catalog, String schemaPattern,
+            String tableNamePattern, String columnNamePattern)
             throws SQLException;
-        boolean  generatedKeyAlwaysReturned() throws SQLException;
-    }
 
-    public interface Driver {
-        public Logger getParentLogger() throws SQLFeatureNotSupportedException;
-    }
+    boolean generatedKeyAlwaysReturned() throws SQLException;
+  }
+
+  public interface Driver {
+
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException;
+  }
 }

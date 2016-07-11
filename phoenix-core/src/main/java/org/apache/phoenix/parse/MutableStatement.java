@@ -21,8 +21,8 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public abstract class MutableStatement implements BindableStatement {
 
-    @Override
-    public Operation getOperation() {
-        return Operation.UPSERT;
-    }
+  @Override
+  public Operation getOperation() {
+    return Operation.UPSERT;
+  }
 }

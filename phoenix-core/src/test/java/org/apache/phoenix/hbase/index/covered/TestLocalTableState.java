@@ -82,7 +82,6 @@ public class TestLocalTableState {
       }
     });
 
-
     LocalHBaseState state = new LocalTable(env);
     LocalTableState table = new LocalTableState(env, state, m);
     //add the kvs from the mutation
@@ -99,6 +98,7 @@ public class TestLocalTableState {
 
   /**
    * Test that we correctly rollback the state of keyvalue
+   *
    * @throws Exception
    */
   @Test
@@ -159,8 +159,8 @@ public class TestLocalTableState {
     Mockito.when(env.getRegion()).thenReturn(region);
     RegionScanner scanner = Mockito.mock(RegionScanner.class);
     Mockito.when(region.getScanner(Mockito.any(Scan.class))).thenReturn(scanner);
-    final KeyValue storedKv =
-        new KeyValue(row, fam, qual, ts, Type.Put, Bytes.toBytes("stored-value"));
+    final KeyValue storedKv
+            = new KeyValue(row, fam, qual, ts, Type.Put, Bytes.toBytes("stored-value"));
     storedKv.setSequenceId(2);
     Mockito.when(scanner.next(Mockito.any(List.class))).thenAnswer(new Answer<Boolean>() {
       @Override

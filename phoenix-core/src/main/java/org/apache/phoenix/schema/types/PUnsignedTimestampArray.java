@@ -28,8 +28,8 @@ public class PUnsignedTimestampArray extends PArrayDataType<Timestamp[]> {
 
   private PUnsignedTimestampArray() {
     super("UNSIGNED_TIMESTAMP ARRAY",
-        PDataType.ARRAY_TYPE_BASE + PUnsignedTimestamp.INSTANCE.getSqlType(), PhoenixArray.class,
-        null, 37);
+            PDataType.ARRAY_TYPE_BASE + PUnsignedTimestamp.INSTANCE.getSqlType(), PhoenixArray.class,
+            null, 37);
   }
 
   @Override
@@ -64,10 +64,10 @@ public class PUnsignedTimestampArray extends PArrayDataType<Timestamp[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PUnsignedTimestamp.INSTANCE, sortOrder,
-        maxLength, scale, PUnsignedTimestamp.INSTANCE);
+            maxLength, scale, PUnsignedTimestamp.INSTANCE);
   }
 
   @Override
@@ -92,10 +92,10 @@ public class PUnsignedTimestampArray extends PArrayDataType<Timestamp[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

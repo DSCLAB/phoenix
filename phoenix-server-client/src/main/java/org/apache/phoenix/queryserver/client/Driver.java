@@ -34,12 +34,12 @@ public class Driver extends org.apache.calcite.avatica.remote.Driver {
   @Override
   protected DriverVersion createDriverVersion() {
     return DriverVersion.load(
-        Driver.class,
-        "org-apache-phoenix-remote-jdbc.properties",
-        "Phoenix Remote JDBC Driver",
-        "unknown version",
-        "Apache Phoenix",
-        "unknown version");
+            Driver.class,
+            "org-apache-phoenix-remote-jdbc.properties",
+            "Phoenix Remote JDBC Driver",
+            "unknown version",
+            "Apache Phoenix",
+            "unknown version");
   }
 
   @Override

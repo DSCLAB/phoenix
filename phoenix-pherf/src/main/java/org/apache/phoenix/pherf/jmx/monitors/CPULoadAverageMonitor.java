@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
@@ -25,9 +24,9 @@ import java.lang.management.MemoryMXBean;
 
 public class CPULoadAverageMonitor implements Monitor {
 
-    @Override
-    public Stat getStat() {
-        Stat<MemoryMXBean> stat = new Stat(ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage());
-        return stat;
-    }
+  @Override
+  public Stat getStat() {
+    Stat<MemoryMXBean> stat = new Stat(ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage());
+    return stat;
+  }
 }

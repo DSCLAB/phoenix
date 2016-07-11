@@ -25,9 +25,9 @@ import com.google.common.collect.Iterators;
 
 public abstract class TraverseNoExpressionVisitor<E> extends BaseExpressionVisitor<E> {
 
-    @Override
-    public Iterator<Expression> defaultIterator(Expression node) {
-        return Iterators.emptyIterator();
-    }
+  @Override
+  public Iterator<Expression> defaultIterator(Expression node) {
+    return Iterators.emptyIterator();
+  }
 
 }

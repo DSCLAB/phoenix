@@ -33,127 +33,131 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PVarchar;
 
-
 /**
- * 
- * Function similar to the regexp_replace function in Postgres, which is used to pattern
- * match a segment of the string. Usage:
- * REGEXP_REPLACE(<source_char>,<pattern>,<replace_string>)
- * source_char is the string in which we want to perform string replacement. pattern is a
- * Java compatible regular expression string, and we replace all the matching part with 
- * replace_string. The first 2 arguments are required and are {@link org.apache.phoenix.schema.types.PVarchar},
- * the replace_string is default to empty string.
- * 
+ *
+ * Function similar to the regexp_replace function in Postgres, which is used to
+ * pattern match a segment of the string. Usage:
+ * REGEXP_REPLACE(<source_char>,<pattern>,<replace_string>) source_char is the
+ * string in which we want to perform string replacement. pattern is a Java
+ * compatible regular expression string, and we replace all the matching part
+ * with replace_string. The first 2 arguments are required and are
+ * {@link org.apache.phoenix.schema.types.PVarchar}, the replace_string is
+ * default to empty string.
+ *
  * The function returns a {@link org.apache.phoenix.schema.types.PVarchar}
- * 
- * 
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=RegexpReplaceFunction.NAME,
-    nodeClass = RegexpReplaceParseNode.class, args= {
-    @Argument(allowedTypes={PVarchar.class}),
-    @Argument(allowedTypes={PVarchar.class}),
-    @Argument(allowedTypes={PVarchar.class},defaultValue="null")} )
+@BuiltInFunction(name = RegexpReplaceFunction.NAME,
+        nodeClass = RegexpReplaceParseNode.class, args = {
+          @Argument(allowedTypes = {PVarchar.class}),
+          @Argument(allowedTypes = {PVarchar.class}),
+          @Argument(allowedTypes = {PVarchar.class}, defaultValue = "null")})
 public abstract class RegexpReplaceFunction extends ScalarFunction {
-    public static final String NAME = "REGEXP_REPLACE";
 
-    private static final PVarchar TYPE = PVarchar.INSTANCE;
-    private byte [] rStrBytes;
-    private int rStrOffset, rStrLen;
-    private AbstractBasePattern pattern;
+  public static final String NAME = "REGEXP_REPLACE";
 
-    public RegexpReplaceFunction() { }
+  private static final PVarchar TYPE = PVarchar.INSTANCE;
+  private byte[] rStrBytes;
+  private int rStrOffset, rStrLen;
+  private AbstractBasePattern pattern;
 
-    // Expect 1 arguments, the pattern. 
-    public RegexpReplaceFunction(List<Expression> children) {
-        super(children);
-        init();
+  public RegexpReplaceFunction() {
+  }
+
+  // Expect 1 arguments, the pattern. 
+  public RegexpReplaceFunction(List<Expression> children) {
+    super(children);
+    init();
+  }
+
+  protected abstract AbstractBasePattern compilePatternSpec(String value);
+
+  private void init() {
+    ImmutableBytesWritable tmpPtr = new ImmutableBytesWritable();
+    Expression e = getPatternStrExpression();
+    if (e.isStateless() && e.getDeterminism() == Determinism.ALWAYS && e.evaluate(null, tmpPtr)) {
+      String patternStr = (String) TYPE.toObject(tmpPtr, e.getDataType(), e.getSortOrder());
+      if (patternStr != null) {
+        pattern = compilePatternSpec(patternStr);
+      }
+    }
+    e = getReplaceStrExpression();
+    if (e.isStateless() && e.getDeterminism() == Determinism.ALWAYS && e.evaluate(null, tmpPtr)) {
+      TYPE.coerceBytes(tmpPtr, TYPE, e.getSortOrder(), SortOrder.ASC);
+      rStrBytes = tmpPtr.get();
+      rStrOffset = tmpPtr.getOffset();
+      rStrLen = tmpPtr.getLength();
+    } else {
+      rStrBytes = null;
+    }
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    AbstractBasePattern pattern = this.pattern;
+    if (pattern == null) {
+      Expression e = getPatternStrExpression();
+      if (!e.evaluate(tuple, ptr)) {
+        return false;
+      }
+      String patternStr = (String) TYPE.toObject(ptr, e.getDataType(), e.getSortOrder());
+      if (patternStr == null) {
+        return false;
+      } else {
+        pattern = compilePatternSpec(patternStr);
+      }
     }
 
-    protected abstract AbstractBasePattern compilePatternSpec(String value);
-
-    private void init() {
-        ImmutableBytesWritable tmpPtr = new ImmutableBytesWritable();
-        Expression e = getPatternStrExpression();
-        if (e.isStateless() && e.getDeterminism() == Determinism.ALWAYS && e.evaluate(null, tmpPtr)) {
-            String patternStr = (String) TYPE.toObject(tmpPtr, e.getDataType(), e.getSortOrder());
-            if (patternStr != null) pattern = compilePatternSpec(patternStr);
-        }
-        e = getReplaceStrExpression();
-        if (e.isStateless() && e.getDeterminism() == Determinism.ALWAYS && e.evaluate(null, tmpPtr)) {
-            TYPE.coerceBytes(tmpPtr, TYPE, e.getSortOrder(), SortOrder.ASC);
-            rStrBytes = tmpPtr.get();
-            rStrOffset = tmpPtr.getOffset();
-            rStrLen = tmpPtr.getLength();
-        } else {
-            rStrBytes = null;
-        }
+    byte[] rStrBytes = this.rStrBytes;
+    int rStrOffset = this.rStrOffset, rStrLen = this.rStrLen;
+    if (rStrBytes == null) {
+      Expression replaceStrExpression = getReplaceStrExpression();
+      if (!replaceStrExpression.evaluate(tuple, ptr)) {
+        return false;
+      }
+      TYPE.coerceBytes(ptr, TYPE, replaceStrExpression.getSortOrder(), SortOrder.ASC);
+      rStrBytes = ptr.get();
+      rStrOffset = ptr.getOffset();
+      rStrLen = ptr.getLength();
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        AbstractBasePattern pattern = this.pattern;
-        if (pattern == null) {
-            Expression e = getPatternStrExpression();
-            if (!e.evaluate(tuple, ptr)) {
-                return false;
-            }
-            String patternStr = (String) TYPE.toObject(ptr, e.getDataType(), e.getSortOrder());
-            if (patternStr == null) {
-                return false;
-            } else {
-                pattern = compilePatternSpec(patternStr);
-            }
-        }
-
-        byte[] rStrBytes = this.rStrBytes;
-        int rStrOffset = this.rStrOffset, rStrLen = this.rStrLen;
-        if (rStrBytes == null) {
-            Expression replaceStrExpression = getReplaceStrExpression();
-            if (!replaceStrExpression.evaluate(tuple, ptr)) {
-                return false;
-            }
-            TYPE.coerceBytes(ptr, TYPE, replaceStrExpression.getSortOrder(), SortOrder.ASC);
-            rStrBytes = ptr.get();
-            rStrOffset = ptr.getOffset();
-            rStrLen = ptr.getLength();
-        }
-
-        Expression sourceStrExpression = getSourceStrExpression();
-        if (!sourceStrExpression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        TYPE.coerceBytes(ptr, TYPE, sourceStrExpression.getSortOrder(), SortOrder.ASC);
-
-        pattern.replaceAll(ptr, rStrBytes, rStrOffset, rStrLen);
-        return true;
+    Expression sourceStrExpression = getSourceStrExpression();
+    if (!sourceStrExpression.evaluate(tuple, ptr)) {
+      return false;
     }
+    TYPE.coerceBytes(ptr, TYPE, sourceStrExpression.getSortOrder(), SortOrder.ASC);
 
-    private Expression getSourceStrExpression() {
-        return children.get(0);
-    }
+    pattern.replaceAll(ptr, rStrBytes, rStrOffset, rStrLen);
+    return true;
+  }
 
-    private Expression getPatternStrExpression() {
-        return children.get(1);
-    }
+  private Expression getSourceStrExpression() {
+    return children.get(0);
+  }
 
-    private Expression getReplaceStrExpression() {
-        return children.get(2);
-    }
+  private Expression getPatternStrExpression() {
+    return children.get(1);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
-    }
+  private Expression getReplaceStrExpression() {
+    return children.get(2);
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        super.readFields(input);
-        init();
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    init();
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

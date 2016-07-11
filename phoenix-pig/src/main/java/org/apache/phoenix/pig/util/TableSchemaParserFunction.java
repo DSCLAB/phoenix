@@ -19,8 +19,6 @@
  */
 package org.apache.phoenix.pig.util;
 
-
-
 import org.apache.hadoop.hbase.util.Pair;
 
 import com.google.common.base.Function;
@@ -29,26 +27,27 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
 /**
- * 
- * A function to parse the table schema passed to LOAD/STORE into a Pair of <table Name, columns>
+ *
+ * A function to parse the table schema passed to LOAD/STORE into a Pair of
+ * <table Name, columns>
  *
  */
-public final class TableSchemaParserFunction implements Function<String,Pair<String,String>> {
+public final class TableSchemaParserFunction implements Function<String, Pair<String, String>> {
 
-    private static final char TABLE_COLUMN_DELIMITER    = '/';
-    
-    @Override
-    public Pair<String, String> apply(final String tableSchema) {
-        Preconditions.checkNotNull(tableSchema);
-        Preconditions.checkArgument(!tableSchema.isEmpty(), "HBase Table name is empty!!");
-        
-        final String  tokens[] = Iterables.toArray(Splitter.on(TABLE_COLUMN_DELIMITER).
-                                    trimResults().omitEmptyStrings().split(tableSchema) , String.class); 
-        final String tableName = tokens[0];
-        String columns = null;
-        if(tokens.length > 1) {
-            columns = tokens[1];    
-        }
-        return new Pair<String, String>(tableName, columns);
+  private static final char TABLE_COLUMN_DELIMITER = '/';
+
+  @Override
+  public Pair<String, String> apply(final String tableSchema) {
+    Preconditions.checkNotNull(tableSchema);
+    Preconditions.checkArgument(!tableSchema.isEmpty(), "HBase Table name is empty!!");
+
+    final String tokens[] = Iterables.toArray(Splitter.on(TABLE_COLUMN_DELIMITER).
+            trimResults().omitEmptyStrings().split(tableSchema), String.class);
+    final String tableName = tokens[0];
+    String columns = null;
+    if (tokens.length > 1) {
+      columns = tokens[1];
     }
+    return new Pair<String, String>(tableName, columns);
+  }
 }

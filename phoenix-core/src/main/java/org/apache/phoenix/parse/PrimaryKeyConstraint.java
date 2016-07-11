@@ -28,40 +28,41 @@ import com.google.common.collect.Maps;
 import org.apache.phoenix.schema.SortOrder;
 
 public class PrimaryKeyConstraint extends NamedNode {
-    public static final PrimaryKeyConstraint EMPTY = new PrimaryKeyConstraint(null, Collections.<Pair<ColumnName, SortOrder>>emptyList());
 
-    private final List<Pair<ColumnName, SortOrder>> columns;
-    private final HashMap<ColumnName, Pair<ColumnName, SortOrder>> columnNameToSortOrder;
-    
-    PrimaryKeyConstraint(String name, List<Pair<ColumnName, SortOrder>> columns) {
-        super(name);
-        this.columns = columns == null ? Collections.<Pair<ColumnName, SortOrder>>emptyList() : ImmutableList.copyOf(columns);
-        this.columnNameToSortOrder = Maps.newHashMapWithExpectedSize(this.columns.size());
-        for (Pair<ColumnName, SortOrder> p : this.columns) {
-            this.columnNameToSortOrder.put(p.getFirst(), p);
-        }
-    }
+  public static final PrimaryKeyConstraint EMPTY = new PrimaryKeyConstraint(null, Collections.<Pair<ColumnName, SortOrder>>emptyList());
 
-    public List<Pair<ColumnName, SortOrder>> getColumnNames() {
-        return columns;
-    }
-    
-    public Pair<ColumnName, SortOrder> getColumn(ColumnName columnName) {
-    	return columnNameToSortOrder.get(columnName);
-    }
-    
-    public boolean contains(ColumnName columnName) {
-        return columnNameToSortOrder.containsKey(columnName);
-    }
-    
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
+  private final List<Pair<ColumnName, SortOrder>> columns;
+  private final HashMap<ColumnName, Pair<ColumnName, SortOrder>> columnNameToSortOrder;
 
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
+  PrimaryKeyConstraint(String name, List<Pair<ColumnName, SortOrder>> columns) {
+    super(name);
+    this.columns = columns == null ? Collections.<Pair<ColumnName, SortOrder>>emptyList() : ImmutableList.copyOf(columns);
+    this.columnNameToSortOrder = Maps.newHashMapWithExpectedSize(this.columns.size());
+    for (Pair<ColumnName, SortOrder> p : this.columns) {
+      this.columnNameToSortOrder.put(p.getFirst(), p);
     }
-    
+  }
+
+  public List<Pair<ColumnName, SortOrder>> getColumnNames() {
+    return columns;
+  }
+
+  public Pair<ColumnName, SortOrder> getColumn(ColumnName columnName) {
+    return columnNameToSortOrder.get(columnName);
+  }
+
+  public boolean contains(ColumnName columnName) {
+    return columnNameToSortOrder.containsKey(columnName);
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
 }

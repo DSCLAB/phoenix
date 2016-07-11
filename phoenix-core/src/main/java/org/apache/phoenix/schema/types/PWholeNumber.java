@@ -21,15 +21,15 @@ import org.apache.phoenix.schema.SortOrder;
 
 public abstract class PWholeNumber<T> extends PNumericType<T> {
 
-    protected PWholeNumber(String sqlTypeName, int sqlType, Class clazz,
-            org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
-        super(sqlTypeName, sqlType, clazz, codec, ordinal);
-    }
+  protected PWholeNumber(String sqlTypeName, int sqlType, Class clazz,
+          org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
+    super(sqlTypeName, sqlType, clazz, codec, ordinal);
+  }
 
-    @Override
-    public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
-            Integer scale) {
-        long l = getCodec().decodeLong(bytes, offset, sortOrder);
-        return Long.signum(l);
-    }
+  @Override
+  public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
+    long l = getCodec().decodeLong(bytes, offset, sortOrder);
+    return Long.signum(l);
+  }
 }

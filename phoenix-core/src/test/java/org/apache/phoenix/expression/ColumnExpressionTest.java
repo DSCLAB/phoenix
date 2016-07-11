@@ -36,82 +36,82 @@ import org.junit.Test;
 
 public class ColumnExpressionTest {
 
-    @Test
-    public void testSerialization() throws Exception {
-        int maxLen = 30;
-        int scale = 5;
-        PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PDecimal.INSTANCE, maxLen, scale,
-                true, 20, SortOrder.getDefault(), 0, null, false, null);
-        ColumnExpression colExp = new KeyValueColumnExpression(column);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dOut = new DataOutputStream(baos);
-        colExp.write(dOut);
-        dOut.flush();
+  @Test
+  public void testSerialization() throws Exception {
+    int maxLen = 30;
+    int scale = 5;
+    PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PDecimal.INSTANCE, maxLen, scale,
+            true, 20, SortOrder.getDefault(), 0, null, false, null);
+    ColumnExpression colExp = new KeyValueColumnExpression(column);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream dOut = new DataOutputStream(baos);
+    colExp.write(dOut);
+    dOut.flush();
 
-        ColumnExpression colExp2 = new KeyValueColumnExpression();
-        byte[] bytes = baos.toByteArray();
-        DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
-        colExp2.readFields(dIn);
-        assertEquals(maxLen, colExp2.getMaxLength().intValue());
-        assertEquals(scale, colExp2.getScale().intValue());
-        assertEquals(PDecimal.INSTANCE, colExp2.getDataType());
-    }
+    ColumnExpression colExp2 = new KeyValueColumnExpression();
+    byte[] bytes = baos.toByteArray();
+    DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
+    colExp2.readFields(dIn);
+    assertEquals(maxLen, colExp2.getMaxLength().intValue());
+    assertEquals(scale, colExp2.getScale().intValue());
+    assertEquals(PDecimal.INSTANCE, colExp2.getDataType());
+  }
 
-    @Test
-    public void testSerializationWithNullScale() throws Exception {
-        int maxLen = 30;
-        PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PBinary.INSTANCE, maxLen, null,
-                true, 20, SortOrder.getDefault(), 0, null, false, null);
-        ColumnExpression colExp = new KeyValueColumnExpression(column);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dOut = new DataOutputStream(baos);
-        colExp.write(dOut);
-        dOut.flush();
+  @Test
+  public void testSerializationWithNullScale() throws Exception {
+    int maxLen = 30;
+    PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PBinary.INSTANCE, maxLen, null,
+            true, 20, SortOrder.getDefault(), 0, null, false, null);
+    ColumnExpression colExp = new KeyValueColumnExpression(column);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream dOut = new DataOutputStream(baos);
+    colExp.write(dOut);
+    dOut.flush();
 
-        ColumnExpression colExp2 = new KeyValueColumnExpression();
-        byte[] bytes = baos.toByteArray();
-        DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
-        colExp2.readFields(dIn);
-        assertEquals(maxLen, colExp2.getMaxLength().intValue());
-        assertNull(colExp2.getScale());
-        assertEquals(PBinary.INSTANCE, colExp2.getDataType());
-    }
+    ColumnExpression colExp2 = new KeyValueColumnExpression();
+    byte[] bytes = baos.toByteArray();
+    DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
+    colExp2.readFields(dIn);
+    assertEquals(maxLen, colExp2.getMaxLength().intValue());
+    assertNull(colExp2.getScale());
+    assertEquals(PBinary.INSTANCE, colExp2.getDataType());
+  }
 
-    @Test
-    public void testSerializationWithNullMaxLength() throws Exception {
-        int scale = 5;
-        PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PVarchar.INSTANCE, null, scale,
-                true, 20, SortOrder.getDefault(), 0, null, false, null);
-        ColumnExpression colExp = new KeyValueColumnExpression(column);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dOut = new DataOutputStream(baos);
-        colExp.write(dOut);
-        dOut.flush();
+  @Test
+  public void testSerializationWithNullMaxLength() throws Exception {
+    int scale = 5;
+    PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PVarchar.INSTANCE, null, scale,
+            true, 20, SortOrder.getDefault(), 0, null, false, null);
+    ColumnExpression colExp = new KeyValueColumnExpression(column);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream dOut = new DataOutputStream(baos);
+    colExp.write(dOut);
+    dOut.flush();
 
-        ColumnExpression colExp2 = new KeyValueColumnExpression();
-        byte[] bytes = baos.toByteArray();
-        DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
-        colExp2.readFields(dIn);
-        assertNull(colExp2.getMaxLength());
-        assertEquals(scale, colExp2.getScale().intValue());
-        assertEquals(PVarchar.INSTANCE, colExp2.getDataType());
-    }
+    ColumnExpression colExp2 = new KeyValueColumnExpression();
+    byte[] bytes = baos.toByteArray();
+    DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
+    colExp2.readFields(dIn);
+    assertNull(colExp2.getMaxLength());
+    assertEquals(scale, colExp2.getScale().intValue());
+    assertEquals(PVarchar.INSTANCE, colExp2.getDataType());
+  }
 
-    @Test
-    public void testSerializationWithNullScaleAndMaxLength() throws Exception {
-        PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PDecimal.INSTANCE, null, null, true,
-                20, SortOrder.getDefault(), 0, null, false, null);
-        ColumnExpression colExp = new KeyValueColumnExpression(column);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dOut = new DataOutputStream(baos);
-        colExp.write(dOut);
-        dOut.flush();
+  @Test
+  public void testSerializationWithNullScaleAndMaxLength() throws Exception {
+    PColumn column = new PColumnImpl(PNameFactory.newName("c1"), PNameFactory.newName("f1"), PDecimal.INSTANCE, null, null, true,
+            20, SortOrder.getDefault(), 0, null, false, null);
+    ColumnExpression colExp = new KeyValueColumnExpression(column);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream dOut = new DataOutputStream(baos);
+    colExp.write(dOut);
+    dOut.flush();
 
-        ColumnExpression colExp2 = new KeyValueColumnExpression();
-        byte[] bytes = baos.toByteArray();
-        DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
-        colExp2.readFields(dIn);
-        assertNull(colExp2.getMaxLength());
-        assertNull(colExp2.getScale());
-    }
+    ColumnExpression colExp2 = new KeyValueColumnExpression();
+    byte[] bytes = baos.toByteArray();
+    DataInputStream dIn = new DataInputStream(new ByteArrayInputStream(bytes, 0, bytes.length));
+    colExp2.readFields(dIn);
+    assertNull(colExp2.getMaxLength());
+    assertNull(colExp2.getScale());
+  }
 }

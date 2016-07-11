@@ -28,7 +28,7 @@ public class PCharArray extends PArrayDataType<String[]> {
 
   private PCharArray() {
     super("CHAR ARRAY", PDataType.ARRAY_TYPE_BASE + PChar.INSTANCE.getSqlType(), PhoenixArray.class,
-        null, 29);
+            null, 29);
   }
 
   @Override
@@ -63,9 +63,9 @@ public class PCharArray extends PArrayDataType<String[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength, Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength, Integer scale) {
     return toObject(bytes, offset, length, PChar.INSTANCE, sortOrder, maxLength, scale,
-        PChar.INSTANCE);
+            PChar.INSTANCE);
   }
 
   @Override
@@ -90,10 +90,10 @@ public class PCharArray extends PArrayDataType<String[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

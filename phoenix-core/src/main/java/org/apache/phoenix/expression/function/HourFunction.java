@@ -30,52 +30,54 @@ import org.apache.phoenix.schema.types.PInteger;
 import org.apache.phoenix.schema.types.PTimestamp;
 
 /**
- * 
- * Implementation of the HOUR() buildin. Input Date/Timestamp/Time.
- * Returns an integer from 0 to 23 representing the hour component of time
- * 
+ *
+ * Implementation of the HOUR() buildin. Input Date/Timestamp/Time. Returns an
+ * integer from 0 to 23 representing the hour component of time
+ *
  */
-@BuiltInFunction(name=HourFunction.NAME, 
-args={@Argument(allowedTypes={PTimestamp.class})})
+@BuiltInFunction(name = HourFunction.NAME,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class})})
 public class HourFunction extends ScalarFunction {
-    public static final String NAME = "HOUR";
 
-    public HourFunction() {
-    }
+  public static final String NAME = "HOUR";
 
-    public HourFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public HourFunction() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression expression = getChildExpression();
-        if (!expression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if ( ptr.getLength() == 0) {
-            return true; //means null
-        }
-        long dateTime = expression.getDataType().getCodec().decodeLong(ptr, expression.getSortOrder());
-        int hour = (int)(((dateTime/1000) % (24*3600))/3600);
-        PDataType returnType = getDataType();
-        byte[] byteValue = new byte[returnType.getByteSize()];
-        returnType.getCodec().encodeInt(hour, byteValue, 0);
-        ptr.set(byteValue);
-        return true;
-    }
+  public HourFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression expression = getChildExpression();
+    if (!expression.evaluate(tuple, ptr)) {
+      return false;
     }
+    if (ptr.getLength() == 0) {
+      return true; //means null
+    }
+    long dateTime = expression.getDataType().getCodec().decodeLong(ptr, expression.getSortOrder());
+    int hour = (int) (((dateTime / 1000) % (24 * 3600)) / 3600);
+    PDataType returnType = getDataType();
+    byte[] byteValue = new byte[returnType.getByteSize()];
+    returnType.getCodec().encodeInt(hour, byteValue, 0);
+    ptr.set(byteValue);
+    return true;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

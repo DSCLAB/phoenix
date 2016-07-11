@@ -32,165 +32,161 @@ import org.apache.phoenix.util.StringUtil;
 
 /**
  * Implementation of LPAD(input string, length int [, fill string])
- * 
- * Fills up the input to length (number of characters) by prepending characters in fill (space by default). If the input
- * is already longer than length then it is truncated on the right.
+ *
+ * Fills up the input to length (number of characters) by prepending characters
+ * in fill (space by default). If the input is already longer than length then
+ * it is truncated on the right.
  */
-@BuiltInFunction(name = LpadFunction.NAME, args = { @Argument(allowedTypes = { PVarchar.class }),
-    @Argument(allowedTypes = { PInteger.class }),
-    @Argument(allowedTypes = { PVarchar.class }, defaultValue = "' '") })
+@BuiltInFunction(name = LpadFunction.NAME, args = {
+  @Argument(allowedTypes = {PVarchar.class}),
+  @Argument(allowedTypes = {PInteger.class}),
+  @Argument(allowedTypes = {PVarchar.class}, defaultValue = "' '")})
 public class LpadFunction extends ScalarFunction {
-    public static final String NAME = "LPAD";
 
-    public LpadFunction() {
-    }
+  public static final String NAME = "LPAD";
 
-    public LpadFunction(List<Expression> children) {
-        super(children);
-    }
+  public LpadFunction() {
+  }
 
-    /**
-     * Helper function to get the utf8 length of CHAR or VARCHAR
-     * 
-     * @param ptr
-     *            points to the string
-     * @param sortOrder
-     *            sortOrder of the string
-     * @param isCharType
-     *            whether the string is of char type
-     * @return utf8 length of the string
-     */
-    private int getUTF8Length(ImmutableBytesWritable ptr, SortOrder sortOrder, boolean isCharType) {
-        return isCharType ? ptr.getLength() : StringUtil.calculateUTF8Length(ptr.get(), ptr.getOffset(),
+  public LpadFunction(List<Expression> children) {
+    super(children);
+  }
+
+  /**
+   * Helper function to get the utf8 length of CHAR or VARCHAR
+   *
+   * @param ptr points to the string
+   * @param sortOrder sortOrder of the string
+   * @param isCharType whether the string is of char type
+   * @return utf8 length of the string
+   */
+  private int getUTF8Length(ImmutableBytesWritable ptr, SortOrder sortOrder, boolean isCharType) {
+    return isCharType ? ptr.getLength() : StringUtil.calculateUTF8Length(ptr.get(), ptr.getOffset(),
             ptr.getLength(), sortOrder);
-    }
+  }
 
-    /**
-     * Helper function to get the byte length of a utf8 encoded string
-     * 
-     * @param ptr
-     *            points to the string
-     * @param sortOrder
-     *            sortOrder of the string
-     * @param isCharType
-     *            whether the string is of char type
-     * @return byte length of the string
-     */
-    private int getSubstringByteLength(ImmutableBytesWritable ptr, int length, SortOrder sortOrder, boolean isCharType) {
-        return isCharType ? length : StringUtil.getByteLengthForUtf8SubStr(ptr.get(), ptr.getOffset(), length,
+  /**
+   * Helper function to get the byte length of a utf8 encoded string
+   *
+   * @param ptr points to the string
+   * @param sortOrder sortOrder of the string
+   * @param isCharType whether the string is of char type
+   * @return byte length of the string
+   */
+  private int getSubstringByteLength(ImmutableBytesWritable ptr, int length, SortOrder sortOrder, boolean isCharType) {
+    return isCharType ? length : StringUtil.getByteLengthForUtf8SubStr(ptr.get(), ptr.getOffset(), length,
             sortOrder);
+  }
+
+  /**
+   * Left pads a string with with the given fill expression.
+   */
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression outputStrLenExpr = getOutputStrLenExpr();
+    if (!outputStrLenExpr.evaluate(tuple, ptr)) {
+      return false;
+    }
+    int outputStrLen = outputStrLenExpr.getDataType().getCodec().decodeInt(ptr, outputStrLenExpr.getSortOrder());
+    if (outputStrLen < 0) {
+      return false;
     }
 
-    /**
-     * Left pads a string with with the given fill expression.
-     */
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression outputStrLenExpr = getOutputStrLenExpr();
-        if (!outputStrLenExpr.evaluate(tuple, ptr)) {
-            return false;
-        }
-        int outputStrLen = outputStrLenExpr.getDataType().getCodec().decodeInt(ptr, outputStrLenExpr.getSortOrder());
-        if (outputStrLen < 0) {
-            return false;
-        }
-
-        Expression strExp = getStrExpr();
-        if (!strExp.evaluate(tuple, ptr)) {
-            return false;
-        }
-
-        boolean isStrCharType = getStrExpr().getDataType() == PChar.INSTANCE;
-        boolean isFillCharType = getFillExpr().getDataType() == PChar.INSTANCE;
-        SortOrder strSortOrder = getStrExpr().getSortOrder();
-        SortOrder fillSortOrder = getFillExpr().getSortOrder();
-        int inputStrLen = getUTF8Length(ptr, strSortOrder, isStrCharType);
-
-        if (outputStrLen == inputStrLen) {
-            // nothing to do
-            return true;
-        }
-        if (outputStrLen < inputStrLen) {
-            // truncate the string from the right
-            int subStrByteLength = getSubstringByteLength(ptr, outputStrLen, strSortOrder, isStrCharType);
-            ptr.set(ptr.get(), ptr.getOffset(), subStrByteLength);
-            return true;
-        }
-
-        // left pad the input string with the fill chars
-        Expression fillExpr = getFillExpr();
-        ImmutableBytesWritable fillPtr = new ImmutableBytesWritable();
-        if (!fillExpr.evaluate(tuple, fillPtr)) {
-            return false;
-        }
-        int fillExprLen = fillPtr.getLength();
-        if (fillExprLen < 1) {
-            // return if fill is empty
-            return false;
-        }
-
-        // if the padding to be added is not a multiple of the length of the
-        // fill string then we need to use part of the fill string to pad
-        // LPAD(ab, 5, xy) = xyxab
-        // padLen = 3
-        // numFillsPrepended = 1
-        // numFillCharsPrepended = 1
-
-        // length of the fill string
-        int fillLen = getUTF8Length(fillPtr, fillSortOrder, isFillCharType);
-        // length of padding to be added
-        int padLen = outputStrLen - inputStrLen;
-        // number of fill strings to be prepended
-        int numFillsPrepended = padLen / fillLen;
-        // number of chars from fill string to be prepended
-        int numFillCharsPrepended = padLen % fillLen;
-
-        // byte length of the input string
-        int strByteLength = getSubstringByteLength(ptr, ptr.getLength(), strSortOrder, isStrCharType);
-        // byte length of the fill string
-        int fillByteLength = getSubstringByteLength(fillPtr, fillPtr.getLength(), fillSortOrder, isFillCharType);
-        // byte length of the full fills to be prepended
-        int fullFillsByteLength = numFillsPrepended * fillByteLength;
-        // byte length of the chars of fill string to be prepended
-        int fillCharsByteLength = getSubstringByteLength(fillPtr, numFillCharsPrepended, fillSortOrder, isFillCharType);
-        // byte length of the padded string =
-        int strWithPaddingByteLength = fullFillsByteLength + fillCharsByteLength + strByteLength;
-
-        // need to invert the fill string if the sort order of fill and
-        // input are different
-        boolean invertFill = fillSortOrder != strSortOrder;
-        byte[] paddedStr =
-            StringUtil.lpad(ptr.get(), ptr.getOffset(), ptr.getLength(), fillPtr.get(), fillPtr.getOffset(),
-                fillPtr.getLength(), invertFill, strWithPaddingByteLength);
-        ptr.set(paddedStr);
-        return true;
+    Expression strExp = getStrExpr();
+    if (!strExp.evaluate(tuple, ptr)) {
+      return false;
     }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
+    boolean isStrCharType = getStrExpr().getDataType() == PChar.INSTANCE;
+    boolean isFillCharType = getFillExpr().getDataType() == PChar.INSTANCE;
+    SortOrder strSortOrder = getStrExpr().getSortOrder();
+    SortOrder fillSortOrder = getFillExpr().getSortOrder();
+    int inputStrLen = getUTF8Length(ptr, strSortOrder, isStrCharType);
+
+    if (outputStrLen == inputStrLen) {
+      // nothing to do
+      return true;
+    }
+    if (outputStrLen < inputStrLen) {
+      // truncate the string from the right
+      int subStrByteLength = getSubstringByteLength(ptr, outputStrLen, strSortOrder, isStrCharType);
+      ptr.set(ptr.get(), ptr.getOffset(), subStrByteLength);
+      return true;
     }
 
-    @Override
-    public String getName() {
-        return NAME;
+    // left pad the input string with the fill chars
+    Expression fillExpr = getFillExpr();
+    ImmutableBytesWritable fillPtr = new ImmutableBytesWritable();
+    if (!fillExpr.evaluate(tuple, fillPtr)) {
+      return false;
+    }
+    int fillExprLen = fillPtr.getLength();
+    if (fillExprLen < 1) {
+      // return if fill is empty
+      return false;
     }
 
-    @Override
-    public SortOrder getSortOrder() {
-        return getStrExpr().getSortOrder();
-    }
+    // if the padding to be added is not a multiple of the length of the
+    // fill string then we need to use part of the fill string to pad
+    // LPAD(ab, 5, xy) = xyxab
+    // padLen = 3
+    // numFillsPrepended = 1
+    // numFillCharsPrepended = 1
+    // length of the fill string
+    int fillLen = getUTF8Length(fillPtr, fillSortOrder, isFillCharType);
+    // length of padding to be added
+    int padLen = outputStrLen - inputStrLen;
+    // number of fill strings to be prepended
+    int numFillsPrepended = padLen / fillLen;
+    // number of chars from fill string to be prepended
+    int numFillCharsPrepended = padLen % fillLen;
 
-    private Expression getStrExpr() {
-        return children.get(0);
-    }
+    // byte length of the input string
+    int strByteLength = getSubstringByteLength(ptr, ptr.getLength(), strSortOrder, isStrCharType);
+    // byte length of the fill string
+    int fillByteLength = getSubstringByteLength(fillPtr, fillPtr.getLength(), fillSortOrder, isFillCharType);
+    // byte length of the full fills to be prepended
+    int fullFillsByteLength = numFillsPrepended * fillByteLength;
+    // byte length of the chars of fill string to be prepended
+    int fillCharsByteLength = getSubstringByteLength(fillPtr, numFillCharsPrepended, fillSortOrder, isFillCharType);
+    // byte length of the padded string =
+    int strWithPaddingByteLength = fullFillsByteLength + fillCharsByteLength + strByteLength;
 
-    private Expression getFillExpr() {
-        return children.get(2);
-    }
+    // need to invert the fill string if the sort order of fill and
+    // input are different
+    boolean invertFill = fillSortOrder != strSortOrder;
+    byte[] paddedStr
+            = StringUtil.lpad(ptr.get(), ptr.getOffset(), ptr.getLength(), fillPtr.get(), fillPtr.getOffset(),
+                    fillPtr.getLength(), invertFill, strWithPaddingByteLength);
+    ptr.set(paddedStr);
+    return true;
+  }
 
-    private Expression getOutputStrLenExpr() {
-        return children.get(1);
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return getStrExpr().getSortOrder();
+  }
+
+  private Expression getStrExpr() {
+    return children.get(0);
+  }
+
+  private Expression getFillExpr() {
+    return children.get(2);
+  }
+
+  private Expression getOutputStrLenExpr() {
+    return children.get(1);
+  }
 
 }

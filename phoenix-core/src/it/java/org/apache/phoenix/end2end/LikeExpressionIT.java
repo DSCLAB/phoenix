@@ -33,56 +33,57 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LikeExpressionIT extends BaseHBaseManagedTimeIT {
-    @Before
-    public void doBeforeTestSetup() throws Exception {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DriverManager.getConnection(getUrl());
-            String ddl;
-            ddl = "CREATE TABLE testTable (k VARCHAR NOT NULL PRIMARY KEY, i INTEGER)";
-            conn.createStatement().execute(ddl);
-            conn.commit();
-        } finally {
-            closeStmtAndConn(stmt, conn);
-        }
-        insertRow(conn, "123n7-app-2-", 1);
-        insertRow(conn, "132n7-App-2-", 2);
-        insertRow(conn, "213n7-app-2-", 4);
-        insertRow(conn, "231n7-App-2-", 8);
-        insertRow(conn, "312n7-app-2-", 16);
-        insertRow(conn, "321n7-App-2-", 32);
-    }
 
-    private void insertRow(Connection conn, String k, int i) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("UPSERT INTO testTable VALUES (?, ?)");
-        stmt.setString(1, k);
-        stmt.setInt(2, i);
-        stmt.executeUpdate();
-        conn.commit();
+  @Before
+  public void doBeforeTestSetup() throws Exception {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+      conn = DriverManager.getConnection(getUrl());
+      String ddl;
+      ddl = "CREATE TABLE testTable (k VARCHAR NOT NULL PRIMARY KEY, i INTEGER)";
+      conn.createStatement().execute(ddl);
+      conn.commit();
+    } finally {
+      closeStmtAndConn(stmt, conn);
     }
+    insertRow(conn, "123n7-app-2-", 1);
+    insertRow(conn, "132n7-App-2-", 2);
+    insertRow(conn, "213n7-app-2-", 4);
+    insertRow(conn, "231n7-App-2-", 8);
+    insertRow(conn, "312n7-app-2-", 16);
+    insertRow(conn, "321n7-App-2-", 32);
+  }
 
-    private void testLikeExpression(Connection conn, String likeStr, int numResult, int expectedSum)
-            throws Exception {
-        String cmd = "select k, i from testTable where k like '" + likeStr + "'";
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(cmd);
-        int sum = 0;
-        for (int i = 0; i < numResult; ++i) {
-            assertTrue(rs.next());
-            sum += rs.getInt("i");
-        }
-        assertFalse(rs.next());
-        assertEquals(sum, expectedSum);
-    }
+  private void insertRow(Connection conn, String k, int i) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement("UPSERT INTO testTable VALUES (?, ?)");
+    stmt.setString(1, k);
+    stmt.setInt(2, i);
+    stmt.executeUpdate();
+    conn.commit();
+  }
 
-    @Test
-    public void testLikeExpression() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        // wildcard
-        testLikeExpression(conn, "%1%3%7%2%", 3, 7);
-        // CaseSensitive
-        testLikeExpression(conn, "%A%", 3, 42);
-        conn.close();
+  private void testLikeExpression(Connection conn, String likeStr, int numResult, int expectedSum)
+          throws Exception {
+    String cmd = "select k, i from testTable where k like '" + likeStr + "'";
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery(cmd);
+    int sum = 0;
+    for (int i = 0; i < numResult; ++i) {
+      assertTrue(rs.next());
+      sum += rs.getInt("i");
     }
+    assertFalse(rs.next());
+    assertEquals(sum, expectedSum);
+  }
+
+  @Test
+  public void testLikeExpression() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    // wildcard
+    testLikeExpression(conn, "%1%3%7%2%", 3, 7);
+    // CaseSensitive
+    testLikeExpression(conn, "%A%", 3, 42);
+    conn.close();
+  }
 }

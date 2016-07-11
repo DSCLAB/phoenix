@@ -49,9 +49,10 @@ public class CapturingAbortable implements Abortable {
   }
 
   /**
-   * Throw the cause of the abort, if <tt>this</tt> was aborted. If there was an exception causing
-   * the abort, re-throws that. Otherwise, just throws a generic {@link Exception} with the reason
-   * why the abort was caused.
+   * Throw the cause of the abort, if <tt>this</tt> was aborted. If there was an
+   * exception causing the abort, re-throws that. Otherwise, just throws a
+   * generic {@link Exception} with the reason why the abort was caused.
+   *
    * @throws Throwable the cause of the abort.
    */
   public void throwCauseIfAborted() throws Throwable {

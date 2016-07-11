@@ -52,11 +52,11 @@ public class PUnsignedTimestamp extends PDataType<Timestamp> {
     java.sql.Timestamp value = (java.sql.Timestamp) object;
     PUnsignedDate.INSTANCE.getCodec().encodeLong(value.getTime(), bytes, offset);
 
-            /*
+    /*
              * By not getting the stuff that got spilled over from the millis part,
              * it leaves the timestamp's byte representation saner - 8 bytes of millis | 4 bytes of nanos.
              * Also, it enables timestamp bytes to be directly compared with date/time bytes.
-             */
+     */
     Bytes.putInt(bytes, offset + Bytes.SIZEOF_LONG, value.getNanos() % 1000000);
     return getByteSize();
   }
@@ -70,9 +70,9 @@ public class PUnsignedTimestamp extends PDataType<Timestamp> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
-    java.sql.Timestamp ts =
-        (java.sql.Timestamp) PTimestamp.INSTANCE.toObject(b, o, l, actualType, sortOrder);
+          Integer maxLength, Integer scale) {
+    java.sql.Timestamp ts
+            = (java.sql.Timestamp) PTimestamp.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeDate(ts);
     return ts;
   }
@@ -90,7 +90,7 @@ public class PUnsignedTimestamp extends PDataType<Timestamp> {
   @Override
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     return super.isCoercibleTo(targetType, value) || PTimestamp.INSTANCE
-        .isCoercibleTo(targetType, value);
+            .isCoercibleTo(targetType, value);
   }
 
   @Override
@@ -124,14 +124,14 @@ public class PUnsignedTimestamp extends PDataType<Timestamp> {
   @Override
   public int getNanos(ImmutableBytesWritable ptr, SortOrder sortOrder) {
     int nanos = PUnsignedInt.INSTANCE.getCodec()
-        .decodeInt(ptr.get(), ptr.getOffset() + PLong.INSTANCE.getByteSize(), sortOrder);
+            .decodeInt(ptr.get(), ptr.getOffset() + PLong.INSTANCE.getByteSize(), sortOrder);
     return nanos;
   }
 
   @Override
   public long getMillis(ImmutableBytesWritable ptr, SortOrder sortOrder) {
-    long millis =
-        PUnsignedLong.INSTANCE.getCodec().decodeLong(ptr.get(), ptr.getOffset(), sortOrder);
+    long millis
+            = PUnsignedLong.INSTANCE.getCodec().decodeLong(ptr.get(), ptr.getOffset(), sortOrder);
     return millis;
   }
 
@@ -143,6 +143,6 @@ public class PUnsignedTimestamp extends PDataType<Timestamp> {
   @Override
   public Object getSampleValue(Integer maxLength, Integer arrayLength) {
     return new java.sql.Timestamp(
-        (Long) PUnsignedLong.INSTANCE.getSampleValue(maxLength, arrayLength));
+            (Long) PUnsignedLong.INSTANCE.getSampleValue(maxLength, arrayLength));
   }
 }

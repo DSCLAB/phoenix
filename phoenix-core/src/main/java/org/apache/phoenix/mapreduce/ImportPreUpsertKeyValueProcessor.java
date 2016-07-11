@@ -22,26 +22,27 @@ import org.apache.hadoop.hbase.KeyValue;
 import java.util.List;
 
 /**
- * A listener hook to process KeyValues that are being written to HFiles for bulk import.
- * Implementing this interface and configuring it via the {@link
+ * A listener hook to process KeyValues that are being written to HFiles for
+ * bulk import. Implementing this interface and configuring it via the {@link
  * CsvToKeyValueMapper#UPSERT_HOOK_CLASS_CONFKEY} configuration key.
  * <p/>
- * The intention of such a hook is to allow coproccessor-style operations to be peformed on
- * data that is being bulk-loaded via MapReduce.
+ * The intention of such a hook is to allow coproccessor-style operations to be
+ * peformed on data that is being bulk-loaded via MapReduce.
  */
 public interface ImportPreUpsertKeyValueProcessor {
 
-    /**
-     * Process a list of KeyValues before they are written to an HFile. The supplied list of
-     * KeyValues contain all data that is to be written for a single Phoenix row.
-     * <p/>
-     * Implementors can filter certain KeyValues from the list, augment the list, or return the
-     * same list.
-     *
-     * @param rowKey the row key for the key values that are being passed in
-     * @param keyValues list of KeyValues that are to be written to an HFile
-     * @return the list that will actually be written
-     */
-    List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues);
+  /**
+   * Process a list of KeyValues before they are written to an HFile. The
+   * supplied list of KeyValues contain all data that is to be written for a
+   * single Phoenix row.
+   * <p/>
+   * Implementors can filter certain KeyValues from the list, augment the list,
+   * or return the same list.
+   *
+   * @param rowKey the row key for the key values that are being passed in
+   * @param keyValues list of KeyValues that are to be written to an HFile
+   * @return the list that will actually be written
+   */
+  List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues);
 
 }

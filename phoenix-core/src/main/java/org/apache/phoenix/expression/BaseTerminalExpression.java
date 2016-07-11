@@ -20,18 +20,17 @@ package org.apache.phoenix.expression;
 import java.util.Collections;
 import java.util.List;
 
-
-
 /**
- * 
+ *
  * Grouping class for expression that have no expression children
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class BaseTerminalExpression extends BaseExpression {
-    @Override
-    public List<Expression> getChildren() {
-        return Collections.emptyList();
-    }
+
+  @Override
+  public List<Expression> getChildren() {
+    return Collections.emptyList();
+  }
 }

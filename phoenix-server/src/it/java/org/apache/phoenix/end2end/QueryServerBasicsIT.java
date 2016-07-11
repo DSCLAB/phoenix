@@ -59,7 +59,7 @@ public class QueryServerBasicsIT extends BaseHBaseManagedTimeIT {
     CONF = getTestClusterConfig();
     CONF.setInt(Main.QUERY_SERVER_HTTP_PORT_KEY, 0);
     String url = getUrl();
-    AVATICA_SERVER = new QueryServerThread(new String[] { url }, CONF,
+    AVATICA_SERVER = new QueryServerThread(new String[]{url}, CONF,
             QueryServerBasicsIT.class.getName());
     AVATICA_SERVER.start();
     AVATICA_SERVER.getMain().awaitRunning();
@@ -106,7 +106,9 @@ public class QueryServerBasicsIT extends BaseHBaseManagedTimeIT {
         assertEquals(TABLE_CATALOG, metaData.getColumnName(2));
         boolean containsSystem = false;
         do {
-          if (resultSet.getString(1).equalsIgnoreCase(SYSTEM_SCHEMA_NAME)) containsSystem = true;
+          if (resultSet.getString(1).equalsIgnoreCase(SYSTEM_SCHEMA_NAME)) {
+            containsSystem = true;
+          }
         } while (resultSet.next());
         assertTrue(format("should contain at least %s schema.", SYSTEM_SCHEMA_NAME), containsSystem);
       }
@@ -122,9 +124,9 @@ public class QueryServerBasicsIT extends BaseHBaseManagedTimeIT {
       try (final Statement stmt = connection.createStatement()) {
         assertFalse(stmt.execute("DROP TABLE IF EXISTS " + tableName));
         assertFalse(stmt.execute("CREATE TABLE " + tableName + "("
-            + "id INTEGER NOT NULL, "
-            + "pk varchar(3) NOT NULL "
-            + "CONSTRAINT PK_CONSTRAINT PRIMARY KEY (id, pk))"));
+                + "id INTEGER NOT NULL, "
+                + "pk varchar(3) NOT NULL "
+                + "CONSTRAINT PK_CONSTRAINT PRIMARY KEY (id, pk))"));
         assertEquals(0, stmt.getUpdateCount());
         assertEquals(1, stmt.executeUpdate("UPSERT INTO " + tableName + " VALUES(1, 'foo')"));
         assertEquals(1, stmt.executeUpdate("UPSERT INTO " + tableName + " VALUES(2, 'bar')"));

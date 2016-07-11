@@ -31,76 +31,78 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ByteUtil;
 import org.apache.phoenix.util.StringUtil;
 
-
 /**
- * Implementation of the Trim(<string>) build-in function. It removes from both end of <string>
+ * Implementation of the Trim(<string>) build-in function. It removes from both
+ * end of <string>
  * space character and other function bytes in single byte utf8 characters set.
- * 
- * 
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=TrimFunction.NAME, args={
-    @Argument(allowedTypes={ PVarchar.class })} )
+@BuiltInFunction(name = TrimFunction.NAME, args = {
+  @Argument(allowedTypes = {PVarchar.class})})
 public class TrimFunction extends ScalarFunction {
-    public static final String NAME = "TRIM";
 
-    private Integer maxLength;
+  public static final String NAME = "TRIM";
 
-    public TrimFunction() { }
+  private Integer maxLength;
 
-    public TrimFunction(List<Expression> children) throws SQLException {
-        super(children);
-        if (getStringExpression().getDataType().isFixedWidth()) {
-            maxLength = getStringExpression().getMaxLength();
-        }
+  public TrimFunction() {
+  }
+
+  public TrimFunction(List<Expression> children) throws SQLException {
+    super(children);
+    if (getStringExpression().getDataType().isFixedWidth()) {
+      maxLength = getStringExpression().getMaxLength();
     }
+  }
 
-    private Expression getStringExpression() {
-        return children.get(0);
+  private Expression getStringExpression() {
+    return children.get(0);
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return children.get(0).getSortOrder();
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!getStringExpression().evaluate(tuple, ptr)) {
+      return false;
     }
-
-    @Override
-    public SortOrder getSortOrder() {
-        return children.get(0).getSortOrder();
-    }    
-
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!getStringExpression().evaluate(tuple, ptr)) {
-            return false;
-        }
-        if (ptr.getLength() == 0) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-            return true;
-        }
-        byte[] string = ptr.get();
-        int offset = ptr.getOffset();
-        int length = ptr.getLength();
-        
-        SortOrder sortOrder = getSortOrder();
-        int end = StringUtil.getFirstNonBlankCharIdxFromEnd(string, offset, length, sortOrder);
-        if (end == offset - 1) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-            return true; 
-        }
-        int head = StringUtil.getFirstNonBlankCharIdxFromStart(string, offset, length, sortOrder);
-        ptr.set(string, head, end - head + 1);
-        return true;
+    if (ptr.getLength() == 0) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+      return true;
     }
+    byte[] string = ptr.get();
+    int offset = ptr.getOffset();
+    int length = ptr.getLength();
 
-    @Override
-    public Integer getMaxLength() {
-        return maxLength;
+    SortOrder sortOrder = getSortOrder();
+    int end = StringUtil.getFirstNonBlankCharIdxFromEnd(string, offset, length, sortOrder);
+    if (end == offset - 1) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+      return true;
     }
+    int head = StringUtil.getFirstNonBlankCharIdxFromStart(string, offset, length, sortOrder);
+    ptr.set(string, head, end - head + 1);
+    return true;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
-    }
+  @Override
+  public Integer getMaxLength() {
+    return maxLength;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
 }

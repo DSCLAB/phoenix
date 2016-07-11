@@ -22,39 +22,39 @@ import java.sql.SQLException;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 /**
- * 
+ *
  * Exception thrown when a column already exists.
  *
- * 
+ *
  * @since 0.1
  */
 public class ColumnAlreadyExistsException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.COLUMN_EXIST_IN_DEF;
-    private final String schemaName;
-    private final String tableName;
-    private final String columnName;
 
-    public ColumnAlreadyExistsException(String schemaName, String tableName, String columnName) {
-        super(new SQLExceptionInfo.Builder(code).setColumnName(columnName)
-                .setSchemaName(schemaName).setTableName(tableName).build().toString(),
-                code.getSQLState(), code.getErrorCode(), null);
-        this.schemaName = schemaName;
-        this.tableName = tableName;
-        this.columnName = columnName;
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.COLUMN_EXIST_IN_DEF;
+  private final String schemaName;
+  private final String tableName;
+  private final String columnName;
 
-    public String getTableName() {
-        return tableName;
-    }
+  public ColumnAlreadyExistsException(String schemaName, String tableName, String columnName) {
+    super(new SQLExceptionInfo.Builder(code).setColumnName(columnName)
+            .setSchemaName(schemaName).setTableName(tableName).build().toString(),
+            code.getSQLState(), code.getErrorCode(), null);
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+    this.columnName = columnName;
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  public String getTableName() {
+    return tableName;
+  }
 
-    public String getColumnName() {
-        return columnName;
-    }
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public String getColumnName() {
+    return columnName;
+  }
 }

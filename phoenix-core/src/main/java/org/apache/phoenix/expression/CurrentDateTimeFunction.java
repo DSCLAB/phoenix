@@ -23,20 +23,20 @@ import org.apache.phoenix.expression.function.ScalarFunction;
 
 public abstract class CurrentDateTimeFunction extends ScalarFunction {
 
-    public CurrentDateTimeFunction() {
-    }
+  public CurrentDateTimeFunction() {
+  }
 
-    public CurrentDateTimeFunction(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public boolean isStateless() {
-        return true;
-    }
+  public CurrentDateTimeFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public Determinism getDeterminism() {
-        return Determinism.PER_STATEMENT;
-    }
+  @Override
+  public boolean isStateless() {
+    return true;
+  }
+
+  @Override
+  public Determinism getDeterminism() {
+    return Determinism.PER_STATEMENT;
+  }
 }

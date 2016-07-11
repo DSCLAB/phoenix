@@ -54,118 +54,114 @@ import com.google.common.collect.Maps;
 
 @RunWith(Parameterized.class)
 public class HashJoinLocalIndexIT extends BaseHBaseManagedTimeIT {
-    
-    private String[] indexDDL;
-    private String[] plans;
-    
-    public HashJoinLocalIndexIT(String[] indexDDL, String[] plans) {
-        this.indexDDL = indexDDL;
-        this.plans = plans;
-    }
-    
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(3);
-        // Forces server cache to be used
-        props.put(QueryServices.INDEX_MUTATE_BATCH_SIZE_THRESHOLD_ATTRIB, Integer.toString(2));
-        // Must update config before starting server
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-    
-    @Before
-    public void initTable() throws Exception {
-        initJoinTableValues(getUrl(), null, null);
-        if (indexDDL != null && indexDDL.length > 0) {
-            Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-            Connection conn = DriverManager.getConnection(getUrl(), props);
-            for (String ddl : indexDDL) {
-                try {
-                    conn.createStatement().execute(ddl);
-                } catch (TableAlreadyExistsException e) {
-                }
-            }
-            conn.close();
-        }
-    }
-    
-    @Parameters
-    public static Collection<Object> data() {
-        List<Object> testCases = Lists.newArrayList();
-        testCases.add(new String[][] {
-                {
-                "CREATE LOCAL INDEX \"idx_customer\" ON " + JOIN_CUSTOMER_TABLE_FULL_NAME + " (name)",
-                "CREATE LOCAL INDEX \"idx_item\" ON " + JOIN_ITEM_TABLE_FULL_NAME + " (name)",
-                "CREATE LOCAL INDEX \"idx_supplier\" ON " + JOIN_SUPPLIER_TABLE_FULL_NAME + " (name)"
-                }, {
-                "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,'S1']\n" +
-                "    SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "CLIENT MERGE SORT\n" +
-                "    PARALLEL INNER-JOIN TABLE 0\n" +
-                "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n" +
-                "            SERVER FILTER BY FIRST KEY ONLY\n" +
-                "        CLIENT MERGE SORT\n" +
-                "    DYNAMIC SERVER FILTER BY \"S.:supplier_id\" IN (\"I.supplier_id\")",
-                
-                "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,'S1']\n" +
-                "    SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "    SERVER AGGREGATE INTO DISTINCT ROWS BY [\"S.PHONE\"]\n" +
-                "CLIENT MERGE SORT\n" +
-                "    PARALLEL INNER-JOIN TABLE 0\n" +
-                "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n" +
-                "            SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "        CLIENT MERGE SORT\n" +
-                "    DYNAMIC SERVER FILTER BY \"S.:supplier_id\" IN (\"I.supplier_id\")",
-                
-                "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'S3']\n" +
-                "    SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "    SERVER AGGREGATE INTO SINGLE ROW\n" +
-                "    PARALLEL LEFT-JOIN TABLE 0\n" +
-                "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n" +
-                "            SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "        CLIENT MERGE SORT",
-                }});
-        return testCases;
-    }
-    
 
-    @Test
-    public void testJoinWithLocalIndex() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {            
-            String query = "select phone, i.name from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" where s.name = 'S1' and i.name < 'T6'";
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue (rs.next());
-            assertEquals(rs.getString(1), "888-888-1111");
-            assertTrue (rs.next());
-            assertEquals(rs.getString(1), "888-888-1111");
-            assertFalse(rs.next());
-            rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-            assertEquals(plans[0], QueryUtil.getExplainPlan(rs));
-            
-            query = "select phone, max(i.name) from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" where s.name = 'S1' and i.name < 'T6' group by phone";
-            statement = conn.prepareStatement(query);
-            rs = statement.executeQuery();
-            assertTrue (rs.next());
-            assertEquals(rs.getString(1), "888-888-1111");
-            assertEquals(rs.getString(2), "T2");
-            assertFalse(rs.next());
-            rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-            assertEquals(plans[1], QueryUtil.getExplainPlan(rs));
-            
-            query = "select max(phone), max(i.name) from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s left join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" and i.name < 'T6' where s.name <= 'S3'";
-            statement = conn.prepareStatement(query);
-            rs = statement.executeQuery();
-            assertTrue (rs.next());
-            assertEquals(rs.getString(1), "888-888-3333");
-            assertEquals(rs.getString(2), "T4");
-            assertFalse(rs.next());
-            rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-            assertEquals(plans[2], QueryUtil.getExplainPlan(rs));
-        } finally {
-            conn.close();
+  private String[] indexDDL;
+  private String[] plans;
+
+  public HashJoinLocalIndexIT(String[] indexDDL, String[] plans) {
+    this.indexDDL = indexDDL;
+    this.plans = plans;
+  }
+
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(3);
+    // Forces server cache to be used
+    props.put(QueryServices.INDEX_MUTATE_BATCH_SIZE_THRESHOLD_ATTRIB, Integer.toString(2));
+    // Must update config before starting server
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
+
+  @Before
+  public void initTable() throws Exception {
+    initJoinTableValues(getUrl(), null, null);
+    if (indexDDL != null && indexDDL.length > 0) {
+      Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+      Connection conn = DriverManager.getConnection(getUrl(), props);
+      for (String ddl : indexDDL) {
+        try {
+          conn.createStatement().execute(ddl);
+        } catch (TableAlreadyExistsException e) {
         }
+      }
+      conn.close();
     }
+  }
+
+  @Parameters
+  public static Collection<Object> data() {
+    List<Object> testCases = Lists.newArrayList();
+    testCases.add(new String[][]{
+      {
+        "CREATE LOCAL INDEX \"idx_customer\" ON " + JOIN_CUSTOMER_TABLE_FULL_NAME + " (name)",
+        "CREATE LOCAL INDEX \"idx_item\" ON " + JOIN_ITEM_TABLE_FULL_NAME + " (name)",
+        "CREATE LOCAL INDEX \"idx_supplier\" ON " + JOIN_SUPPLIER_TABLE_FULL_NAME + " (name)"
+      }, {
+        "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,'S1']\n"
+        + "    SERVER FILTER BY FIRST KEY ONLY\n"
+        + "CLIENT MERGE SORT\n"
+        + "    PARALLEL INNER-JOIN TABLE 0\n"
+        + "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n"
+        + "            SERVER FILTER BY FIRST KEY ONLY\n"
+        + "        CLIENT MERGE SORT\n"
+        + "    DYNAMIC SERVER FILTER BY \"S.:supplier_id\" IN (\"I.supplier_id\")",
+        "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,'S1']\n"
+        + "    SERVER FILTER BY FIRST KEY ONLY\n"
+        + "    SERVER AGGREGATE INTO DISTINCT ROWS BY [\"S.PHONE\"]\n"
+        + "CLIENT MERGE SORT\n"
+        + "    PARALLEL INNER-JOIN TABLE 0\n"
+        + "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n"
+        + "            SERVER FILTER BY FIRST KEY ONLY\n"
+        + "        CLIENT MERGE SORT\n"
+        + "    DYNAMIC SERVER FILTER BY \"S.:supplier_id\" IN (\"I.supplier_id\")",
+        "CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_SUPPLIER_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'S3']\n"
+        + "    SERVER FILTER BY FIRST KEY ONLY\n"
+        + "    SERVER AGGREGATE INTO SINGLE ROW\n"
+        + "    PARALLEL LEFT-JOIN TABLE 0\n"
+        + "        CLIENT PARALLEL 1-WAY RANGE SCAN OVER " + MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX + JOIN_ITEM_TABLE_DISPLAY_NAME + " [-32768,*] - [-32768,'T6']\n"
+        + "            SERVER FILTER BY FIRST KEY ONLY\n"
+        + "        CLIENT MERGE SORT",}});
+    return testCases;
+  }
+
+  @Test
+  public void testJoinWithLocalIndex() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      String query = "select phone, i.name from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" where s.name = 'S1' and i.name < 'T6'";
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(rs.getString(1), "888-888-1111");
+      assertTrue(rs.next());
+      assertEquals(rs.getString(1), "888-888-1111");
+      assertFalse(rs.next());
+      rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+      assertEquals(plans[0], QueryUtil.getExplainPlan(rs));
+
+      query = "select phone, max(i.name) from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" where s.name = 'S1' and i.name < 'T6' group by phone";
+      statement = conn.prepareStatement(query);
+      rs = statement.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(rs.getString(1), "888-888-1111");
+      assertEquals(rs.getString(2), "T2");
+      assertFalse(rs.next());
+      rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+      assertEquals(plans[1], QueryUtil.getExplainPlan(rs));
+
+      query = "select max(phone), max(i.name) from " + JOIN_SUPPLIER_TABLE_FULL_NAME + " s left join " + JOIN_ITEM_TABLE_FULL_NAME + " i on s.\"supplier_id\" = i.\"supplier_id\" and i.name < 'T6' where s.name <= 'S3'";
+      statement = conn.prepareStatement(query);
+      rs = statement.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(rs.getString(1), "888-888-3333");
+      assertEquals(rs.getString(2), "T4");
+      assertFalse(rs.next());
+      rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+      assertEquals(plans[2], QueryUtil.getExplainPlan(rs));
+    } finally {
+      conn.close();
+    }
+  }
 }

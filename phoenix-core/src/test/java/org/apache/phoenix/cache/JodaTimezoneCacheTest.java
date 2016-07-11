@@ -27,27 +27,27 @@ import org.junit.Test;
 
 public class JodaTimezoneCacheTest {
 
-    @Test
-    public void testGetInstanceByteBufferUTC() {
-        DateTimeZone instance = JodaTimezoneCache.getInstance(ByteBuffer.wrap(Bytes.toBytes("UTC")));
-        assertNotNull(instance);
-    }
+  @Test
+  public void testGetInstanceByteBufferUTC() {
+    DateTimeZone instance = JodaTimezoneCache.getInstance(ByteBuffer.wrap(Bytes.toBytes("UTC")));
+    assertNotNull(instance);
+  }
 
-    @Test
-    public void testGetInstanceString() {
-        DateTimeZone instance = JodaTimezoneCache.getInstance("America/St_Vincent");
-        assertNotNull(instance);
-    }
+  @Test
+  public void testGetInstanceString() {
+    DateTimeZone instance = JodaTimezoneCache.getInstance("America/St_Vincent");
+    assertNotNull(instance);
+  }
 
-    @Test(expected = IllegalDataException.class)
-    public void testGetInstanceStringUnknown() {
-        JodaTimezoneCache.getInstance("SOME_UNKNOWN_TIMEZONE");
-    }
+  @Test(expected = IllegalDataException.class)
+  public void testGetInstanceStringUnknown() {
+    JodaTimezoneCache.getInstance("SOME_UNKNOWN_TIMEZONE");
+  }
 
-    @Test
-    public void testGetInstanceImmutableBytesWritable() {
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable(Bytes.toBytes("Europe/Isle_of_Man"));
-        DateTimeZone instance = JodaTimezoneCache.getInstance(ptr);
-        assertNotNull(instance);
-    }
+  @Test
+  public void testGetInstanceImmutableBytesWritable() {
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable(Bytes.toBytes("Europe/Isle_of_Man"));
+    DateTimeZone instance = JodaTimezoneCache.getInstance(ptr);
+    assertNotNull(instance);
+  }
 }

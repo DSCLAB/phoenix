@@ -75,11 +75,11 @@ import org.junit.Test;
 import com.google.common.collect.Multimap;
 
 /**
- * When a regionserver crashes, its WAL is split and then replayed to the server. If the index
- * region was present on the same server, we have to make a best effort to not kill the server for
- * not succeeding on index writes while the index region is coming up.
+ * When a regionserver crashes, its WAL is split and then replayed to the
+ * server. If the index region was present on the same server, we have to make a
+ * best effort to not kill the server for not succeeding on index writes while
+ * the index region is coming up.
  */
-
 public class TestWALRecoveryCaching {
 
   private static final Log LOG = LogFactory.getLog(TestWALRecoveryCaching.class);
@@ -105,7 +105,7 @@ public class TestWALRecoveryCaching {
 
     @Override
     public void preWALRestore(ObserverContext<RegionCoprocessorEnvironment> env, HRegionInfo info,
-        HLogKey logKey, WALEdit logEdit) throws IOException {
+            HLogKey logKey, WALEdit logEdit) throws IOException {
       try {
         LOG.debug("Restoring logs for index table");
         if (allowIndexTableToRecover != null) {
@@ -129,7 +129,7 @@ public class TestWALRecoveryCaching {
 
     @Override
     public void handleFailure(Multimap<HTableInterfaceReference, Mutation> attempted,
-        Exception cause) throws IOException {
+            Exception cause) throws IOException {
       LOG.debug("Found index update failure!");
       if (allowIndexTableToRecover != null) {
         LOG.info("failed index write on WAL recovery - allowing index table to be restored.");
@@ -142,7 +142,7 @@ public class TestWALRecoveryCaching {
 
   //TODO: Jesse to fix
   @SuppressWarnings("deprecation")
-@Ignore("Configuration issue - valid test, just needs fixing")
+  @Ignore("Configuration issue - valid test, just needs fixing")
   @Test
   public void testWaitsOnIndexRegionToReload() throws Exception {
     HBaseTestingUtility util = new HBaseTestingUtility();
@@ -175,7 +175,7 @@ public class TestWALRecoveryCaching {
     primaryTable.addFamily(new HColumnDescriptor(family));
     primaryTable.addFamily(new HColumnDescriptor(nonIndexedFamily));
     builder.addArbitraryConfigForTesting(Indexer.RecoveryFailurePolicyKeyForTesting,
-      ReleaseLatchOnFailurePolicy.class.getName());
+            ReleaseLatchOnFailurePolicy.class.getName());
     builder.build(primaryTable);
     admin.createTable(primaryTable);
 
@@ -185,9 +185,9 @@ public class TestWALRecoveryCaching {
     CoveredColumnIndexer.createIndexTable(admin, indexTableDesc);
 
     // figure out where our tables live
-    ServerName shared =
-        ensureTablesLiveOnSameServer(util.getMiniHBaseCluster(), Bytes.toBytes(indexedTableName),
-          testTable.getTableName());
+    ServerName shared
+            = ensureTablesLiveOnSameServer(util.getMiniHBaseCluster(), Bytes.toBytes(indexedTableName),
+                    testTable.getTableName());
 
     // load some data into the table
     Put p = new Put(Bytes.toBytes("row"));
@@ -203,9 +203,9 @@ public class TestWALRecoveryCaching {
     // find the regionserver that matches the passed server
     List<HRegion> online = new ArrayList<HRegion>();
     online.addAll(getRegionsFromServerForTable(util.getMiniHBaseCluster(), shared,
-      testTable.getTableName()));
+            testTable.getTableName()));
     online.addAll(getRegionsFromServerForTable(util.getMiniHBaseCluster(), shared,
-      Bytes.toBytes(indexedTableName)));
+            Bytes.toBytes(indexedTableName)));
 
     // log all the current state of the server
     LOG.info("Current Server/Region paring: ");
@@ -240,7 +240,7 @@ public class TestWALRecoveryCaching {
 
     // make sure that we actually failed the write once (within a 5 minute window)
     assertTrue("Didn't find an error writing to index table within timeout!",
-      allowIndexTableToRecover.await(ONE_MIN * 5, TimeUnit.MILLISECONDS));
+            allowIndexTableToRecover.await(ONE_MIN * 5, TimeUnit.MILLISECONDS));
 
     // scan the index to make sure it has the one entry, (that had to be replayed from the WAL,
     // since we hard killed the server)
@@ -268,7 +268,7 @@ public class TestWALRecoveryCaching {
    * @return
    */
   private List<HRegion> getRegionsFromServerForTable(MiniHBaseCluster cluster, ServerName server,
-      byte[] table) {
+          byte[] table) {
     List<HRegion> online = Collections.emptyList();
     for (RegionServerThread rst : cluster.getRegionServerThreads()) {
       // if its the server we are going to kill, get the regions we want to reassign
@@ -286,7 +286,7 @@ public class TestWALRecoveryCaching {
    * @param primaryTable
    */
   private ServerName ensureTablesLiveOnSameServer(MiniHBaseCluster cluster, byte[] indexTable,
-      byte[] primaryTable) throws Exception {
+          byte[] primaryTable) throws Exception {
 
     ServerName shared = getSharedServer(cluster, indexTable, primaryTable);
     boolean tryIndex = true;
@@ -340,7 +340,7 @@ public class TestWALRecoveryCaching {
    * @throws Exception
    */
   private ServerName getSharedServer(MiniHBaseCluster cluster, byte[] indexTable,
-      byte[] primaryTable) throws Exception {
+          byte[] primaryTable) throws Exception {
     Set<ServerName> indexServers = getServersForTable(cluster, indexTable);
     Set<ServerName> primaryServers = getServersForTable(cluster, primaryTable);
 
@@ -355,14 +355,14 @@ public class TestWALRecoveryCaching {
         }
       }
       throw new RuntimeException(
-          "Couldn't find a matching server on which both the primary and index table live, "
+              "Couldn't find a matching server on which both the primary and index table live, "
               + "even though they have overlapping server sets");
     }
     return null;
   }
 
   private Set<ServerName> getServersForTable(MiniHBaseCluster cluster, byte[] table)
-      throws Exception {
+          throws Exception {
     List<HRegion> indexRegions = cluster.getRegions(table);
     Set<ServerName> indexServers = new HashSet<ServerName>();
     for (HRegion region : indexRegions) {

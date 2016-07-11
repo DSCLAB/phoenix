@@ -29,7 +29,7 @@ public class PDecimalArray extends PArrayDataType<BigDecimal[]> {
 
   private PDecimalArray() {
     super("DECIMAL ARRAY", PDataType.ARRAY_TYPE_BASE + PDecimal.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 35);
+            PhoenixArray.class, null, 35);
   }
 
   @Override
@@ -64,18 +64,18 @@ public class PDecimalArray extends PArrayDataType<BigDecimal[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PDecimal.INSTANCE, sortOrder, maxLength, scale,
-        PDecimal.INSTANCE);
+            PDecimal.INSTANCE);
   }
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

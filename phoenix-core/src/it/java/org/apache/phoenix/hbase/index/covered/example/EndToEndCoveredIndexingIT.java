@@ -17,7 +17,6 @@
  */
 package org.apache.phoenix.hbase.index.covered.example;
 
-
 import static org.apache.phoenix.query.BaseTest.setUpConfigForMiniCluster;
 
 import java.io.IOException;
@@ -55,12 +54,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
- * Test Covered Column indexing in an 'end-to-end' manner on a minicluster. This covers cases where
- * we manage custom timestamped updates that arrive in and out of order as well as just using the
- * generically timestamped updates.
+ * Test Covered Column indexing in an 'end-to-end' manner on a minicluster. This
+ * covers cases where we manage custom timestamped updates that arrive in and
+ * out of order as well as just using the generically timestamped updates.
  */
 @Category(NeedsOwnMiniClusterTest.class)
 public class EndToEndCoveredIndexingIT {
+
   private static final Log LOG = LogFactory.getLog(EndToEndCoveredIndexingIT.class);
   protected static final HBaseTestingUtility UTIL = new HBaseTestingUtility();
   private static final String FAM_STRING = "FAMILY";
@@ -79,10 +79,10 @@ public class EndToEndCoveredIndexingIT {
   // matches the family2:* columns
   private static final CoveredColumn col2 = new CoveredColumn(FAM2_STRING, null);
   private static final CoveredColumn col3 = new CoveredColumn(FAM2_STRING, indexed_qualifer);
-  
+
   @Rule
   public TableName TestTable = new TableName();
-  
+
   private ColumnGroup fam1;
   private ColumnGroup fam2;
 
@@ -123,8 +123,9 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Test that a bunch of puts with a single timestamp across all the puts builds and inserts index
-   * entries as expected
+   * Test that a bunch of puts with a single timestamp across all the puts
+   * builds and inserts index entries as expected
+   *
    * @throws Exception on failure
    */
   @Test
@@ -156,7 +157,9 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Test that the multiple timestamps in a single put build the correct index updates.
+   * Test that the multiple timestamps in a single put build the correct index
+   * updates.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -198,7 +201,9 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Test that we make updates to multiple {@link ColumnGroup}s across a single put/delete 
+   * Test that we make updates to multiple {@link ColumnGroup}s across a single
+   * put/delete
+   *
    * @throws Exception on failure
    */
   @Test
@@ -236,10 +241,12 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * HBase has a 'fun' property wherein you can completely clobber an existing row if you make a
-   * {@link Put} at the exact same dimension (row, cf, cq, ts) as an existing row. The old row
-   * disappears and the new value (since the rest of the row is the same) completely subsumes it.
-   * This test ensures that we remove the old entry and put a new entry in its place.
+   * HBase has a 'fun' property wherein you can completely clobber an existing
+   * row if you make a {@link Put} at the exact same dimension (row, cf, cq, ts)
+   * as an existing row. The old row disappears and the new value (since the
+   * rest of the row is the same) completely subsumes it. This test ensures that
+   * we remove the old entry and put a new entry in its place.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -280,13 +287,13 @@ public class EndToEndCoveredIndexingIT {
     expected = CoveredColumnIndexCodec.getIndexKeyValueForTesting(row1, ts, pairs);
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts, value3);
     // and verify that a scan at the first entry returns nothing (ignore the updated row)
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue> emptyList(), ts,
-      value1, value2);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue>emptyList(), ts,
+            value1, value2);
 
     // cleanup
     closeAndCleanupTables(primary, index1);
   }
-  
+
   @Test
   public void testSimpleDeletes() throws Exception {
     HTable primary = createSetupTables(fam1);
@@ -303,10 +310,10 @@ public class EndToEndCoveredIndexingIT {
     primary.delete(d);
 
     HTable index = new HTable(UTIL.getConfiguration(), fam1.getTable());
-    List<KeyValue> expected = Collections.<KeyValue> emptyList();
+    List<KeyValue> expected = Collections.<KeyValue>emptyList();
     // scan over all time should cause the delete to be covered
     IndexTestingUtils.verifyIndexTableAtTimestamp(index, expected, 0, Long.MAX_VALUE, value1,
-      HConstants.EMPTY_END_ROW);
+            HConstants.EMPTY_END_ROW);
 
     // scan at the older timestamp should still show the older value
     List<Pair<byte[], CoveredColumn>> pairs = new ArrayList<Pair<byte[], CoveredColumn>>();
@@ -320,9 +327,11 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * If we don't have any updates to make to the index, we don't take a lock on the WAL. However, we
-   * need to make sure that we don't try to unlock the WAL on write time when we don't write
-   * anything, since that will cause an java.lang.IllegalMonitorStateException
+   * If we don't have any updates to make to the index, we don't take a lock on
+   * the WAL. However, we need to make sure that we don't try to unlock the WAL
+   * on write time when we don't write anything, since that will cause an
+   * java.lang.IllegalMonitorStateException
+   *
    * @throws Exception on failure
    */
   @Test
@@ -335,7 +344,7 @@ public class EndToEndCoveredIndexingIT {
     primary.delete(d);
 
     HTable index1 = new HTable(UTIL.getConfiguration(), fam1.getTable());
-    List<KeyValue> expected = Collections.<KeyValue> emptyList();
+    List<KeyValue> expected = Collections.<KeyValue>emptyList();
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts, value1);
 
     // a delete of a specific family/column should also not show any index updates
@@ -362,7 +371,9 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Similar to the {@link #testMultipleTimestampsInSinglePut()}, this check the same with deletes
+   * Similar to the {@link #testMultipleTimestampsInSinglePut()}, this check the
+   * same with deletes
+   *
    * @throws Exception on failure
    */
   @Test
@@ -411,7 +422,7 @@ public class EndToEndCoveredIndexingIT {
     // at ts1, we should have the put covered exactly by the delete and into the entire future
     expected = Collections.emptyList();
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts1, Long.MAX_VALUE, value1,
-      value1);
+            value1);
 
     // at ts2, we should just see value3
     pairs.clear();
@@ -422,19 +433,22 @@ public class EndToEndCoveredIndexingIT {
 
     // the later delete is a point delete, so we shouldn't see any change at ts3
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts2, ts3, value1,
-      HConstants.EMPTY_END_ROW);
+            HConstants.EMPTY_END_ROW);
 
     // cleanup
     closeAndCleanupTables(primary, index1);
   }
 
   /**
-   * Covering deletes (via {@link Delete#deleteColumns}) cover everything back in time from the
-   * given time. If its modifying the latest state, we don't need to do anything but add deletes. If
-   * its modifying back in time state, we need to just fix up the surrounding elements as anything
-   * else ahead of it will be fixed up by later updates.
+   * Covering deletes (via {@link Delete#deleteColumns}) cover everything back
+   * in time from the given time. If its modifying the latest state, we don't
+   * need to do anything but add deletes. If its modifying back in time state,
+   * we need to just fix up the surrounding elements as anything else ahead of
+   * it will be fixed up by later updates.
    * <p>
-   * similar to {@link #testMultipleTimestampsInSingleDelete()}, but with covering deletes.
+   * similar to {@link #testMultipleTimestampsInSingleDelete()}, but with
+   * covering deletes.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -482,11 +496,13 @@ public class EndToEndCoveredIndexingIT {
     // cleanup
     closeAndCleanupTables(primary, index1);
   }
-  
+
   /**
-   * If the client is using custom timestamps is possible that the updates come out-of-order (i.e.
-   * update to ts 10 comes after the update to ts 12). In the case, we need to be sure that the
-   * index is correctly updated when the out of order put arrives.
+   * If the client is using custom timestamps is possible that the updates come
+   * out-of-order (i.e. update to ts 10 comes after the update to ts 12). In the
+   * case, we need to be sure that the index is correctly updated when the out
+   * of order put arrives.
+   *
    * @throws Exception
    */
   @Test
@@ -510,7 +526,7 @@ public class EndToEndCoveredIndexingIT {
 
     // check the first entry at ts
     List<KeyValue> expectedTs1 = CoveredColumnIndexCodec
-        .getIndexKeyValueForTesting(row1, ts, pairs);
+            .getIndexKeyValueForTesting(row1, ts, pairs);
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expectedTs1, ts, value1);
 
     // now make a put back in time
@@ -526,11 +542,11 @@ public class EndToEndCoveredIndexingIT {
 
     // check to make sure the back in time entry exists
     List<KeyValue> expectedTs2 = CoveredColumnIndexCodec.getIndexKeyValueForTesting(row1, ts2,
-      pairs);
+            pairs);
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expectedTs2, ts2, value2);
     // then it should be gone at the newer ts (because it deletes itself)
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue> emptyList(), ts2,
-      ts + 1, value2, HConstants.EMPTY_END_ROW);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue>emptyList(), ts2,
+            ts + 1, value2, HConstants.EMPTY_END_ROW);
 
     // but that the original index entry is still visible at ts, just fine
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expectedTs1, ts, value1);
@@ -540,11 +556,13 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Its possible (i.e. from a fast, frequently writing client) that they put more than the
-   * 'visible' number of versions in a row before a client make a put 'back in time' on that row. If
-   * we don't scan the current table properly, we won't see an index update for that 'back in time'
-   * update since the usual lookup will only see the regular number of versions. This ability to see
-   * back in time depends on running HBase 0.94.9
+   * Its possible (i.e. from a fast, frequently writing client) that they put
+   * more than the 'visible' number of versions in a row before a client make a
+   * put 'back in time' on that row. If we don't scan the current table
+   * properly, we won't see an index update for that 'back in time' update since
+   * the usual lookup will only see the regular number of versions. This ability
+   * to see back in time depends on running HBase 0.94.9
+   *
    * @throws Exception on failure
    */
   @Test
@@ -625,8 +643,8 @@ public class EndToEndCoveredIndexingIT {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index, expected, ts1, value1, value2);
 
     // and value1 should be removed at ts2 (even though it came later)
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue> emptyList(), ts1,
-      ts2 + 1, value1, value2); // timestamp + 1 since its exclusive end timestamp
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue>emptyList(), ts1,
+            ts2 + 1, value1, value2); // timestamp + 1 since its exclusive end timestamp
 
     // late added column should be there just fine at its timestamp
     pairs.clear();
@@ -635,12 +653,11 @@ public class EndToEndCoveredIndexingIT {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index, expected, ts2, value2);
 
     // and check that the late entry also removes its self at the next timestamp up
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue> emptyList(), ts3,
-      value2, value3);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue>emptyList(), ts3,
+            value2, value3);
 
     // then we should have the rest of the inserts at their appropriate timestamps. Everything else
     // should be exactly the same, except we shouldn't see ts0 anymore at ts2
-
     // check the third entry
     pairs.clear();
     pairs.add(new Pair<byte[], CoveredColumn>(value3, col3));
@@ -659,15 +676,17 @@ public class EndToEndCoveredIndexingIT {
     expected = CoveredColumnIndexCodec.getIndexKeyValueForTesting(row1, ts2, pairs);
     IndexTestingUtils.verifyIndexTableAtTimestamp(index, expected, ts2, value2);
     // verify that we remove the entry, even though its too far 'back in time'
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue> emptyList(), ts3,
-      value4);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index, Collections.<KeyValue>emptyList(), ts3,
+            value4);
 
     // cleanup
     closeAndCleanupTables(primary, index);
   }
 
   /**
-   * Similar to {@link #testExceedVersionsOutOfOrderPut()}, but mingles deletes and puts.
+   * Similar to {@link #testExceedVersionsOutOfOrderPut()}, but mingles deletes
+   * and puts.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -676,13 +695,13 @@ public class EndToEndCoveredIndexingIT {
 
     // setup the data to store
     long ts1 = 1, ts2 = 2, ts3 = 3, ts4 = 4, ts5 = 5, ts6 = 6;
-    byte[] value4 = Bytes.toBytes("val4"), value5 = Bytes.toBytes("val5"), value6 =
-        Bytes.toBytes("val6");
+    byte[] value4 = Bytes.toBytes("val4"), value5 = Bytes.toBytes("val5"), value6
+            = Bytes.toBytes("val6");
     // values for the other column to index
-    byte[] v1_1 = ArrayUtils.addAll(value1, Bytes.toBytes("_otherCol")), v3_1 =
-        ArrayUtils.addAll(value3, Bytes.toBytes("_otherCol")), v5_1 =
-        ArrayUtils.addAll(value5, Bytes.toBytes("_otherCol")), v6_1 =
-        ArrayUtils.addAll(value6, Bytes.toBytes("_otherCol"));
+    byte[] v1_1 = ArrayUtils.addAll(value1, Bytes.toBytes("_otherCol")), v3_1
+            = ArrayUtils.addAll(value3, Bytes.toBytes("_otherCol")), v5_1
+            = ArrayUtils.addAll(value5, Bytes.toBytes("_otherCol")), v6_1
+            = ArrayUtils.addAll(value6, Bytes.toBytes("_otherCol"));
 
     // make some puts to the primary table
     Put p = new Put(row1);
@@ -743,8 +762,8 @@ public class EndToEndCoveredIndexingIT {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts1, value1, value2);
 
     // and value1 should be removed at ts2 (even though it came later)
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue> emptyList(), ts1,
-      ts2 + 1, value1, value2); // timestamp + 1 since its exclusive end timestamp
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue>emptyList(), ts1,
+            ts2 + 1, value1, value2); // timestamp + 1 since its exclusive end timestamp
 
     // late added column should be there just fine at its timestamp
     pairs.clear();
@@ -754,13 +773,12 @@ public class EndToEndCoveredIndexingIT {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts2, value2);
 
     // and check that the late entry also removes its self at the next timestamp up
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue> emptyList(), ts3,
-      value2, value3);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue>emptyList(), ts3,
+            value2, value3);
 
     // -----------------------------------------------
     // Check Delete intermingled
     // -----------------------------------------------
-
     // verify that the old row is there
     pairs.clear();
     pairs.add(new Pair<byte[], CoveredColumn>(value3, col1));
@@ -768,7 +786,7 @@ public class EndToEndCoveredIndexingIT {
     expected = CoveredColumnIndexCodec.getIndexKeyValueForTesting(row1, ts3, pairs);
     // scan from the start key forward (should only include [value3][v3_3])
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts3, expected.get(0).getKey(),
-      value4);
+            value4);
 
     // then do a delete of just one of the indexed columns. This should insert a delete for all just
     // the single value, then a put & a later corresponding in the past for the new value
@@ -786,8 +804,8 @@ public class EndToEndCoveredIndexingIT {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts3, value3, value4);
 
     // but we shouldn't find it at ts5 since it should be covered again
-    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue> emptyList(), ts5,
-      value3, value4);
+    IndexTestingUtils.verifyIndexTableAtTimestamp(index1, Collections.<KeyValue>emptyList(), ts5,
+            value3, value4);
 
     // now remove all the older columns in FAM2 at 4
     d = new Delete(row1);
@@ -819,7 +837,6 @@ public class EndToEndCoveredIndexingIT {
     // then we should have the rest of the inserts at their appropriate timestamps. Everything else
     // should be exactly the same, except we shouldn't see ts0 anymore at ts2
     // -----------------------------------------------
-
     // check the entry at 5
     pairs.clear();
     pairs.add(new Pair<byte[], CoveredColumn>(value5, col1));
@@ -839,9 +856,12 @@ public class EndToEndCoveredIndexingIT {
   }
 
   /**
-   * Create the primary table (to which you should write), setup properly for indexing the given
-   * {@link ColumnGroup}s. Also creates the necessary index tables to match the passes groups.
-   * @param groups {@link ColumnGroup}s to index, creating one index table per column group.
+   * Create the primary table (to which you should write), setup properly for
+   * indexing the given {@link ColumnGroup}s. Also creates the necessary index
+   * tables to match the passes groups.
+   *
+   * @param groups {@link ColumnGroup}s to index, creating one index table per
+   * column group.
    * @return reference to the primary table
    * @throws IOException if there is an issue communicating with HBase
    */

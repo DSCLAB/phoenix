@@ -17,11 +17,10 @@
  */
 package org.apache.phoenix.schema.tuple;
 
-
 public abstract class BaseTuple implements Tuple {
 
-    @Override
-    public long getSequenceValue(int index) {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public long getSequenceValue(int index) {
+    throw new UnsupportedOperationException();
+  }
 }

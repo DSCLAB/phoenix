@@ -54,12 +54,12 @@ public class DriverCohabitationTest {
     final String thickUrl = QueryUtil.getUrl("localhost");
     final String thinUrl = ThinClientUtil.getConnectionUrl("localhost", 1234);
     assertTrue("Thick driver should accept connections like " + thickUrl,
-        thickDriver.acceptsURL(thickUrl));
+            thickDriver.acceptsURL(thickUrl));
     assertFalse("Thick driver should reject connections like " + thinUrl,
-        thickDriver.acceptsURL(thinUrl));
+            thickDriver.acceptsURL(thinUrl));
     assertTrue("Thin driver should accept connections like " + thinUrl,
-        thinDriver.acceptsURL(thinUrl));
+            thinDriver.acceptsURL(thinUrl));
     assertFalse("Thin driver should reject connections like " + thickUrl,
-        thinDriver.acceptsURL(thickUrl));
+            thinDriver.acceptsURL(thickUrl));
   }
 }

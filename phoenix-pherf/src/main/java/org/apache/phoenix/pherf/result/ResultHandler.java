@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.result.file.ResultFileDetails;
@@ -23,15 +22,22 @@ import org.apache.phoenix.pherf.result.file.ResultFileDetails;
 import java.util.List;
 
 /**
- * This is a common interface for working with Pherf results in various output formats. Implementations of this
- * interface can deal with particular details for that format while giving callers to output a simple API to report
+ * This is a common interface for working with Pherf results in various output
+ * formats. Implementations of this interface can deal with particular details
+ * for that format while giving callers to output a simple API to report
  * against.
  */
 public interface ResultHandler {
-    public void write(Result result) throws Exception;
-    public void flush() throws Exception;
-    public void close() throws Exception;
-    public List<Result> read() throws Exception;
-    public boolean isClosed();
-    public ResultFileDetails getResultFileDetails();
+
+  public void write(Result result) throws Exception;
+
+  public void flush() throws Exception;
+
+  public void close() throws Exception;
+
+  public List<Result> read() throws Exception;
+
+  public boolean isClosed();
+
+  public ResultFileDetails getResultFileDetails();
 }

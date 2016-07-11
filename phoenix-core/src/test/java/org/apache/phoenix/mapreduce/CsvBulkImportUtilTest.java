@@ -33,42 +33,41 @@ import com.google.common.collect.ImmutableList;
 
 public class CsvBulkImportUtilTest {
 
-    @Test
-    public void testInitCsvImportJob() {
-        Configuration conf = new Configuration();
+  @Test
+  public void testInitCsvImportJob() {
+    Configuration conf = new Configuration();
 
-        String tableName = "SCHEMANAME.TABLENAME";
-        char delimiter = '!';
-        char quote = '"';
-        char escape = '\\';
+    String tableName = "SCHEMANAME.TABLENAME";
+    char delimiter = '!';
+    char quote = '"';
+    char escape = '\\';
 
-        List<ColumnInfo> columnInfoList = ImmutableList.of(
-                new ColumnInfo("MYCOL", PInteger.INSTANCE.getSqlType()));
+    List<ColumnInfo> columnInfoList = ImmutableList.of(
+            new ColumnInfo("MYCOL", PInteger.INSTANCE.getSqlType()));
 
-        CsvBulkImportUtil.initCsvImportJob(
-                conf, tableName, delimiter, quote, escape, null, columnInfoList, true);
+    CsvBulkImportUtil.initCsvImportJob(
+            conf, tableName, delimiter, quote, escape, null, columnInfoList, true);
 
-        assertEquals(tableName, conf.get(CsvToKeyValueMapper.TABLE_NAME_CONFKEY));
-        assertEquals("!", conf.get(CsvToKeyValueMapper.FIELD_DELIMITER_CONFKEY));
-        assertNull(conf.get(CsvToKeyValueMapper.ARRAY_DELIMITER_CONFKEY));
-        assertEquals(columnInfoList, CsvToKeyValueMapper.buildColumnInfoList(conf));
-        assertEquals(true, conf.getBoolean(CsvToKeyValueMapper.IGNORE_INVALID_ROW_CONFKEY, false));
+    assertEquals(tableName, conf.get(CsvToKeyValueMapper.TABLE_NAME_CONFKEY));
+    assertEquals("!", conf.get(CsvToKeyValueMapper.FIELD_DELIMITER_CONFKEY));
+    assertNull(conf.get(CsvToKeyValueMapper.ARRAY_DELIMITER_CONFKEY));
+    assertEquals(columnInfoList, CsvToKeyValueMapper.buildColumnInfoList(conf));
+    assertEquals(true, conf.getBoolean(CsvToKeyValueMapper.IGNORE_INVALID_ROW_CONFKEY, false));
+  }
+
+  @Test
+  public void testConfigurePreUpsertProcessor() {
+    Configuration conf = new Configuration();
+    CsvBulkImportUtil.configurePreUpsertProcessor(conf, MockProcessor.class);
+    ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+    assertEquals(MockProcessor.class, processor.getClass());
+  }
+
+  public static class MockProcessor implements ImportPreUpsertKeyValueProcessor {
+
+    @Override
+    public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
+      throw new UnsupportedOperationException("Not yet implemented");
     }
-
-    @Test
-    public void testConfigurePreUpsertProcessor() {
-        Configuration conf = new Configuration();
-        CsvBulkImportUtil.configurePreUpsertProcessor(conf, MockProcessor.class);
-        ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-        assertEquals(MockProcessor.class, processor.getClass());
-    }
-
-
-    public static class MockProcessor implements ImportPreUpsertKeyValueProcessor {
-
-        @Override
-        public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
-            throw new UnsupportedOperationException("Not yet implemented");
-        }
-    }
+  }
 }

@@ -47,87 +47,87 @@ import org.slf4j.LoggerFactory;
  */
 public class PhoenixIndexImportMapper extends Mapper<NullWritable, PhoenixIndexDBWritable, ImmutableBytesWritable, KeyValue> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportMapper.class);
-    
-    private final PhoenixIndexDBWritable indxWritable = new PhoenixIndexDBWritable();
-    
-    private List<ColumnInfo> indxTblColumnMetadata ;
-    
-    private Connection connection;
-    
-    private String indexTableName;
-    
-    private ImportPreUpsertKeyValueProcessor preUpdateProcessor;
-    
-    private PreparedStatement pStatement;
-    
-    @Override
-    protected void setup(final Context context) throws IOException, InterruptedException {
-        super.setup(context);
-        final Configuration configuration = context.getConfiguration();
-        try {
-            indxTblColumnMetadata = PhoenixConfigurationUtil.getUpsertColumnMetadataList(context.getConfiguration());
-            indxWritable.setColumnMetadata(indxTblColumnMetadata);
-            
-            preUpdateProcessor = PhoenixConfigurationUtil.loadPreUpsertProcessor(configuration);
-            indexTableName = PhoenixConfigurationUtil.getOutputTableName(configuration);
-            final Properties overrideProps = new Properties ();
-            overrideProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE));
-            connection = ConnectionUtil.getOutputConnection(configuration,overrideProps);
-            connection.setAutoCommit(false);
-            final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-            this.pStatement = connection.prepareStatement(upsertQuery);
-            
-        } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
-        } 
-    }
-    
-    @Override
-    protected void map(NullWritable key, PhoenixIndexDBWritable record, Context context)
-            throws IOException, InterruptedException {
-       
-        context.getCounter(PhoenixJobCounters.INPUT_RECORDS).increment(1);
-        
-        try {
-           final ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
-           final List<Object> values = record.getValues();
-           indxWritable.setValues(values);
-           indxWritable.write(this.pStatement);
-           this.pStatement.execute();
-            
-           final Iterator<Pair<byte[], List<KeyValue>>> uncommittedDataIterator = PhoenixRuntime.getUncommittedDataIterator(connection, true);
-           while (uncommittedDataIterator.hasNext()) {
-                Pair<byte[], List<KeyValue>> kvPair = uncommittedDataIterator.next();
-                if (Bytes.compareTo(Bytes.toBytes(indexTableName), kvPair.getFirst()) != 0) {
-                    // skip edits for other tables
-                    continue;
-                }
-                List<KeyValue> keyValueList = kvPair.getSecond();
-                keyValueList = preUpdateProcessor.preUpsert(kvPair.getFirst(), keyValueList);
-                for (KeyValue kv : keyValueList) {
-                    outputKey.set(kv.getRowArray(), kv.getRowOffset(), kv.getRowLength());
-                    context.write(outputKey, kv);
-                }
-                context.getCounter(PhoenixJobCounters.OUTPUT_RECORDS).increment(1);
-            }
-            connection.rollback();
-       } catch (SQLException e) {
-           LOG.error(" Error {}  while read/write of a record ",e.getMessage());
-           context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
-           throw new RuntimeException(e);
-        } 
-    }
+  private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportMapper.class);
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-         super.cleanup(context);
-         if(connection != null) {
-             try {
-                connection.close();
-            } catch (SQLException e) {
-                LOG.error("Error {} while closing connection in the PhoenixIndexMapper class ",e.getMessage());
-            }
-         }
+  private final PhoenixIndexDBWritable indxWritable = new PhoenixIndexDBWritable();
+
+  private List<ColumnInfo> indxTblColumnMetadata;
+
+  private Connection connection;
+
+  private String indexTableName;
+
+  private ImportPreUpsertKeyValueProcessor preUpdateProcessor;
+
+  private PreparedStatement pStatement;
+
+  @Override
+  protected void setup(final Context context) throws IOException, InterruptedException {
+    super.setup(context);
+    final Configuration configuration = context.getConfiguration();
+    try {
+      indxTblColumnMetadata = PhoenixConfigurationUtil.getUpsertColumnMetadataList(context.getConfiguration());
+      indxWritable.setColumnMetadata(indxTblColumnMetadata);
+
+      preUpdateProcessor = PhoenixConfigurationUtil.loadPreUpsertProcessor(configuration);
+      indexTableName = PhoenixConfigurationUtil.getOutputTableName(configuration);
+      final Properties overrideProps = new Properties();
+      overrideProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE));
+      connection = ConnectionUtil.getOutputConnection(configuration, overrideProps);
+      connection.setAutoCommit(false);
+      final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+      this.pStatement = connection.prepareStatement(upsertQuery);
+
+    } catch (SQLException e) {
+      throw new RuntimeException(e.getMessage());
     }
+  }
+
+  @Override
+  protected void map(NullWritable key, PhoenixIndexDBWritable record, Context context)
+          throws IOException, InterruptedException {
+
+    context.getCounter(PhoenixJobCounters.INPUT_RECORDS).increment(1);
+
+    try {
+      final ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
+      final List<Object> values = record.getValues();
+      indxWritable.setValues(values);
+      indxWritable.write(this.pStatement);
+      this.pStatement.execute();
+
+      final Iterator<Pair<byte[], List<KeyValue>>> uncommittedDataIterator = PhoenixRuntime.getUncommittedDataIterator(connection, true);
+      while (uncommittedDataIterator.hasNext()) {
+        Pair<byte[], List<KeyValue>> kvPair = uncommittedDataIterator.next();
+        if (Bytes.compareTo(Bytes.toBytes(indexTableName), kvPair.getFirst()) != 0) {
+          // skip edits for other tables
+          continue;
+        }
+        List<KeyValue> keyValueList = kvPair.getSecond();
+        keyValueList = preUpdateProcessor.preUpsert(kvPair.getFirst(), keyValueList);
+        for (KeyValue kv : keyValueList) {
+          outputKey.set(kv.getRowArray(), kv.getRowOffset(), kv.getRowLength());
+          context.write(outputKey, kv);
+        }
+        context.getCounter(PhoenixJobCounters.OUTPUT_RECORDS).increment(1);
+      }
+      connection.rollback();
+    } catch (SQLException e) {
+      LOG.error(" Error {}  while read/write of a record ", e.getMessage());
+      context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  protected void cleanup(Context context) throws IOException, InterruptedException {
+    super.cleanup(context);
+    if (connection != null) {
+      try {
+        connection.close();
+      } catch (SQLException e) {
+        LOG.error("Error {} while closing connection in the PhoenixIndexMapper class ", e.getMessage());
+      }
+    }
+  }
 }

@@ -13,24 +13,24 @@ package org.apache.phoenix.schema.types;
 public class PrimitiveDoublePhoenixArrayToStringTest extends
         BasePrimitiveDoublePhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PDouble.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PDouble.INSTANCE;
+  }
 
-    @Override
-    protected Object getElement1() {
-        return 1.1;
-    }
+  @Override
+  protected Object getElement1() {
+    return 1.1;
+  }
 
-    @Override
-    protected Object getElement2() {
-        return 2.2;
-    }
+  @Override
+  protected Object getElement2() {
+    return 2.2;
+  }
 
-    @Override
-    protected Object getElement3() {
-        return 3.3;
-    }
+  @Override
+  protected Object getElement3() {
+    return 3.3;
+  }
 
 }

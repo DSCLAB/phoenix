@@ -26,48 +26,48 @@ import org.apache.phoenix.schema.types.PDouble;
 
 public class DoubleMultiplyExpression extends MultiplyExpression {
 
-    public DoubleMultiplyExpression() {
-    }
+  public DoubleMultiplyExpression() {
+  }
 
-    public DoubleMultiplyExpression(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        double result = 1.0;
-        for (int i = 0; i < children.size(); i++) {
-            Expression child = children.get(i);
-            if (!child.evaluate(tuple, ptr)) {
-                return false;
-            }
-            if (ptr.getLength() == 0) {
-                return true;
-            }
-            double childvalue = child.getDataType().getCodec()
-                    .decodeDouble(ptr, child.getSortOrder());
-            if (!Double.isNaN(childvalue)
-                    && childvalue != Double.NEGATIVE_INFINITY
-                    && childvalue != Double.POSITIVE_INFINITY) {
-                result *= childvalue;
-            } else {
-                return false;
-            }
-        }
-        byte[] resultPtr = new byte[getDataType().getByteSize()];
-        getDataType().getCodec().encodeDouble(result, resultPtr, 0);
-        ptr.set(resultPtr);
+  public DoubleMultiplyExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    double result = 1.0;
+    for (int i = 0; i < children.size(); i++) {
+      Expression child = children.get(i);
+      if (!child.evaluate(tuple, ptr)) {
+        return false;
+      }
+      if (ptr.getLength() == 0) {
         return true;
+      }
+      double childvalue = child.getDataType().getCodec()
+              .decodeDouble(ptr, child.getSortOrder());
+      if (!Double.isNaN(childvalue)
+              && childvalue != Double.NEGATIVE_INFINITY
+              && childvalue != Double.POSITIVE_INFINITY) {
+        result *= childvalue;
+      } else {
+        return false;
+      }
     }
+    byte[] resultPtr = new byte[getDataType().getByteSize()];
+    getDataType().getCodec().encodeDouble(result, resultPtr, 0);
+    ptr.set(resultPtr);
+    return true;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PDouble.INSTANCE;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PDouble.INSTANCE;
+  }
 
-    @Override
-    public ArithmeticExpression clone(List<Expression> children) {
-        return new DoubleMultiplyExpression(children);
-    }
+  @Override
+  public ArithmeticExpression clone(List<Expression> children) {
+    return new DoubleMultiplyExpression(children);
+  }
 
 }

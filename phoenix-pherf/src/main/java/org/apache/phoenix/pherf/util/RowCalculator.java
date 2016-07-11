@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.util;
 
 import java.util.ArrayList;
@@ -23,56 +22,60 @@ import java.util.Collections;
 import java.util.List;
 
 public class RowCalculator {
-    private final int buckets;
-    private final int rows;
-    private final List<Integer> rowCountList;
 
-    public RowCalculator(int buckets, int rows) {
-        this.buckets = buckets;
-        this.rows = rows;
-        this.rowCountList = Collections.synchronizedList(new ArrayList<Integer>(buckets));
-        init();
-    }
+  private final int buckets;
+  private final int rows;
+  private final List<Integer> rowCountList;
 
-    public synchronized int size() {
-        return rowCountList.size();
-    }
+  public RowCalculator(int buckets, int rows) {
+    this.buckets = buckets;
+    this.rows = rows;
+    this.rowCountList = Collections.synchronizedList(new ArrayList<Integer>(buckets));
+    init();
+  }
 
-    public synchronized int getNext() {
-        return rowCountList.remove(0);
-    }
+  public synchronized int size() {
+    return rowCountList.size();
+  }
 
-    /**
-     * Get the number of row that should fit into each bucket.
-     * @return
-     */
-    public int getRowsPerBucket() {
-        return rows / buckets;
-    }
+  public synchronized int getNext() {
+    return rowCountList.remove(0);
+  }
 
-    /**
-     * Get the number of extra rows that need to be added if rows don't divide evenly among the buckets.
-     * @return
-     */
-    public int getExtraRowCount() {
-        return rows % buckets;
-    }
+  /**
+   * Get the number of row that should fit into each bucket.
+   *
+   * @return
+   */
+  public int getRowsPerBucket() {
+    return rows / buckets;
+  }
 
-    private void init() {
-        for (int i = 0; i < buckets; i++) {
-            synchronized (rowCountList) {
-                // On the first row count we tack on the extra rows if they exist
-                if (i == 0) {
-                    // When row count is small we just put them all in the first bucket
-                    if (rows < buckets) {
-                        rowCountList.add(getExtraRowCount());
-                    } else {
-                        rowCountList.add(getRowsPerBucket() + getExtraRowCount());
-                    }
-                } else {
-                    rowCountList.add(getRowsPerBucket());
-                }
-            }
+  /**
+   * Get the number of extra rows that need to be added if rows don't divide
+   * evenly among the buckets.
+   *
+   * @return
+   */
+  public int getExtraRowCount() {
+    return rows % buckets;
+  }
+
+  private void init() {
+    for (int i = 0; i < buckets; i++) {
+      synchronized (rowCountList) {
+        // On the first row count we tack on the extra rows if they exist
+        if (i == 0) {
+          // When row count is small we just put them all in the first bucket
+          if (rows < buckets) {
+            rowCountList.add(getExtraRowCount());
+          } else {
+            rowCountList.add(getRowsPerBucket() + getExtraRowCount());
+          }
+        } else {
+          rowCountList.add(getRowsPerBucket());
         }
+      }
     }
+  }
 }

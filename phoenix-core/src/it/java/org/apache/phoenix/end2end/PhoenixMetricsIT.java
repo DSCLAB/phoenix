@@ -42,106 +42,103 @@ import org.apache.phoenix.util.PhoenixRuntime;
 import org.junit.Test;
 
 public class PhoenixMetricsIT extends BaseHBaseManagedTimeIT {
-    
-    @Test
-    public void testResetPhoenixMetrics() {
-        resetMetrics();
-        for (Metric m : PhoenixRuntime.getInternalPhoenixMetrics()) {
-            assertEquals(0, m.getTotalSum());
-            assertEquals(0, m.getNumberOfSamples());
-        }
+
+  @Test
+  public void testResetPhoenixMetrics() {
+    resetMetrics();
+    for (Metric m : PhoenixRuntime.getInternalPhoenixMetrics()) {
+      assertEquals(0, m.getTotalSum());
+      assertEquals(0, m.getNumberOfSamples());
     }
-    
-    @Test
-    public void testPhoenixMetricsForQueries() throws Exception {
-        createTableAndInsertValues("T", true);
-        resetMetrics(); // we want to count metrics related only to the below query
-        Connection conn = DriverManager.getConnection(getUrl());
-        String query = "SELECT * FROM T";
-        ResultSet rs = conn.createStatement().executeQuery(query);
-        while (rs.next()) {
-            rs.getString(1);
-            rs.getString(2);
-        }
-        assertEquals(1, PARALLEL_SCANS.getMetric().getTotalSum());
-        assertEquals(1, QUERY_COUNT.getMetric().getTotalSum());
-        assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
-        assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
-        assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
-        assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
-        assertEquals(0, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
-        assertEquals(0, MUTATION_BYTES.getMetric().getTotalSum());
-        assertEquals(0, MUTATION_COMMIT_TIME.getMetric().getTotalSum());
-        
-        assertTrue(SCAN_BYTES.getMetric().getTotalSum() > 0);
-        assertTrue(QUERY_TIME.getMetric().getTotalSum() > 0);
+  }
+
+  @Test
+  public void testPhoenixMetricsForQueries() throws Exception {
+    createTableAndInsertValues("T", true);
+    resetMetrics(); // we want to count metrics related only to the below query
+    Connection conn = DriverManager.getConnection(getUrl());
+    String query = "SELECT * FROM T";
+    ResultSet rs = conn.createStatement().executeQuery(query);
+    while (rs.next()) {
+      rs.getString(1);
+      rs.getString(2);
     }
-    
-    @Test
-    public void testPhoenixMetricsForMutations() throws Exception {
-        createTableAndInsertValues("T", true);
-        assertEquals(10, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
-        assertEquals(10, MUTATION_COUNT.getMetric().getTotalSum());
-        assertTrue(MUTATION_BYTES.getMetric().getTotalSum() > 0);
-        assertTrue(MUTATION_COMMIT_TIME.getMetric().getTotalSum() > 0);
-        assertEquals(0, PARALLEL_SCANS.getMetric().getTotalSum());
-        assertEquals(0, QUERY_COUNT.getMetric().getTotalSum());
-        assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
-        assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
-        assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
-        assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
+    assertEquals(1, PARALLEL_SCANS.getMetric().getTotalSum());
+    assertEquals(1, QUERY_COUNT.getMetric().getTotalSum());
+    assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
+    assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
+    assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
+    assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
+    assertEquals(0, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
+    assertEquals(0, MUTATION_BYTES.getMetric().getTotalSum());
+    assertEquals(0, MUTATION_COMMIT_TIME.getMetric().getTotalSum());
+
+    assertTrue(SCAN_BYTES.getMetric().getTotalSum() > 0);
+    assertTrue(QUERY_TIME.getMetric().getTotalSum() > 0);
+  }
+
+  @Test
+  public void testPhoenixMetricsForMutations() throws Exception {
+    createTableAndInsertValues("T", true);
+    assertEquals(10, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
+    assertEquals(10, MUTATION_COUNT.getMetric().getTotalSum());
+    assertTrue(MUTATION_BYTES.getMetric().getTotalSum() > 0);
+    assertTrue(MUTATION_COMMIT_TIME.getMetric().getTotalSum() > 0);
+    assertEquals(0, PARALLEL_SCANS.getMetric().getTotalSum());
+    assertEquals(0, QUERY_COUNT.getMetric().getTotalSum());
+    assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
+    assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
+    assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
+    assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
+  }
+
+  @Test
+  public void testPhoenixMetricsForUpsertSelect() throws Exception {
+    createTableAndInsertValues("T", true);
+    resetMetrics();
+    String ddl = "CREATE TABLE T2 (K VARCHAR NOT NULL PRIMARY KEY, V VARCHAR)";
+    Connection conn = DriverManager.getConnection(getUrl());
+    conn.createStatement().execute(ddl);
+    resetMetrics();
+    String dml = "UPSERT INTO T2 (K, V) SELECT K, V FROM T";
+    conn.createStatement().executeUpdate(dml);
+    conn.commit();
+    assertEquals(10, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
+    assertEquals(1, MUTATION_COUNT.getMetric().getTotalSum());
+    assertEquals(1, PARALLEL_SCANS.getMetric().getTotalSum());
+    assertEquals(0, QUERY_TIME.getMetric().getTotalSum());
+    assertTrue(SCAN_BYTES.getMetric().getTotalSum() > 0);
+    assertTrue(MUTATION_BYTES.getMetric().getTotalSum() > 0);
+    assertTrue(MUTATION_COMMIT_TIME.getMetric().getTotalSum() > 0);
+    assertEquals(0, QUERY_COUNT.getMetric().getTotalSum());
+    assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
+    assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
+    assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
+    assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
+  }
+
+  private static void resetMetrics() {
+    for (Metric m : PhoenixRuntime.getInternalPhoenixMetrics()) {
+      m.reset();
     }
-    
-    
-    @Test
-    public void testPhoenixMetricsForUpsertSelect() throws Exception { 
-        createTableAndInsertValues("T", true);
-        resetMetrics();
-        String ddl = "CREATE TABLE T2 (K VARCHAR NOT NULL PRIMARY KEY, V VARCHAR)";
-        Connection conn = DriverManager.getConnection(getUrl());
-        conn.createStatement().execute(ddl);
-        resetMetrics();
-        String dml = "UPSERT INTO T2 (K, V) SELECT K, V FROM T";
-        conn.createStatement().executeUpdate(dml);
-        conn.commit();
-        assertEquals(10, MUTATION_BATCH_SIZE.getMetric().getTotalSum());
-        assertEquals(1, MUTATION_COUNT.getMetric().getTotalSum());
-        assertEquals(1, PARALLEL_SCANS.getMetric().getTotalSum());
-        assertEquals(0, QUERY_TIME.getMetric().getTotalSum());
-        assertTrue(SCAN_BYTES.getMetric().getTotalSum() > 0);
-        assertTrue(MUTATION_BYTES.getMetric().getTotalSum() > 0);
-        assertTrue(MUTATION_COMMIT_TIME.getMetric().getTotalSum() > 0);
-        assertEquals(0, QUERY_COUNT.getMetric().getTotalSum());
-        assertEquals(0, REJECTED_TASK_COUNT.getMetric().getTotalSum());
-        assertEquals(0, QUERY_TIMEOUT.getMetric().getTotalSum());
-        assertEquals(0, FAILED_QUERY.getMetric().getTotalSum());
-        assertEquals(0, NUM_SPOOL_FILE.getMetric().getTotalSum());
+  }
+
+  private static void createTableAndInsertValues(String tableName, boolean resetMetricsAfterTableCreate) throws Exception {
+    String ddl = "CREATE TABLE " + tableName + " (K VARCHAR NOT NULL PRIMARY KEY, V VARCHAR)";
+    Connection conn = DriverManager.getConnection(getUrl());
+    conn.createStatement().execute(ddl);
+    if (resetMetricsAfterTableCreate) {
+      resetMetrics();
     }
-    
-    private static void resetMetrics() {
-        for (Metric m : PhoenixRuntime.getInternalPhoenixMetrics()) {
-            m.reset();
-        }
+    // executing 10 upserts/mutations.
+    String dml = "UPSERT INTO " + tableName + " VALUES (?, ?)";
+    PreparedStatement stmt = conn.prepareStatement(dml);
+    for (int i = 1; i <= 10; i++) {
+      stmt.setString(1, "key" + i);
+      stmt.setString(2, "value" + i);
+      stmt.executeUpdate();
     }
-    
-    private static void createTableAndInsertValues(String tableName, boolean resetMetricsAfterTableCreate) throws Exception {
-        String ddl = "CREATE TABLE " + tableName + " (K VARCHAR NOT NULL PRIMARY KEY, V VARCHAR)";
-        Connection conn = DriverManager.getConnection(getUrl());
-        conn.createStatement().execute(ddl);
-        if (resetMetricsAfterTableCreate) {
-            resetMetrics();
-        }
-        // executing 10 upserts/mutations.
-        String dml = "UPSERT INTO " + tableName + " VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(dml);
-        for (int i = 1; i <= 10; i++) {
-            stmt.setString(1, "key" + i);
-            stmt.setString(2, "value" + i);
-            stmt.executeUpdate();
-        }
-        conn.commit();
-    }
-    
-    
-    
+    conn.commit();
+  }
+
 }

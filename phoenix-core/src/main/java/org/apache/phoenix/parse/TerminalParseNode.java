@@ -21,15 +21,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 
+ *
  * Abstract node for expressions that have no children
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class TerminalParseNode extends ParseNode {
-    @Override
-    public final List<ParseNode> getChildren() {
-        return Collections.emptyList();
-    }
+
+  @Override
+  public final List<ParseNode> getChildren() {
+    return Collections.emptyList();
+  }
 }

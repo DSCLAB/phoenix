@@ -27,16 +27,18 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * {@link TaskRunner} that attempts to run all tasks passed, but quits early if any {@link Task}
- * fails, not waiting for the remaining {@link Task}s to complete.
+ * {@link TaskRunner} that attempts to run all tasks passed, but quits early if
+ * any {@link Task} fails, not waiting for the remaining {@link Task}s to
+ * complete.
  */
 public class QuickFailingTaskRunner extends BaseTaskRunner {
 
   static final Log LOG = LogFactory.getLog(QuickFailingTaskRunner.class);
 
   /**
-   * @param service thread pool to which {@link Task}s are submitted. This service is then 'owned'
-   *          by <tt>this</tt> and will be shutdown on calls to {@link #stop(String)}.
+   * @param service thread pool to which {@link Task}s are submitted. This
+   * service is then 'owned' by <tt>this</tt> and will be shutdown on calls to
+   * {@link #stop(String)}.
    */
   public QuickFailingTaskRunner(ExecutorService service) {
     super(service);

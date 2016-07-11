@@ -20,10 +20,16 @@ package org.apache.phoenix.parse;
 import java.util.List;
 
 public interface FilterableStatement extends BindableStatement {
-    public HintNode getHint();
-    public ParseNode getWhere();
-    public boolean isDistinct();
-    public boolean isAggregate();
-    public List<OrderByNode> getOrderBy();
-    public LimitNode getLimit();
+
+  public HintNode getHint();
+
+  public ParseNode getWhere();
+
+  public boolean isDistinct();
+
+  public boolean isAggregate();
+
+  public List<OrderByNode> getOrderBy();
+
+  public LimitNode getLimit();
 }

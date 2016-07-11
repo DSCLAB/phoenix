@@ -34,88 +34,87 @@ import org.apache.pig.data.DataType;
 import com.google.common.base.Preconditions;
 
 /**
- * A {@link Writable} representing a Phoenix record. This class
- * a) does a type mapping and sets the value accordingly in the {@link PreparedStatement}
- * b) reads the column values from the {@link ResultSet}
- * 
+ * A {@link Writable} representing a Phoenix record. This class a) does a type
+ * mapping and sets the value accordingly in the {@link PreparedStatement} b)
+ * reads the column values from the {@link ResultSet}
+ *
  */
 public class PhoenixPigDBWritable implements DBWritable {
-    
-    private final List<Object> values;
-    private ResourceFieldSchema[] fieldSchemas;
-    private List<ColumnInfo> columnMetadataList;
-  
-    public PhoenixPigDBWritable() {
-        this.values = new ArrayList<Object>();
-    }
-    
-    @Override
-    public void write(PreparedStatement statement) throws SQLException {
-        for (int i = 0; i < columnMetadataList.size(); i++) {
-            Object o = values.get(i);
-            ColumnInfo columnInfo = columnMetadataList.get(i);
-            byte type = (fieldSchemas == null) ? DataType.findType(o) : fieldSchemas[i].getType();
-            try {
-                Object upsertValue = convertTypeSpecificValue(o, type, columnInfo.getSqlType());
-                if (upsertValue != null) {
-                    statement.setObject(i + 1, upsertValue, columnInfo.getSqlType());
-                } else {
-                    statement.setNull(i + 1, columnInfo.getSqlType());
-                }
-            } catch (RuntimeException re) {
-                throw new RuntimeException(String.format("Unable to process column %s, innerMessage=%s"
-                        ,columnInfo.toString(),re.getMessage()),re);
-                
-            }
+
+  private final List<Object> values;
+  private ResourceFieldSchema[] fieldSchemas;
+  private List<ColumnInfo> columnMetadataList;
+
+  public PhoenixPigDBWritable() {
+    this.values = new ArrayList<Object>();
+  }
+
+  @Override
+  public void write(PreparedStatement statement) throws SQLException {
+    for (int i = 0; i < columnMetadataList.size(); i++) {
+      Object o = values.get(i);
+      ColumnInfo columnInfo = columnMetadataList.get(i);
+      byte type = (fieldSchemas == null) ? DataType.findType(o) : fieldSchemas[i].getType();
+      try {
+        Object upsertValue = convertTypeSpecificValue(o, type, columnInfo.getSqlType());
+        if (upsertValue != null) {
+          statement.setObject(i + 1, upsertValue, columnInfo.getSqlType());
+        } else {
+          statement.setNull(i + 1, columnInfo.getSqlType());
         }
-    }
-    
-    public void add(Object value) {
-        values.add(value);
-    }
+      } catch (RuntimeException re) {
+        throw new RuntimeException(String.format("Unable to process column %s, innerMessage=%s", columnInfo.toString(), re.getMessage()), re);
 
-    private Object convertTypeSpecificValue(Object o, byte type, Integer sqlType) {
-        PDataType pDataType = PDataType.fromTypeId(sqlType);
-        return TypeUtil.castPigTypeToPhoenix(o, type, pDataType);
+      }
     }
+  }
 
-    public List<Object> getValues() {
-        return values;
-    }
+  public void add(Object value) {
+    values.add(value);
+  }
 
-    @Override
-    public void readFields(final ResultSet rs) throws SQLException {
-        Preconditions.checkNotNull(rs);
-        final int noOfColumns = rs.getMetaData().getColumnCount();
-        values.clear();
-        for(int i = 1 ; i <= noOfColumns ; i++) {
-            Object obj = rs.getObject(i);
-            values.add(obj);
-        }
-    }
+  private Object convertTypeSpecificValue(Object o, byte type, Integer sqlType) {
+    PDataType pDataType = PDataType.fromTypeId(sqlType);
+    return TypeUtil.castPigTypeToPhoenix(o, type, pDataType);
+  }
 
-    public ResourceFieldSchema[] getFieldSchemas() {
-        return fieldSchemas;
-    }
+  public List<Object> getValues() {
+    return values;
+  }
 
-    public void setFieldSchemas(ResourceFieldSchema[] fieldSchemas) {
-        this.fieldSchemas = fieldSchemas;
+  @Override
+  public void readFields(final ResultSet rs) throws SQLException {
+    Preconditions.checkNotNull(rs);
+    final int noOfColumns = rs.getMetaData().getColumnCount();
+    values.clear();
+    for (int i = 1; i <= noOfColumns; i++) {
+      Object obj = rs.getObject(i);
+      values.add(obj);
     }
+  }
 
-    public List<ColumnInfo> getColumnMetadataList() {
-        return columnMetadataList;
-    }
+  public ResourceFieldSchema[] getFieldSchemas() {
+    return fieldSchemas;
+  }
 
-    public void setColumnMetadataList(List<ColumnInfo> columnMetadataList) {
-        this.columnMetadataList = columnMetadataList;
-    }
+  public void setFieldSchemas(ResourceFieldSchema[] fieldSchemas) {
+    this.fieldSchemas = fieldSchemas;
+  }
 
-    public static PhoenixPigDBWritable newInstance(final ResourceFieldSchema[] fieldSchemas,
-            final List<ColumnInfo> columnMetadataList) {
-        final PhoenixPigDBWritable dbWritable = new PhoenixPigDBWritable ();
-        dbWritable.setFieldSchemas(fieldSchemas);
-        dbWritable.setColumnMetadataList(columnMetadataList);
-        return dbWritable;
-    }
+  public List<ColumnInfo> getColumnMetadataList() {
+    return columnMetadataList;
+  }
+
+  public void setColumnMetadataList(List<ColumnInfo> columnMetadataList) {
+    this.columnMetadataList = columnMetadataList;
+  }
+
+  public static PhoenixPigDBWritable newInstance(final ResourceFieldSchema[] fieldSchemas,
+          final List<ColumnInfo> columnMetadataList) {
+    final PhoenixPigDBWritable dbWritable = new PhoenixPigDBWritable();
+    dbWritable.setFieldSchemas(fieldSchemas);
+    dbWritable.setColumnMetadataList(columnMetadataList);
+    return dbWritable;
+  }
 
 }

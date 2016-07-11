@@ -28,115 +28,122 @@ import org.apache.hadoop.io.WritableUtils;
 
 import com.google.common.collect.ImmutableList;
 
-
 public abstract class BaseCompoundExpression extends BaseExpression {
-    protected List<Expression> children;
-    private boolean isNullable;
-    private boolean isStateless;
-    private Determinism determinism;
-    private boolean requiresFinalEvaluation;
-   
-    public BaseCompoundExpression() {
-        init(Collections.<Expression>emptyList());
-    }
-    
-    public BaseCompoundExpression(List<Expression> children) {
-        init(children);
-    }
-    
-    private void init(List<Expression> children) {
-        this.children = ImmutableList.copyOf(children);
-        boolean isStateless = true;
-        boolean isNullable = false;
-        boolean requiresFinalEvaluation = false;
-        this.determinism = Determinism.ALWAYS;
-        for (int i = 0; i < children.size(); i++) {
-            Expression child = children.get(i);
-            isNullable |= child.isNullable();
-            isStateless &= child.isStateless();
-            this.determinism = this.determinism.combine(child.getDeterminism());
-            requiresFinalEvaluation |= child.requiresFinalEvaluation();
-        }
-        this.isStateless = isStateless;
-        this.isNullable = isNullable;
-        this.requiresFinalEvaluation = requiresFinalEvaluation;
-    }
-    
-    @Override
-    public List<Expression> getChildren() {
-        return children;
-    }
-    
-    
-    @Override
-    public Determinism getDeterminism() {
-        return determinism;
-    }
-    
-    @Override
-    public boolean isStateless() {
-        return isStateless;
-    }
 
-    @Override
-    public boolean isNullable() {
-        return isNullable;
-    }
+  protected List<Expression> children;
+  private boolean isNullable;
+  private boolean isStateless;
+  private Determinism determinism;
+  private boolean requiresFinalEvaluation;
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + children.hashCode();
-        return result;
-    }
+  public BaseCompoundExpression() {
+    init(Collections.<Expression>emptyList());
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        BaseCompoundExpression other = (BaseCompoundExpression)obj;
-        if (!children.equals(other.children)) return false;
-        return true;
-    }
+  public BaseCompoundExpression(List<Expression> children) {
+    init(children);
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        int len = WritableUtils.readVInt(input);
-        List<Expression>children = new ArrayList<Expression>(len);
-        for (int i = 0; i < len; i++) {
-            Expression child = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
-            child.readFields(input);
-            children.add(child);
-        }
-        init(children);
+  private void init(List<Expression> children) {
+    this.children = ImmutableList.copyOf(children);
+    boolean isStateless = true;
+    boolean isNullable = false;
+    boolean requiresFinalEvaluation = false;
+    this.determinism = Determinism.ALWAYS;
+    for (int i = 0; i < children.size(); i++) {
+      Expression child = children.get(i);
+      isNullable |= child.isNullable();
+      isStateless &= child.isStateless();
+      this.determinism = this.determinism.combine(child.getDeterminism());
+      requiresFinalEvaluation |= child.requiresFinalEvaluation();
     }
+    this.isStateless = isStateless;
+    this.isNullable = isNullable;
+    this.requiresFinalEvaluation = requiresFinalEvaluation;
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        WritableUtils.writeVInt(output, children.size());
-        for (int i = 0; i < children.size(); i++) {
-            Expression child = children.get(i);
-            WritableUtils.writeVInt(output, ExpressionType.valueOf(child).ordinal());
-            child.write(output);
-        }
-    }
+  @Override
+  public List<Expression> getChildren() {
+    return children;
+  }
 
-    @Override
-    public void reset() {
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).reset();
-        }
+  @Override
+  public Determinism getDeterminism() {
+    return determinism;
+  }
+
+  @Override
+  public boolean isStateless() {
+    return isStateless;
+  }
+
+  @Override
+  public boolean isNullable() {
+    return isNullable;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + children.hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-    
-    @Override
-    public String toString() {
-        return this.getClass().getName() + " [children=" + children + "]";
+    if (obj == null) {
+      return false;
     }
-    
-    @Override
-    public boolean requiresFinalEvaluation() {
-        return requiresFinalEvaluation;
+    if (getClass() != obj.getClass()) {
+      return false;
     }
+    BaseCompoundExpression other = (BaseCompoundExpression) obj;
+    if (!children.equals(other.children)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    int len = WritableUtils.readVInt(input);
+    List<Expression> children = new ArrayList<Expression>(len);
+    for (int i = 0; i < len; i++) {
+      Expression child = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
+      child.readFields(input);
+      children.add(child);
+    }
+    init(children);
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    WritableUtils.writeVInt(output, children.size());
+    for (int i = 0; i < children.size(); i++) {
+      Expression child = children.get(i);
+      WritableUtils.writeVInt(output, ExpressionType.valueOf(child).ordinal());
+      child.write(output);
+    }
+  }
+
+  @Override
+  public void reset() {
+    for (int i = 0; i < children.size(); i++) {
+      children.get(i).reset();
+    }
+  }
+
+  @Override
+  public String toString() {
+    return this.getClass().getName() + " [children=" + children + "]";
+  }
+
+  @Override
+  public boolean requiresFinalEvaluation() {
+    return requiresFinalEvaluation;
+  }
 }

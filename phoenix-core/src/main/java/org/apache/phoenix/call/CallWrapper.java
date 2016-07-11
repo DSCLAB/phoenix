@@ -22,8 +22,8 @@ package org.apache.phoenix.call;
  */
 public interface CallWrapper {
 
-    public void before();
+  public void before();
 
-    public void after();
+  public void after();
 
 }

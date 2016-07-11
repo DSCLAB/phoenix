@@ -24,7 +24,7 @@
   <dependencySets>
     <dependencySet>
       <!-- Unpack all the dependencies to class files, since java doesn't support
-        jar of jars for running -->
+      jar of jars for running -->
       <unpack>false</unpack>
       <outputDirectory>/lib</outputDirectory>
       <includes>
@@ -48,7 +48,7 @@
       </includes>
     </dependencySet>
     <!-- Separate dependency set to just pull in the jackson stuff since its test 
-      scoped and we only include 'runtime' scoped (which includes compile) dependencies -->
+    scoped and we only include 'runtime' scoped (which includes compile) dependencies -->
     <dependencySet>
       <unpack>false</unpack>
       <scope>test</scope>

@@ -27,11 +27,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Abortable;
 
 /**
- * A group of {@link Task}s. The tasks are all bound together using the same {@link Abortable} (
- * <tt>this</tt>) to ensure that all tasks are aware when any of the other tasks fails.
+ * A group of {@link Task}s. The tasks are all bound together using the same
+ * {@link Abortable} (
+ * <tt>this</tt>) to ensure that all tasks are aware when any of the other tasks
+ * fails.
+ *
  * @param <V> expected result type from all the tasks
  */
 public class TaskBatch<V> implements Abortable {
+
   private static final Log LOG = LogFactory.getLog(TaskBatch.class);
   private AtomicBoolean aborted = new AtomicBoolean();
   private List<Task<V>> tasks;

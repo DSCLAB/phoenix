@@ -32,43 +32,45 @@ import org.apache.phoenix.schema.types.PNumericType;
 
 /**
  * Base class for built-in SIGN function.
+ *
  * @since 4.3.0
  */
-@BuiltInFunction(name = SignFunction.NAME, args = { @Argument(allowedTypes = { PDecimal.class }) })
+@BuiltInFunction(name = SignFunction.NAME, args = {
+  @Argument(allowedTypes = {PDecimal.class})})
 public class SignFunction extends ScalarFunction {
 
-    public static final String NAME = "SIGN";
+  public static final String NAME = "SIGN";
 
-    private static final byte[][] RESULT = { PInteger.INSTANCE.toBytes(Integer.valueOf(-1)),
-            PInteger.INSTANCE.toBytes(Integer.valueOf(0)),
-            PInteger.INSTANCE.toBytes(Integer.valueOf(1)), };
+  private static final byte[][] RESULT = {PInteger.INSTANCE.toBytes(Integer.valueOf(-1)),
+    PInteger.INSTANCE.toBytes(Integer.valueOf(0)),
+    PInteger.INSTANCE.toBytes(Integer.valueOf(1)),};
 
-    public SignFunction() {
+  public SignFunction() {
+  }
+
+  public SignFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression childExpr = children.get(0);
+    PDataType dataType = childExpr.getDataType();
+    if (childExpr.evaluate(tuple, ptr)) {
+      int ret = ((PNumericType) dataType).signum(ptr, childExpr.getSortOrder());
+      ptr.set(RESULT[ret + 1]);
+      return true;
     }
+    return false;
+  }
 
-    public SignFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression childExpr = children.get(0);
-        PDataType dataType = childExpr.getDataType();
-        if (childExpr.evaluate(tuple, ptr)) {
-            int ret = ((PNumericType) dataType).signum(ptr, childExpr.getSortOrder());
-            ptr.set(RESULT[ret + 1]);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

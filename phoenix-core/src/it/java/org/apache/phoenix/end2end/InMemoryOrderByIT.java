@@ -23,18 +23,17 @@ import org.apache.phoenix.query.QueryServices;
 import org.apache.phoenix.util.ReadOnlyProps;
 import org.junit.BeforeClass;
 
-
 public class InMemoryOrderByIT extends OrderByIT {
 
-    public InMemoryOrderByIT() {
-    }
+  public InMemoryOrderByIT() {
+  }
 
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String,String> props = getDefaultProps();
-        props.put(QueryServices.SPOOL_THRESHOLD_BYTES_ATTRIB, Integer.toString(1024*1024));
-        // Must update config before starting server
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = getDefaultProps();
+    props.put(QueryServices.SPOOL_THRESHOLD_BYTES_ATTRIB, Integer.toString(1024 * 1024));
+    // Must update config before starting server
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 }

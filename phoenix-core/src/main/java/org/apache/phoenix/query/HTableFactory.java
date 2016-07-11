@@ -26,29 +26,32 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 /**
  * Creates clients to access HBase tables.
  *
- * 
+ *
  * @since 0.2
  */
 public interface HTableFactory {
-    /**
-     * Creates an HBase client using an externally managed HConnection and Thread pool.
-     *
-     * @param tableName Name of the table.
-     * @param connection HConnection to use.
-     * @param pool ExecutorService to use.
-     * @return An client to access an HBase table.
-     * @throws IOException if a server or network exception occurs
-     */
-    HTableInterface getTable(byte[] tableName, HConnection connection, ExecutorService pool) throws IOException;
 
-    /**
-     * Default implementation.  Uses standard HBase HTables.
-     */
-    static class HTableFactoryImpl implements HTableFactory {
-        @Override
-        public HTableInterface getTable(byte[] tableName, HConnection connection, ExecutorService pool) throws IOException {
-            // Let the HBase client manage the thread pool instead of passing ours through
-            return connection.getTable(tableName);
-        }
+  /**
+   * Creates an HBase client using an externally managed HConnection and Thread
+   * pool.
+   *
+   * @param tableName Name of the table.
+   * @param connection HConnection to use.
+   * @param pool ExecutorService to use.
+   * @return An client to access an HBase table.
+   * @throws IOException if a server or network exception occurs
+   */
+  HTableInterface getTable(byte[] tableName, HConnection connection, ExecutorService pool) throws IOException;
+
+  /**
+   * Default implementation. Uses standard HBase HTables.
+   */
+  static class HTableFactoryImpl implements HTableFactory {
+
+    @Override
+    public HTableInterface getTable(byte[] tableName, HConnection connection, ExecutorService pool) throws IOException {
+      // Let the HBase client manage the thread pool instead of passing ours through
+      return connection.getTable(tableName);
     }
+  }
 }

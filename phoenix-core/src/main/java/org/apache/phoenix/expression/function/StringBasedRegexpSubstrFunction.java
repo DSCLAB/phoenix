@@ -24,15 +24,16 @@ import org.apache.phoenix.expression.util.regex.AbstractBasePattern;
 import org.apache.phoenix.expression.util.regex.JavaPattern;
 
 public class StringBasedRegexpSubstrFunction extends RegexpSubstrFunction {
-    public StringBasedRegexpSubstrFunction() {
-    }
 
-    public StringBasedRegexpSubstrFunction(List<Expression> children) {
-        super(children);
-    }
+  public StringBasedRegexpSubstrFunction() {
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JavaPattern(value);
-    }
+  public StringBasedRegexpSubstrFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JavaPattern(value);
+  }
 }

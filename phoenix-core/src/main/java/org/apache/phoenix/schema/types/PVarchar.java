@@ -58,7 +58,7 @@ public class PVarchar extends PDataType<String> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length, PDataType actualType,
-      SortOrder sortOrder, Integer maxLength, Integer scale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale) {
     if (!actualType.isCoercibleTo(this)) {
       throwConstraintViolationException(actualType, this);
     }
@@ -99,8 +99,8 @@ public class PVarchar extends PDataType<String> {
 
   @Override
   public boolean isSizeCompatible(ImmutableBytesWritable ptr, Object value, PDataType srcType,
-      Integer maxLength, Integer scale, Integer desiredMaxLength,
-      Integer desiredScale) {
+          Integer maxLength, Integer scale, Integer desiredMaxLength,
+          Integer desiredScale) {
     if (ptr.getLength() != 0 && maxLength != null && desiredMaxLength != null) {
       return maxLength <= desiredMaxLength;
     }

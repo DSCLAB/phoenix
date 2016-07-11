@@ -32,88 +32,88 @@ import org.junit.Test;
 
 public class StddevIT extends BaseHBaseManagedTimeIT {
 
-    @Test
-    public void testSTDDEV_POP() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
+  @Test
+  public void testSTDDEV_POP() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
 
-        String query = "SELECT STDDEV_POP(A_INTEGER) FROM aTable";
+    String query = "SELECT STDDEV_POP(A_INTEGER) FROM aTable";
 
-        Connection conn = DriverManager.getConnection(getUrl());
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue(rs.next());
-            BigDecimal stddev = rs.getBigDecimal(1);
-            stddev = stddev.setScale(1, RoundingMode.HALF_UP);
-            assertEquals(2.6, stddev.doubleValue(),0.0);
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+    Connection conn = DriverManager.getConnection(getUrl());
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      BigDecimal stddev = rs.getBigDecimal(1);
+      stddev = stddev.setScale(1, RoundingMode.HALF_UP);
+      assertEquals(2.6, stddev.doubleValue(), 0.0);
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
-    
-    @Test
-    public void testSTDDEV_SAMP() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
+  }
 
-        String query = "SELECT STDDEV_SAMP(x_decimal) FROM aTable";
+  @Test
+  public void testSTDDEV_SAMP() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
 
-        Connection conn = DriverManager.getConnection(getUrl());
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue(rs.next());
-            BigDecimal stddev = rs.getBigDecimal(1);
-            stddev = stddev.setScale(1, RoundingMode.HALF_UP);
-            assertEquals(2.0, stddev.doubleValue(),0.0);
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+    String query = "SELECT STDDEV_SAMP(x_decimal) FROM aTable";
+
+    Connection conn = DriverManager.getConnection(getUrl());
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      BigDecimal stddev = rs.getBigDecimal(1);
+      stddev = stddev.setScale(1, RoundingMode.HALF_UP);
+      assertEquals(2.0, stddev.doubleValue(), 0.0);
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
+  }
 
-    @Test
-    public void testSTDDEV_POPOnDecimalColType() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
+  @Test
+  public void testSTDDEV_POPOnDecimalColType() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
 
-        String query = "SELECT STDDEV_POP(x_decimal) FROM aTable";
+    String query = "SELECT STDDEV_POP(x_decimal) FROM aTable";
 
-        Connection conn = DriverManager.getConnection(getUrl());
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue(rs.next());
-            BigDecimal stddev = rs.getBigDecimal(1);
-            stddev = stddev.setScale(10, RoundingMode.HALF_UP);
-            assertEquals(1.6679994671, stddev.doubleValue(), 0.0);
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+    Connection conn = DriverManager.getConnection(getUrl());
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      BigDecimal stddev = rs.getBigDecimal(1);
+      stddev = stddev.setScale(10, RoundingMode.HALF_UP);
+      assertEquals(1.6679994671, stddev.doubleValue(), 0.0);
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
+  }
 
-    @Test
-    public void testSTDDEV_SAMPOnDecimalColType() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
+  @Test
+  public void testSTDDEV_SAMPOnDecimalColType() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), getUrl());
 
-        String query = "SELECT STDDEV_SAMP(x_decimal) FROM aTable";
+    String query = "SELECT STDDEV_SAMP(x_decimal) FROM aTable";
 
-        Connection conn = DriverManager.getConnection(getUrl());
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue(rs.next());
-            BigDecimal stddev = rs.getBigDecimal(1);
-            stddev = stddev.setScale(10, RoundingMode.HALF_UP);
-            assertEquals(2.0428737928, stddev.doubleValue(), 0.0);
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+    Connection conn = DriverManager.getConnection(getUrl());
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      BigDecimal stddev = rs.getBigDecimal(1);
+      stddev = stddev.setScale(10, RoundingMode.HALF_UP);
+      assertEquals(2.0428737928, stddev.doubleValue(), 0.0);
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
+  }
 
 }

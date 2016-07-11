@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
@@ -24,9 +23,9 @@ import java.lang.management.ManagementFactory;
 
 public class NonHeapMemoryMonitor implements Monitor {
 
-    @Override
-    public Stat getStat() {
-        Stat<Long> stat = new Stat(ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed());
-        return stat;
-    }
+  @Override
+  public Stat getStat() {
+    Stat<Long> stat = new Stat(ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed());
+    return stat;
+  }
 }

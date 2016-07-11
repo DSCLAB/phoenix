@@ -29,7 +29,7 @@ public class PBooleanArray extends PArrayDataType<boolean[]> {
 
   private PBooleanArray() {
     super("BOOLEAN ARRAY", PDataType.ARRAY_TYPE_BASE + PBoolean.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 25);
+            PhoenixArray.class, null, 25);
   }
 
   @Override
@@ -64,9 +64,9 @@ public class PBooleanArray extends PArrayDataType<boolean[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength, Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength, Integer scale) {
     return toObject(bytes, offset, length, PBoolean.INSTANCE, sortOrder, maxLength, scale,
-        PBoolean.INSTANCE);
+            PBoolean.INSTANCE);
   }
 
   @Override
@@ -74,20 +74,20 @@ public class PBooleanArray extends PArrayDataType<boolean[]> {
     return isCoercibleTo(targetType, this);
   }
 
-    @Override
-    public boolean isCoercibleTo(PDataType targetType, Object value) {
-        if (value == null) {
-            return true;
-        }
-        PrimitiveBooleanPhoenixArray pArr = (PrimitiveBooleanPhoenixArray) value;
-        boolean[] booleanArr = (boolean[]) pArr.array;
-        for (boolean b : booleanArr) {
-            if (!super.isCoercibleTo(PInteger.INSTANCE, b)) {
-                return false;
-            }
-        }
-        return true;
+  @Override
+  public boolean isCoercibleTo(PDataType targetType, Object value) {
+    if (value == null) {
+      return true;
     }
+    PrimitiveBooleanPhoenixArray pArr = (PrimitiveBooleanPhoenixArray) value;
+    boolean[] booleanArr = (boolean[]) pArr.array;
+    for (boolean b : booleanArr) {
+      if (!super.isCoercibleTo(PInteger.INSTANCE, b)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   @Override
   public int getResultSetSqlType() {
@@ -96,10 +96,10 @@ public class PBooleanArray extends PArrayDataType<boolean[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

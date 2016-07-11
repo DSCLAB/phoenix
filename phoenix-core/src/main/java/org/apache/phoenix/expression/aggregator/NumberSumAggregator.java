@@ -26,88 +26,89 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.SizedUtil;
 
 /**
- * 
+ *
  * Aggregator that sums integral number values
- * 
- * 
+ *
+ *
  * @since 0.1
  */
 abstract public class NumberSumAggregator extends BaseAggregator {
-    private long sum = 0;
-    private byte[] buffer;
 
-    public NumberSumAggregator(SortOrder sortOrder) {
-        super(sortOrder);
+  private long sum = 0;
+  private byte[] buffer;
+
+  public NumberSumAggregator(SortOrder sortOrder) {
+    super(sortOrder);
+  }
+
+  public NumberSumAggregator(SortOrder sortOrder,
+          ImmutableBytesWritable ptr) {
+    this(sortOrder);
+    if (ptr != null) {
+      initBuffer();
+      sum = PLong.INSTANCE.getCodec().decodeLong(ptr, sortOrder);
     }
+  }
 
-    public NumberSumAggregator(SortOrder sortOrder,
-            ImmutableBytesWritable ptr) {
-        this(sortOrder);
-        if (ptr != null) {
-            initBuffer();
-            sum = PLong.INSTANCE.getCodec().decodeLong(ptr, sortOrder);
-        }
+  public long getSum() {
+    return sum;
+  }
+
+  abstract protected PDataType getInputDataType();
+
+  private int getBufferLength() {
+    return getDataType().getByteSize();
+  }
+
+  private void initBuffer() {
+    buffer = new byte[getBufferLength()];
+  }
+
+  @Override
+  public void aggregate(Tuple tuple, ImmutableBytesWritable ptr) {
+    // Get either IntNative or LongNative depending on input type
+    long value = getInputDataType().getCodec().decodeLong(ptr,
+            sortOrder);
+    sum += value;
+    if (buffer == null) {
+      initBuffer();
     }
+  }
 
-    public long getSum() {
-        return sum;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (buffer == null) {
+      if (isNullable()) {
+        return false;
+      }
+      initBuffer();
     }
+    getDataType().getCodec().encodeLong(sum, buffer, 0);
+    ptr.set(buffer);
+    return true;
+  }
 
-    abstract protected PDataType getInputDataType();
+  @Override
+  public final PDataType getDataType() {
+    return PLong.INSTANCE;
+  }
 
-    private int getBufferLength() {
-        return getDataType().getByteSize();
-    }
+  @Override
+  public void reset() {
+    sum = 0;
+    buffer = null;
+    super.reset();
+  }
 
-    private void initBuffer() {
-        buffer = new byte[getBufferLength()];
-    }
+  @Override
+  public String toString() {
+    return "SUM [sum=" + sum + "]";
+  }
 
-    @Override
-    public void aggregate(Tuple tuple, ImmutableBytesWritable ptr) {
-        // Get either IntNative or LongNative depending on input type
-        long value = getInputDataType().getCodec().decodeLong(ptr,
-                sortOrder);
-        sum += value;
-        if (buffer == null) {
-            initBuffer();
-        }
-    }
-
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (buffer == null) {
-            if (isNullable()) {
-                return false;
-            }
-            initBuffer();
-        }
-        getDataType().getCodec().encodeLong(sum, buffer, 0);
-        ptr.set(buffer);
-        return true;
-    }
-
-    @Override
-    public final PDataType getDataType() {
-        return PLong.INSTANCE;
-    }
-
-    @Override
-    public void reset() {
-        sum = 0;
-        buffer = null;
-        super.reset();
-    }
-
-    @Override
-    public String toString() {
-        return "SUM [sum=" + sum + "]";
-    }
-
-    @Override
-    public int getSize() {
-        return super.getSize() + SizedUtil.LONG_SIZE + SizedUtil.ARRAY_SIZE
-                + getBufferLength();
-    }
+  @Override
+  public int getSize() {
+    return super.getSize() + SizedUtil.LONG_SIZE + SizedUtil.ARRAY_SIZE
+            + getBufferLength();
+  }
 
 }

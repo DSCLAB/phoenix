@@ -66,11 +66,13 @@ import org.apache.zookeeper.data.Stat;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * Executes region split as a "transaction".  Call {@link #prepare()} to setup
+ * Executes region split as a "transaction". Call {@link #prepare()} to setup
  * the transaction, {@link #execute(Server, RegionServerServices)} to run the
- * transaction and {@link #rollback(Server, RegionServerServices)} to cleanup if execute fails.
+ * transaction and {@link #rollback(Server, RegionServerServices)} to cleanup if
+ * execute fails.
  *
- * <p>Here is an example of how you would use this class:
+ * <p>
+ * Here is an example of how you would use this class:
  * <pre>
  *  SplitTransaction st = new SplitTransaction(this.conf, parent, midKey)
  *  if (!st.prepare()) return;
@@ -85,11 +87,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *    }
  *  }
  * </Pre>
- * <p>This class is not thread safe.  Caller needs ensure split is run by
- * one thread only.
+ * <p>
+ * This class is not thread safe. Caller needs ensure split is run by one thread
+ * only.
  */
 @InterfaceAudience.Private
 public class IndexSplitTransaction extends SplitTransaction {
+
   private static final Log LOG = LogFactory.getLog(IndexSplitTransaction.class);
 
   /*
@@ -104,12 +108,11 @@ public class IndexSplitTransaction extends SplitTransaction {
   /*
    * Row to split around
    */
-  private final byte [] splitrow;
+  private final byte[] splitrow;
 
   /**
-   * Types to add to the transaction journal.
-   * Each enum is a step in the split transaction. Used to figure how much
-   * we need to rollback.
+   * Types to add to the transaction journal. Each enum is a step in the split
+   * transaction. Used to figure how much we need to rollback.
    */
   enum JournalEntry {
     /**
@@ -137,9 +140,8 @@ public class IndexSplitTransaction extends SplitTransaction {
      */
     STARTED_REGION_B_CREATION,
     /**
-     * Point of no return.
-     * If we got here, then transaction is not recoverable other than by
-     * crashing out the regionserver.
+     * Point of no return. If we got here, then transaction is not recoverable
+     * other than by crashing out the regionserver.
      */
     PONR
   }
@@ -151,33 +153,39 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   /**
    * Constructor
+   *
    * @param r Region to split
    * @param splitrow Row to split around
    */
-  public IndexSplitTransaction(final HRegion r, final byte [] splitrow) {
-    super(r , splitrow);
+  public IndexSplitTransaction(final HRegion r, final byte[] splitrow) {
+    super(r, splitrow);
     this.parent = r;
     this.splitrow = splitrow;
   }
 
   /**
    * Does checks on split inputs.
+   *
    * @return <code>true</code> if the region is splittable else
    * <code>false</code> if it is not (e.g. its already closed, etc.).
    */
   public boolean prepare() {
-    if (!this.parent.isSplittable()) return false;
+    if (!this.parent.isSplittable()) {
+      return false;
+    }
     // Split key can be null if this region is unsplittable; i.e. has refs.
-    if (this.splitrow == null) return false;
+    if (this.splitrow == null) {
+      return false;
+    }
     HRegionInfo hri = this.parent.getRegionInfo();
     parent.prepareToSplit();
     // Check splitrow.
-    byte [] startKey = hri.getStartKey();
-    byte [] endKey = hri.getEndKey();
-    if (Bytes.equals(startKey, splitrow) ||
-        !this.parent.getRegionInfo().containsRow(splitrow)) {
-      LOG.info("Split row is not inside region key range or is equal to " +
-          "startkey: " + Bytes.toStringBinary(this.splitrow));
+    byte[] startKey = hri.getStartKey();
+    byte[] endKey = hri.getEndKey();
+    if (Bytes.equals(startKey, splitrow)
+            || !this.parent.getRegionInfo().containsRow(splitrow)) {
+      LOG.info("Split row is not inside region key range or is equal to "
+              + "startkey: " + Bytes.toStringBinary(this.splitrow));
       return false;
     }
     long rid = getDaughterRegionIdTimestamp(hri);
@@ -188,6 +196,7 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   /**
    * Calculate daughter regionid to use.
+   *
    * @param hri Parent {@link HRegionInfo}
    * @return Daughter region id (timestamp) to use.
    */
@@ -196,34 +205,36 @@ public class IndexSplitTransaction extends SplitTransaction {
     // Regionid is timestamp.  Can't be less than that of parent else will insert
     // at wrong location in hbase:meta (See HBASE-710).
     if (rid < hri.getRegionId()) {
-      LOG.warn("Clock skew; parent regions id is " + hri.getRegionId() +
-        " but current time here is " + rid);
+      LOG.warn("Clock skew; parent regions id is " + hri.getRegionId()
+              + " but current time here is " + rid);
       rid = hri.getRegionId() + 1;
     }
     return rid;
   }
 
   private static IOException closedByOtherException = new IOException(
-      "Failed to close region: already closed by another thread");
+          "Failed to close region: already closed by another thread");
 
   /**
    * Prepare the regions and region files.
-   * @param server Hosting server instance.  Can be null when testing (won't try
+   *
+   * @param server Hosting server instance. Can be null when testing (won't try
    * and update in zk if a null server)
    * @param services Used to online/offline regions.
-   * @throws IOException If thrown, transaction failed.
-   *    Call {@link #rollback(Server, RegionServerServices)}
+   * @throws IOException If thrown, transaction failed. Call
+   * {@link #rollback(Server, RegionServerServices)}
    * @return Regions created
    */
-  /* package */PairOfSameType<HRegion> createDaughters(final Server server,
-      final RegionServerServices services) throws IOException {
+  /* package */
+  PairOfSameType<HRegion> createDaughters(final Server server,
+          final RegionServerServices services) throws IOException {
     LOG.info("Starting split of region " + this.parent);
-    if ((server != null && server.isStopped()) ||
-        (services != null && services.isStopping())) {
+    if ((server != null && server.isStopped())
+            || (services != null && services.isStopping())) {
       throw new IOException("Server is stopped or stopping");
     }
-    assert !this.parent.lock.writeLock().isHeldByCurrentThread():
-      "Unsafe to hold write lock while performing RPCs";
+    assert !this.parent.lock.writeLock().isHeldByCurrentThread() :
+            "Unsafe to hold write lock while performing RPCs";
 
     // Coprocessor callback
     if (this.parent.getCoprocessorHost() != null) {
@@ -236,20 +247,20 @@ public class IndexSplitTransaction extends SplitTransaction {
     }
 
     // If true, no cluster to write meta edits to or to update znodes in.
-    boolean testing = server == null? true:
-        server.getConfiguration().getBoolean("hbase.testing.nocluster", false);
-    this.fileSplitTimeout = testing ? this.fileSplitTimeout :
-        server.getConfiguration().getLong("hbase.regionserver.fileSplitTimeout",
-          this.fileSplitTimeout);
+    boolean testing = server == null ? true
+            : server.getConfiguration().getBoolean("hbase.testing.nocluster", false);
+    this.fileSplitTimeout = testing ? this.fileSplitTimeout
+            : server.getConfiguration().getLong("hbase.regionserver.fileSplitTimeout",
+                    this.fileSplitTimeout);
 
     PairOfSameType<HRegion> daughterRegions = stepsBeforePONR(server, services, testing);
 
     List<Mutation> metaEntries = new ArrayList<Mutation>();
     if (this.parent.getCoprocessorHost() != null) {
       if (this.parent.getCoprocessorHost().
-          preSplitBeforePONR(this.splitrow, metaEntries)) {
+              preSplitBeforePONR(this.splitrow, metaEntries)) {
         throw new IOException("Coprocessor bypassing region "
-            + this.parent.getRegionNameAsString() + " split.");
+                + this.parent.getRegionNameAsString() + " split.");
       }
       try {
         for (Mutation p : metaEntries) {
@@ -257,7 +268,7 @@ public class IndexSplitTransaction extends SplitTransaction {
         }
       } catch (IOException e) {
         LOG.error("Row key of mutation from coprossor is not parsable as region name."
-            + "Mutations from coprocessor should only for hbase:meta table.");
+                + "Mutations from coprocessor should only for hbase:meta table.");
         throw e;
       }
     }
@@ -291,24 +302,24 @@ public class IndexSplitTransaction extends SplitTransaction {
                 daughterRegions.getSecond().getRegionInfo(), server.getServerName(), 0);
       } else {
         offlineParentInMetaAndputMetaEntries(server.getConnection(),
-          parent.getRegionInfo(), daughterRegions.getFirst().getRegionInfo(), daughterRegions
-              .getSecond().getRegionInfo(), server.getServerName(), metaEntries);
+                parent.getRegionInfo(), daughterRegions.getFirst().getRegionInfo(), daughterRegions
+                .getSecond().getRegionInfo(), server.getServerName(), metaEntries);
       }
     }
     return daughterRegions;
   }
 
   public PairOfSameType<HRegion> stepsBeforePONR(final Server server,
-      final RegionServerServices services, boolean testing) throws IOException {
+          final RegionServerServices services, boolean testing) throws IOException {
     // Set ephemeral SPLITTING znode up in zk.  Mocked servers sometimes don't
     // have zookeeper so don't do zk stuff if server or zookeeper is null
     if (server != null && server.getZooKeeper() != null) {
       try {
         createNodeSplitting(server.getZooKeeper(),
-          parent.getRegionInfo(), server.getServerName(), hri_a, hri_b);
+                parent.getRegionInfo(), server.getServerName(), hri_a, hri_b);
       } catch (KeeperException e) {
-        throw new IOException("Failed creating PENDING_SPLIT znode on " +
-          this.parent.getRegionNameAsString(), e);
+        throw new IOException("Failed creating PENDING_SPLIT znode on "
+                + this.parent.getRegionNameAsString(), e);
       }
     }
     this.journal.add(JournalEntry.SET_SPLITTING_IN_ZK);
@@ -324,7 +335,7 @@ public class IndexSplitTransaction extends SplitTransaction {
 
     Map<byte[], List<StoreFile>> hstoreFilesToSplit = null;
     Exception exceptionToThrow = null;
-    try{
+    try {
       hstoreFilesToSplit = this.parent.close(false);
     } catch (Exception e) {
       exceptionToThrow = e;
@@ -341,7 +352,9 @@ public class IndexSplitTransaction extends SplitTransaction {
       this.journal.add(JournalEntry.CLOSED_PARENT_REGION);
     }
     if (exceptionToThrow != null) {
-      if (exceptionToThrow instanceof IOException) throw (IOException)exceptionToThrow;
+      if (exceptionToThrow instanceof IOException) {
+        throw (IOException) exceptionToThrow;
+      }
       throw new IOException(exceptionToThrow);
     }
     if (!testing) {
@@ -372,26 +385,28 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   /**
    * Perform time consuming opening of the daughter regions.
-   * @param server Hosting server instance.  Can be null when testing (won't try
+   *
+   * @param server Hosting server instance. Can be null when testing (won't try
    * and update in zk if a null server)
    * @param services Used to online/offline regions.
    * @param a first daughter region
    * @param a second daughter region
-   * @throws IOException If thrown, transaction failed.
-   *          Call {@link #rollback(Server, RegionServerServices)}
+   * @throws IOException If thrown, transaction failed. Call
+   * {@link #rollback(Server, RegionServerServices)}
    */
-  /* package */void openDaughters(final Server server,
-      final RegionServerServices services, HRegion a, HRegion b)
-      throws IOException {
+  /* package */
+  void openDaughters(final Server server,
+          final RegionServerServices services, HRegion a, HRegion b)
+          throws IOException {
     boolean stopped = server != null && server.isStopped();
     boolean stopping = services != null && services.isStopping();
     // TODO: Is this check needed here?
     if (stopped || stopping) {
-      LOG.info("Not opening daughters " +
-          b.getRegionInfo().getRegionNameAsString() +
-          " and " +
-          a.getRegionInfo().getRegionNameAsString() +
-          " because stopping=" + stopping + ", stopped=" + stopped);
+      LOG.info("Not opening daughters "
+              + b.getRegionInfo().getRegionNameAsString()
+              + " and "
+              + a.getRegionInfo().getRegionNameAsString()
+              + " because stopping=" + stopping + ", stopped=" + stopped);
     } else {
       // Open daughters in parallel.
       DaughterOpener aOpener = new DaughterOpener(server, a);
@@ -402,15 +417,15 @@ public class IndexSplitTransaction extends SplitTransaction {
         aOpener.join();
         bOpener.join();
       } catch (InterruptedException e) {
-        throw (InterruptedIOException)new InterruptedIOException().initCause(e);
+        throw (InterruptedIOException) new InterruptedIOException().initCause(e);
       }
       if (aOpener.getException() != null) {
-        throw new IOException("Failed " +
-          aOpener.getName(), aOpener.getException());
+        throw new IOException("Failed "
+                + aOpener.getName(), aOpener.getException());
       }
       if (bOpener.getException() != null) {
-        throw new IOException("Failed " +
-          bOpener.getName(), bOpener.getException());
+        throw new IOException("Failed "
+                + bOpener.getName(), bOpener.getException());
       }
       if (services != null) {
         try {
@@ -429,24 +444,26 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   /**
    * Finish off split transaction, transition the zknode
-   * @param server Hosting server instance.  Can be null when testing (won't try
+   *
+   * @param server Hosting server instance. Can be null when testing (won't try
    * and update in zk if a null server)
    * @param services Used to online/offline regions.
    * @param a first daughter region
    * @param a second daughter region
-   * @throws IOException If thrown, transaction failed.
-   *          Call {@link #rollback(Server, RegionServerServices)}
+   * @throws IOException If thrown, transaction failed. Call
+   * {@link #rollback(Server, RegionServerServices)}
    */
-  /* package */void transitionZKNode(final Server server,
-      final RegionServerServices services, HRegion a, HRegion b)
-      throws IOException {
+  /* package */
+  void transitionZKNode(final Server server,
+          final RegionServerServices services, HRegion a, HRegion b)
+          throws IOException {
     // Tell master about split by updating zk.  If we fail, abort.
     if (server != null && server.getZooKeeper() != null) {
       try {
         this.znodeVersion = transitionSplittingNode(server.getZooKeeper(),
-          parent.getRegionInfo(), a.getRegionInfo(), b.getRegionInfo(),
-          server.getServerName(), this.znodeVersion,
-          RS_ZK_REGION_SPLITTING, RS_ZK_REGION_SPLIT);
+                parent.getRegionInfo(), a.getRegionInfo(), b.getRegionInfo(),
+                server.getServerName(), this.znodeVersion,
+                RS_ZK_REGION_SPLITTING, RS_ZK_REGION_SPLIT);
 
         int spins = 0;
         // Now wait for the master to process the split. We know it's done
@@ -454,18 +471,18 @@ public class IndexSplitTransaction extends SplitTransaction {
         // that it's possible for the master to miss an event.
         do {
           if (spins % 10 == 0) {
-            LOG.debug("Still waiting on the master to process the split for " +
-                this.parent.getRegionInfo().getEncodedName());
+            LOG.debug("Still waiting on the master to process the split for "
+                    + this.parent.getRegionInfo().getEncodedName());
           }
           Thread.sleep(100);
           // When this returns -1 it means the znode doesn't exist
           this.znodeVersion = transitionSplittingNode(server.getZooKeeper(),
-            parent.getRegionInfo(), a.getRegionInfo(), b.getRegionInfo(),
-            server.getServerName(), this.znodeVersion,
-            RS_ZK_REGION_SPLIT, RS_ZK_REGION_SPLIT);
+                  parent.getRegionInfo(), a.getRegionInfo(), b.getRegionInfo(),
+                  server.getServerName(), this.znodeVersion,
+                  RS_ZK_REGION_SPLIT, RS_ZK_REGION_SPLIT);
           spins++;
         } while (this.znodeVersion != -1 && !server.isStopped()
-            && !services.isStopping());
+                && !services.isStopping());
       } catch (Exception e) {
         if (e instanceof InterruptedException) {
           Thread.currentThread().interrupt();
@@ -476,7 +493,7 @@ public class IndexSplitTransaction extends SplitTransaction {
 
     // Coprocessor callback
     if (this.parent.getCoprocessorHost() != null) {
-      this.parent.getCoprocessorHost().postSplit(a,b);
+      this.parent.getCoprocessorHost().postSplit(a, b);
     }
 
     // Leaving here, the splitdir with its dross will be in place but since the
@@ -485,15 +502,14 @@ public class IndexSplitTransaction extends SplitTransaction {
   }
 
   /**
-   * Wait for the splitting node to be transitioned from pending_split
-   * to splitting by master. That's how we are sure master has processed
-   * the event and is good with us to move on. If we don't get any update,
-   * we periodically transition the node so that master gets the callback.
-   * If the node is removed or is not in pending_split state any more,
-   * we abort the split.
+   * Wait for the splitting node to be transitioned from pending_split to
+   * splitting by master. That's how we are sure master has processed the event
+   * and is good with us to move on. If we don't get any update, we periodically
+   * transition the node so that master gets the callback. If the node is
+   * removed or is not in pending_split state any more, we abort the split.
    */
   private int getZKNode(final Server server,
-      final RegionServerServices services) throws IOException {
+          final RegionServerServices services) throws IOException {
     // Wait for the master to process the pending_split.
     try {
       int spins = 0;
@@ -504,17 +520,17 @@ public class IndexSplitTransaction extends SplitTransaction {
       while (!(server.isStopped() || services.isStopping())) {
         if (spins % 5 == 0) {
           LOG.debug("Still waiting for master to process "
-            + "the pending_split for " + node);
+                  + "the pending_split for " + node);
           transitionSplittingNode(zkw, parent.getRegionInfo(),
-            hri_a, hri_b, expectedServer, -1, RS_ZK_REQUEST_REGION_SPLIT,
-            RS_ZK_REQUEST_REGION_SPLIT);
+                  hri_a, hri_b, expectedServer, -1, RS_ZK_REQUEST_REGION_SPLIT,
+                  RS_ZK_REQUEST_REGION_SPLIT);
         }
         Thread.sleep(100);
         spins++;
-        byte [] data = ZKAssign.getDataNoWatch(zkw, node, stat);
+        byte[] data = ZKAssign.getDataNoWatch(zkw, node, stat);
         if (data == null) {
           throw new IOException("Data is null, splitting node "
-            + node + " no longer exists");
+                  + node + " no longer exists");
         }
         RegionTransition rt = RegionTransition.parseFrom(data);
         EventType et = rt.getEventType();
@@ -522,52 +538,53 @@ public class IndexSplitTransaction extends SplitTransaction {
           ServerName serverName = rt.getServerName();
           if (!serverName.equals(expectedServer)) {
             throw new IOException("Splitting node " + node + " is for "
-              + serverName + ", not us " + expectedServer);
+                    + serverName + ", not us " + expectedServer);
           }
-          byte [] payloadOfSplitting = rt.getPayload();
+          byte[] payloadOfSplitting = rt.getPayload();
           List<HRegionInfo> splittingRegions = HRegionInfo.parseDelimitedFrom(
-            payloadOfSplitting, 0, payloadOfSplitting.length);
+                  payloadOfSplitting, 0, payloadOfSplitting.length);
           assert splittingRegions.size() == 2;
           HRegionInfo a = splittingRegions.get(0);
           HRegionInfo b = splittingRegions.get(1);
           if (!(hri_a.equals(a) && hri_b.equals(b))) {
             throw new IOException("Splitting node " + node + " is for " + a + ", "
-              + b + ", not expected daughters: " + hri_a + ", " + hri_b);
+                    + b + ", not expected daughters: " + hri_a + ", " + hri_b);
           }
           // Master has processed it.
           return stat.getVersion();
         }
         if (et != RS_ZK_REQUEST_REGION_SPLIT) {
           throw new IOException("Splitting node " + node
-            + " moved out of splitting to " + et);
+                  + " moved out of splitting to " + et);
         }
       }
       // Server is stopping/stopped
       throw new IOException("Server is "
-        + (services.isStopping() ? "stopping" : "stopped"));
+              + (services.isStopping() ? "stopping" : "stopped"));
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
       throw new IOException("Failed getting SPLITTING znode on "
-        + parent.getRegionNameAsString(), e);
+              + parent.getRegionNameAsString(), e);
     }
   }
 
   /**
    * Run the transaction.
-   * @param server Hosting server instance.  Can be null when testing (won't try
+   *
+   * @param server Hosting server instance. Can be null when testing (won't try
    * and update in zk if a null server)
    * @param services Used to online/offline regions.
-   * @throws IOException If thrown, transaction failed.
-   *          Call {@link #rollback(Server, RegionServerServices)}
+   * @throws IOException If thrown, transaction failed. Call
+   * {@link #rollback(Server, RegionServerServices)}
    * @return Regions created
    * @throws IOException
    * @see #rollback(Server, RegionServerServices)
    */
   public PairOfSameType<HRegion> execute(final Server server,
-      final RegionServerServices services)
-  throws IOException {
+          final RegionServerServices services)
+          throws IOException {
     PairOfSameType<HRegion> regions = createDaughters(server, services);
     if (this.parent.getCoprocessorHost() != null) {
       this.parent.getCoprocessorHost().preSplitAfterPONR();
@@ -576,16 +593,16 @@ public class IndexSplitTransaction extends SplitTransaction {
   }
 
   public PairOfSameType<HRegion> stepsAfterPONR(final Server server,
-      final RegionServerServices services, PairOfSameType<HRegion> regions)
-      throws IOException {
+          final RegionServerServices services, PairOfSameType<HRegion> regions)
+          throws IOException {
     openDaughters(server, services, regions.getFirst(), regions.getSecond());
     transitionZKNode(server, services, regions.getFirst(), regions.getSecond());
     return regions;
   }
 
   private void offlineParentInMetaAndputMetaEntries(Connection conn,
-      HRegionInfo parent, HRegionInfo splitA, HRegionInfo splitB,
-      ServerName serverName, List<Mutation> metaEntries) throws IOException {
+          HRegionInfo parent, HRegionInfo splitA, HRegionInfo splitB,
+          ServerName serverName, List<Mutation> metaEntries) throws IOException {
     List<Mutation> mutations = metaEntries;
     HRegionInfo copyOfParent = new HRegionInfo(parent);
     copyOfParent.setOffline(true);
@@ -595,7 +612,7 @@ public class IndexSplitTransaction extends SplitTransaction {
     Put putParent = MetaTableAccessor.makePutFromRegionInfo(copyOfParent);
     MetaTableAccessor.addDaughtersToPut(putParent, splitA, splitB);
     mutations.add(putParent);
-    
+
     //Puts for daughters
     Put putA = MetaTableAccessor.makePutFromRegionInfo(splitA);
     Put putB = MetaTableAccessor.makePutFromRegionInfo(splitB);
@@ -609,11 +626,11 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   public Put addLocation(final Put p, final ServerName sn, long openSeqNum) {
     p.addImmutable(HConstants.CATALOG_FAMILY, HConstants.SERVER_QUALIFIER,
-      Bytes.toBytes(sn.getHostAndPort()));
+            Bytes.toBytes(sn.getHostAndPort()));
     p.addImmutable(HConstants.CATALOG_FAMILY, HConstants.STARTCODE_QUALIFIER,
-      Bytes.toBytes(sn.getStartcode()));
+            Bytes.toBytes(sn.getStartcode()));
     p.addImmutable(HConstants.CATALOG_FAMILY, HConstants.SEQNUM_QUALIFIER,
-        Bytes.toBytes(openSeqNum));
+            Bytes.toBytes(openSeqNum));
     return p;
   }
 
@@ -622,13 +639,14 @@ public class IndexSplitTransaction extends SplitTransaction {
    * If we fail, abort this hosting server.
    */
   class DaughterOpener extends HasThread {
+
     private final Server server;
     private final HRegion r;
     private Throwable t = null;
 
     DaughterOpener(final Server s, final HRegion r) {
-      super((s == null? "null-services": s.getServerName()) +
-        "-daughterOpener=" + r.getRegionInfo().getEncodedName());
+      super((s == null ? "null-services" : s.getServerName())
+              + "-daughterOpener=" + r.getRegionInfo().getEncodedName());
       setDaemon(true);
       this.server = s;
       this.r = r;
@@ -654,21 +672,23 @@ public class IndexSplitTransaction extends SplitTransaction {
 
   /**
    * Open daughter regions, add them to online list and update meta.
+   *
    * @param server
    * @param daughter
    * @throws IOException
    * @throws KeeperException
    */
   void openDaughterRegion(final Server server, final HRegion daughter)
-  throws IOException, KeeperException {
+          throws IOException, KeeperException {
     HRegionInfo hri = daughter.getRegionInfo();
     LoggingProgressable reporter = server == null ? null
-        : new LoggingProgressable(hri, server.getConfiguration().getLong(
-            "hbase.regionserver.split.daughter.open.log.interval", 10000));
+            : new LoggingProgressable(hri, server.getConfiguration().getLong(
+                    "hbase.regionserver.split.daughter.open.log.interval", 10000));
     daughter.openHRegion(reporter);
   }
 
   static class LoggingProgressable implements CancelableProgressable {
+
     private final HRegionInfo hri;
     private long lastLog = -1;
     private final long interval;
@@ -690,7 +710,7 @@ public class IndexSplitTransaction extends SplitTransaction {
   }
 
   private void splitStoreFiles(final Map<byte[], List<StoreFile>> hstoreFilesToSplit)
-      throws IOException {
+          throws IOException {
     if (hstoreFilesToSplit == null) {
       // Could be null because close didn't succeed -- for now consider it fatal
       throw new IOException("Close returned empty list of StoreFiles");
@@ -706,13 +726,13 @@ public class IndexSplitTransaction extends SplitTransaction {
     ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
     builder.setNameFormat("StoreFileSplitter-%1$d");
     ThreadFactory factory = builder.build();
-    ThreadPoolExecutor threadPool =
-      (ThreadPoolExecutor) Executors.newFixedThreadPool(nbFiles, factory);
+    ThreadPoolExecutor threadPool
+            = (ThreadPoolExecutor) Executors.newFixedThreadPool(nbFiles, factory);
     List<Future<Void>> futures = new ArrayList<Future<Void>>(nbFiles);
 
     // Split each store file.
-    for (Map.Entry<byte[], List<StoreFile>> entry: hstoreFilesToSplit.entrySet()) {
-      for (StoreFile sf: entry.getValue()) {
+    for (Map.Entry<byte[], List<StoreFile>> entry : hstoreFilesToSplit.entrySet()) {
+      for (StoreFile sf : entry.getValue()) {
         StoreFileSplitter sfs = new StoreFileSplitter(entry.getKey(), sf);
         futures.add(threadPool.submit(sfs));
       }
@@ -723,26 +743,26 @@ public class IndexSplitTransaction extends SplitTransaction {
     // Wait for all the tasks to finish
     try {
       boolean stillRunning = !threadPool.awaitTermination(
-          this.fileSplitTimeout, TimeUnit.MILLISECONDS);
+              this.fileSplitTimeout, TimeUnit.MILLISECONDS);
       if (stillRunning) {
         threadPool.shutdownNow();
         // wait for the thread to shutdown completely.
         while (!threadPool.isTerminated()) {
           Thread.sleep(50);
         }
-        throw new IOException("Took too long to split the" +
-            " files and create the references, aborting split");
+        throw new IOException("Took too long to split the"
+                + " files and create the references, aborting split");
       }
     } catch (InterruptedException e) {
-      throw (InterruptedIOException)new InterruptedIOException().initCause(e);
+      throw (InterruptedIOException) new InterruptedIOException().initCause(e);
     }
 
     // Look for any exception
-    for (Future<Void> future: futures) {
+    for (Future<Void> future : futures) {
       try {
         future.get();
       } catch (InterruptedException e) {
-        throw (InterruptedIOException)new InterruptedIOException().initCause(e);
+        throw (InterruptedIOException) new InterruptedIOException().initCause(e);
       } catch (ExecutionException e) {
         throw new IOException(e);
       }
@@ -750,15 +770,17 @@ public class IndexSplitTransaction extends SplitTransaction {
   }
 
   /**
-   * Utility class used to do the file splitting / reference writing
-   * in parallel instead of sequentially.
+   * Utility class used to do the file splitting / reference writing in parallel
+   * instead of sequentially.
    */
   class StoreFileSplitter implements Callable<Void> {
+
     private final byte[] family;
     private final StoreFile sf;
 
     /**
      * Constructor that takes what it needs to split
+     *
      * @param family Family that contains the store file
      * @param sf which file
      */
@@ -773,103 +795,105 @@ public class IndexSplitTransaction extends SplitTransaction {
     }
   }
 
-    private void splitStoreFile(final byte[] family, final StoreFile sf) throws IOException {
-        HRegionFileSystem fs = this.parent.getRegionFileSystem();
-        String familyName = Bytes.toString(family);
-        splitStoreFile(this.hri_a, familyName, sf, this.splitrow, false, fs);
-        splitStoreFile(this.hri_b, familyName, sf, this.splitrow, true, fs);
-    }
+  private void splitStoreFile(final byte[] family, final StoreFile sf) throws IOException {
+    HRegionFileSystem fs = this.parent.getRegionFileSystem();
+    String familyName = Bytes.toString(family);
+    splitStoreFile(this.hri_a, familyName, sf, this.splitrow, false, fs);
+    splitStoreFile(this.hri_b, familyName, sf, this.splitrow, true, fs);
+  }
 
-    private Path splitStoreFile(HRegionInfo hri, String familyName, StoreFile f, byte[] splitRow,
-            boolean top, HRegionFileSystem fs) throws IOException {
-        f.closeReader(true);
-        Path splitDir =
-                new Path(fs.getSplitsDir(hri), familyName);
-        // A reference to the bottom half of the hsf store file.
-        Reference r =
-                top ? Reference.createTopReference(splitRow) : Reference
-                        .createBottomReference(splitRow);
-        // Add the referred-to regions name as a dot separated suffix.
-        // See REF_NAME_REGEX regex above. The referred-to regions name is
-        // up in the path of the passed in <code>f</code> -- parentdir is family,
-        // then the directory above is the region name.
-        String parentRegionName = this.parent.getRegionInfo().getEncodedName();
-        // Write reference with same file id only with the other region name as
-        // suffix and into the new region location (under same family).
-        Path p = new Path(splitDir, f.getPath().getName() + "." + parentRegionName);
-        return r.write(fs.getFileSystem(), p);
-    }
+  private Path splitStoreFile(HRegionInfo hri, String familyName, StoreFile f, byte[] splitRow,
+          boolean top, HRegionFileSystem fs) throws IOException {
+    f.closeReader(true);
+    Path splitDir
+            = new Path(fs.getSplitsDir(hri), familyName);
+    // A reference to the bottom half of the hsf store file.
+    Reference r
+            = top ? Reference.createTopReference(splitRow) : Reference
+                    .createBottomReference(splitRow);
+    // Add the referred-to regions name as a dot separated suffix.
+    // See REF_NAME_REGEX regex above. The referred-to regions name is
+    // up in the path of the passed in <code>f</code> -- parentdir is family,
+    // then the directory above is the region name.
+    String parentRegionName = this.parent.getRegionInfo().getEncodedName();
+    // Write reference with same file id only with the other region name as
+    // suffix and into the new region location (under same family).
+    Path p = new Path(splitDir, f.getPath().getName() + "." + parentRegionName);
+    return r.write(fs.getFileSystem(), p);
+  }
 
   /**
    * @param server Hosting server instance (May be null when testing).
    * @param services
-   * @throws IOException If thrown, rollback failed.  Take drastic action.
+   * @throws IOException If thrown, rollback failed. Take drastic action.
    * @return True if we successfully rolled back, false if we got to the point
    * of no return and so now need to abort the server to minimize damage.
    */
   @SuppressWarnings("deprecation")
   public boolean rollback(final Server server, final RegionServerServices services)
-  throws IOException {
+          throws IOException {
     // Coprocessor callback
     if (this.parent.getCoprocessorHost() != null) {
       this.parent.getCoprocessorHost().preRollBackSplit();
     }
 
     boolean result = true;
-    ListIterator<JournalEntry> iterator =
-      this.journal.listIterator(this.journal.size());
+    ListIterator<JournalEntry> iterator
+            = this.journal.listIterator(this.journal.size());
     // Iterate in reverse.
     while (iterator.hasPrevious()) {
       JournalEntry je = iterator.previous();
-      switch(je) {
+      switch (je) {
 
-      case SET_SPLITTING_IN_ZK:
-        if (server != null && server.getZooKeeper() != null) {
-          cleanZK(server, this.parent.getRegionInfo());
-        }
-        break;
+        case SET_SPLITTING_IN_ZK:
+          if (server != null && server.getZooKeeper() != null) {
+            cleanZK(server, this.parent.getRegionInfo());
+          }
+          break;
 
-      case CREATE_SPLIT_DIR:
-        this.parent.writestate.writesEnabled = true;
-        this.parent.getRegionFileSystem().cleanupSplitsDir();
-        break;
+        case CREATE_SPLIT_DIR:
+          this.parent.writestate.writesEnabled = true;
+          this.parent.getRegionFileSystem().cleanupSplitsDir();
+          break;
 
-      case CLOSED_PARENT_REGION:
-        try {
-          // So, this returns a seqid but if we just closed and then reopened, we
-          // should be ok. On close, we flushed using sequenceid obtained from
-          // hosting regionserver so no need to propagate the sequenceid returned
-          // out of initialize below up into regionserver as we normally do.
-          // TODO: Verify.
-          this.parent.initialize();
-        } catch (IOException e) {
-          LOG.error("Failed rollbacking CLOSED_PARENT_REGION of region " +
-            this.parent.getRegionNameAsString(), e);
-          throw new RuntimeException(e);
-        }
-        break;
+        case CLOSED_PARENT_REGION:
+          try {
+            // So, this returns a seqid but if we just closed and then reopened, we
+            // should be ok. On close, we flushed using sequenceid obtained from
+            // hosting regionserver so no need to propagate the sequenceid returned
+            // out of initialize below up into regionserver as we normally do.
+            // TODO: Verify.
+            this.parent.initialize();
+          } catch (IOException e) {
+            LOG.error("Failed rollbacking CLOSED_PARENT_REGION of region "
+                    + this.parent.getRegionNameAsString(), e);
+            throw new RuntimeException(e);
+          }
+          break;
 
-      case STARTED_REGION_A_CREATION:
-        this.parent.getRegionFileSystem().cleanupDaughterRegion(this.hri_a);
-        break;
+        case STARTED_REGION_A_CREATION:
+          this.parent.getRegionFileSystem().cleanupDaughterRegion(this.hri_a);
+          break;
 
-      case STARTED_REGION_B_CREATION:
-        this.parent.getRegionFileSystem().cleanupDaughterRegion(this.hri_b);
-        break;
+        case STARTED_REGION_B_CREATION:
+          this.parent.getRegionFileSystem().cleanupDaughterRegion(this.hri_b);
+          break;
 
-      case OFFLINED_PARENT:
-        if (services != null) services.addToOnlineRegions(this.parent);
-        break;
+        case OFFLINED_PARENT:
+          if (services != null) {
+            services.addToOnlineRegions(this.parent);
+          }
+          break;
 
-      case PONR:
-        // We got to the point-of-no-return so we need to just abort. Return
-        // immediately.  Do not clean up created daughter regions.  They need
-        // to be in place so we don't delete the parent region mistakenly.
-        // See HBASE-3872.
-        return false;
+        case PONR:
+          // We got to the point-of-no-return so we need to just abort. Return
+          // immediately.  Do not clean up created daughter regions.  They need
+          // to be in place so we don't delete the parent region mistakenly.
+          // See HBASE-3872.
+          return false;
 
-      default:
-        throw new RuntimeException("Unhandled journal entry: " + je);
+        default:
+          throw new RuntimeException("Unhandled journal entry: " + je);
       }
     }
     // Coprocessor callback
@@ -891,9 +915,9 @@ public class IndexSplitTransaction extends SplitTransaction {
     try {
       // Only delete if its in expected state; could have been hijacked.
       if (!ZKAssign.deleteNode(server.getZooKeeper(), hri.getEncodedName(),
-          RS_ZK_REQUEST_REGION_SPLIT, server.getServerName())) {
+              RS_ZK_REQUEST_REGION_SPLIT, server.getServerName())) {
         ZKAssign.deleteNode(server.getZooKeeper(), hri.getEncodedName(),
-          RS_ZK_REGION_SPLITTING, server.getServerName());
+                RS_ZK_REGION_SPLITTING, server.getServerName());
       }
     } catch (KeeperException.NoNodeException e) {
       LOG.info("Failed cleanup zk node of " + hri.getRegionNameAsString(), e);
@@ -903,11 +927,12 @@ public class IndexSplitTransaction extends SplitTransaction {
   }
 
   /**
-   * Creates a new ephemeral node in the PENDING_SPLIT state for the specified region.
-   * Create it ephemeral in case regionserver dies mid-split.
+   * Creates a new ephemeral node in the PENDING_SPLIT state for the specified
+   * region. Create it ephemeral in case regionserver dies mid-split.
    *
-   * <p>Does not transition nodes from other states.  If a node already exists
-   * for this region, a {@link NodeExistsException} will be thrown.
+   * <p>
+   * Does not transition nodes from other states. If a node already exists for
+   * this region, a {@link NodeExistsException} will be thrown.
    *
    * @param zkw zk reference
    * @param region region to be created as offline
@@ -916,13 +941,13 @@ public class IndexSplitTransaction extends SplitTransaction {
    * @throws IOException
    */
   public static void createNodeSplitting(final ZooKeeperWatcher zkw, final HRegionInfo region,
-      final ServerName serverName, final HRegionInfo a,
-      final HRegionInfo b) throws KeeperException, IOException {
-    LOG.debug(zkw.prefix("Creating ephemeral node for " +
-      region.getEncodedName() + " in PENDING_SPLIT state"));
-    byte [] payload = HRegionInfo.toDelimitedByteArray(a, b);
+          final ServerName serverName, final HRegionInfo a,
+          final HRegionInfo b) throws KeeperException, IOException {
+    LOG.debug(zkw.prefix("Creating ephemeral node for "
+            + region.getEncodedName() + " in PENDING_SPLIT state"));
+    byte[] payload = HRegionInfo.toDelimitedByteArray(a, b);
     RegionTransition rt = RegionTransition.createRegionTransition(
-      RS_ZK_REQUEST_REGION_SPLIT, region.getRegionName(), serverName, payload);
+            RS_ZK_REQUEST_REGION_SPLIT, region.getRegionName(), serverName, payload);
     String node = ZKAssign.getNodeName(zkw, region.getEncodedName());
     if (!ZKUtil.createEphemeralNodeAndWatch(zkw, node, rt.toByteArray())) {
       throw new IOException("Failed create of ephemeral " + node);
@@ -934,22 +959,27 @@ public class IndexSplitTransaction extends SplitTransaction {
    * currently in the begin state to be in the end state. Master cleans up the
    * final SPLIT znode when it reads it (or if we crash, zk will clean it up).
    *
-   * <p>Does not transition nodes from other states. If for some reason the
-   * node could not be transitioned, the method returns -1. If the transition
-   * is successful, the version of the node after transition is returned.
+   * <p>
+   * Does not transition nodes from other states. If for some reason the node
+   * could not be transitioned, the method returns -1. If the transition is
+   * successful, the version of the node after transition is returned.
    *
-   * <p>This method can fail and return false for three different reasons:
+   * <p>
+   * This method can fail and return false for three different reasons:
    * <ul><li>Node for this region does not exist</li>
    * <li>Node for this region is not in the begin state</li>
    * <li>After verifying the begin state, update fails because of wrong version
    * (this should never actually happen since an RS only does this transition
-   * following a transition to the begin state. If two RS are conflicting, one would
-   * fail the original transition to the begin state and not this transition)</li>
+   * following a transition to the begin state. If two RS are conflicting, one
+   * would fail the original transition to the begin state and not this
+   * transition)</li>
    * </ul>
    *
-   * <p>Does not set any watches.
+   * <p>
+   * Does not set any watches.
    *
-   * <p>This method should only be used by a RegionServer when splitting a region.
+   * <p>
+   * This method should only be used by a RegionServer when splitting a region.
    *
    * @param zkw zk reference
    * @param parent region to be transitioned to opened
@@ -964,14 +994,14 @@ public class IndexSplitTransaction extends SplitTransaction {
    * @throws IOException
    */
   public static int transitionSplittingNode(ZooKeeperWatcher zkw,
-      HRegionInfo parent, HRegionInfo a, HRegionInfo b, ServerName serverName,
-      final int znodeVersion, final EventType beginState,
-      final EventType endState) throws KeeperException, IOException {
-    byte [] payload = HRegionInfo.toDelimitedByteArray(a, b);
+          HRegionInfo parent, HRegionInfo a, HRegionInfo b, ServerName serverName,
+          final int znodeVersion, final EventType beginState,
+          final EventType endState) throws KeeperException, IOException {
+    byte[] payload = HRegionInfo.toDelimitedByteArray(a, b);
     return ZKAssign.transitionNode(zkw, parent, serverName,
-      beginState, endState, znodeVersion, payload);
+            beginState, endState, znodeVersion, payload);
   }
-  
+
   public HRegion getParent() {
     return this.parent;
   }

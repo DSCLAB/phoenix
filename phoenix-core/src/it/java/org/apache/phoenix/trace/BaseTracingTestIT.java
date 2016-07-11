@@ -50,95 +50,93 @@ import org.junit.Before;
  * Base test for tracing tests - helps manage getting tracing/non-tracing
  * connections, as well as any supporting utils.
  */
-
 public class BaseTracingTestIT extends BaseHBaseManagedTimeIT {
-    @Before
-    public void resetTracingTableIfExists() throws Exception {
-        Connection conn = getConnectionWithoutTracing();
-        conn.setAutoCommit(true);
-        try {
-            conn.createStatement().executeUpdate(
-                    "DELETE FROM " + QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME);
-        } catch (TableNotFoundException ignore) {
-        }
+
+  @Before
+  public void resetTracingTableIfExists() throws Exception {
+    Connection conn = getConnectionWithoutTracing();
+    conn.setAutoCommit(true);
+    try {
+      conn.createStatement().executeUpdate(
+              "DELETE FROM " + QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME);
+    } catch (TableNotFoundException ignore) {
     }
+  }
 
-    public static Connection getConnectionWithoutTracing() throws SQLException {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        return getConnectionWithoutTracing(props);
+  public static Connection getConnectionWithoutTracing() throws SQLException {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    return getConnectionWithoutTracing(props);
+  }
+
+  public static Connection getConnectionWithoutTracing(Properties props) throws SQLException {
+    Connection conn = getConnectionWithTracingFrequency(props, Frequency.NEVER);
+    conn.setAutoCommit(false);
+    return conn;
+  }
+
+  public static Connection getTracingConnection() throws Exception {
+    return getTracingConnection(Collections.<String, String>emptyMap(), null);
+  }
+
+  public static Connection getTracingConnection(Map<String, String> customAnnotations,
+          String tenantId) throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    for (Map.Entry<String, String> annot : customAnnotations.entrySet()) {
+      props.put(ANNOTATION_ATTRIB_PREFIX + annot.getKey(), annot.getValue());
     }
-
-    public static Connection getConnectionWithoutTracing(Properties props) throws SQLException {
-        Connection conn = getConnectionWithTracingFrequency(props, Frequency.NEVER);
-        conn.setAutoCommit(false);
-        return conn;
+    if (tenantId != null) {
+      props.put(PhoenixRuntime.TENANT_ID_ATTRIB, tenantId);
     }
+    return getConnectionWithTracingFrequency(props, Tracing.Frequency.ALWAYS);
+  }
 
-    public static Connection getTracingConnection() throws Exception {
-        return getTracingConnection(Collections.<String, String>emptyMap(), null);
+  public static Connection getConnectionWithTracingFrequency(Properties props,
+          Tracing.Frequency frequency) throws SQLException {
+    Tracing.setSampling(props, frequency);
+    return DriverManager.getConnection(getUrl(), props);
+  }
+
+  public static MetricsRecord createRecord(long traceid, long parentid, long spanid,
+          String desc, long startTime, long endTime, String hostname, String... tags) {
+
+    List<AbstractMetric> metrics = new ArrayList<AbstractMetric>();
+    AbstractMetric span = new ExposedMetricCounterLong(asInfo(MetricInfo.SPAN.traceName),
+            spanid);
+    metrics.add(span);
+
+    AbstractMetric parent = new ExposedMetricCounterLong(asInfo(MetricInfo.PARENT.traceName),
+            parentid);
+    metrics.add(parent);
+
+    AbstractMetric start = new ExposedMetricCounterLong(asInfo(MetricInfo.START.traceName),
+            startTime);
+    metrics.add(start);
+
+    AbstractMetric end
+            = new ExposedMetricCounterLong(asInfo(MetricInfo.END.traceName), endTime);
+    metrics.add(end);
+
+    List<MetricsTag> tagsList = new ArrayList<MetricsTag>();
+    int tagCount = 0;
+    for (String annotation : tags) {
+      MetricsTag tag
+              = new PhoenixTagImpl(MetricInfo.ANNOTATION.traceName,
+                      Integer.toString(tagCount++), annotation);
+      tagsList.add(tag);
     }
+    String hostnameValue = "host-name.value";
+    MetricsTag hostnameTag
+            = new PhoenixTagImpl(MetricInfo.HOSTNAME.traceName, "", hostnameValue);
+    tagsList.add(hostnameTag);
 
-    public static Connection getTracingConnection(Map<String, String> customAnnotations,
-            String tenantId) throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        for (Map.Entry<String, String> annot : customAnnotations.entrySet()) {
-            props.put(ANNOTATION_ATTRIB_PREFIX + annot.getKey(), annot.getValue());
-        }
-        if (tenantId != null) {
-            props.put(PhoenixRuntime.TENANT_ID_ATTRIB, tenantId);
-        }
-        return getConnectionWithTracingFrequency(props, Tracing.Frequency.ALWAYS);
-    }
+    MetricsRecord record
+            = new ExposedMetricsRecordImpl(new ExposedMetricsInfoImpl(TracingUtils
+                    .getTraceMetricName(traceid), desc), System.currentTimeMillis(),
+                    tagsList, metrics);
+    return record;
+  }
 
-    public static Connection getConnectionWithTracingFrequency(Properties props,
-            Tracing.Frequency frequency) throws SQLException {
-        Tracing.setSampling(props, frequency);
-        return DriverManager.getConnection(getUrl(), props);
-    }
-
-    public static MetricsRecord createRecord(long traceid, long parentid, long spanid,
-            String desc, long startTime, long endTime, String hostname, String... tags) {
-
-        List<AbstractMetric> metrics = new ArrayList<AbstractMetric>();
-        AbstractMetric span = new ExposedMetricCounterLong(asInfo(MetricInfo
-                .SPAN.traceName),
-                spanid);
-        metrics.add(span);
-
-        AbstractMetric parent = new ExposedMetricCounterLong(asInfo(MetricInfo.PARENT.traceName),
-                parentid);
-        metrics.add(parent);
-
-        AbstractMetric start = new ExposedMetricCounterLong(asInfo(MetricInfo.START.traceName),
-                startTime);
-        metrics.add(start);
-
-        AbstractMetric
-                end =
-                new ExposedMetricCounterLong(asInfo(MetricInfo.END.traceName), endTime);
-        metrics.add(end);
-
-        List<MetricsTag> tagsList = new ArrayList<MetricsTag>();
-        int tagCount = 0;
-        for (String annotation : tags) {
-            MetricsTag tag =
-                    new PhoenixTagImpl(MetricInfo.ANNOTATION.traceName,
-                            Integer.toString(tagCount++), annotation);
-            tagsList.add(tag);
-        }
-        String hostnameValue = "host-name.value";
-        MetricsTag hostnameTag =
-                new PhoenixTagImpl(MetricInfo.HOSTNAME.traceName, "", hostnameValue);
-        tagsList.add(hostnameTag);
-
-        MetricsRecord record =
-                new ExposedMetricsRecordImpl(new ExposedMetricsInfoImpl(TracingUtils
-                        .getTraceMetricName(traceid), desc), System.currentTimeMillis(),
-                        tagsList, metrics);
-        return record;
-    }
-
-    private static MetricsInfo asInfo(String name) {
-        return new ExposedMetricsInfoImpl(name, "");
-    }
+  private static MetricsInfo asInfo(String name) {
+    return new ExposedMetricsInfoImpl(name, "");
+  }
 }

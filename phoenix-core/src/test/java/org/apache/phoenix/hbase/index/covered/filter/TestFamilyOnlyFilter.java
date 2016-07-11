@@ -30,8 +30,8 @@ import org.junit.Test;
  */
 public class TestFamilyOnlyFilter {
 
-  byte[] row = new byte[] { 'a' };
-  byte[] qual = new byte[] { 'b' };
+  byte[] row = new byte[]{'a'};
+  byte[] qual = new byte[]{'b'};
   byte[] val = Bytes.toBytes("val");
 
   @Test
@@ -96,7 +96,7 @@ public class TestFamilyOnlyFilter {
     // we shouldn't match the family again - everything after a switched family should be ignored
     code = filter.filterKeyValue(accept);
     assertEquals("Should have skipped a 'matching' family if it arrives out of order",
-      ReturnCode.SKIP, code);
+            ReturnCode.SKIP, code);
 
     // reset the filter and we should accept it again
     filter.reset();

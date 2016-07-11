@@ -27,14 +27,15 @@ import org.apache.hadoop.hbase.regionserver.MiniBatchOperationInProgress;
 import org.apache.phoenix.hbase.index.covered.CoveredColumnsIndexBuilder;
 
 /**
- * Basic implementation of the {@link IndexBuilder} that doesn't do any actual work of indexing.
+ * Basic implementation of the {@link IndexBuilder} that doesn't do any actual
+ * work of indexing.
  * <p>
- * You should extend this class, rather than implementing IndexBuilder directly to maintain
- * compatability going forward.
+ * You should extend this class, rather than implementing IndexBuilder directly
+ * to maintain compatability going forward.
  * <p>
- * Generally, you should consider using one of the implemented IndexBuilders (e.g
- * {@link CoveredColumnsIndexBuilder}) as there is a lot of work required to keep an index table
- * up-to-date.
+ * Generally, you should consider using one of the implemented IndexBuilders
+ * (e.g {@link CoveredColumnsIndexBuilder}) as there is a lot of work required
+ * to keep an index table up-to-date.
  */
 public abstract class BaseIndexBuilder implements IndexBuilder {
 
@@ -42,8 +43,9 @@ public abstract class BaseIndexBuilder implements IndexBuilder {
   protected boolean stopped;
 
   @Override
-  public void extendBaseIndexBuilderInstead() { }
-  
+  public void extendBaseIndexBuilderInstead() {
+  }
+
   @Override
   public void setup(RegionCoprocessorEnvironment conf) throws IOException {
     // noop
@@ -58,24 +60,26 @@ public abstract class BaseIndexBuilder implements IndexBuilder {
   public void batchCompleted(MiniBatchOperationInProgress<Mutation> miniBatchOp) {
     // noop
   }
-  
+
   /**
-   * By default, we always attempt to index the mutation. Commonly this can be slow (because the
-   * framework spends the time to do the indexing, only to realize that you don't need it) or not
-   * ideal (if you want to turn on/off indexing on a table without completely reloading it).
- * @throws IOException 
+   * By default, we always attempt to index the mutation. Commonly this can be
+   * slow (because the framework spends the time to do the indexing, only to
+   * realize that you don't need it) or not ideal (if you want to turn on/off
+   * indexing on a table without completely reloading it).
+   *
+   * @throws IOException
    */
   @Override
   public boolean isEnabled(Mutation m) throws IOException {
-    return true; 
+    return true;
   }
 
   /**
    * {@inheritDoc}
    * <p>
-   * By default, assumes that all mutations should <b>not be batched</b>. That is to say, each
-   * mutation always applies to different rows, even if they are in the same batch, or are
-   * independent updates.
+   * By default, assumes that all mutations should <b>not be batched</b>. That
+   * is to say, each mutation always applies to different rows, even if they are
+   * in the same batch, or are independent updates.
    */
   @Override
   public byte[] getBatchId(Mutation m) {

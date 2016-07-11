@@ -36,87 +36,89 @@ import org.apache.phoenix.util.SchemaUtil;
 
 public class LocalIndexMerger extends BaseRegionServerObserver {
 
-    private static final Log LOG = LogFactory.getLog(LocalIndexMerger.class);
+  private static final Log LOG = LogFactory.getLog(LocalIndexMerger.class);
 
-    private RegionMergeTransaction rmt = null;
-    private HRegion mergedRegion = null;
+  private RegionMergeTransaction rmt = null;
+  private HRegion mergedRegion = null;
 
-    @Override
-    public void preMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-            HRegion regionA, HRegion regionB, List<Mutation> metaEntries) throws IOException {
-        HTableDescriptor tableDesc = regionA.getTableDesc();
-        if (SchemaUtil.isSystemTable(tableDesc.getName())) {
-            return;
-        }
-        RegionServerServices rss = ctx.getEnvironment().getRegionServerServices();
-        HRegionServer rs = (HRegionServer) rss;
-        if (tableDesc.getValue(MetaDataUtil.IS_LOCAL_INDEX_TABLE_PROP_BYTES) == null
-                || !Boolean.TRUE.equals(PBoolean.INSTANCE.toObject(tableDesc
-                        .getValue(MetaDataUtil.IS_LOCAL_INDEX_TABLE_PROP_BYTES)))) {
-            TableName indexTable =
-                    TableName.valueOf(MetaDataUtil.getLocalIndexPhysicalName(tableDesc.getName()));
-            if (!MetaTableAccessor.tableExists(rs.getConnection(), indexTable)) return;
-            HRegion indexRegionA = IndexUtil.getIndexRegion(regionA, ctx.getEnvironment());
-            if (indexRegionA == null) {
-                LOG.warn("Index region corresponindg to data region " + regionA
-                        + " not in the same server. So skipping the merge.");
-                ctx.bypass();
-                return;
-            }
-            HRegion indexRegionB = IndexUtil.getIndexRegion(regionB, ctx.getEnvironment());
-            if (indexRegionB == null) {
-                LOG.warn("Index region corresponindg to region " + regionB
-                        + " not in the same server. So skipping the merge.");
-                ctx.bypass();
-                return;
-            }
-            try {
-                rmt = new RegionMergeTransaction(indexRegionA, indexRegionB, false);
-                if (!rmt.prepare(rss)) {
-                    LOG.error("Prepare for the index regions merge [" + indexRegionA + ","
-                            + indexRegionB + "] failed. So returning null. ");
-                    ctx.bypass();
-                    return;
-                }
-                this.mergedRegion = rmt.stepsBeforePONR(rss, rss, false);
-                rmt.prepareMutationsForMerge(mergedRegion.getRegionInfo(),
-                    indexRegionA.getRegionInfo(), indexRegionB.getRegionInfo(),
-                    rss.getServerName(), metaEntries, 0);
-            } catch (Exception e) {
-                ctx.bypass();
-                LOG.warn("index regions merge failed with the exception ", e);
-                if (rmt != null) {
-                    rmt.rollback(rss, rss);
-                    rmt = null;
-                    mergedRegion = null;
-                }
-            }
-        }
+  @Override
+  public void preMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
+          HRegion regionA, HRegion regionB, List<Mutation> metaEntries) throws IOException {
+    HTableDescriptor tableDesc = regionA.getTableDesc();
+    if (SchemaUtil.isSystemTable(tableDesc.getName())) {
+      return;
     }
-
-    @Override
-    public void postMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-            HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
-        if (rmt != null && this.mergedRegion != null) {
-            RegionServerCoprocessorEnvironment environment = ctx.getEnvironment();
-            HRegionServer rs = (HRegionServer) environment.getRegionServerServices();
-            rmt.stepsAfterPONR(rs, rs, this.mergedRegion);
+    RegionServerServices rss = ctx.getEnvironment().getRegionServerServices();
+    HRegionServer rs = (HRegionServer) rss;
+    if (tableDesc.getValue(MetaDataUtil.IS_LOCAL_INDEX_TABLE_PROP_BYTES) == null
+            || !Boolean.TRUE.equals(PBoolean.INSTANCE.toObject(tableDesc
+                    .getValue(MetaDataUtil.IS_LOCAL_INDEX_TABLE_PROP_BYTES)))) {
+      TableName indexTable
+              = TableName.valueOf(MetaDataUtil.getLocalIndexPhysicalName(tableDesc.getName()));
+      if (!MetaTableAccessor.tableExists(rs.getConnection(), indexTable)) {
+        return;
+      }
+      HRegion indexRegionA = IndexUtil.getIndexRegion(regionA, ctx.getEnvironment());
+      if (indexRegionA == null) {
+        LOG.warn("Index region corresponindg to data region " + regionA
+                + " not in the same server. So skipping the merge.");
+        ctx.bypass();
+        return;
+      }
+      HRegion indexRegionB = IndexUtil.getIndexRegion(regionB, ctx.getEnvironment());
+      if (indexRegionB == null) {
+        LOG.warn("Index region corresponindg to region " + regionB
+                + " not in the same server. So skipping the merge.");
+        ctx.bypass();
+        return;
+      }
+      try {
+        rmt = new RegionMergeTransaction(indexRegionA, indexRegionB, false);
+        if (!rmt.prepare(rss)) {
+          LOG.error("Prepare for the index regions merge [" + indexRegionA + ","
+                  + indexRegionB + "] failed. So returning null. ");
+          ctx.bypass();
+          return;
         }
-    }
-
-    @Override
-    public void preRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
-            HRegion regionA, HRegion regionB) throws IOException {
-        HRegionServer rs = (HRegionServer) ctx.getEnvironment().getRegionServerServices();
-        try {
-            if (rmt != null) {
-                rmt.rollback(rs, rs);
-                rmt = null;
-                mergedRegion = null;
-            }
-        } catch (Exception e) {
-            LOG.error("Error while rolling back the merge failure for index regions", e);
-            rs.abort("Abort; we got an error during rollback of index");
+        this.mergedRegion = rmt.stepsBeforePONR(rss, rss, false);
+        rmt.prepareMutationsForMerge(mergedRegion.getRegionInfo(),
+                indexRegionA.getRegionInfo(), indexRegionB.getRegionInfo(),
+                rss.getServerName(), metaEntries, 0);
+      } catch (Exception e) {
+        ctx.bypass();
+        LOG.warn("index regions merge failed with the exception ", e);
+        if (rmt != null) {
+          rmt.rollback(rss, rss);
+          rmt = null;
+          mergedRegion = null;
         }
+      }
     }
+  }
+
+  @Override
+  public void postMergeCommit(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
+          HRegion regionA, HRegion regionB, HRegion mergedRegion) throws IOException {
+    if (rmt != null && this.mergedRegion != null) {
+      RegionServerCoprocessorEnvironment environment = ctx.getEnvironment();
+      HRegionServer rs = (HRegionServer) environment.getRegionServerServices();
+      rmt.stepsAfterPONR(rs, rs, this.mergedRegion);
+    }
+  }
+
+  @Override
+  public void preRollBackMerge(ObserverContext<RegionServerCoprocessorEnvironment> ctx,
+          HRegion regionA, HRegion regionB) throws IOException {
+    HRegionServer rs = (HRegionServer) ctx.getEnvironment().getRegionServerServices();
+    try {
+      if (rmt != null) {
+        rmt.rollback(rs, rs);
+        rmt = null;
+        mergedRegion = null;
+      }
+    } catch (Exception e) {
+      LOG.error("Error while rolling back the merge failure for index regions", e);
+      rs.abort("Abort; we got an error during rollback of index");
+    }
+  }
 }

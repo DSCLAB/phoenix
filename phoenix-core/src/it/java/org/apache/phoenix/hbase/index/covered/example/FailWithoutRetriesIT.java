@@ -49,11 +49,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-
 /**
- * If {@link DoNotRetryIOException} is not subclassed correctly (with the {@link String}
- * constructor), {@link MultiResponse#readFields(java.io.DataInput)} will not correctly deserialize
- * the exception, and just return <tt>null</tt> to the client, which then just goes and retries.
+ * If {@link DoNotRetryIOException} is not subclassed correctly (with the
+ * {@link String} constructor),
+ * {@link MultiResponse#readFields(java.io.DataInput)} will not correctly
+ * deserialize the exception, and just return <tt>null</tt> to the client, which
+ * then just goes and retries.
  */
 @Category(NeedsOwnMiniClusterTest.class)
 public class FailWithoutRetriesIT {
@@ -73,13 +74,13 @@ public class FailWithoutRetriesIT {
     @Override
     public Iterable<IndexUpdate> getIndexDeletes(TableState state) throws IOException {
       throw new RuntimeException("Intentionally failing deletes for "
-          + FailWithoutRetriesIT.class.getName());
+              + FailWithoutRetriesIT.class.getName());
     }
 
     @Override
     public Iterable<IndexUpdate> getIndexUpserts(TableState state) throws IOException {
       throw new RuntimeException("Intentionally failing upserts for "
-          + FailWithoutRetriesIT.class.getName());
+              + FailWithoutRetriesIT.class.getName());
     }
 
   }
@@ -101,10 +102,11 @@ public class FailWithoutRetriesIT {
   }
 
   /**
-   * If this test times out, then we didn't fail quickly enough. {@link Indexer} maybe isn't
-   * rethrowing the exception correctly?
+   * If this test times out, then we didn't fail quickly enough. {@link Indexer}
+   * maybe isn't rethrowing the exception correctly?
    * <p>
    * We use a custom codec to enforce the thrown exception.
+   *
    * @throws Exception
    */
   @Test(timeout = 300000)

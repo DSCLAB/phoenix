@@ -20,12 +20,12 @@
 -->
 
 <html>
-<body>
-This document is for the JDBC implementation of Phoenix, targeting those who are interested in extending the level of SQL support.
-For users of Phoenix, the programmatic API is <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/sql/package-summary.html">JDBC</a>.
-For example, the following snippet demonstrates how to query a table:
+  <body>
+    This document is for the JDBC implementation of Phoenix, targeting those who are interested in extending the level of SQL support.
+    For users of Phoenix, the programmatic API is <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/sql/package-summary.html">JDBC</a>.
+    For example, the following snippet demonstrates how to query a table:
 
-<pre>
+    <pre>
         Properties props = new Properties();
         // Ensure the driver is on classpath
         // Connect through Phoenix to the zookeeper quorum with a host name of myServer
@@ -40,7 +40,7 @@ For example, the following snippet demonstrates how to query a table:
         } finally {
             conn.close();
         }
-</pre>
+    </pre>
 
-</body>
+  </body>
 </html>

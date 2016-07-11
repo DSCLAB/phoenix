@@ -23,39 +23,39 @@ import java.util.List;
 import org.apache.phoenix.expression.OrderByExpression;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * Result scanner that sorts aggregated rows by columns specified in the ORDER BY clause.
+ * Result scanner that sorts aggregated rows by columns specified in the ORDER
+ * BY clause.
  * <p>
- * Note that currently the sort is entirely done in memory. 
- *  
- * 
+ * Note that currently the sort is entirely done in memory.
+ *
+ *
  * @since 0.1
  */
 public class OrderedAggregatingResultIterator extends OrderedResultIterator implements AggregatingResultIterator {
 
-    public OrderedAggregatingResultIterator(AggregatingResultIterator delegate,
-                                List<OrderByExpression> orderByExpressions,
-                                int thresholdBytes, Integer limit) throws SQLException {
-        super (delegate, orderByExpressions, thresholdBytes, limit);
-    }
+  public OrderedAggregatingResultIterator(AggregatingResultIterator delegate,
+          List<OrderByExpression> orderByExpressions,
+          int thresholdBytes, Integer limit) throws SQLException {
+    super(delegate, orderByExpressions, thresholdBytes, limit);
+  }
 
-    @Override
-    protected AggregatingResultIterator getDelegate() {
-        return (AggregatingResultIterator)super.getDelegate();
+  @Override
+  protected AggregatingResultIterator getDelegate() {
+    return (AggregatingResultIterator) super.getDelegate();
+  }
+
+  @Override
+  public Tuple next() throws SQLException {
+    Tuple tuple = super.next();
+    if (tuple != null) {
+      aggregate(tuple);
     }
-    
-    @Override
-    public Tuple next() throws SQLException {
-        Tuple tuple = super.next();
-        if (tuple != null) {
-            aggregate(tuple);
-        }
-        return tuple;
-    }
-    
-    @Override
-    public void aggregate(Tuple result) {
-        getDelegate().aggregate(result);
-    }
+    return tuple;
+  }
+
+  @Override
+  public void aggregate(Tuple result) {
+    getDelegate().aggregate(result);
+  }
 }

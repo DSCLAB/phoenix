@@ -29,26 +29,27 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
 public class GuavaSplitter implements AbstractBaseSplitter {
-    private final Splitter splitter;
 
-    public GuavaSplitter(String patternString) {
-        if (patternString != null) {
-            splitter = Splitter.onPattern(patternString);
-        } else {
-            splitter = null;
-        }
-    }
+  private final Splitter splitter;
 
-    @Override
-    public boolean split(ImmutableBytesWritable srcPtr) {
-        String sourceStr = (String) PVarchar.INSTANCE.toObject(srcPtr);
-        if (sourceStr == null) { // sourceStr evaluated to null
-            srcPtr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-        } else {
-            List<String> splitStrings = Lists.newArrayList(splitter.split(sourceStr));
-            PhoenixArray splitArray = new PhoenixArray(PVarchar.INSTANCE, splitStrings.toArray());
-            srcPtr.set(PVarcharArray.INSTANCE.toBytes(splitArray));
-        }
-        return true;
+  public GuavaSplitter(String patternString) {
+    if (patternString != null) {
+      splitter = Splitter.onPattern(patternString);
+    } else {
+      splitter = null;
     }
+  }
+
+  @Override
+  public boolean split(ImmutableBytesWritable srcPtr) {
+    String sourceStr = (String) PVarchar.INSTANCE.toObject(srcPtr);
+    if (sourceStr == null) { // sourceStr evaluated to null
+      srcPtr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+    } else {
+      List<String> splitStrings = Lists.newArrayList(splitter.split(sourceStr));
+      PhoenixArray splitArray = new PhoenixArray(PVarchar.INSTANCE, splitStrings.toArray());
+      srcPtr.set(PVarcharArray.INSTANCE.toBytes(splitArray));
+    }
+    return true;
+  }
 }

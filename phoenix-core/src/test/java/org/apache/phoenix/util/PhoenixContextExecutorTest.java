@@ -26,24 +26,25 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class PhoenixContextExecutorTest {
-    @Test
-    public void testCall() {
-        URLClassLoader customerClassLoader = new URLClassLoader(new URL[]{});
-        ClassLoader saveCcl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(customerClassLoader);
-        try {
-            PhoenixContextExecutor.callWithoutPropagation(new Callable<Object>() {
-                @Override
-                public Object call() {
-                    assertEquals(
-                            PhoenixContextExecutor.class.getClassLoader(),
-                            Thread.currentThread().getContextClassLoader());
-                    return null;
-                }
-            });
-        } finally {
-            Thread.currentThread().setContextClassLoader(saveCcl);
-        }
 
+  @Test
+  public void testCall() {
+    URLClassLoader customerClassLoader = new URLClassLoader(new URL[]{});
+    ClassLoader saveCcl = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(customerClassLoader);
+    try {
+      PhoenixContextExecutor.callWithoutPropagation(new Callable<Object>() {
+        @Override
+        public Object call() {
+          assertEquals(
+                  PhoenixContextExecutor.class.getClassLoader(),
+                  Thread.currentThread().getContextClassLoader());
+          return null;
+        }
+      });
+    } finally {
+      Thread.currentThread().setContextClassLoader(saveCcl);
     }
+
+  }
 }

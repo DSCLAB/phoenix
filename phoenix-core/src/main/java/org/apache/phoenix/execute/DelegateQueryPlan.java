@@ -32,80 +32,81 @@ import org.apache.phoenix.query.KeyRange;
 import org.apache.phoenix.schema.TableRef;
 
 public abstract class DelegateQueryPlan implements QueryPlan {
-    protected final QueryPlan delegate;
 
-    public DelegateQueryPlan(QueryPlan delegate) {
-        this.delegate = delegate;
-    }
+  protected final QueryPlan delegate;
 
-    @Override
-    public StatementContext getContext() {
-        return delegate.getContext();
-    }
+  public DelegateQueryPlan(QueryPlan delegate) {
+    this.delegate = delegate;
+  }
 
-    @Override
-    public ParameterMetaData getParameterMetaData() {
-        return delegate.getParameterMetaData();
-    }
+  @Override
+  public StatementContext getContext() {
+    return delegate.getContext();
+  }
 
-    @Override
-    public long getEstimatedSize() {
-        return delegate.getEstimatedSize();
-    }
+  @Override
+  public ParameterMetaData getParameterMetaData() {
+    return delegate.getParameterMetaData();
+  }
 
-    @Override
-    public TableRef getTableRef() {
-        return delegate.getTableRef();
-    }
+  @Override
+  public long getEstimatedSize() {
+    return delegate.getEstimatedSize();
+  }
 
-    @Override
-    public RowProjector getProjector() {
-        return delegate.getProjector();
-    }
+  @Override
+  public TableRef getTableRef() {
+    return delegate.getTableRef();
+  }
 
-    @Override
-    public Integer getLimit() {
-        return delegate.getLimit();
-    }
+  @Override
+  public RowProjector getProjector() {
+    return delegate.getProjector();
+  }
 
-    @Override
-    public OrderBy getOrderBy() {
-        return delegate.getOrderBy();
-    }
+  @Override
+  public Integer getLimit() {
+    return delegate.getLimit();
+  }
 
-    @Override
-    public GroupBy getGroupBy() {
-        return delegate.getGroupBy();
-    }
+  @Override
+  public OrderBy getOrderBy() {
+    return delegate.getOrderBy();
+  }
 
-    @Override
-    public List<KeyRange> getSplits() {
-        return delegate.getSplits();
-    }
+  @Override
+  public GroupBy getGroupBy() {
+    return delegate.getGroupBy();
+  }
 
-    @Override
-    public List<List<Scan>> getScans() {
-        return delegate.getScans();
-    }
+  @Override
+  public List<KeyRange> getSplits() {
+    return delegate.getSplits();
+  }
 
-    @Override
-    public FilterableStatement getStatement() {
-        return delegate.getStatement();
-    }
+  @Override
+  public List<List<Scan>> getScans() {
+    return delegate.getScans();
+  }
 
-    @Override
-    public boolean isDegenerate() {
-        return delegate.isDegenerate();
-    }
+  @Override
+  public FilterableStatement getStatement() {
+    return delegate.getStatement();
+  }
 
-    @Override
-    public boolean isRowKeyOrdered() {
-        return delegate.isRowKeyOrdered();
-    }
-    
-    @Override
-    public boolean useRoundRobinIterator() throws SQLException {
-        return delegate.useRoundRobinIterator();
-    }
+  @Override
+  public boolean isDegenerate() {
+    return delegate.isDegenerate();
+  }
+
+  @Override
+  public boolean isRowKeyOrdered() {
+    return delegate.isRowKeyOrdered();
+  }
+
+  @Override
+  public boolean useRoundRobinIterator() throws SQLException {
+    return delegate.useRoundRobinIterator();
+  }
 
 }

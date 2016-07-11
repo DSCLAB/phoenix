@@ -34,29 +34,30 @@ import org.apache.hadoop.mapreduce.lib.db.DBWritable;
  * {@link OutputFormat} implementation for Phoenix.
  *
  */
-public class PhoenixOutputFormat <T extends DBWritable> extends OutputFormat<NullWritable,T> {
-    private static final Log LOG = LogFactory.getLog(PhoenixOutputFormat.class);
-    
-    @Override
-    public void checkOutputSpecs(JobContext jobContext) throws IOException, InterruptedException {      
-    }
-    
-    /**
-     * 
-     */
-    @Override
-    public OutputCommitter getOutputCommitter(TaskAttemptContext context) throws IOException, InterruptedException {
-        return new PhoenixOutputCommitter();
-    }
+public class PhoenixOutputFormat<T extends DBWritable> extends OutputFormat<NullWritable, T> {
 
-    @Override
-    public RecordWriter<NullWritable, T> getRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
-        try {
-            return new PhoenixRecordWriter<T>(context.getConfiguration());
-        } catch (SQLException e) {
-            LOG.error("Error calling PhoenixRecordWriter "  + e.getMessage());
-            throw new RuntimeException(e);
-        }
+  private static final Log LOG = LogFactory.getLog(PhoenixOutputFormat.class);
+
+  @Override
+  public void checkOutputSpecs(JobContext jobContext) throws IOException, InterruptedException {
+  }
+
+  /**
+   *
+   */
+  @Override
+  public OutputCommitter getOutputCommitter(TaskAttemptContext context) throws IOException, InterruptedException {
+    return new PhoenixOutputCommitter();
+  }
+
+  @Override
+  public RecordWriter<NullWritable, T> getRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
+    try {
+      return new PhoenixRecordWriter<T>(context.getConfiguration());
+    } catch (SQLException e) {
+      LOG.error("Error calling PhoenixRecordWriter " + e.getMessage());
+      throw new RuntimeException(e);
     }
+  }
 
 }

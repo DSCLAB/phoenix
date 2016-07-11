@@ -22,40 +22,41 @@ import java.util.List;
 
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
+ *
  * Interface for iterating through results returned from a scan, adding the
  * ability to peek at the next result.
  *
- * 
+ *
  * @since 0.1
  */
 public interface PeekingResultIterator extends ResultIterator {
-    public static final PeekingResultIterator EMPTY_ITERATOR = new PeekingResultIterator() {
 
-        @Override
-        public Tuple next() throws SQLException {
-            return null;
-        }
+  public static final PeekingResultIterator EMPTY_ITERATOR = new PeekingResultIterator() {
 
-        @Override
-        public Tuple peek() {
-            return null;
-        }
+    @Override
+    public Tuple next() throws SQLException {
+      return null;
+    }
 
-        @Override
-        public void close() throws SQLException {
-        }
+    @Override
+    public Tuple peek() {
+      return null;
+    }
 
-        @Override
-        public void explain(List<String> planSteps) {
-        }
-    };
+    @Override
+    public void close() throws SQLException {
+    }
 
-    /**
-     * Returns the next result without advancing the iterator
-     * @throws SQLException
-     */
-    public Tuple peek() throws SQLException;
+    @Override
+    public void explain(List<String> planSteps) {
+    }
+  };
+
+  /**
+   * Returns the next result without advancing the iterator
+   *
+   * @throws SQLException
+   */
+  public Tuple peek() throws SQLException;
 }

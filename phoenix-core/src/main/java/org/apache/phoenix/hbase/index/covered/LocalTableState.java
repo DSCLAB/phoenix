@@ -46,12 +46,12 @@ import org.apache.phoenix.hbase.index.scanner.ScannerBuilder;
 /**
  * Manage the state of the HRegion's view of the table, for the single row.
  * <p>
- * Currently, this is a single-use object - you need to create a new one for each row that you need
- * to manage. In the future, we could make this object reusable, but for the moment its easier to
- * manage as a throw-away object.
+ * Currently, this is a single-use object - you need to create a new one for
+ * each row that you need to manage. In the future, we could make this object
+ * reusable, but for the moment its easier to manage as a throw-away object.
  * <p>
- * This class is <b>not</b> thread-safe - it requires external synchronization is access
- * concurrently.
+ * This class is <b>not</b> thread-safe - it requires external synchronization
+ * is access concurrently.
  */
 public class LocalTableState implements TableState {
 
@@ -76,12 +76,16 @@ public class LocalTableState implements TableState {
   }
 
   public void addPendingUpdates(KeyValue... kvs) {
-    if (kvs == null) return;
+    if (kvs == null) {
+      return;
+    }
     addPendingUpdates(Arrays.asList(kvs));
   }
 
   public void addPendingUpdates(List<KeyValue> kvs) {
-    if(kvs == null) return;
+    if (kvs == null) {
+      return;
+    }
     setPendingUpdates(kvs);
     addUpdate(kvs);
   }
@@ -91,7 +95,9 @@ public class LocalTableState implements TableState {
   }
 
   private void addUpdate(List<KeyValue> list, boolean overwrite) {
-    if (list == null) return;
+    if (list == null) {
+      return;
+    }
     for (KeyValue kv : list) {
       this.memstore.add(kv, overwrite);
     }
@@ -122,7 +128,7 @@ public class LocalTableState implements TableState {
 
   @Override
   public Pair<Scanner, IndexUpdate> getIndexedColumnsTableState(
-      Collection<? extends ColumnReference> indexedColumns) throws IOException {
+          Collection<? extends ColumnReference> indexedColumns) throws IOException {
     ensureLocalStateInitialized(indexedColumns);
     // filter out things with a newer timestamp and track the column references to which it applies
     ColumnTracker tracker = new ColumnTracker(indexedColumns);
@@ -133,20 +139,20 @@ public class LocalTableState implements TableState {
       }
     }
 
-    Scanner scanner =
-        this.scannerBuilder.buildIndexedColumnScanner(indexedColumns, tracker, ts);
+    Scanner scanner
+            = this.scannerBuilder.buildIndexedColumnScanner(indexedColumns, tracker, ts);
 
     return new Pair<Scanner, IndexUpdate>(scanner, new IndexUpdate(tracker));
   }
 
   /**
    * Initialize the managed local state. Generally, this will only be called by
-   * {@link #getNonIndexedColumnsTableState(List)}, which is unlikely to be called concurrently from the outside.
-   * Even then, there is still fairly low contention as each new Put/Delete will have its own table
-   * state.
+   * {@link #getNonIndexedColumnsTableState(List)}, which is unlikely to be
+   * called concurrently from the outside. Even then, there is still fairly low
+   * contention as each new Put/Delete will have its own table state.
    */
   private synchronized void ensureLocalStateInitialized(
-      Collection<? extends ColumnReference> columns) throws IOException {
+          Collection<? extends ColumnReference> columns) throws IOException {
     // check to see if we haven't initialized any columns yet
     Collection<? extends ColumnReference> toCover = this.columnSet.findNonCoveredColumns(columns);
     // we have all the columns loaded, so we are good to go.
@@ -189,6 +195,7 @@ public class LocalTableState implements TableState {
 
   /**
    * Helper to add a {@link Mutation} to the values stored for the current row
+   *
    * @param pendingUpdate update to apply
    */
   public void addUpdateForTesting(Mutation pendingUpdate) {
@@ -216,8 +223,9 @@ public class LocalTableState implements TableState {
   }
 
   /**
-   * Set the {@link KeyValue}s in the update for which we are currently building an index update,
-   * but don't actually apply them.
+   * Set the {@link KeyValue}s in the update for which we are currently building
+   * an index update, but don't actually apply them.
+   *
    * @param update pending {@link KeyValue}s
    */
   public void setPendingUpdates(Collection<KeyValue> update) {
@@ -234,6 +242,7 @@ public class LocalTableState implements TableState {
 
   /**
    * Rollback all the given values from the underlying state.
+   *
    * @param values
    */
   public void rollback(Collection<KeyValue> values) {

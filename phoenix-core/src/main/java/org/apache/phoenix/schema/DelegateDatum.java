@@ -20,38 +20,39 @@ package org.apache.phoenix.schema;
 import org.apache.phoenix.schema.types.PDataType;
 
 public class DelegateDatum implements PDatum {
-    private final PDatum delegate;
-    
-    public DelegateDatum(PDatum delegate) {
-        this.delegate = delegate;
-    }
-    
-    @Override
-    public boolean isNullable() {
-        return delegate.isNullable();
-    }
 
-    @Override
-    public PDataType getDataType() {
-        return delegate.getDataType();
-    }
+  private final PDatum delegate;
 
-    @Override
-    public Integer getMaxLength() {
-        return delegate.getMaxLength();
-    }
+  public DelegateDatum(PDatum delegate) {
+    this.delegate = delegate;
+  }
 
-    @Override
-    public Integer getScale() {
-        return delegate.getScale();
-    }
-    
-	@Override
-	public SortOrder getSortOrder() {
-		return delegate.getSortOrder();
-	}
+  @Override
+  public boolean isNullable() {
+    return delegate.isNullable();
+  }
 
-    protected PDatum getDelegate() {
-        return delegate;
-    }
+  @Override
+  public PDataType getDataType() {
+    return delegate.getDataType();
+  }
+
+  @Override
+  public Integer getMaxLength() {
+    return delegate.getMaxLength();
+  }
+
+  @Override
+  public Integer getScale() {
+    return delegate.getScale();
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return delegate.getSortOrder();
+  }
+
+  protected PDatum getDelegate() {
+    return delegate;
+  }
 }

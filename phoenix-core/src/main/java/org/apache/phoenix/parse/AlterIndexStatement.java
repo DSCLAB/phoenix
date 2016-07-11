@@ -20,32 +20,33 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.schema.PIndexState;
 
 public class AlterIndexStatement extends SingleTableStatement {
-    private final String dataTableName;
-    private final boolean ifExists;
-    private final PIndexState indexState;
 
-    public AlterIndexStatement(NamedTableNode indexTableNode, String dataTableName, boolean ifExists, PIndexState indexState) {
-        super(indexTableNode,0);
-        this.dataTableName = dataTableName;
-        this.ifExists = ifExists;
-        this.indexState = indexState;
-    }
+  private final String dataTableName;
+  private final boolean ifExists;
+  private final PIndexState indexState;
 
-    public String getTableName() {
-        return dataTableName;
-    }
+  public AlterIndexStatement(NamedTableNode indexTableNode, String dataTableName, boolean ifExists, PIndexState indexState) {
+    super(indexTableNode, 0);
+    this.dataTableName = dataTableName;
+    this.ifExists = ifExists;
+    this.indexState = indexState;
+  }
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  public String getTableName() {
+    return dataTableName;
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    public PIndexState getIndexState() {
-        return indexState;
-    }
+  public boolean ifExists() {
+    return ifExists;
+  }
+
+  public PIndexState getIndexState() {
+    return indexState;
+  }
 
 }

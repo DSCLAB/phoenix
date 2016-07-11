@@ -22,8 +22,9 @@ import java.sql.SQLException;
 import org.apache.phoenix.execute.MutationState;
 import org.apache.phoenix.jdbc.PhoenixConnection;
 
-
 public interface MutationPlan extends StatementPlan {
-    public PhoenixConnection getConnection();
-    public MutationState execute() throws SQLException;
+
+  public PhoenixConnection getConnection();
+
+  public MutationState execute() throws SQLException;
 }

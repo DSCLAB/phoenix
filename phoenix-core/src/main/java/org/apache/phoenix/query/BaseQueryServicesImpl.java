@@ -25,57 +25,56 @@ import org.apache.phoenix.memory.MemoryManager;
 import org.apache.phoenix.optimize.QueryOptimizer;
 import org.apache.phoenix.util.ReadOnlyProps;
 
-
-
 /**
- * 
+ *
  * Base class for QueryService implementors.
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class BaseQueryServicesImpl implements QueryServices {
-    private final ThreadPoolExecutor executor;
-    private final MemoryManager memoryManager;
-    private final ReadOnlyProps props;
-    private final QueryOptimizer queryOptimizer;
-    
-    public BaseQueryServicesImpl(ReadOnlyProps defaultProps, QueryServicesOptions options) {
-        this.executor =  JobManager.createThreadPoolExec(
-                options.getKeepAliveMs(), 
-                options.getThreadPoolSize(), 
-                options.getQueueSize(),
-                options.isMetricsEnabled());
-        this.memoryManager = new GlobalMemoryManager(
-                Runtime.getRuntime().maxMemory() * options.getMaxMemoryPerc() / 100,
-                options.getMaxMemoryWaitMs());
-        this.props = options.getProps(defaultProps);
-        this.queryOptimizer = new QueryOptimizer(this);
-    }
-    
-    @Override
-    public ThreadPoolExecutor getExecutor() {
-        return executor;
-    }
 
-    @Override
-    public MemoryManager getMemoryManager() {
-        return memoryManager;
-    }
+  private final ThreadPoolExecutor executor;
+  private final MemoryManager memoryManager;
+  private final ReadOnlyProps props;
+  private final QueryOptimizer queryOptimizer;
 
-    @Override
-    public final ReadOnlyProps getProps() {
-        return props;
-    }
+  public BaseQueryServicesImpl(ReadOnlyProps defaultProps, QueryServicesOptions options) {
+    this.executor = JobManager.createThreadPoolExec(
+            options.getKeepAliveMs(),
+            options.getThreadPoolSize(),
+            options.getQueueSize(),
+            options.isMetricsEnabled());
+    this.memoryManager = new GlobalMemoryManager(
+            Runtime.getRuntime().maxMemory() * options.getMaxMemoryPerc() / 100,
+            options.getMaxMemoryWaitMs());
+    this.props = options.getProps(defaultProps);
+    this.queryOptimizer = new QueryOptimizer(this);
+  }
 
-    @Override
-    public void close() {
-        // Do not shutdown the executor as it prevents the Driver from being able
-        // to attempt to open a connection in the future.
-    }
+  @Override
+  public ThreadPoolExecutor getExecutor() {
+    return executor;
+  }
 
-    @Override
-    public QueryOptimizer getOptimizer() {
-        return queryOptimizer;
-    }   
+  @Override
+  public MemoryManager getMemoryManager() {
+    return memoryManager;
+  }
+
+  @Override
+  public final ReadOnlyProps getProps() {
+    return props;
+  }
+
+  @Override
+  public void close() {
+    // Do not shutdown the executor as it prevents the Driver from being able
+    // to attempt to open a connection in the future.
+  }
+
+  @Override
+  public QueryOptimizer getOptimizer() {
+    return queryOptimizer;
+  }
 }

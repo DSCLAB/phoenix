@@ -33,91 +33,98 @@ import org.apache.phoenix.schema.types.PLong;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.SchemaUtil;
 
-
 /**
- * 
+ *
  * Built-in function for COUNT(distinct <expression>) aggregate function,
  *
- * 
+ *
  * @since 1.2.1
  */
-@BuiltInFunction(name=DistinctCountAggregateFunction.NAME, args= {@Argument()} )
+@BuiltInFunction(name = DistinctCountAggregateFunction.NAME, args = {
+  @Argument()})
 public class DistinctCountAggregateFunction extends DelegateConstantToCountAggregateFunction {
-    public static final String NAME = "DISTINCT_COUNT";
-    public static final String NORMALIZED_NAME = SchemaUtil.normalizeIdentifier(NAME);
-    public final static byte[] ZERO = PLong.INSTANCE.toBytes(0L);
-    public final static byte[] ONE = PLong.INSTANCE.toBytes(1L);
-    
-    public DistinctCountAggregateFunction() {
-    }
 
-    public DistinctCountAggregateFunction(List<Expression> childExpressions) {
-        this(childExpressions, null);
-    }
+  public static final String NAME = "DISTINCT_COUNT";
+  public static final String NORMALIZED_NAME = SchemaUtil.normalizeIdentifier(NAME);
+  public final static byte[] ZERO = PLong.INSTANCE.toBytes(0L);
+  public final static byte[] ONE = PLong.INSTANCE.toBytes(1L);
 
-    public DistinctCountAggregateFunction(List<Expression> childExpressions,
-            CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-        assert childExpressions.size() == 1;
-    }
-    
-    @Override
-    public int hashCode() {
-        return isConstantExpression() ? 0 : super.hashCode();
-    }
+  public DistinctCountAggregateFunction() {
+  }
 
-    /**
-     * The COUNT function never returns null
-     */
-    @Override
-    public boolean isNullable() {
-        return false;
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        DistinctCountAggregateFunction other = (DistinctCountAggregateFunction)obj;
-        return (isConstantExpression() && other.isConstantExpression()) || children.equals(other.getChildren());
-    }
+  public DistinctCountAggregateFunction(List<Expression> childExpressions) {
+    this(childExpressions, null);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PLong.INSTANCE;
-    }
+  public DistinctCountAggregateFunction(List<Expression> childExpressions,
+          CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+    assert childExpressions.size() == 1;
+  }
 
-    @Override 
-    public DistinctCountClientAggregator newClientAggregator() {
-        return new DistinctCountClientAggregator(getAggregatorExpression().getSortOrder());
-    }
-    
-    @Override 
-    public Aggregator newServerAggregator(Configuration conf) {
-        return new DistinctValueWithCountServerAggregator(conf);
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        // TODO: optimize query plan of this to run scan serially for a limit of one row
-        if (!super.evaluate(tuple, ptr)) {
-            ptr.set(ZERO); // If evaluate returns false, then no rows were found, so result is 0
-        } else if (isConstantExpression()) {
-            ptr.set(ONE); // Otherwise, we found one or more rows, so a distinct on a constant is 1
-        }
-        return true; // Always evaluates to a LONG value
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public int hashCode() {
+    return isConstantExpression() ? 0 : super.hashCode();
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration config, ImmutableBytesWritable ptr) {
-        DistinctCountClientAggregator clientAgg = newClientAggregator();
-        clientAgg.aggregate(null, ptr);
-        return new DistinctValueWithCountServerAggregator(config, clientAgg);
+  /**
+   * The COUNT function never returns null
+   */
+  @Override
+  public boolean isNullable() {
+    return false;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    DistinctCountAggregateFunction other = (DistinctCountAggregateFunction) obj;
+    return (isConstantExpression() && other.isConstantExpression()) || children.equals(other.getChildren());
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PLong.INSTANCE;
+  }
+
+  @Override
+  public DistinctCountClientAggregator newClientAggregator() {
+    return new DistinctCountClientAggregator(getAggregatorExpression().getSortOrder());
+  }
+
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    return new DistinctValueWithCountServerAggregator(conf);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    // TODO: optimize query plan of this to run scan serially for a limit of one row
+    if (!super.evaluate(tuple, ptr)) {
+      ptr.set(ZERO); // If evaluate returns false, then no rows were found, so result is 0
+    } else if (isConstantExpression()) {
+      ptr.set(ONE); // Otherwise, we found one or more rows, so a distinct on a constant is 1
+    }
+    return true; // Always evaluates to a LONG value
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public Aggregator newServerAggregator(Configuration config, ImmutableBytesWritable ptr) {
+    DistinctCountClientAggregator clientAgg = newClientAggregator();
+    clientAgg.aggregate(null, ptr);
+    return new DistinctValueWithCountServerAggregator(config, clientAgg);
+  }
 }

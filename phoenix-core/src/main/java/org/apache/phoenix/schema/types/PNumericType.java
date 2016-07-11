@@ -22,23 +22,24 @@ import org.apache.phoenix.schema.SortOrder;
 
 /**
  * Base class for numeric PDataType, including PInteger, PFloat etc.
+ *
  * @since 4.3.0
  */
 public abstract class PNumericType<T> extends PDataType<T> {
 
-    protected PNumericType(String sqlTypeName, int sqlType, Class clazz,
-            org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
-        super(sqlTypeName, sqlType, clazz, codec, ordinal);
-    }
+  protected PNumericType(String sqlTypeName, int sqlType, Class clazz,
+          org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
+    super(sqlTypeName, sqlType, clazz, codec, ordinal);
+  }
 
-    public final int signum(byte[] bytes, int offset, int length, SortOrder sortOrder) {
-        return signum(bytes, offset, length, sortOrder, null, null);
-    }
+  public final int signum(byte[] bytes, int offset, int length, SortOrder sortOrder) {
+    return signum(bytes, offset, length, sortOrder, null, null);
+  }
 
-    public final int signum(ImmutableBytesWritable ptr, SortOrder sortOrder) {
-        return signum(ptr.get(), ptr.getOffset(), ptr.getLength(), sortOrder);
-    }
+  public final int signum(ImmutableBytesWritable ptr, SortOrder sortOrder) {
+    return signum(ptr.get(), ptr.getOffset(), ptr.getLength(), sortOrder);
+  }
 
-    abstract public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder,
-            Integer maxLength, Integer scale);
+  abstract public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder,
+          Integer maxLength, Integer scale);
 }

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.cache;
 
 import java.io.Closeable;
@@ -24,5 +23,6 @@ import java.util.List;
 import org.apache.phoenix.index.IndexMaintainer;
 
 public interface IndexMetaDataCache extends Closeable {
-    public List<IndexMaintainer> getIndexMaintainers();
+
+  public List<IndexMaintainer> getIndexMaintainers();
 }

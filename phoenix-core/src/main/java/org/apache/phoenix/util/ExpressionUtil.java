@@ -25,37 +25,37 @@ import com.google.common.collect.Lists;
 
 public class ExpressionUtil {
 
-	@SuppressWarnings("unchecked")
-	private static final List<Class<? extends FunctionExpression>> OVERRIDE_LITERAL_FUNCTIONS = Lists
-			.<Class<? extends FunctionExpression>> newArrayList(
-					CurrentDateFunction.class, CurrentTimeFunction.class);
+  @SuppressWarnings("unchecked")
+  private static final List<Class<? extends FunctionExpression>> OVERRIDE_LITERAL_FUNCTIONS = Lists
+          .<Class<? extends FunctionExpression>>newArrayList(
+                  CurrentDateFunction.class, CurrentTimeFunction.class);
 
-	private ExpressionUtil() {
-	}
+  private ExpressionUtil() {
+  }
 
-	public static boolean isConstant(Expression expression) {
-		return (expression.isStateless() && (expression.getDeterminism() == Determinism.ALWAYS
-				|| expression.getDeterminism() == Determinism.PER_STATEMENT 
-				// TODO remove this in 3.4/4.4 (need to support clients on 3.1/4.1)
-				|| OVERRIDE_LITERAL_FUNCTIONS.contains(expression.getClass())));
-	}
+  public static boolean isConstant(Expression expression) {
+    return (expression.isStateless() && (expression.getDeterminism() == Determinism.ALWAYS
+            || expression.getDeterminism() == Determinism.PER_STATEMENT
+            // TODO remove this in 3.4/4.4 (need to support clients on 3.1/4.1)
+            || OVERRIDE_LITERAL_FUNCTIONS.contains(expression.getClass())));
+  }
 
-    public static LiteralExpression getConstantExpression(Expression expression, ImmutableBytesWritable ptr)
-            throws SQLException {
-        Object value = null;
-        PDataType type = expression.getDataType();
-        if (expression.evaluate(null, ptr) && ptr.getLength() != 0) {
-            value = type.toObject(ptr);
-        }
-        return LiteralExpression.newConstant(value, type, expression.getDeterminism());
+  public static LiteralExpression getConstantExpression(Expression expression, ImmutableBytesWritable ptr)
+          throws SQLException {
+    Object value = null;
+    PDataType type = expression.getDataType();
+    if (expression.evaluate(null, ptr) && ptr.getLength() != 0) {
+      value = type.toObject(ptr);
     }
+    return LiteralExpression.newConstant(value, type, expression.getDeterminism());
+  }
 
-    public static boolean isNull(Expression expression, ImmutableBytesWritable ptr) {
-        return isConstant(expression) && (!expression.evaluate(null, ptr) || ptr.getLength() == 0);
-    }
+  public static boolean isNull(Expression expression, ImmutableBytesWritable ptr) {
+    return isConstant(expression) && (!expression.evaluate(null, ptr) || ptr.getLength() == 0);
+  }
 
-    public static LiteralExpression getNullExpression(Expression expression) throws SQLException {
-        return LiteralExpression.newConstant(null, expression.getDataType(), expression.getDeterminism());
-    }
+  public static LiteralExpression getNullExpression(Expression expression) throws SQLException {
+    return LiteralExpression.newConstant(null, expression.getDataType(), expression.getDeterminism());
+  }
 
 }

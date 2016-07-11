@@ -29,80 +29,81 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 public class DelegateExpression implements Expression {
-    private final Expression delegate;
-    
-    public DelegateExpression(Expression delegate) {
-        this.delegate = delegate;
-    }
 
-    @Override
-    public boolean isNullable() {
-        return delegate.isNullable();
-    }
+  private final Expression delegate;
 
-    @Override
-    public PDataType getDataType() {
-        return delegate.getDataType();
-    }
+  public DelegateExpression(Expression delegate) {
+    this.delegate = delegate;
+  }
 
-    @Override
-    public Integer getMaxLength() {
-        return delegate.getMaxLength();
-    }
+  @Override
+  public boolean isNullable() {
+    return delegate.isNullable();
+  }
 
-    @Override
-    public Integer getScale() {
-        return delegate.getScale();
-    }
+  @Override
+  public PDataType getDataType() {
+    return delegate.getDataType();
+  }
 
-    @Override
-    public SortOrder getSortOrder() {
-        return delegate.getSortOrder();
-    }
+  @Override
+  public Integer getMaxLength() {
+    return delegate.getMaxLength();
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        delegate.readFields(input);
-    }
+  @Override
+  public Integer getScale() {
+    return delegate.getScale();
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        delegate.write(output);
-    }
+  @Override
+  public SortOrder getSortOrder() {
+    return delegate.getSortOrder();
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        return delegate.evaluate(tuple, ptr);
-    }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    delegate.readFields(input);
+  }
 
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        return delegate.accept(visitor);
-    }
+  @Override
+  public void write(DataOutput output) throws IOException {
+    delegate.write(output);
+  }
 
-    @Override
-    public List<Expression> getChildren() {
-        return delegate.getChildren();
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    return delegate.evaluate(tuple, ptr);
+  }
 
-    @Override
-    public void reset() {
-        delegate.reset();
-    }
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    return delegate.accept(visitor);
+  }
 
-    @Override
-    public boolean isStateless() {
-        return delegate.isStateless();
-    }
+  @Override
+  public List<Expression> getChildren() {
+    return delegate.getChildren();
+  }
 
-    @Override
-    public Determinism getDeterminism() {
-        return delegate.getDeterminism();
-    }
+  @Override
+  public void reset() {
+    delegate.reset();
+  }
 
-    @Override
-    public boolean requiresFinalEvaluation() {
-        return delegate.requiresFinalEvaluation();
-    }
+  @Override
+  public boolean isStateless() {
+    return delegate.isStateless();
+  }
+
+  @Override
+  public Determinism getDeterminism() {
+    return delegate.getDeterminism();
+  }
+
+  @Override
+  public boolean requiresFinalEvaluation() {
+    return delegate.requiresFinalEvaluation();
+  }
 
 }

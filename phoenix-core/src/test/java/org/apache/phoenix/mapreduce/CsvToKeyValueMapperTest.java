@@ -39,110 +39,108 @@ import com.google.common.collect.Lists;
 
 public class CsvToKeyValueMapperTest {
 
-    @Test
-    public void testCsvLineParser() throws IOException {
-        CsvToKeyValueMapper.CsvLineParser lineParser =
-                new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
-        CSVRecord parsed = lineParser.parse("one;two");
+  @Test
+  public void testCsvLineParser() throws IOException {
+    CsvToKeyValueMapper.CsvLineParser lineParser
+            = new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
+    CSVRecord parsed = lineParser.parse("one;two");
 
-        assertEquals("one", parsed.get(0));
-        assertEquals("two", parsed.get(1));
-        assertTrue(parsed.isConsistent());
-        assertEquals(1, parsed.getRecordNumber());
+    assertEquals("one", parsed.get(0));
+    assertEquals("two", parsed.get(1));
+    assertTrue(parsed.isConsistent());
+    assertEquals(1, parsed.getRecordNumber());
+  }
+
+  @Test
+  public void testCsvLineParserWithQuoting() throws IOException {
+    CsvToKeyValueMapper.CsvLineParser lineParser
+            = new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
+    CSVRecord parsed = lineParser.parse("\"\\\"one\";\"\\;two\\\\\"");
+
+    assertEquals("\"one", parsed.get(0));
+    assertEquals(";two\\", parsed.get(1));
+    assertTrue(parsed.isConsistent());
+    assertEquals(1, parsed.getRecordNumber());
+  }
+
+  @Test
+  public void testBuildColumnInfoList() {
+    List<ColumnInfo> columnInfoList = ImmutableList.of(
+            new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
+            new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
+            new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
+
+    Configuration conf = new Configuration();
+    CsvToKeyValueMapper.configureColumnInfoList(conf, columnInfoList);
+    List<ColumnInfo> fromConfig = CsvToKeyValueMapper.buildColumnInfoList(conf);
+
+    assertEquals(columnInfoList, fromConfig);
+  }
+
+  @Test
+  public void testBuildColumnInfoList_ContainingNulls() {
+    // A null value in the column info list means "skip that column in the input"
+    List<ColumnInfo> columnInfoListWithNull = Lists.newArrayList(
+            new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
+            null,
+            new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
+            new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
+
+    Configuration conf = new Configuration();
+    CsvToKeyValueMapper.configureColumnInfoList(conf, columnInfoListWithNull);
+    List<ColumnInfo> fromConfig = CsvToKeyValueMapper.buildColumnInfoList(conf);
+
+    assertEquals(columnInfoListWithNull, fromConfig);
+  }
+
+  @Test
+  public void testGetJdbcUrl() {
+    Configuration conf = new Configuration();
+    conf.set(HConstants.ZOOKEEPER_QUORUM, "myzkclient:2181");
+    String jdbcUrl = CsvToKeyValueMapper.getJdbcUrl(conf);
+
+    assertEquals("jdbc:phoenix:myzkclient:2181", jdbcUrl);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetJdbcUrl_NotConfigured() {
+    Configuration conf = new Configuration();
+    CsvToKeyValueMapper.getJdbcUrl(conf);
+  }
+
+  @Test
+  public void testLoadPreUpdateProcessor() {
+    Configuration conf = new Configuration();
+    conf.setClass(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, MockUpsertProcessor.class,
+            ImportPreUpsertKeyValueProcessor.class);
+
+    ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+    assertEquals(MockUpsertProcessor.class, processor.getClass());
+  }
+
+  @Test
+  public void testLoadPreUpdateProcessor_NotConfigured() {
+
+    Configuration conf = new Configuration();
+    ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+
+    assertEquals(CsvToKeyValueMapper.DefaultImportPreUpsertKeyValueProcessor.class,
+            processor.getClass());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testLoadPreUpdateProcessor_ClassNotFound() {
+    Configuration conf = new Configuration();
+    conf.set(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, "MyUndefinedClass");
+
+    PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+  }
+
+  static class MockUpsertProcessor implements ImportPreUpsertKeyValueProcessor {
+
+    @Override
+    public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
+      throw new UnsupportedOperationException("Not yet implemented");
     }
-
-    @Test
-    public void testCsvLineParserWithQuoting() throws IOException {
-        CsvToKeyValueMapper.CsvLineParser lineParser =
-                new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
-        CSVRecord parsed = lineParser.parse("\"\\\"one\";\"\\;two\\\\\"");
-
-        assertEquals("\"one", parsed.get(0));
-        assertEquals(";two\\", parsed.get(1));
-        assertTrue(parsed.isConsistent());
-        assertEquals(1, parsed.getRecordNumber());
-    }
-
-
-    @Test
-    public void testBuildColumnInfoList() {
-        List<ColumnInfo> columnInfoList = ImmutableList.of(
-                new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
-                new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
-                new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
-
-        Configuration conf = new Configuration();
-        CsvToKeyValueMapper.configureColumnInfoList(conf, columnInfoList);
-        List<ColumnInfo> fromConfig = CsvToKeyValueMapper.buildColumnInfoList(conf);
-
-        assertEquals(columnInfoList, fromConfig);
-    }
-
-    @Test
-    public void testBuildColumnInfoList_ContainingNulls() {
-        // A null value in the column info list means "skip that column in the input"
-        List<ColumnInfo> columnInfoListWithNull = Lists.newArrayList(
-                new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
-                null,
-                new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
-                new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
-
-        Configuration conf = new Configuration();
-        CsvToKeyValueMapper.configureColumnInfoList(conf, columnInfoListWithNull);
-        List<ColumnInfo> fromConfig = CsvToKeyValueMapper.buildColumnInfoList(conf);
-
-        assertEquals(columnInfoListWithNull, fromConfig);
-    }
-
-    @Test
-    public void testGetJdbcUrl() {
-        Configuration conf = new Configuration();
-        conf.set(HConstants.ZOOKEEPER_QUORUM, "myzkclient:2181");
-        String jdbcUrl = CsvToKeyValueMapper.getJdbcUrl(conf);
-
-        assertEquals("jdbc:phoenix:myzkclient:2181", jdbcUrl);
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void testGetJdbcUrl_NotConfigured() {
-        Configuration conf = new Configuration();
-        CsvToKeyValueMapper.getJdbcUrl(conf);
-    }
-
-    @Test
-    public void testLoadPreUpdateProcessor() {
-        Configuration conf = new Configuration();
-        conf.setClass(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, MockUpsertProcessor.class,
-                ImportPreUpsertKeyValueProcessor.class);
-
-        ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-        assertEquals(MockUpsertProcessor.class, processor.getClass());
-    }
-
-    @Test
-    public void testLoadPreUpdateProcessor_NotConfigured() {
-
-        Configuration conf = new Configuration();
-        ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-
-        assertEquals(CsvToKeyValueMapper.DefaultImportPreUpsertKeyValueProcessor.class,
-                processor.getClass());
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void testLoadPreUpdateProcessor_ClassNotFound() {
-        Configuration conf = new Configuration();
-        conf.set(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, "MyUndefinedClass");
-
-        PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-    }
-
-
-    static class MockUpsertProcessor implements ImportPreUpsertKeyValueProcessor {
-
-        @Override
-        public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
-            throw new UnsupportedOperationException("Not yet implemented");
-        }
-    }
+  }
 }

@@ -20,13 +20,14 @@ package org.apache.phoenix.compile;
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
 
-
 public interface StatementPlan {
-    StatementContext getContext();
-    /**
-     * Returns the ParameterMetaData for the statement
-     */
-    ParameterMetaData getParameterMetaData();
-    
-    ExplainPlan getExplainPlan() throws SQLException;
+
+  StatementContext getContext();
+
+  /**
+   * Returns the ParameterMetaData for the statement
+   */
+  ParameterMetaData getParameterMetaData();
+
+  ExplainPlan getExplainPlan() throws SQLException;
 }

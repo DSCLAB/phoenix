@@ -38,77 +38,78 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-
 /**
  *
- * Class that parallelizes the scan over a table using the ExecutorService provided.  Each region of the table will be scanned in parallel with
- * the results accessible through {@link #getIterators()}
+ * Class that parallelizes the scan over a table using the ExecutorService
+ * provided. Each region of the table will be scanned in parallel with the
+ * results accessible through {@link #getIterators()}
  *
- * 
+ *
  * @since 0.1
  */
 public class SerialIterators extends BaseResultIterators {
-	private static final Logger logger = LoggerFactory.getLogger(SerialIterators.class);
-	private static final String NAME = "SERIAL";
-    private final ParallelIteratorFactory iteratorFactory;
-    
-    public SerialIterators(QueryPlan plan, Integer perScanLimit, ParallelIteratorFactory iteratorFactory)
-            throws SQLException {
-        super(plan, perScanLimit);
-        Preconditions.checkArgument(perScanLimit != null); // must be a limit specified
-        this.iteratorFactory = iteratorFactory;
-    }
 
-    @Override
-    protected void submitWork(List<List<Scan>> nestedScans, List<List<Pair<Scan,Future<PeekingResultIterator>>>> nestedFutures,
-            final Queue<PeekingResultIterator> allIterators, int estFlattenedSize) {
-        // Pre-populate nestedFutures lists so that we can shuffle the scans
-        // and add the future to the right nested list. By shuffling the scans
-        // we get better utilization of the cluster since our thread executor
-        // will spray the scans across machines as opposed to targeting a
-        // single one since the scans are in row key order.
-        ExecutorService executor = context.getConnection().getQueryServices().getExecutor();
-        
-        for (final List<Scan> scans : nestedScans) {
-            Scan firstScan = scans.get(0);
-            Scan lastScan = scans.get(scans.size()-1);
-            final Scan overallScan = ScanUtil.newScan(firstScan);
-            overallScan.setStopRow(lastScan.getStopRow());
-            Future<PeekingResultIterator> future = executor.submit(Tracing.wrap(new JobCallable<PeekingResultIterator>() {
+  private static final Logger logger = LoggerFactory.getLogger(SerialIterators.class);
+  private static final String NAME = "SERIAL";
+  private final ParallelIteratorFactory iteratorFactory;
 
-                @Override
-                public PeekingResultIterator call() throws Exception {
-                	List<PeekingResultIterator> concatIterators = Lists.newArrayListWithExpectedSize(scans.size());
-                	for (final Scan scan : scans) {
-	                    long startTime = System.currentTimeMillis();
-	                    ResultIterator scanner = new TableResultIterator(context, tableRef, scan, ScannerCreation.DELAYED);
-	                    if (logger.isDebugEnabled()) {
-	                        logger.debug(LogUtil.addCustomAnnotations("Id: " + scanId + ", Time: " + (System.currentTimeMillis() - startTime) + "ms, Scan: " + scan, ScanUtil.getCustomAnnotations(scan)));
-	                    }
-	                    concatIterators.add(iteratorFactory.newIterator(context, scanner, scan));
-                	}
-                	PeekingResultIterator concatIterator = ConcatResultIterator.newIterator(concatIterators);
-                    allIterators.add(concatIterator);
-                    return concatIterator;
-                }
+  public SerialIterators(QueryPlan plan, Integer perScanLimit, ParallelIteratorFactory iteratorFactory)
+          throws SQLException {
+    super(plan, perScanLimit);
+    Preconditions.checkArgument(perScanLimit != null); // must be a limit specified
+    this.iteratorFactory = iteratorFactory;
+  }
 
-                /**
-                 * Defines the grouping for round robin behavior.  All threads spawned to process
-                 * this scan will be grouped together and time sliced with other simultaneously
-                 * executing parallel scans.
-                 */
-                @Override
-                public Object getJobId() {
-                    return SerialIterators.this;
-                }
-            }, "Serial scanner for table: " + tableRef.getTable().getName().getString()));
-            // Add our singleton Future which will execute serially
-            nestedFutures.add(Collections.singletonList(new Pair<Scan,Future<PeekingResultIterator>>(overallScan,future)));
+  @Override
+  protected void submitWork(List<List<Scan>> nestedScans, List<List<Pair<Scan, Future<PeekingResultIterator>>>> nestedFutures,
+          final Queue<PeekingResultIterator> allIterators, int estFlattenedSize) {
+    // Pre-populate nestedFutures lists so that we can shuffle the scans
+    // and add the future to the right nested list. By shuffling the scans
+    // we get better utilization of the cluster since our thread executor
+    // will spray the scans across machines as opposed to targeting a
+    // single one since the scans are in row key order.
+    ExecutorService executor = context.getConnection().getQueryServices().getExecutor();
+
+    for (final List<Scan> scans : nestedScans) {
+      Scan firstScan = scans.get(0);
+      Scan lastScan = scans.get(scans.size() - 1);
+      final Scan overallScan = ScanUtil.newScan(firstScan);
+      overallScan.setStopRow(lastScan.getStopRow());
+      Future<PeekingResultIterator> future = executor.submit(Tracing.wrap(new JobCallable<PeekingResultIterator>() {
+
+        @Override
+        public PeekingResultIterator call() throws Exception {
+          List<PeekingResultIterator> concatIterators = Lists.newArrayListWithExpectedSize(scans.size());
+          for (final Scan scan : scans) {
+            long startTime = System.currentTimeMillis();
+            ResultIterator scanner = new TableResultIterator(context, tableRef, scan, ScannerCreation.DELAYED);
+            if (logger.isDebugEnabled()) {
+              logger.debug(LogUtil.addCustomAnnotations("Id: " + scanId + ", Time: " + (System.currentTimeMillis() - startTime) + "ms, Scan: " + scan, ScanUtil.getCustomAnnotations(scan)));
+            }
+            concatIterators.add(iteratorFactory.newIterator(context, scanner, scan));
+          }
+          PeekingResultIterator concatIterator = ConcatResultIterator.newIterator(concatIterators);
+          allIterators.add(concatIterator);
+          return concatIterator;
         }
-    }
 
-    @Override
-    protected String getName() {
-        return NAME;
+        /**
+         * Defines the grouping for round robin behavior. All threads spawned to
+         * process this scan will be grouped together and time sliced with other
+         * simultaneously executing parallel scans.
+         */
+        @Override
+        public Object getJobId() {
+          return SerialIterators.this;
+        }
+      }, "Serial scanner for table: " + tableRef.getTable().getName().getString()));
+      // Add our singleton Future which will execute serially
+      nestedFutures.add(Collections.singletonList(new Pair<Scan, Future<PeekingResultIterator>>(overallScan, future)));
     }
+  }
+
+  @Override
+  protected String getName() {
+    return NAME;
+  }
 }

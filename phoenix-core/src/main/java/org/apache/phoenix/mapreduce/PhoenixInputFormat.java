@@ -47,81 +47,80 @@ import com.google.common.collect.Lists;
 
 /**
  * {@link InputFormat} implementation from Phoenix.
- * 
+ *
  */
-public class PhoenixInputFormat<T extends DBWritable> extends InputFormat<NullWritable,T> {
+public class PhoenixInputFormat<T extends DBWritable> extends InputFormat<NullWritable, T> {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixInputFormat.class);
-       
-    /**
-     * instantiated by framework
-     */
-    public PhoenixInputFormat() {
-    }
+  private static final Log LOG = LogFactory.getLog(PhoenixInputFormat.class);
 
-    @Override
-    public RecordReader<NullWritable,T> createRecordReader(InputSplit split, TaskAttemptContext context)
-            throws IOException, InterruptedException {
-        
-        final Configuration configuration = context.getConfiguration();
-        final QueryPlan queryPlan = getQueryPlan(context,configuration);
-        @SuppressWarnings("unchecked")
-        final Class<T> inputClass = (Class<T>) PhoenixConfigurationUtil.getInputClass(configuration);
-        return new PhoenixRecordReader<T>(inputClass , configuration, queryPlan);
-    }
-    
-   
+  /**
+   * instantiated by framework
+   */
+  public PhoenixInputFormat() {
+  }
 
-    @Override
-    public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {  
-        final Configuration configuration = context.getConfiguration();
-        final QueryPlan queryPlan = getQueryPlan(context,configuration);
-        final List<KeyRange> allSplits = queryPlan.getSplits();
-        final List<InputSplit> splits = generateSplits(queryPlan,allSplits);
-        return splits;
-    }
+  @Override
+  public RecordReader<NullWritable, T> createRecordReader(InputSplit split, TaskAttemptContext context)
+          throws IOException, InterruptedException {
 
-    private List<InputSplit> generateSplits(final QueryPlan qplan, final List<KeyRange> splits) throws IOException {
-        Preconditions.checkNotNull(qplan);
-        Preconditions.checkNotNull(splits);
-        final List<InputSplit> psplits = Lists.newArrayListWithExpectedSize(splits.size());
-        for (List<Scan> scans : qplan.getScans()) {
-            psplits.add(new PhoenixInputSplit(scans));
-        }
-        return psplits;
+    final Configuration configuration = context.getConfiguration();
+    final QueryPlan queryPlan = getQueryPlan(context, configuration);
+    @SuppressWarnings("unchecked")
+    final Class<T> inputClass = (Class<T>) PhoenixConfigurationUtil.getInputClass(configuration);
+    return new PhoenixRecordReader<T>(inputClass, configuration, queryPlan);
+  }
+
+  @Override
+  public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
+    final Configuration configuration = context.getConfiguration();
+    final QueryPlan queryPlan = getQueryPlan(context, configuration);
+    final List<KeyRange> allSplits = queryPlan.getSplits();
+    final List<InputSplit> splits = generateSplits(queryPlan, allSplits);
+    return splits;
+  }
+
+  private List<InputSplit> generateSplits(final QueryPlan qplan, final List<KeyRange> splits) throws IOException {
+    Preconditions.checkNotNull(qplan);
+    Preconditions.checkNotNull(splits);
+    final List<InputSplit> psplits = Lists.newArrayListWithExpectedSize(splits.size());
+    for (List<Scan> scans : qplan.getScans()) {
+      psplits.add(new PhoenixInputSplit(scans));
     }
-    
-    /**
-     * Returns the query plan associated with the select query.
-     * @param context
-     * @return
-     * @throws IOException
-     * @throws SQLException
-     */
-    private QueryPlan getQueryPlan(final JobContext context, final Configuration configuration)
-            throws IOException {
-        Preconditions.checkNotNull(context);
-        try {
-            final String currentScnValue = configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE);
-            final Properties overridingProps = new Properties();
-            if(currentScnValue != null) {
-                overridingProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, currentScnValue);
-            }
-            final Connection connection = ConnectionUtil.getInputConnection(configuration, overridingProps);
-            final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
-            Preconditions.checkNotNull(selectStatement);
-            final Statement statement = connection.createStatement();
-            final PhoenixStatement pstmt = statement.unwrap(PhoenixStatement.class);
-            // Optimize the query plan so that we potentially use secondary indexes
-            final QueryPlan queryPlan = pstmt.optimizeQuery(selectStatement);
-            // Initialize the query plan so it sets up the parallel scans
-            queryPlan.iterator();
-            return queryPlan;
-        } catch (Exception exception) {
-            LOG.error(String.format("Failed to get the query plan with error [%s]",
-                exception.getMessage()));
-            throw new RuntimeException(exception);
-        }
+    return psplits;
+  }
+
+  /**
+   * Returns the query plan associated with the select query.
+   *
+   * @param context
+   * @return
+   * @throws IOException
+   * @throws SQLException
+   */
+  private QueryPlan getQueryPlan(final JobContext context, final Configuration configuration)
+          throws IOException {
+    Preconditions.checkNotNull(context);
+    try {
+      final String currentScnValue = configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE);
+      final Properties overridingProps = new Properties();
+      if (currentScnValue != null) {
+        overridingProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, currentScnValue);
+      }
+      final Connection connection = ConnectionUtil.getInputConnection(configuration, overridingProps);
+      final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
+      Preconditions.checkNotNull(selectStatement);
+      final Statement statement = connection.createStatement();
+      final PhoenixStatement pstmt = statement.unwrap(PhoenixStatement.class);
+      // Optimize the query plan so that we potentially use secondary indexes
+      final QueryPlan queryPlan = pstmt.optimizeQuery(selectStatement);
+      // Initialize the query plan so it sets up the parallel scans
+      queryPlan.iterator();
+      return queryPlan;
+    } catch (Exception exception) {
+      LOG.error(String.format("Failed to get the query plan with error [%s]",
+              exception.getMessage()));
+      throw new RuntimeException(exception);
     }
+  }
 
 }

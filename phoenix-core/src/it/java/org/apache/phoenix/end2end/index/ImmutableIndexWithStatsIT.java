@@ -39,51 +39,50 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-
 public class ImmutableIndexWithStatsIT extends BaseOwnClusterHBaseManagedTimeIT {
-    
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(5);
-        props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(1));
-        props.put(QueryServices.EXPLAIN_CHUNK_COUNT_ATTRIB, Boolean.TRUE.toString());
-        props.put(QueryServices.THREAD_POOL_SIZE_ATTRIB, Integer.toString(4));
-        props.put(QueryServices.QUEUE_SIZE_ATTRIB, Integer.toString(500));
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-   
-    @Test
-    public void testIndexCreationDeadlockWithStats() throws Exception {
-        String query;
-        ResultSet rs;
-        
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        String tableName = TestUtil.DEFAULT_DATA_TABLE_FULL_NAME;
-        conn.createStatement().execute("CREATE TABLE " + tableName + " (k VARCHAR NOT NULL PRIMARY KEY, v VARCHAR) IMMUTABLE_ROWS=TRUE");
-        query = "SELECT * FROM " + tableName;
-        rs = conn.createStatement().executeQuery(query);
-        assertFalse(rs.next());
 
-        PreparedStatement stmt = conn.prepareStatement("UPSERT INTO " + tableName + " VALUES(?,?)");
-        for (int i=0; i<6;i++) {
-	        stmt.setString(1,"k" + i);
-	        stmt.setString(2, "v" + i );
-	        stmt.execute();
-        }
-        conn.commit();
-        
-        conn.createStatement().execute("UPDATE STATISTICS " + tableName);
-        query = "SELECT COUNT(*) FROM " + tableName;
-        rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-        assertTrue(QueryUtil.getExplainPlan(rs).startsWith("CLIENT 7-CHUNK PARALLEL 1-WAY FULL SCAN"));
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(5);
+    props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(1));
+    props.put(QueryServices.EXPLAIN_CHUNK_COUNT_ATTRIB, Boolean.TRUE.toString());
+    props.put(QueryServices.THREAD_POOL_SIZE_ATTRIB, Integer.toString(4));
+    props.put(QueryServices.QUEUE_SIZE_ATTRIB, Integer.toString(500));
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 
-        String indexName = TestUtil.DEFAULT_INDEX_TABLE_NAME;
-        conn.createStatement().execute("CREATE INDEX " + indexName + " ON " + tableName + " (v)");
-        
-        query = "SELECT * FROM " + indexName;
-        rs = conn.createStatement().executeQuery(query);
-        assertTrue(rs.next());
+  @Test
+  public void testIndexCreationDeadlockWithStats() throws Exception {
+    String query;
+    ResultSet rs;
+
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    String tableName = TestUtil.DEFAULT_DATA_TABLE_FULL_NAME;
+    conn.createStatement().execute("CREATE TABLE " + tableName + " (k VARCHAR NOT NULL PRIMARY KEY, v VARCHAR) IMMUTABLE_ROWS=TRUE");
+    query = "SELECT * FROM " + tableName;
+    rs = conn.createStatement().executeQuery(query);
+    assertFalse(rs.next());
+
+    PreparedStatement stmt = conn.prepareStatement("UPSERT INTO " + tableName + " VALUES(?,?)");
+    for (int i = 0; i < 6; i++) {
+      stmt.setString(1, "k" + i);
+      stmt.setString(2, "v" + i);
+      stmt.execute();
     }
+    conn.commit();
+
+    conn.createStatement().execute("UPDATE STATISTICS " + tableName);
+    query = "SELECT COUNT(*) FROM " + tableName;
+    rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+    assertTrue(QueryUtil.getExplainPlan(rs).startsWith("CLIENT 7-CHUNK PARALLEL 1-WAY FULL SCAN"));
+
+    String indexName = TestUtil.DEFAULT_INDEX_TABLE_NAME;
+    conn.createStatement().execute("CREATE INDEX " + indexName + " ON " + tableName + " (v)");
+
+    query = "SELECT * FROM " + indexName;
+    rs = conn.createStatement().executeQuery(query);
+    assertTrue(rs.next());
+  }
 }

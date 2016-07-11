@@ -20,13 +20,14 @@ package org.apache.phoenix.util;
 import java.sql.SQLException;
 
 /**
- * 
- * Interface for a SQL resource that should be closed
- * after it is no longer in use.
  *
- * 
+ * Interface for a SQL resource that should be closed after it is no longer in
+ * use.
+ *
+ *
  * @since 0.1
  */
 public interface SQLCloseable {
-    void close() throws SQLException;
+
+  void close() throws SQLException;
 }

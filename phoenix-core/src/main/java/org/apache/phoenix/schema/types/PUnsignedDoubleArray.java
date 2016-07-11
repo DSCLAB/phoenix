@@ -28,7 +28,7 @@ public class PUnsignedDoubleArray extends PArrayDataType<double[]> {
 
   private PUnsignedDoubleArray() {
     super("UNSIGNED_DOUBLE ARRAY", PDataType.ARRAY_TYPE_BASE + PUnsignedDouble.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 47);
+            PhoenixArray.class, null, 47);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PUnsignedDoubleArray extends PArrayDataType<double[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PUnsignedDouble.INSTANCE, sortOrder, maxLength,
-        scale, PUnsignedDouble.INSTANCE);
+            scale, PUnsignedDouble.INSTANCE);
   }
 
   @Override
@@ -76,10 +76,10 @@ public class PUnsignedDoubleArray extends PArrayDataType<double[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override
@@ -91,9 +91,9 @@ public class PUnsignedDoubleArray extends PArrayDataType<double[]> {
     Object[] doubleArr = (Object[]) pArr.array;
     for (Object i : doubleArr) {
       if (!super.isCoercibleTo(PUnsignedDouble.INSTANCE, i) && (!super.isCoercibleTo(
-          PUnsignedTimestamp.INSTANCE, i))
-          && (!super.isCoercibleTo(PUnsignedTime.INSTANCE, i)) && (!super
-          .isCoercibleTo(PUnsignedDate.INSTANCE, i))) {
+              PUnsignedTimestamp.INSTANCE, i))
+              && (!super.isCoercibleTo(PUnsignedTime.INSTANCE, i)) && (!super
+              .isCoercibleTo(PUnsignedDate.INSTANCE, i))) {
         return false;
       }
     }

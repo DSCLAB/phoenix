@@ -21,14 +21,14 @@ import java.util.Map;
 
 public class DMLStatement extends SingleTableStatement {
 
-    private final Map<String, UDFParseNode> udfParseNodes;
-    
-    public DMLStatement(NamedTableNode table, int bindCount, Map<String, UDFParseNode> udfParseNodes) {
-        super(table, bindCount);
-        this.udfParseNodes = udfParseNodes;
-    }
-    
-    public Map<String, UDFParseNode> getUdfParseNodes() {
-        return udfParseNodes;
-    }
+  private final Map<String, UDFParseNode> udfParseNodes;
+
+  public DMLStatement(NamedTableNode table, int bindCount, Map<String, UDFParseNode> udfParseNodes) {
+    super(table, bindCount);
+    this.udfParseNodes = udfParseNodes;
+  }
+
+  public Map<String, UDFParseNode> getUdfParseNodes() {
+    return udfParseNodes;
+  }
 }

@@ -21,27 +21,28 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-/** 
- * The Expression a = ALL(b) where b is of type array is rewritten in this
- * node as ALL(a = b(n))
+
+/**
+ * The Expression a = ALL(b) where b is of type array is rewritten in this node
+ * as ALL(a = b(n))
  */
 public class ArrayAllComparisonNode extends ArrayAllAnyComparisonNode {
 
-    ArrayAllComparisonNode(ParseNode rhs, ComparisonParseNode compareNode) {
-        super(Arrays.<ParseNode>asList(rhs, compareNode));
-    }
-    
-    @Override
-    public String getType() {
-        return "ALL";
-    }
+  ArrayAllComparisonNode(ParseNode rhs, ComparisonParseNode compareNode) {
+    super(Arrays.<ParseNode>asList(rhs, compareNode));
+  }
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  @Override
+  public String getType() {
+    return "ALL";
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
+    return visitor.visitLeave(this, l);
+  }
 }

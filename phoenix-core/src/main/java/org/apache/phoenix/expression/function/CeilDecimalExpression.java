@@ -36,74 +36,78 @@ import org.apache.phoenix.schema.types.PLong;
 
 /**
  *
- * Class encapsulating the CEIL operation on a {@link org.apache.phoenix.schema.types.PDecimal}
+ * Class encapsulating the CEIL operation on a
+ * {@link org.apache.phoenix.schema.types.PDecimal}
  *
  *
  * @since 3.0.0
  */
 public class CeilDecimalExpression extends RoundDecimalExpression {
 
-    public CeilDecimalExpression() {}
+  public CeilDecimalExpression() {
+  }
 
-    private CeilDecimalExpression(List<Expression> children) {
-        super(children);
-    }
+  private CeilDecimalExpression(List<Expression> children) {
+    super(children);
+  }
 
-    /**
-     * Creates a {@link CeilDecimalExpression} with rounding scale given by @param scale.
-     *
-     */
-    public static Expression create(Expression expr, int scale) throws SQLException {
-       if (expr.getDataType().isCoercibleTo(PLong.INSTANCE)) {
-            return expr;
-        }
-        Expression scaleExpr = LiteralExpression.newConstant(scale, PInteger.INSTANCE, Determinism.ALWAYS);
-        List<Expression> expressions = Lists.newArrayList(expr, scaleExpr);
-        return new CeilDecimalExpression(expressions);
+  /**
+   * Creates a {@link CeilDecimalExpression} with rounding scale given by @param
+   * scale.
+   *
+   */
+  public static Expression create(Expression expr, int scale) throws SQLException {
+    if (expr.getDataType().isCoercibleTo(PLong.INSTANCE)) {
+      return expr;
     }
+    Expression scaleExpr = LiteralExpression.newConstant(scale, PInteger.INSTANCE, Determinism.ALWAYS);
+    List<Expression> expressions = Lists.newArrayList(expr, scaleExpr);
+    return new CeilDecimalExpression(expressions);
+  }
 
-    public static Expression create(List<Expression> exprs) throws SQLException {
-        Expression expr = exprs.get(0);
-       if (expr.getDataType().isCoercibleTo(PLong.INSTANCE)) {
-            return expr;
-        }
-       if (exprs.size() == 1) {
-            Expression scaleExpr = LiteralExpression.newConstant(0, PInteger.INSTANCE, Determinism.ALWAYS);
-            exprs = Lists.newArrayList(expr, scaleExpr);
-        }
-        return new CeilDecimalExpression(exprs);
+  public static Expression create(List<Expression> exprs) throws SQLException {
+    Expression expr = exprs.get(0);
+    if (expr.getDataType().isCoercibleTo(PLong.INSTANCE)) {
+      return expr;
     }
+    if (exprs.size() == 1) {
+      Expression scaleExpr = LiteralExpression.newConstant(0, PInteger.INSTANCE, Determinism.ALWAYS);
+      exprs = Lists.newArrayList(expr, scaleExpr);
+    }
+    return new CeilDecimalExpression(exprs);
+  }
 
-    /**
-     * Creates a {@link CeilDecimalExpression} with a default scale of 0 used for rounding.
-     *
-     */
-    public static Expression create(Expression expr) throws SQLException {
-        return create(expr, 0);
-    }
+  /**
+   * Creates a {@link CeilDecimalExpression} with a default scale of 0 used for
+   * rounding.
+   *
+   */
+  public static Expression create(Expression expr) throws SQLException {
+    return create(expr, 0);
+  }
 
-    @Override
-    protected RoundingMode getRoundingMode() {
-        return RoundingMode.CEILING;
-    }
+  @Override
+  protected RoundingMode getRoundingMode() {
+    return RoundingMode.CEILING;
+  }
 
-    @Override
-    public String getName() {
-        return CeilFunction.NAME;
+  @Override
+  public String getName() {
+    return CeilFunction.NAME;
+  }
+
+  /**
+   * {@inheritDoc }
+   */
+  @Override
+  protected KeyRange getInputRangeProducing(BigDecimal result) {
+    if (!hasEnoughPrecisionToProduce(result)) {
+      throw new IllegalArgumentException("Cannot produce input range for decimal " + result
+              + ", not enough precision with scale " + getRoundingScale());
     }
-    
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    protected KeyRange getInputRangeProducing(BigDecimal result) {
-        if(!hasEnoughPrecisionToProduce(result)) {
-            throw new IllegalArgumentException("Cannot produce input range for decimal " + result 
-                + ", not enough precision with scale " + getRoundingScale());
-        }
-        byte[] lowerRange = PDecimal.INSTANCE.toBytes(stepPrevInScale(result));
-        byte[] upperRange = PDecimal.INSTANCE.toBytes(result);
-        return KeyRange.getKeyRange(lowerRange, false, upperRange, true);
-    }
+    byte[] lowerRange = PDecimal.INSTANCE.toBytes(stepPrevInScale(result));
+    byte[] upperRange = PDecimal.INSTANCE.toBytes(result);
+    return KeyRange.getKeyRange(lowerRange, false, upperRange, true);
+  }
 
 }

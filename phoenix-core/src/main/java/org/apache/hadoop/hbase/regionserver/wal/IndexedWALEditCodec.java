@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hbase.regionserver.wal;
 
 import java.io.DataInput;
@@ -34,13 +33,12 @@ import org.apache.hadoop.hbase.codec.BaseEncoder;
 import org.apache.phoenix.hbase.index.wal.IndexedKeyValue;
 import org.apache.phoenix.hbase.index.wal.KeyValueCodec;
 
-
 /**
  * Support custom indexing {@link KeyValue}s when written to the WAL.
  * <p>
- * Currently, we don't support reading older WAL files - only new WAL files. Therefore, this should
- * not be installed on a running cluster, but rather one that has been cleanly shutdown and requires
- * no WAL replay on startup.
+ * Currently, we don't support reading older WAL files - only new WAL files.
+ * Therefore, this should not be installed on a running cluster, but rather one
+ * that has been cleanly shutdown and requires no WAL replay on startup.
  */
 public class IndexedWALEditCodec extends WALCellCodec {
 
@@ -50,8 +48,8 @@ public class IndexedWALEditCodec extends WALCellCodec {
   private CompressionContext compression;
 
   public IndexedWALEditCodec(Configuration conf, CompressionContext compression) {
-      super(conf, compression);
-      this.compression = compression;
+    super(conf, compression);
+    this.compression = compression;
   }
 
   @Override
@@ -80,21 +78,23 @@ public class IndexedWALEditCodec extends WALCellCodec {
   }
 
   /**
-   * Custom Decoder that can handle a stream of regular and indexed {@link KeyValue}s.
+   * Custom Decoder that can handle a stream of regular and indexed
+   * {@link KeyValue}s.
    */
   public class IndexKeyValueDecoder extends BaseDecoder {
 
     /**
-     * Create a Decoder on the given input stream with the given Decoder to parse
-     * generic {@link KeyValue}s.
+     * Create a Decoder on the given input stream with the given Decoder to
+     * parse generic {@link KeyValue}s.
+     *
      * @param is stream to read from
      */
-    public IndexKeyValueDecoder(InputStream is){
+    public IndexKeyValueDecoder(InputStream is) {
       super(is);
     }
 
     @Override
-    protected KeyValue parseCell() throws IOException{
+    protected KeyValue parseCell() throws IOException {
       return KeyValueCodec.readKeyValue((DataInput) this.in);
     }
   }
@@ -104,11 +104,12 @@ public class IndexedWALEditCodec extends WALCellCodec {
     private Decoder decoder;
 
     /**
-     * Create a Decoder on the given input stream with the given Decoder to parse
-     * generic {@link KeyValue}s.
+     * Create a Decoder on the given input stream with the given Decoder to
+     * parse generic {@link KeyValue}s.
+     *
      * @param is stream to read from
-     * @param compressedDecoder decoder for generic {@link KeyValue}s. Should support the expected
-     *          compression.
+     * @param compressedDecoder decoder for generic {@link KeyValue}s. Should
+     * support the expected compression.
      */
     public CompressedIndexKeyValueDecoder(InputStream is, Decoder compressedDecoder) {
       super(is);
@@ -121,7 +122,7 @@ public class IndexedWALEditCodec extends WALCellCodec {
       int marker = this.in.read();
       if (marker < 0) {
         throw new EOFException(
-            "Unexepcted end of stream found while reading next (Indexed) KeyValue");
+                "Unexepcted end of stream found while reading next (Indexed) KeyValue");
       }
 
       // do the normal thing, if its a regular kv
@@ -138,10 +139,11 @@ public class IndexedWALEditCodec extends WALCellCodec {
   }
 
   /**
-   * Encode {@link IndexedKeyValue}s via the {@link KeyValueCodec}. Does <b>not</b> support
-   * compression.
+   * Encode {@link IndexedKeyValue}s via the {@link KeyValueCodec}. Does
+   * <b>not</b> support compression.
    */
   private static class IndexKeyValueEncoder extends BaseEncoder {
+
     public IndexKeyValueEncoder(OutputStream os) {
       super(os);
     }
@@ -162,11 +164,13 @@ public class IndexedWALEditCodec extends WALCellCodec {
   }
 
   /**
-   * Write {@link IndexedKeyValue}s along side compressed {@link KeyValue}s. This Encoder is
-   * <b>not</b> compatible with the {@link IndexKeyValueDecoder} - one cannot intermingle compressed
-   * and uncompressed WALs that contain index entries.
+   * Write {@link IndexedKeyValue}s along side compressed {@link KeyValue}s.
+   * This Encoder is
+   * <b>not</b> compatible with the {@link IndexKeyValueDecoder} - one cannot
+   * intermingle compressed and uncompressed WALs that contain index entries.
    */
   private static class CompressedIndexKeyValueEncoder extends BaseEncoder {
+
     private Encoder compressedKvEncoder;
 
     public CompressedIndexKeyValueEncoder(OutputStream os, Encoder compressedKvEncoder) {
@@ -184,19 +188,18 @@ public class IndexedWALEditCodec extends WALCellCodec {
     public void write(Cell cell) throws IOException {
       //make sure we are open
       checkFlushed();
-      
+
       //write the special marker so we can figure out which kind of kv is it
       int marker = IndexedWALEditCodec.REGULAR_KEY_VALUE_MARKER;
       if (cell instanceof IndexedKeyValue) {
         marker = KeyValueCodec.INDEX_TYPE_LENGTH_MARKER;
       }
       out.write(marker);
-      
+
       //then serialize based on the marker
       if (marker == IndexedWALEditCodec.REGULAR_KEY_VALUE_MARKER) {
         this.compressedKvEncoder.write(cell);
-      }
-      else{
+      } else {
         KeyValueCodec.write((DataOutput) out, KeyValueUtil.ensureKeyValue(cell));
       }
     }

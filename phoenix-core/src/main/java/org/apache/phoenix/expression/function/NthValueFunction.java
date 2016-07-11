@@ -30,50 +30,50 @@ import org.apache.phoenix.schema.types.PBoolean;
 import org.apache.phoenix.schema.types.PInteger;
 
 /**
- * Built-in function for NTH_VALUE(<expression>, <expression>) WITHIN GROUP (ORDER BY <expression> ASC/DESC)
- * aggregate function
+ * Built-in function for NTH_VALUE(<expression>, <expression>) WITHIN GROUP
+ * (ORDER BY <expression> ASC/DESC) aggregate function
  *
  */
 @FunctionParseNode.BuiltInFunction(name = NthValueFunction.NAME, nodeClass = NthValueAggregateParseNode.class, args = {
-    @FunctionParseNode.Argument(),
-    @FunctionParseNode.Argument(allowedTypes = { PBoolean.class }, isConstant = true),
-    @FunctionParseNode.Argument(),
-    @FunctionParseNode.Argument(allowedTypes = { PInteger.class }, isConstant = true)})
+  @FunctionParseNode.Argument(),
+  @FunctionParseNode.Argument(allowedTypes = {PBoolean.class}, isConstant = true),
+  @FunctionParseNode.Argument(),
+  @FunctionParseNode.Argument(allowedTypes = {PInteger.class}, isConstant = true)})
 public class NthValueFunction extends FirstLastValueBaseFunction {
 
-    public static final String NAME = "NTH_VALUE";
-    private int offset;
+  public static final String NAME = "NTH_VALUE";
+  private int offset;
 
-    public NthValueFunction() {
+  public NthValueFunction() {
+  }
+
+  public NthValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
+
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
+
+    offset = ((Number) ((LiteralExpression) children.get(3)).getValue()).intValue();
+    boolean order = (Boolean) ((LiteralExpression) children.get(1)).getValue();
+
+    aggregator.init(children, order, offset);
+
+    return aggregator;
+  }
+
+  @Override
+  public Aggregator newClientAggregator() {
+    FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
+
+    if (children.size() < 3) {
+      aggregator.init(offset);
+    } else {
+      aggregator.init(((Number) ((LiteralExpression) children.get(3)).getValue()).intValue());
     }
 
-    public NthValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
-
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
-
-        offset = ((Number) ((LiteralExpression) children.get(3)).getValue()).intValue();
-        boolean order = (Boolean) ((LiteralExpression) children.get(1)).getValue();
-
-        aggregator.init(children, order, offset);
-
-        return aggregator;
-    }
-
-    @Override
-    public Aggregator newClientAggregator() {
-        FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
-
-        if (children.size() < 3) {
-            aggregator.init(offset);
-        } else {
-            aggregator.init(((Number) ((LiteralExpression) children.get(3)).getValue()).intValue());
-        }
-
-        return aggregator;
-    }
+    return aggregator;
+  }
 
 }

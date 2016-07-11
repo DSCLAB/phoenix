@@ -30,7 +30,9 @@ public class SingleIndexWriteFailureException extends IndexWriteException {
   private String table;
 
   /**
-   * Cannot reach the index, but not sure of the table or the mutations that caused the failure
+   * Cannot reach the index, but not sure of the table or the mutations that
+   * caused the failure
+   *
    * @param msg more description of what happened
    * @param cause original cause
    */
@@ -40,20 +42,22 @@ public class SingleIndexWriteFailureException extends IndexWriteException {
 
   /**
    * Failed to write the passed mutations to an index table for some reason.
+   *
    * @param targetTableName index table to which we attempted to write
    * @param mutations mutations that were attempted
    * @param cause underlying reason for the failure
    */
   public SingleIndexWriteFailureException(String targetTableName, List<Mutation> mutations,
-      Exception cause) {
+          Exception cause) {
     super("Failed to make index update:\n\t table: " + targetTableName + "\n\t edits: " + mutations
-        + "\n\tcause: " + cause == null ? "UNKNOWN" : cause.getMessage(), cause);
+            + "\n\tcause: " + cause == null ? "UNKNOWN" : cause.getMessage(), cause);
     this.table = targetTableName;
   }
 
   /**
-   * @return The table to which we failed to write the index updates. If unknown, returns
-   *         <tt>null</tt>
+   * @return The table to which we failed to write the index updates. If
+   * unknown, returns
+   * <tt>null</tt>
    */
   public String getTableName() {
     return this.table;

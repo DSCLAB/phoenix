@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.phoenix</groupId>
   <artifactId>phoenix</artifactId>
@@ -9,17 +9,17 @@
   <description>A SQL layer over HBase</description>
 
   <licenses>
-      <license>
-          <name>The Apache Software License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-          <distribution>repo</distribution>
-          <comments />
-      </license>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments />
+    </license>
   </licenses>
 
   <organization>
-      <name>Apache Software Foundation</name>
-      <url>http://www.apache.org</url>
+    <name>Apache Software Foundation</name>
+    <url>http://www.apache.org</url>
   </organization>
 
   <modules>
@@ -108,7 +108,7 @@
     <snappy.version>0.3</snappy.version>
     <netty.version>4.0.23.Final</netty.version>
     <commons-codec.version>1.7</commons-codec.version>
-    <htrace.version>3.1.0-incubating</htrace.version>
+    <htrace.version>3.2.0-incubating</htrace.version>
     <collections.version>3.2.1</collections.version>
     <jodatime.version>2.7</jodatime.version>
     <joni.version>2.1.2</joni.version>
@@ -150,7 +150,7 @@
           </configuration>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings 
-          only. It has no influence on the Maven build itself. -->
+        only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
@@ -193,7 +193,7 @@
               <exclude>CHANGES</exclude>
               <exclude>README.md</exclude>
               <exclude>README</exclude>
-	          <exclude>dev/phoenix.importorder</exclude>
+              <exclude>dev/phoenix.importorder</exclude>
               <exclude>dev/release_files/**</exclude>
               <exclude>**/target/**</exclude>
               <exclude>**/*.versionsBackup</exclude>
@@ -221,10 +221,10 @@
           </configuration>
         </plugin>
         <!-- We put slow-running tests into src/it and run them during the
-            integration-test phase using the failsafe plugin. This way
-            developers can run unit tests conveniently from the IDE or via
-            "mvn package" from the command line without triggering time
-            consuming integration tests. -->
+        integration-test phase using the failsafe plugin. This way
+        developers can run unit tests conveniently from the IDE or via
+        "mvn package" from the command line without triggering time
+        consuming integration tests. -->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -264,52 +264,52 @@
           <version>${maven-failsafe-plugin.version}</version>
           <executions>
             <execution>
-               <id>ClientManagedTimeTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <reuseForks>true</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.ClientManagedTimeTest</groups>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+              <id>ClientManagedTimeTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <reuseForks>true</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.ClientManagedTimeTest</groups>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
             <execution>
-               <id>HBaseManagedTimeTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <reuseForks>true</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.HBaseManagedTimeTest</groups>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+              <id>HBaseManagedTimeTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <reuseForks>true</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.HBaseManagedTimeTest</groups>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
-	        <execution>
-               <id>NeedTheirOwnClusterTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <reuseForks>true</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.NeedsOwnMiniClusterTest</groups>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+            <execution>
+              <id>NeedTheirOwnClusterTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <reuseForks>true</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.NeedsOwnMiniClusterTest</groups>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
           </executions>
         </plugin>
@@ -388,7 +388,7 @@
         <executions>
           <execution>
             <phase>prepare-package
-                </phase>
+            </phase>
             <goals>
               <goal>test-jar</goal>
             </goals>

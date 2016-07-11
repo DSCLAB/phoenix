@@ -28,7 +28,7 @@ public class PFloatArray extends PArrayDataType<float[]> {
 
   private PFloatArray() {
     super("FLOAT ARRAY", PDataType.ARRAY_TYPE_BASE + PFloat.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 33);
+            PhoenixArray.class, null, 33);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PFloatArray extends PArrayDataType<float[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PFloat.INSTANCE, sortOrder, maxLength, scale,
-        PFloat.INSTANCE);
+            PFloat.INSTANCE);
   }
 
   @Override
@@ -96,10 +96,10 @@ public class PFloatArray extends PArrayDataType<float[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

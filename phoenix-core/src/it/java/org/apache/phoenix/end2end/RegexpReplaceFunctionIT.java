@@ -32,69 +32,68 @@ import java.sql.Statement;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class RegexpReplaceFunctionIT extends BaseHBaseManagedTimeIT {
 
-    private int id;
+  private int id;
 
-    @Before
-    public void doBeforeTestSetup() throws Exception {
-        ensureTableCreated(getUrl(), GROUPBYTEST_NAME);
-        Connection conn = DriverManager.getConnection(getUrl());
-        insertRow(conn, "Report11", 10);
-        insertRow(conn, "Report11", 10);
-        insertRow(conn, "Report22", 30);
-        insertRow(conn, "Report33", 30);
-        conn.commit();
-        conn.close();
-    }
+  @Before
+  public void doBeforeTestSetup() throws Exception {
+    ensureTableCreated(getUrl(), GROUPBYTEST_NAME);
+    Connection conn = DriverManager.getConnection(getUrl());
+    insertRow(conn, "Report11", 10);
+    insertRow(conn, "Report11", 10);
+    insertRow(conn, "Report22", 30);
+    insertRow(conn, "Report33", 30);
+    conn.commit();
+    conn.close();
+  }
 
-    private void insertRow(Connection conn, String uri, int appcpu) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement("UPSERT INTO " + GROUPBYTEST_NAME + "(id, uri, appcpu) values (?,?,?)");
-        statement.setString(1, "id" + id);
-        statement.setString(2, uri);
-        statement.setInt(3, appcpu);
-        statement.executeUpdate();
-        id++;
-    }
+  private void insertRow(Connection conn, String uri, int appcpu) throws SQLException {
+    PreparedStatement statement = conn.prepareStatement("UPSERT INTO " + GROUPBYTEST_NAME + "(id, uri, appcpu) values (?,?,?)");
+    statement.setString(1, "id" + id);
+    statement.setString(2, uri);
+    statement.setInt(3, appcpu);
+    statement.executeUpdate();
+    id++;
+  }
 
-    @Test
-    public void testGroupByScanWithRegexpReplace() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("select REGEXP_REPLACE(uri, '[1-3]+', '*') suburi, sum(appcpu) sumcpu from " + GROUPBYTEST_NAME + " group by suburi");
-        assertTrue(rs.next());
-        assertEquals(rs.getString("suburi"), "Report*");
-        assertEquals(rs.getInt("sumcpu"), 80);
-        assertFalse(rs.next());
+  @Test
+  public void testGroupByScanWithRegexpReplace() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery("select REGEXP_REPLACE(uri, '[1-3]+', '*') suburi, sum(appcpu) sumcpu from " + GROUPBYTEST_NAME + " group by suburi");
+    assertTrue(rs.next());
+    assertEquals(rs.getString("suburi"), "Report*");
+    assertEquals(rs.getInt("sumcpu"), 80);
+    assertFalse(rs.next());
 
-        stmt = conn.createStatement();
-        rs = stmt.executeQuery("select REGEXP_REPLACE(uri, '[1-3]+') suburi, sum(appcpu) sumcpu from " + GROUPBYTEST_NAME + " group by suburi");
-        assertTrue(rs.next());
-        assertEquals(rs.getString("suburi"), "Report");
-        assertEquals(rs.getInt("sumcpu"), 80);
-        assertFalse(rs.next());
+    stmt = conn.createStatement();
+    rs = stmt.executeQuery("select REGEXP_REPLACE(uri, '[1-3]+') suburi, sum(appcpu) sumcpu from " + GROUPBYTEST_NAME + " group by suburi");
+    assertTrue(rs.next());
+    assertEquals(rs.getString("suburi"), "Report");
+    assertEquals(rs.getInt("sumcpu"), 80);
+    assertFalse(rs.next());
 
-        conn.close();
-    }
+    conn.close();
+  }
 
-    @Test
-    public void testFilterWithRegexReplace() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        ResultSet rs = conn.createStatement().executeQuery("select id from " + GROUPBYTEST_NAME + " where REGEXP_REPLACE(uri, '[2-3]+', '*') = 'Report*'");
-        assertTrue(rs.next());
-        assertEquals("id2", rs.getString(1));
-        assertTrue(rs.next());
-        assertEquals("id3", rs.getString(1));
-        assertFalse(rs.next());
+  @Test
+  public void testFilterWithRegexReplace() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    ResultSet rs = conn.createStatement().executeQuery("select id from " + GROUPBYTEST_NAME + " where REGEXP_REPLACE(uri, '[2-3]+', '*') = 'Report*'");
+    assertTrue(rs.next());
+    assertEquals("id2", rs.getString(1));
+    assertTrue(rs.next());
+    assertEquals("id3", rs.getString(1));
+    assertFalse(rs.next());
 
-        rs = conn.createStatement().executeQuery("select id from " + GROUPBYTEST_NAME + " where REGEXP_REPLACE(uri, '[2-3]+') = 'Report'");
-        assertTrue(rs.next());
-        assertEquals("id2", rs.getString(1));
-        assertTrue(rs.next());
-        assertEquals("id3", rs.getString(1));
-        assertFalse(rs.next());
-        conn.close();
-    }
+    rs = conn.createStatement().executeQuery("select id from " + GROUPBYTEST_NAME + " where REGEXP_REPLACE(uri, '[2-3]+') = 'Report'");
+    assertTrue(rs.next());
+    assertEquals("id2", rs.getString(1));
+    assertTrue(rs.next());
+    assertEquals("id3", rs.getString(1));
+    assertFalse(rs.next());
+    conn.close();
+  }
 
 }

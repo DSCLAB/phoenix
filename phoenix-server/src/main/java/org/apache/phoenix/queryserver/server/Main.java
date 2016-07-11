@@ -43,11 +43,11 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Main extends Configured implements Tool, Runnable {
 
-  public static final String QUERY_SERVER_META_FACTORY_KEY =
-      "phoenix.queryserver.metafactory.class";
+  public static final String QUERY_SERVER_META_FACTORY_KEY
+          = "phoenix.queryserver.metafactory.class";
 
-  public static final String QUERY_SERVER_HTTP_PORT_KEY =
-      "phoenix.queryserver.http.port";
+  public static final String QUERY_SERVER_HTTP_PORT_KEY
+          = "phoenix.queryserver.http.port";
   public static final int DEFAULT_HTTP_PORT = 8765;
 
   public static final String KEYTAB_FILENAME_KEY = "phoenix.queryserver.keytab.file";
@@ -64,23 +64,30 @@ public final class Main extends Configured implements Tool, Runnable {
   private int retCode = 0;
   private Throwable t = null;
 
-  /** Constructor for use from {@link org.apache.hadoop.util.ToolRunner}. */
+  /**
+   * Constructor for use from {@link org.apache.hadoop.util.ToolRunner}.
+   */
   public Main() {
     this(null, null);
   }
 
-  /** Constructor for use as {@link java.lang.Runnable}. */
+  /**
+   * Constructor for use as {@link java.lang.Runnable}.
+   */
   public Main(String[] argv, Configuration conf) {
     this.argv = argv;
     setConf(conf);
   }
 
   /**
-   * @return the port number this instance is bound to, or {@code -1} if the server is not running.
+   * @return the port number this instance is bound to, or {@code -1} if the
+   * server is not running.
    */
   @VisibleForTesting
   public int getPort() {
-    if (server == null) return -1;
+    if (server == null) {
+      return -1;
+    }
     return server.getPort();
   }
 
@@ -100,12 +107,16 @@ public final class Main extends Configured implements Tool, Runnable {
     return t;
   }
 
-  /** Calling thread waits until the server is running. */
+  /**
+   * Calling thread waits until the server is running.
+   */
   public void awaitRunning() throws InterruptedException {
     runningLatch.await();
   }
 
-  /** Calling thread waits until the server is running. */
+  /**
+   * Calling thread waits until the server is running.
+   */
   public void awaitRunning(long timeout, TimeUnit unit) throws InterruptedException {
     runningLatch.await(timeout, unit);
   }
@@ -116,21 +127,21 @@ public final class Main extends Configured implements Tool, Runnable {
       // handle secure cluster credentials
       if ("kerberos".equalsIgnoreCase(getConf().get(HBASE_SECURITY_CONF_KEY))) {
         String hostname = Strings.domainNamePointerToHostName(DNS.getDefaultHost(
-            getConf().get(DNS_INTERFACE_KEY, "default"),
-            getConf().get(DNS_NAMESERVER_KEY, "default")));
+                getConf().get(DNS_INTERFACE_KEY, "default"),
+                getConf().get(DNS_NAMESERVER_KEY, "default")));
         if (LOG.isDebugEnabled()) {
           LOG.debug("Login to " + hostname + " using " + getConf().get(KEYTAB_FILENAME_KEY)
-              + " and principal " + getConf().get(KERBEROS_PRINCIPAL_KEY) + ".");
+                  + " and principal " + getConf().get(KERBEROS_PRINCIPAL_KEY) + ".");
         }
         SecurityUtil.login(getConf(), KEYTAB_FILENAME_KEY, KERBEROS_PRINCIPAL_KEY, hostname);
         LOG.info("Login successful.");
       }
       Class<? extends PhoenixMetaFactory> factoryClass = getConf().getClass(
-          QUERY_SERVER_META_FACTORY_KEY, PhoenixMetaFactoryImpl.class, PhoenixMetaFactory.class);
+              QUERY_SERVER_META_FACTORY_KEY, PhoenixMetaFactoryImpl.class, PhoenixMetaFactory.class);
       int port = getConf().getInt(QUERY_SERVER_HTTP_PORT_KEY, DEFAULT_HTTP_PORT);
       LOG.debug("Listening on port " + port);
-      PhoenixMetaFactory factory =
-          factoryClass.getDeclaredConstructor(Configuration.class).newInstance(getConf());
+      PhoenixMetaFactory factory
+              = factoryClass.getDeclaredConstructor(Configuration.class).newInstance(getConf());
       Meta meta = factory.create(Arrays.asList(args));
       Service service = new LocalService(meta);
       server = new HttpServer(port, new AvaticaHandler(service));
@@ -145,7 +156,8 @@ public final class Main extends Configured implements Tool, Runnable {
     }
   }
 
-  @Override public void run() {
+  @Override
+  public void run() {
     try {
       retCode = run(argv);
     } catch (Exception e) {

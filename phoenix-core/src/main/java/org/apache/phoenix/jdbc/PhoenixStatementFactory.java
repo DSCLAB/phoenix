@@ -18,5 +18,6 @@
 package org.apache.phoenix.jdbc;
 
 public interface PhoenixStatementFactory {
-    public PhoenixStatement newStatement(PhoenixConnection connection);
+
+  public PhoenixStatement newStatement(PhoenixConnection connection);
 }

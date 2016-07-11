@@ -22,25 +22,25 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
+ *
  * Interface to abstract the incremental calculation of an aggregated value.
  *
- * 
+ *
  * @since 0.1
  */
 public interface Aggregator extends Expression {
-    
-    /**
-     * Incrementally aggregate the value with the current row
-     * @param tuple the result containing all the key values of the row
-     * @param ptr the bytes pointer to the underlying result
-     */
-    public void aggregate(Tuple tuple, ImmutableBytesWritable ptr);
-    
-    /**
-     * Get the size in bytes
-     */
-    public int getSize();
+
+  /**
+   * Incrementally aggregate the value with the current row
+   *
+   * @param tuple the result containing all the key values of the row
+   * @param ptr the bytes pointer to the underlying result
+   */
+  public void aggregate(Tuple tuple, ImmutableBytesWritable ptr);
+
+  /**
+   * Get the size in bytes
+   */
+  public int getSize();
 }

@@ -41,24 +41,28 @@ public class ThreadPoolManager {
   private static final Log LOG = LogFactory.getLog(ThreadPoolManager.class);
 
   /**
-   * Get an executor for the given name, based on the passed {@link Configuration}. If a thread pool
-   * already exists with that name, it will be returned.
+   * Get an executor for the given name, based on the passed
+   * {@link Configuration}. If a thread pool already exists with that name, it
+   * will be returned.
+   *
    * @param builder
    * @param env
-   * @return a {@link ThreadPoolExecutor} for the given name. Thread pool that only shuts down when
-   *         there are no more explicit references to it. You do not need to shutdown the threadpool
-   *         on your own - it is managed for you. When you are done, you merely need to release your
-   *         reference. If you do attempt to shutdown the pool, you should be careful to call
-   *         {@link ThreadPoolExecutor#shutdown()} XOR {@link ThreadPoolExecutor#shutdownNow()} - extra calls to either can lead to
-   *         early shutdown of the pool.
+   * @return a {@link ThreadPoolExecutor} for the given name. Thread pool that
+   * only shuts down when there are no more explicit references to it. You do
+   * not need to shutdown the threadpool on your own - it is managed for you.
+   * When you are done, you merely need to release your reference. If you do
+   * attempt to shutdown the pool, you should be careful to call
+   * {@link ThreadPoolExecutor#shutdown()} XOR
+   * {@link ThreadPoolExecutor#shutdownNow()} - extra calls to either can lead
+   * to early shutdown of the pool.
    */
   public static synchronized ThreadPoolExecutor getExecutor(ThreadPoolBuilder builder,
-      RegionCoprocessorEnvironment env) {
+          RegionCoprocessorEnvironment env) {
     return getExecutor(builder, env.getSharedData());
   }
 
   static synchronized ThreadPoolExecutor getExecutor(ThreadPoolBuilder builder,
-      Map<String, Object> poolCache) {
+          Map<String, Object> poolCache) {
     ThreadPoolExecutor pool = (ThreadPoolExecutor) poolCache.get(builder.getName());
     if (pool == null || pool.isTerminating() || pool.isShutdown()) {
       pool = getDefaultExecutor(builder);
@@ -86,19 +90,20 @@ public class ThreadPoolManager {
     // even more time. If we shutdown the pool, but are still putting new tasks, we can just do the
     // usual policy and throw a RejectedExecutionException because we are shutting down anyways and
     // the worst thing is that this gets unloaded.
-    ShutdownOnUnusedThreadPoolExecutor pool =
-        new ShutdownOnUnusedThreadPoolExecutor(maxThreads, maxThreads, keepAliveTime,
-            TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-            Threads.newDaemonThreadFactory(builder.getName() + "-"), builder.getName());
+    ShutdownOnUnusedThreadPoolExecutor pool
+            = new ShutdownOnUnusedThreadPoolExecutor(maxThreads, maxThreads, keepAliveTime,
+                    TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+                    Threads.newDaemonThreadFactory(builder.getName() + "-"), builder.getName());
     pool.allowCoreThreadTimeOut(true);
     return pool;
   }
 
   /**
-   * Thread pool that only shuts down when there are no more explicit references to it. A reference
-   * is when obtained and released on calls to {@link #shutdown()} or {@link #shutdownNow()}.
-   * Therefore, users should be careful to call {@link #shutdown()} XOR {@link #shutdownNow()} -
-   * extra calls to either can lead to early shutdown of the pool.
+   * Thread pool that only shuts down when there are no more explicit references
+   * to it. A reference is when obtained and released on calls to
+   * {@link #shutdown()} or {@link #shutdownNow()}. Therefore, users should be
+   * careful to call {@link #shutdown()} XOR {@link #shutdownNow()} - extra
+   * calls to either can lead to early shutdown of the pool.
    */
   private static class ShutdownOnUnusedThreadPoolExecutor extends ThreadPoolExecutor {
 
@@ -106,8 +111,8 @@ public class ThreadPoolManager {
     private String poolName;
 
     public ShutdownOnUnusedThreadPoolExecutor(int coreThreads, int maxThreads, long keepAliveTime,
-        TimeUnit timeUnit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory,
-        String poolName) {
+            TimeUnit timeUnit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory,
+            String poolName) {
       super(coreThreads, maxThreads, keepAliveTime, timeUnit, workQueue, threadFactory);
       this.references = new AtomicInteger();
       this.poolName = poolName;

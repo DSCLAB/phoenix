@@ -20,35 +20,36 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class DropIndexStatement extends MutableStatement {
-    private final TableName tableName;
-    private final NamedNode indexName;
-    private final boolean ifExists;
 
-    public DropIndexStatement(NamedNode indexName, TableName tableName, boolean ifExists) {
-        this.indexName = indexName;
-        this.tableName = tableName;
-        this.ifExists = ifExists;
-    }
+  private final TableName tableName;
+  private final NamedNode indexName;
+  private final boolean ifExists;
 
-    public TableName getTableName() {
-        return tableName;
-    }
+  public DropIndexStatement(NamedNode indexName, TableName tableName, boolean ifExists) {
+    this.indexName = indexName;
+    this.tableName = tableName;
+    this.ifExists = ifExists;
+  }
 
-    public NamedNode getIndexName() {
-        return indexName;
-    }
+  public TableName getTableName() {
+    return tableName;
+  }
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  public NamedNode getIndexName() {
+    return indexName;
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    @Override
-    public Operation getOperation() {
-        return Operation.DELETE;
-    }
+  public boolean ifExists() {
+    return ifExists;
+  }
+
+  @Override
+  public Operation getOperation() {
+    return Operation.DELETE;
+  }
 }

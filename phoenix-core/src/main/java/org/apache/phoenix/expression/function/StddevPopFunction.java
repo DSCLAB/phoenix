@@ -33,45 +33,47 @@ import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * 
+ *
  * Built-in function for STDDEV_POP(<expression>) aggregate function
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
-@BuiltInFunction(name = StddevPopFunction.NAME, args = { @Argument(allowedTypes={PDecimal.class})})
+@BuiltInFunction(name = StddevPopFunction.NAME, args = {
+  @Argument(allowedTypes = {PDecimal.class})})
 public class StddevPopFunction extends DistinctValueWithCountAggregateFunction {
-    public static final String NAME = "STDDEV_POP";
 
-    public StddevPopFunction() {
+  public static final String NAME = "STDDEV_POP";
 
-    }
+  public StddevPopFunction() {
 
-    public StddevPopFunction(List<Expression> childern) {
-        super(childern);
-    }
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        return new DistinctValueWithCountServerAggregator(conf);
-    }
+  public StddevPopFunction(List<Expression> childern) {
+    super(childern);
+  }
 
-    @Override
-    public DistinctValueWithCountClientAggregator newClientAggregator() {
-        if (children.get(0).getDataType() == PDecimal.INSTANCE) {
-            // Special Aggregators for DECIMAL datatype for more precision than double
-            return new DecimalStddevPopAggregator(children, getAggregatorExpression().getSortOrder());
-        }
-        return new StddevPopAggregator(children, getAggregatorExpression().getSortOrder());
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    return new DistinctValueWithCountServerAggregator(conf);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PDecimal.INSTANCE;
+  @Override
+  public DistinctValueWithCountClientAggregator newClientAggregator() {
+    if (children.get(0).getDataType() == PDecimal.INSTANCE) {
+      // Special Aggregators for DECIMAL datatype for more precision than double
+      return new DecimalStddevPopAggregator(children, getAggregatorExpression().getSortOrder());
     }
+    return new StddevPopAggregator(children, getAggregatorExpression().getSortOrder());
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PDecimal.INSTANCE;
+  }
 }

@@ -22,73 +22,73 @@ import java.util.List;
 import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 import org.apache.phoenix.schema.types.PDataType;
 
-
 /**
- * 
+ *
  * Subtract expression implementation
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class MultiplyExpression extends ArithmeticExpression {
-    private Integer maxLength;
-    private Integer scale;
 
-    public MultiplyExpression() {
-    }
+  private Integer maxLength;
+  private Integer scale;
 
-    public MultiplyExpression(List<Expression> children) {
-        super(children);
-        Expression firstChild = children.get(0);
-        maxLength = getPrecision(firstChild);
-        scale = getScale(firstChild);
-        for (int i=1; i<children.size(); i++) {
-            Expression childExpr = children.get(i);
-            maxLength = getPrecision(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
-            scale = getScale(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
-        }
-    }
+  public MultiplyExpression() {
+  }
 
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
+  public MultiplyExpression(List<Expression> children) {
+    super(children);
+    Expression firstChild = children.get(0);
+    maxLength = getPrecision(firstChild);
+    scale = getScale(firstChild);
+    for (int i = 1; i < children.size(); i++) {
+      Expression childExpr = children.get(i);
+      maxLength = getPrecision(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
+      scale = getScale(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
     }
+  }
 
-    @Override
-    public String getOperatorString() {
-        return " * ";
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
     }
-    
-    private static Integer getPrecision(Integer lp, Integer rp, Integer ls, Integer rs) {
-        if (ls == null || rs == null) {
-            return PDataType.MAX_PRECISION;
-        }
-        int val = lp + rp;
-        return Math.min(PDataType.MAX_PRECISION, val);
-    }
+    return t;
+  }
 
-    private static Integer getScale(Integer lp, Integer rp, Integer ls, Integer rs) {
-        // If we are adding a decimal with scale and precision to a decimal
-        // with no precision nor scale, the scale system does not apply.
-        if (ls == null || rs == null) {
-            return null;
-        }
-        int val = ls + rs;
-        return Math.min(PDataType.MAX_PRECISION, val);
-    }
-    
-    @Override
-    public Integer getScale() {
-        return scale;
-    }
+  @Override
+  public String getOperatorString() {
+    return " * ";
+  }
 
-    @Override
-    public Integer getMaxLength() {
-        return maxLength;
+  private static Integer getPrecision(Integer lp, Integer rp, Integer ls, Integer rs) {
+    if (ls == null || rs == null) {
+      return PDataType.MAX_PRECISION;
     }
+    int val = lp + rp;
+    return Math.min(PDataType.MAX_PRECISION, val);
+  }
+
+  private static Integer getScale(Integer lp, Integer rp, Integer ls, Integer rs) {
+    // If we are adding a decimal with scale and precision to a decimal
+    // with no precision nor scale, the scale system does not apply.
+    if (ls == null || rs == null) {
+      return null;
+    }
+    int val = ls + rs;
+    return Math.min(PDataType.MAX_PRECISION, val);
+  }
+
+  @Override
+  public Integer getScale() {
+    return scale;
+  }
+
+  @Override
+  public Integer getMaxLength() {
+    return maxLength;
+  }
 }

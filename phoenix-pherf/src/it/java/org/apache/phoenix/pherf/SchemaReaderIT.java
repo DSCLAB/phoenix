@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.end2end.BaseHBaseManagedTimeIT;
@@ -39,39 +38,40 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class SchemaReaderIT extends BaseHBaseManagedTimeIT {
-    protected static PhoenixUtil util = new PhoenixUtil(true);
 
-	@Test
-    public void testSchemaReader() {
-        // Test for the unit test version of the schema files.
-        assertApplySchemaTest();
+  protected static PhoenixUtil util = new PhoenixUtil(true);
+
+  @Test
+  public void testSchemaReader() {
+    // Test for the unit test version of the schema files.
+    assertApplySchemaTest();
+  }
+
+  private void assertApplySchemaTest() {
+    try {
+      util.setZookeeper("localhost");
+      SchemaReader reader = new SchemaReader(util, ".*datamodel/.*test.*sql");
+
+      List<Path> resources = new ArrayList<>(reader.getResourceList());
+      assertTrue("Could not pull list of schema files.", resources.size() > 0);
+      assertNotNull("Could not read schema file.", this.getClass().getResourceAsStream(
+              PherfConstants.RESOURCE_DATAMODEL + "/" + resources.get(0).getFileName().toString()));
+      assertNotNull("Could not read schema file.", reader.resourceToString(resources.get(0)));
+      reader.applySchema();
+
+      Connection connection = null;
+      URL resourceUrl = getClass().getResource("/scenario/test_scenario.xml");
+      assertNotNull("Test data XML file is missing", resourceUrl);
+      connection = util.getConnection();
+      Path resourcePath = Paths.get(resourceUrl.toURI());
+      DataModel data = XMLConfigParser.readDataModel(resourcePath);
+      List<Scenario> scenarioList = data.getScenarios();
+      Scenario scenario = scenarioList.get(0);
+      List<Column> columnList = util.getColumnsFromPhoenix(scenario.getSchemaName(), scenario.getTableNameWithoutSchemaName(), connection);
+      assertTrue("Could not retrieve Metadata from Phoenix", columnList.size() > 0);
+    } catch (Exception e) {
+      fail("Could not initialize SchemaReader");
+      e.printStackTrace();
     }
-
-    private void assertApplySchemaTest() {
-        try {
-            util.setZookeeper("localhost");
-            SchemaReader reader = new SchemaReader(util, ".*datamodel/.*test.*sql");
-
-            List<Path> resources = new ArrayList<>(reader.getResourceList());
-            assertTrue("Could not pull list of schema files.", resources.size() > 0);
-            assertNotNull("Could not read schema file.", this.getClass().getResourceAsStream(
-                    PherfConstants.RESOURCE_DATAMODEL + "/" + resources.get(0).getFileName().toString()));
-            assertNotNull("Could not read schema file.", reader.resourceToString(resources.get(0)));
-            reader.applySchema();
-
-            Connection connection = null;
-            URL resourceUrl = getClass().getResource("/scenario/test_scenario.xml");
-            assertNotNull("Test data XML file is missing", resourceUrl);
-            connection = util.getConnection();
-            Path resourcePath = Paths.get(resourceUrl.toURI());
-            DataModel data = XMLConfigParser.readDataModel(resourcePath);
-            List<Scenario> scenarioList = data.getScenarios();
-            Scenario scenario = scenarioList.get(0);
-            List<Column> columnList = util.getColumnsFromPhoenix(scenario.getSchemaName(), scenario.getTableNameWithoutSchemaName(), connection);
-            assertTrue("Could not retrieve Metadata from Phoenix", columnList.size() > 0);
-        } catch (Exception e) {
-            fail("Could not initialize SchemaReader");
-            e.printStackTrace();
-        }
-    }
+  }
 }

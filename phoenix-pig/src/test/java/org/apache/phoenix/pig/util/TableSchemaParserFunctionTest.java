@@ -30,27 +30,27 @@ import com.google.common.base.Joiner;
 
 public class TableSchemaParserFunctionTest {
 
-    final TableSchemaParserFunction function = new TableSchemaParserFunction();
-    
-    @Test
-    public void testTableSchema() {
-        final String loadTableSchema = "EMPLOYEE/col1,col2";
-        final Pair<String,String> pair = function.apply(loadTableSchema);
-        assertEquals("EMPLOYEE", pair.getFirst());
-        assertEquals(pair.getSecond(),Joiner.on(',').join("col1","col2"));
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void testEmptyTableSchema() {
-        final String loadTableSchema = "";
-        function.apply(loadTableSchema);
-    }
-    
-    @Test
-    public void testTableOnlySchema() {
-        final String loadTableSchema = "EMPLOYEE";
-        final Pair<String,String> pair = function.apply(loadTableSchema);
-        assertEquals("EMPLOYEE", pair.getFirst());
-        assertNull(pair.getSecond());
-    }
+  final TableSchemaParserFunction function = new TableSchemaParserFunction();
+
+  @Test
+  public void testTableSchema() {
+    final String loadTableSchema = "EMPLOYEE/col1,col2";
+    final Pair<String, String> pair = function.apply(loadTableSchema);
+    assertEquals("EMPLOYEE", pair.getFirst());
+    assertEquals(pair.getSecond(), Joiner.on(',').join("col1", "col2"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEmptyTableSchema() {
+    final String loadTableSchema = "";
+    function.apply(loadTableSchema);
+  }
+
+  @Test
+  public void testTableOnlySchema() {
+    final String loadTableSchema = "EMPLOYEE";
+    final Pair<String, String> pair = function.apply(loadTableSchema);
+    assertEquals("EMPLOYEE", pair.getFirst());
+    assertNull(pair.getSecond());
+  }
 }

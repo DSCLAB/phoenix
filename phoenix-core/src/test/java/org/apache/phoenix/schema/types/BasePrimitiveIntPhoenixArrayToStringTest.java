@@ -12,39 +12,39 @@ package org.apache.phoenix.schema.types;
 
 public abstract class BasePrimitiveIntPhoenixArrayToStringTest extends BasePhoenixArrayToStringTest {
 
-    @Override
-    protected Number getElement1() {
-        return 1;
-    }
+  @Override
+  protected Number getElement1() {
+    return 1;
+  }
 
-    @Override
-    protected String getString1() {
-        return "1";
-    }
+  @Override
+  protected String getString1() {
+    return "1";
+  }
 
-    @Override
-    protected Number getElement2() {
-        return 2;
-    }
+  @Override
+  protected Number getElement2() {
+    return 2;
+  }
 
-    @Override
-    protected String getString2() {
-        return "2";
-    }
+  @Override
+  protected String getString2() {
+    return "2";
+  }
 
-    @Override
-    protected Number getElement3() {
-        return 3;
-    }
+  @Override
+  protected Number getElement3() {
+    return 3;
+  }
 
-    @Override
-    protected String getString3() {
-        return "3";
-    }
+  @Override
+  protected String getString3() {
+    return "3";
+  }
 
-    @Override
-    protected String getNullString() {
-        return "0";
-    }
+  @Override
+  protected String getNullString() {
+    return "0";
+  }
 
 }

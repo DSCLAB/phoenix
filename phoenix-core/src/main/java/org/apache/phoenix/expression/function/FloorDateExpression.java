@@ -30,61 +30,62 @@ import org.apache.phoenix.schema.types.PUnsignedDate;
 import org.apache.phoenix.schema.types.PUnsignedTimestamp;
 
 /**
- * 
- * Class encapsulating the FLOOR operation on 
- * a column/literal of type {@link org.apache.phoenix.schema.types.PDate}.
  *
- * 
+ * Class encapsulating the FLOOR operation on a column/literal of type
+ * {@link org.apache.phoenix.schema.types.PDate}.
+ *
+ *
  * @since 3.0.0
  */
 public class FloorDateExpression extends RoundDateExpression {
-    
-    public FloorDateExpression() {}
-    
-    private FloorDateExpression(List<Expression> children) {
-        super(children);
+
+  public FloorDateExpression() {
+  }
+
+  private FloorDateExpression(List<Expression> children) {
+    super(children);
+  }
+
+  public static Expression create(List<Expression> children) throws SQLException {
+    Expression firstChild = children.get(0);
+    PDataType firstChildDataType = firstChild.getDataType();
+    if (firstChildDataType == PTimestamp.INSTANCE || firstChildDataType == PUnsignedTimestamp.INSTANCE) {
+      // Coerce TIMESTAMP to DATE, as the nanos has no affect
+      List<Expression> newChildren = Lists.newArrayListWithExpectedSize(children.size());
+      newChildren.add(CoerceExpression.create(firstChild, firstChildDataType == PTimestamp.INSTANCE ? PDate.INSTANCE : PUnsignedDate.INSTANCE));
+      newChildren.addAll(children.subList(1, children.size()));
+      children = newChildren;
     }
-    
-    public static Expression create(List<Expression> children) throws SQLException {
-        Expression firstChild = children.get(0);
-        PDataType firstChildDataType = firstChild.getDataType();
-        if (firstChildDataType == PTimestamp.INSTANCE || firstChildDataType == PUnsignedTimestamp.INSTANCE){
-            // Coerce TIMESTAMP to DATE, as the nanos has no affect
-            List<Expression> newChildren = Lists.newArrayListWithExpectedSize(children.size());
-            newChildren.add(CoerceExpression.create(firstChild, firstChildDataType == PTimestamp.INSTANCE ? PDate.INSTANCE : PUnsignedDate.INSTANCE));
-            newChildren.addAll(children.subList(1, children.size()));
-            children = newChildren;
-        }
-        return new FloorDateExpression(children);
-    }
-    
-    /**
-     * @param timeUnit - unit of time to round up to.
-     * Creates a {@link FloorDateExpression} with default multiplier of 1.
-     */
-    public static Expression create(Expression expr, TimeUnit timeUnit) throws SQLException {
-        return create(expr, timeUnit, 1);
-    }
-    
-    /**
-     * @param timeUnit - unit of time to round up to
-     * @param multiplier - determines the roll up window size.
-     * Create a {@link FloorDateExpression}. 
-     */
-    public static Expression create(Expression expr, TimeUnit timeUnit, int multiplier) throws SQLException {
-        Expression timeUnitExpr = getTimeUnitExpr(timeUnit);
-        Expression defaultMultiplierExpr = getMultiplierExpr(multiplier);
-        List<Expression> expressions = Lists.newArrayList(expr, timeUnitExpr, defaultMultiplierExpr);
-        return create(expressions);
-    }
-   
-    @Override
-    protected long getRoundUpAmount() {
-        return 0;
-    }
-    
-    @Override
-    public String getName() {
-        return FloorFunction.NAME;
-    }
+    return new FloorDateExpression(children);
+  }
+
+  /**
+   * @param timeUnit - unit of time to round up to. Creates a
+   * {@link FloorDateExpression} with default multiplier of 1.
+   */
+  public static Expression create(Expression expr, TimeUnit timeUnit) throws SQLException {
+    return create(expr, timeUnit, 1);
+  }
+
+  /**
+   * @param timeUnit - unit of time to round up to
+   * @param multiplier - determines the roll up window size. Create a
+   * {@link FloorDateExpression}.
+   */
+  public static Expression create(Expression expr, TimeUnit timeUnit, int multiplier) throws SQLException {
+    Expression timeUnitExpr = getTimeUnitExpr(timeUnit);
+    Expression defaultMultiplierExpr = getMultiplierExpr(multiplier);
+    List<Expression> expressions = Lists.newArrayList(expr, timeUnitExpr, defaultMultiplierExpr);
+    return create(expressions);
+  }
+
+  @Override
+  protected long getRoundUpAmount() {
+    return 0;
+  }
+
+  @Override
+  public String getName() {
+    return FloorFunction.NAME;
+  }
 }

@@ -23,8 +23,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Pair;
 
 /**
- * Helper utility to make a thread pool from a configuration based on reasonable defaults and passed
- * configuration keys.
+ * Helper utility to make a thread pool from a configuration based on reasonable
+ * defaults and passed configuration keys.
  */
 public class ThreadPoolBuilder {
 
@@ -62,26 +62,26 @@ public class ThreadPoolBuilder {
   }
 
   String getName() {
-   return this.name;
+    return this.name;
   }
 
   int getMaxThreads() {
     int maxThreads = DEFAULT_MAX_THREADS;
     if (this.maxThreads != null) {
       String key = this.maxThreads.getFirst();
-      maxThreads =
-          key == null ? this.maxThreads.getSecond() : conf.getInt(key, this.maxThreads.getSecond());
+      maxThreads
+              = key == null ? this.maxThreads.getSecond() : conf.getInt(key, this.maxThreads.getSecond());
     }
     LOG.trace("Creating pool builder with max " + maxThreads + " threads ");
     return maxThreads;
   }
 
   long getKeepAliveTime() {
-    long timeout =DEFAULT_TIMEOUT;
+    long timeout = DEFAULT_TIMEOUT;
     if (this.timeout != null) {
       String key = this.timeout.getFirst();
-      timeout =
-          key == null ? this.timeout.getSecond() : conf.getLong(key, this.timeout.getSecond());
+      timeout
+              = key == null ? this.timeout.getSecond() : conf.getLong(key, this.timeout.getSecond());
     }
 
     LOG.trace("Creating pool builder with core thread timeout of " + timeout + " seconds ");

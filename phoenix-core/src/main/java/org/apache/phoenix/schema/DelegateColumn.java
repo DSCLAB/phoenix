@@ -25,58 +25,58 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.util.SizedUtil;
 
 public class DelegateColumn extends DelegateDatum implements PColumn {
-    
-    public DelegateColumn(PColumn delegate) {
-        super(delegate);
-    }
-    
-    @Override
-    protected PColumn getDelegate() {
-        return (PColumn)super.getDelegate();
-    }
-    
-    @Override
-    public PName getName() {
-        return getDelegate().getName();
-    }
-    
-    @Override
-    public SortOrder getSortOrder() {
-    	return getDelegate().getSortOrder();
-    }
 
-    @Override
-    public PName getFamilyName() {
-        return getDelegate().getFamilyName();
-    }
+  public DelegateColumn(PColumn delegate) {
+    super(delegate);
+  }
 
-    @Override
-    public int getPosition() {
-        return getDelegate().getPosition();
-    }
+  @Override
+  protected PColumn getDelegate() {
+    return (PColumn) super.getDelegate();
+  }
 
-    @Override
-    public Integer getArraySize() {
-        return getDelegate().getArraySize();
-    }
+  @Override
+  public PName getName() {
+    return getDelegate().getName();
+  }
 
-    @Override
-    public byte[] getViewConstant() {
-        return getDelegate().getViewConstant();
-    }
+  @Override
+  public SortOrder getSortOrder() {
+    return getDelegate().getSortOrder();
+  }
 
-    @Override
-    public int getEstimatedSize() {
-        return SizedUtil.OBJECT_SIZE + getDelegate().getEstimatedSize();
-    }
+  @Override
+  public PName getFamilyName() {
+    return getDelegate().getFamilyName();
+  }
 
-    @Override
-    public boolean isViewReferenced() {
-        return getDelegate().isViewReferenced();
-    }
-    
-    @Override
-    public String getExpressionStr() {
-        return getDelegate().getExpressionStr();
-    }
+  @Override
+  public int getPosition() {
+    return getDelegate().getPosition();
+  }
+
+  @Override
+  public Integer getArraySize() {
+    return getDelegate().getArraySize();
+  }
+
+  @Override
+  public byte[] getViewConstant() {
+    return getDelegate().getViewConstant();
+  }
+
+  @Override
+  public int getEstimatedSize() {
+    return SizedUtil.OBJECT_SIZE + getDelegate().getEstimatedSize();
+  }
+
+  @Override
+  public boolean isViewReferenced() {
+    return getDelegate().isViewReferenced();
+  }
+
+  @Override
+  public String getExpressionStr() {
+    return getDelegate().getExpressionStr();
+  }
 }

@@ -37,78 +37,80 @@ import org.apache.phoenix.schema.types.PDataType.PDataCodec;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * 
- * Class encapsulating the CEIL operation on {@link org.apache.phoenix.schema.types.PTimestamp}
- * This class only supports CEIL {@link TimeUnit#MILLISECOND}. If you want more options of CEIL like 
+ *
+ * Class encapsulating the CEIL operation on
+ * {@link org.apache.phoenix.schema.types.PTimestamp} This class only supports
+ * CEIL {@link TimeUnit#MILLISECOND}. If you want more options of CEIL like
  * using {@link TimeUnit#HOUR} use {@link CeilDateExpression}
- * 
- * 
+ *
+ *
  * @since 3.0.0
  */
 public class CeilTimestampExpression extends CeilDateExpression {
-    
-    public CeilTimestampExpression() {}
-    
-    private CeilTimestampExpression(List<Expression> children) {
-        super(children);
-    }
-    
-    /**
-     * Creates a {@link CeilTimestampExpression} that uses {@link TimeUnit#MILLISECOND} 
-     * as the time unit for rounding. 
-     */
-    public static CeilTimestampExpression create(Expression expr, int multiplier) throws SQLException {
-        List<Expression> childExprs = Lists.newArrayList(expr, getTimeUnitExpr(TimeUnit.MILLISECOND), getMultiplierExpr(multiplier));
-        return new CeilTimestampExpression(childExprs); 
-    }
-    
-    public static Expression create(List<Expression> children) throws SQLException {
-        Expression firstChild = children.get(0);
-        PDataType firstChildDataType = firstChild.getDataType();
-        String timeUnit = (String)((LiteralExpression)children.get(1)).getValue();
-        if(TimeUnit.MILLISECOND.toString().equalsIgnoreCase(timeUnit)) {
-            return new CeilTimestampExpression(children);
-        }
-        // Coerce TIMESTAMP to DATE, as the nanos has no affect
-        List<Expression> newChildren = Lists.newArrayListWithExpectedSize(children.size());
-        newChildren.add(CoerceExpression.create(firstChild, firstChildDataType == PTimestamp.INSTANCE ?
-            PDate.INSTANCE : PUnsignedDate.INSTANCE));
-        newChildren.addAll(children.subList(1, children.size()));
-        return CeilDateExpression.create(newChildren);
-    }
-    
-    /**
-     * Creates a {@link CeilTimestampExpression} that uses {@link TimeUnit#MILLISECOND} 
-     * as the time unit for rounding. 
-     */
-    public static CeilTimestampExpression create (Expression expr) throws SQLException {
-        return create(expr, 1);
-    }
 
-    @Override
-    protected PDataCodec getKeyRangeCodec(PDataType columnDataType) {
-        return columnDataType == PTimestamp.INSTANCE
-                ? PDate.INSTANCE.getCodec()
-                : columnDataType == PUnsignedTimestamp.INSTANCE
+  public CeilTimestampExpression() {
+  }
+
+  private CeilTimestampExpression(List<Expression> children) {
+    super(children);
+  }
+
+  /**
+   * Creates a {@link CeilTimestampExpression} that uses
+   * {@link TimeUnit#MILLISECOND} as the time unit for rounding.
+   */
+  public static CeilTimestampExpression create(Expression expr, int multiplier) throws SQLException {
+    List<Expression> childExprs = Lists.newArrayList(expr, getTimeUnitExpr(TimeUnit.MILLISECOND), getMultiplierExpr(multiplier));
+    return new CeilTimestampExpression(childExprs);
+  }
+
+  public static Expression create(List<Expression> children) throws SQLException {
+    Expression firstChild = children.get(0);
+    PDataType firstChildDataType = firstChild.getDataType();
+    String timeUnit = (String) ((LiteralExpression) children.get(1)).getValue();
+    if (TimeUnit.MILLISECOND.toString().equalsIgnoreCase(timeUnit)) {
+      return new CeilTimestampExpression(children);
+    }
+    // Coerce TIMESTAMP to DATE, as the nanos has no affect
+    List<Expression> newChildren = Lists.newArrayListWithExpectedSize(children.size());
+    newChildren.add(CoerceExpression.create(firstChild, firstChildDataType == PTimestamp.INSTANCE
+            ? PDate.INSTANCE : PUnsignedDate.INSTANCE));
+    newChildren.addAll(children.subList(1, children.size()));
+    return CeilDateExpression.create(newChildren);
+  }
+
+  /**
+   * Creates a {@link CeilTimestampExpression} that uses
+   * {@link TimeUnit#MILLISECOND} as the time unit for rounding.
+   */
+  public static CeilTimestampExpression create(Expression expr) throws SQLException {
+    return create(expr, 1);
+  }
+
+  @Override
+  protected PDataCodec getKeyRangeCodec(PDataType columnDataType) {
+    return columnDataType == PTimestamp.INSTANCE
+            ? PDate.INSTANCE.getCodec()
+            : columnDataType == PUnsignedTimestamp.INSTANCE
                     ? PUnsignedDate.INSTANCE.getCodec()
                     : super.getKeyRangeCodec(columnDataType);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (children.get(0).evaluate(tuple, ptr)) {
+      SortOrder sortOrder = children.get(0).getSortOrder();
+      PDataType dataType = getDataType();
+      int nanos = dataType.getNanos(ptr, sortOrder);
+      if (nanos > 0) {
+        long millis = dataType.getMillis(ptr, sortOrder);
+        Timestamp roundedTs = new Timestamp(millis + 1);
+        byte[] byteValue = dataType.toBytes(roundedTs);
+        ptr.set(byteValue);
+      }
+      return true; // for timestamp we only support rounding up the milliseconds.
     }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (children.get(0).evaluate(tuple, ptr)) {
-            SortOrder sortOrder = children.get(0).getSortOrder();
-            PDataType dataType = getDataType();
-            int nanos = dataType.getNanos(ptr, sortOrder);
-            if (nanos > 0) {
-                long millis = dataType.getMillis(ptr, sortOrder); 
-                Timestamp roundedTs = new Timestamp(millis + 1);
-                byte[] byteValue = dataType.toBytes(roundedTs);
-                ptr.set(byteValue);
-            }
-            return true; // for timestamp we only support rounding up the milliseconds.
-        }
-        return false;
-    }   
+    return false;
+  }
 
 }

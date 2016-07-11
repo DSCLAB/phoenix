@@ -31,53 +31,55 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.joda.time.DateTime;
 
 /**
- * 
- * Implementation of the Month() buildin. Input Date/Timestamp/Time.
- * Returns an integer from 1 to 12 representing the month omponent of date
- * 
+ *
+ * Implementation of the Month() buildin. Input Date/Timestamp/Time. Returns an
+ * integer from 1 to 12 representing the month omponent of date
+ *
  */
-@BuiltInFunction(name=MonthFunction.NAME, 
-args={@Argument(allowedTypes={PTimestamp.class})})
+@BuiltInFunction(name = MonthFunction.NAME,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class})})
 public class MonthFunction extends ScalarFunction {
-    public static final String NAME = "MONTH";
 
-    public MonthFunction() {
-    }
+  public static final String NAME = "MONTH";
 
-    public MonthFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public MonthFunction() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression expression = getChildExpression();
-        if (!expression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if ( ptr.getLength() == 0) {
-            return true; //means null
-        }
-        long dateTime = expression.getDataType().getCodec().decodeLong(ptr, expression.getSortOrder());
-        DateTime dt = new DateTime(dateTime);
-        int month = dt.getMonthOfYear();
-        PDataType returnType = getDataType();
-        byte[] byteValue = new byte[returnType.getByteSize()];
-        returnType.getCodec().encodeInt(month, byteValue, 0);
-        ptr.set(byteValue);
-        return true;
-    }
+  public MonthFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression expression = getChildExpression();
+    if (!expression.evaluate(tuple, ptr)) {
+      return false;
     }
+    if (ptr.getLength() == 0) {
+      return true; //means null
+    }
+    long dateTime = expression.getDataType().getCodec().decodeLong(ptr, expression.getSortOrder());
+    DateTime dt = new DateTime(dateTime);
+    int month = dt.getMonthOfYear();
+    PDataType returnType = getDataType();
+    byte[] byteValue = new byte[returnType.getByteSize()];
+    returnType.getCodec().encodeInt(month, byteValue, 0);
+    ptr.set(byteValue);
+    return true;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

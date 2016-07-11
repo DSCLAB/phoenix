@@ -24,15 +24,16 @@ import org.apache.phoenix.expression.util.regex.AbstractBaseSplitter;
 import org.apache.phoenix.expression.util.regex.JONIPattern;
 
 public class ByteBasedRegexpSplitFunction extends RegexpSplitFunction {
-    public ByteBasedRegexpSplitFunction() {
-    }
 
-    public ByteBasedRegexpSplitFunction(List<Expression> children) {
-        super(children);
-    }
+  public ByteBasedRegexpSplitFunction() {
+  }
 
-    @Override
-    protected AbstractBaseSplitter compilePatternSpec(String value) {
-        return new JONIPattern(value);
-    }
+  public ByteBasedRegexpSplitFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected AbstractBaseSplitter compilePatternSpec(String value) {
+    return new JONIPattern(value);
+  }
 }

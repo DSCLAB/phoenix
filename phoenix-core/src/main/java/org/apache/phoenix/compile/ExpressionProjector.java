@@ -17,7 +17,6 @@
  */
 package org.apache.phoenix.compile;
 
-
 import java.sql.SQLException;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -25,66 +24,65 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
-
 /**
- * 
+ *
  * Projector for getting value from a select statement for an expression
  *
- * 
+ *
  * @since 0.1
  */
 public class ExpressionProjector implements ColumnProjector {
-    private final String name;
-    private final Expression expression;
-    private final String tableName;
-    private final boolean isCaseSensitive;
-    
-    public ExpressionProjector(String name, String tableName, Expression expression, boolean isCaseSensitive) {
-        this.name = name;
-        this.expression = expression;
-        this.tableName = tableName;
-        this.isCaseSensitive = isCaseSensitive;
-    }
-    
-    @Override
-    public String getTableName() {
-        return tableName;
-    }
 
-    @Override
-    public Expression getExpression() {
-        return expression;
-    }
+  private final String name;
+  private final Expression expression;
+  private final String tableName;
+  private final boolean isCaseSensitive;
 
-    @Override
-    public String getName() {
-        return name;
-    }
+  public ExpressionProjector(String name, String tableName, Expression expression, boolean isCaseSensitive) {
+    this.name = name;
+    this.expression = expression;
+    this.tableName = tableName;
+    this.isCaseSensitive = isCaseSensitive;
+  }
 
-    @Override
-    public final Object getValue(Tuple tuple, PDataType type, ImmutableBytesWritable ptr) throws SQLException {
-        try {
-            Expression expression = getExpression();
-            if (!expression.evaluate(tuple, ptr)) {
-                return null;
-            }
-            if (ptr.getLength() == 0) {
-                return null;
-            }        
-            return type.toObject(ptr, expression.getDataType(), expression.getSortOrder(), expression.getMaxLength(), expression.getScale());
-        } catch (RuntimeException e) {
-            // FIXME: Expression.evaluate does not throw SQLException
-            // so this will unwrap throws from that.
-            if (e.getCause() instanceof SQLException) {
-                throw (SQLException) e.getCause();
-            }
-            throw e;
-        }
-    }
+  @Override
+  public String getTableName() {
+    return tableName;
+  }
 
-    @Override
-    public boolean isCaseSensitive() {
-        return isCaseSensitive;
+  @Override
+  public Expression getExpression() {
+    return expression;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public final Object getValue(Tuple tuple, PDataType type, ImmutableBytesWritable ptr) throws SQLException {
+    try {
+      Expression expression = getExpression();
+      if (!expression.evaluate(tuple, ptr)) {
+        return null;
+      }
+      if (ptr.getLength() == 0) {
+        return null;
+      }
+      return type.toObject(ptr, expression.getDataType(), expression.getSortOrder(), expression.getMaxLength(), expression.getScale());
+    } catch (RuntimeException e) {
+      // FIXME: Expression.evaluate does not throw SQLException
+      // so this will unwrap throws from that.
+      if (e.getCause() instanceof SQLException) {
+        throw (SQLException) e.getCause();
+      }
+      throw e;
     }
+  }
+
+  @Override
+  public boolean isCaseSensitive() {
+    return isCaseSensitive;
+  }
 }

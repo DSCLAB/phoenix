@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.end2end.BaseHBaseManagedTimeIT;
@@ -40,49 +39,50 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class DataIngestIT extends BaseHBaseManagedTimeIT {
-    protected static PhoenixUtil util = new PhoenixUtil(true);
-    static final String matcherScenario = ".*scenario/.*test.*xml";
-    static final String matcherSchema = ".*datamodel/.*test.*sql";
 
-    @Test
-    public void generateData() throws Exception {
-        util.setZookeeper("localhost");
-        SchemaReader reader = new SchemaReader(util, matcherSchema);
-        XMLConfigParser parser = new XMLConfigParser(matcherScenario);
+  protected static PhoenixUtil util = new PhoenixUtil(true);
+  static final String matcherScenario = ".*scenario/.*test.*xml";
+  static final String matcherSchema = ".*datamodel/.*test.*sql";
 
-        // 1. Generate table schema from file
-        List<Path> resources = new ArrayList<>(reader.getResourceList());
-        assertTrue("Could not pull list of schema files.", resources.size() > 0);
-        assertNotNull("Could not read schema file.", reader.resourceToString(resources.get(0)));
-        reader.applySchema();
+  @Test
+  public void generateData() throws Exception {
+    util.setZookeeper("localhost");
+    SchemaReader reader = new SchemaReader(util, matcherSchema);
+    XMLConfigParser parser = new XMLConfigParser(matcherScenario);
 
-        // 2. Load the metadata of for the test tables
-        Scenario scenario = parser.getScenarios().get(0);
-        List<Column> columnListFromPhoenix = util.getColumnsFromPhoenix(scenario.getSchemaName(), scenario.getTableNameWithoutSchemaName(), util.getConnection());
-        assertTrue("Could not get phoenix columns.", columnListFromPhoenix.size() > 0);
-        DataLoader loader = new DataLoader(util,parser);
-        RulesApplier rulesApplier = loader.getRulesApplier();
-        List<Map> modelList = rulesApplier.getModelList();
-        assertTrue("Could not generate the modelList", modelList.size() > 0);
+    // 1. Generate table schema from file
+    List<Path> resources = new ArrayList<>(reader.getResourceList());
+    assertTrue("Could not pull list of schema files.", resources.size() > 0);
+    assertNotNull("Could not read schema file.", reader.resourceToString(resources.get(0)));
+    reader.applySchema();
 
-        for (Column column : columnListFromPhoenix) {
-            DataValue data = rulesApplier.getDataForRule(scenario, column);
+    // 2. Load the metadata of for the test tables
+    Scenario scenario = parser.getScenarios().get(0);
+    List<Column> columnListFromPhoenix = util.getColumnsFromPhoenix(scenario.getSchemaName(), scenario.getTableNameWithoutSchemaName(), util.getConnection());
+    assertTrue("Could not get phoenix columns.", columnListFromPhoenix.size() > 0);
+    DataLoader loader = new DataLoader(util, parser);
+    RulesApplier rulesApplier = loader.getRulesApplier();
+    List<Map> modelList = rulesApplier.getModelList();
+    assertTrue("Could not generate the modelList", modelList.size() > 0);
 
-            // We are generating data values so the value should have been specified by this point.
-            assertTrue("Failed to retrieve data for column type: " + column.getType(), data != null);
+    for (Column column : columnListFromPhoenix) {
+      DataValue data = rulesApplier.getDataForRule(scenario, column);
 
-            // Test that we still retrieve the GENERAL_CHAR rule even after an override is applied to another CHAR type.
-            // NEWVAL_STRING Column does not  specify an override so we should get the default rule.
-            if ((column.getType() == DataTypeMapping.VARCHAR) && (column.getName().equals("NEWVAL_STRING"))) {
-                assertTrue("Failed to retrieve data for column type: ", data.getDistribution() == Integer.MIN_VALUE);
-            }
-        }
+      // We are generating data values so the value should have been specified by this point.
+      assertTrue("Failed to retrieve data for column type: " + column.getType(), data != null);
 
-        // Load up the data.
-        try {
-            loader.execute();
-        } catch (Exception e) {
-            fail("Failed to lead data. An exception was thrown: " + e.getMessage());
-        }
+      // Test that we still retrieve the GENERAL_CHAR rule even after an override is applied to another CHAR type.
+      // NEWVAL_STRING Column does not  specify an override so we should get the default rule.
+      if ((column.getType() == DataTypeMapping.VARCHAR) && (column.getName().equals("NEWVAL_STRING"))) {
+        assertTrue("Failed to retrieve data for column type: ", data.getDistribution() == Integer.MIN_VALUE);
+      }
     }
+
+    // Load up the data.
+    try {
+      loader.execute();
+    } catch (Exception e) {
+      fail("Failed to lead data. An exception was thrown: " + e.getMessage());
+    }
+  }
 }

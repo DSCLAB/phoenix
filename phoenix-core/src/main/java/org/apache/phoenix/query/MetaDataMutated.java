@@ -26,19 +26,24 @@ import org.apache.phoenix.schema.PMetaData;
 import org.apache.phoenix.schema.PName;
 import org.apache.phoenix.schema.PTable;
 
-
 /**
- * 
+ *
  * Interface for applying schema mutations to our client-side schema cache
  *
- * 
+ *
  * @since 0.1
  */
 public interface MetaDataMutated {
-    PMetaData addTable(PTable table) throws SQLException;
-    PMetaData removeTable(PName tenantId, String tableName, String parentTableName, long tableTimeStamp) throws SQLException;
-    PMetaData addColumn(PName tenantId, String tableName, List<PColumn> columns, long tableTimeStamp, long tableSeqNum, boolean isImmutableRows, boolean isWalDisabled, boolean isMultitenant, boolean storeNulls) throws SQLException;
-    PMetaData removeColumn(PName tenantId, String tableName, List<PColumn> columnsToRemove, long tableTimeStamp, long tableSeqNum) throws SQLException;
-    PMetaData addFunction(PFunction function) throws SQLException;
-    PMetaData removeFunction(PName tenantId, String function, long functionTimeStamp) throws SQLException;
+
+  PMetaData addTable(PTable table) throws SQLException;
+
+  PMetaData removeTable(PName tenantId, String tableName, String parentTableName, long tableTimeStamp) throws SQLException;
+
+  PMetaData addColumn(PName tenantId, String tableName, List<PColumn> columns, long tableTimeStamp, long tableSeqNum, boolean isImmutableRows, boolean isWalDisabled, boolean isMultitenant, boolean storeNulls) throws SQLException;
+
+  PMetaData removeColumn(PName tenantId, String tableName, List<PColumn> columnsToRemove, long tableTimeStamp, long tableSeqNum) throws SQLException;
+
+  PMetaData addFunction(PFunction function) throws SQLException;
+
+  PMetaData removeFunction(PName tenantId, String function, long functionTimeStamp) throws SQLException;
 }

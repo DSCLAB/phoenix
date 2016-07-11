@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result.impl;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -32,72 +31,73 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class XMLResultHandler implements ResultHandler {
-    private final String resultFileName;
-    private final ResultFileDetails resultFileDetails;
 
-    public XMLResultHandler(String resultFileName, ResultFileDetails resultFileDetails) {
-        this(resultFileName, resultFileDetails, true);
+  private final String resultFileName;
+  private final ResultFileDetails resultFileDetails;
+
+  public XMLResultHandler(String resultFileName, ResultFileDetails resultFileDetails) {
+    this(resultFileName, resultFileDetails, true);
+  }
+
+  public XMLResultHandler(String resultFileName, ResultFileDetails resultFileDetails, boolean generateFullFileName) {
+    ResultUtil util = new ResultUtil();
+    this.resultFileName = generateFullFileName
+            ? PherfConstants.RESULT_DIR + PherfConstants.PATH_SEPARATOR
+            + PherfConstants.RESULT_PREFIX
+            + resultFileName + util.getSuffix()
+            + resultFileDetails.getExtension().toString()
+            : resultFileName;
+    this.resultFileDetails = resultFileDetails;
+  }
+
+  @Override
+  public synchronized void write(Result result) throws Exception {
+    FileOutputStream os = null;
+    JAXBContext jaxbContext = JAXBContext.newInstance(DataModelResult.class);
+    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+    try {
+      os = new FileOutputStream(resultFileName);
+      ResultValue resultValue = result.getResultValues().get(0);
+      jaxbMarshaller.marshal(resultValue.getResultValue(), os);
+    } finally {
+      if (os != null) {
+        os.flush();
+        os.close();
+      }
     }
+  }
 
-    public XMLResultHandler(String resultFileName, ResultFileDetails resultFileDetails, boolean generateFullFileName) {
-        ResultUtil util = new ResultUtil();
-        this.resultFileName = generateFullFileName ?
-                PherfConstants.RESULT_DIR + PherfConstants.PATH_SEPARATOR
-                        + PherfConstants.RESULT_PREFIX
-                        + resultFileName + util.getSuffix()
-                        + resultFileDetails.getExtension().toString()
-                : resultFileName;
-        this.resultFileDetails = resultFileDetails;
-    }
+  @Override
+  public synchronized void flush() throws IOException {
+    return;
+  }
 
-    @Override
-    public synchronized void write(Result result) throws Exception {
-        FileOutputStream os = null;
-        JAXBContext jaxbContext = JAXBContext.newInstance(DataModelResult.class);
-        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        try {
-            os = new FileOutputStream(resultFileName);
-            ResultValue resultValue = result.getResultValues().get(0);
-            jaxbMarshaller.marshal(resultValue.getResultValue(), os);
-        } finally {
-            if (os != null) {
-                os.flush();
-                os.close();
-            }
-        }
-    }
+  @Override
+  public synchronized void close() throws IOException {
+    return;
+  }
 
-    @Override
-    public synchronized void flush() throws IOException {
-        return;
-    }
+  @Override
+  public synchronized List<Result> read() throws Exception {
 
-    @Override
-    public synchronized void close() throws IOException {
-        return;
-    }
+    JAXBContext jaxbContext = JAXBContext.newInstance(DataModelResult.class);
+    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+    File XMLfile = new File(resultFileName);
+    List<ResultValue> resultValue = new ArrayList();
+    resultValue.add(new ResultValue<>((DataModelResult) jaxbUnmarshaller.unmarshal(XMLfile)));
+    List<Result> results = new ArrayList<>();
+    results.add(new Result(ResultFileDetails.XML, null, resultValue));
+    return results;
+  }
 
-    @Override
-    public synchronized List<Result> read() throws Exception {
+  @Override
+  public boolean isClosed() {
+    return true;
+  }
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(DataModelResult.class);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        File XMLfile = new File(resultFileName);
-        List<ResultValue> resultValue = new ArrayList();
-        resultValue.add(new ResultValue<>((DataModelResult) jaxbUnmarshaller.unmarshal(XMLfile)));
-        List<Result> results = new ArrayList<>();
-        results.add(new Result(ResultFileDetails.XML, null, resultValue));
-        return results;
-    }
-
-    @Override
-    public boolean isClosed() {
-        return true;
-    }
-
-    @Override
-    public ResultFileDetails getResultFileDetails() {
-        return resultFileDetails;
-    }
+  @Override
+  public ResultFileDetails getResultFileDetails() {
+    return resultFileDetails;
+  }
 }

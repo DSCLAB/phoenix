@@ -26,19 +26,19 @@ import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 public class CoprocessorHTableFactory implements HTableFactory {
 
-    private CoprocessorEnvironment e;
+  private CoprocessorEnvironment e;
 
-    public CoprocessorHTableFactory(CoprocessorEnvironment e) {
-        this.e = e;
-    }
+  public CoprocessorHTableFactory(CoprocessorEnvironment e) {
+    this.e = e;
+  }
 
-    @Override
-    public HTableInterface getTable(ImmutableBytesPtr tablename) throws IOException {
-        return this.e.getTable(TableName.valueOf(tablename.copyBytesIfNecessary()));
-    }
+  @Override
+  public HTableInterface getTable(ImmutableBytesPtr tablename) throws IOException {
+    return this.e.getTable(TableName.valueOf(tablename.copyBytesIfNecessary()));
+  }
 
-    @Override
-    public void shutdown() {
-        // noop
-    }
+  @Override
+  public void shutdown() {
+    // noop
+  }
 }

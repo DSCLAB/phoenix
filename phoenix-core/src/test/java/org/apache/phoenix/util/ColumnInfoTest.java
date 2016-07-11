@@ -28,31 +28,31 @@ import org.junit.Test;
 
 public class ColumnInfoTest {
 
-    @Test
-    public void testToFromStringRoundTrip() {
-        ColumnInfo columnInfo = new ColumnInfo("a.myColumn", Types.INTEGER);
-        assertEquals(columnInfo, ColumnInfo.fromString(columnInfo.toString()));
-    }
+  @Test
+  public void testToFromStringRoundTrip() {
+    ColumnInfo columnInfo = new ColumnInfo("a.myColumn", Types.INTEGER);
+    assertEquals(columnInfo, ColumnInfo.fromString(columnInfo.toString()));
+  }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testFromString_InvalidString() {
-        ColumnInfo.fromString("invalid");
-    }
+  @Test(expected = IllegalArgumentException.class)
+  public void testFromString_InvalidString() {
+    ColumnInfo.fromString("invalid");
+  }
 
-    @Test
-    public void testFromString_InvalidDataType() {
-        try {
-            ColumnInfo.fromString("COLNAME:badType");
-        } catch (RuntimeException e) {
-            assertTrue(e.getCause() instanceof SQLException);
-            SQLException sqlE = (SQLException)e.getCause();
-            assertEquals(SQLExceptionCode.ILLEGAL_DATA.getErrorCode(), sqlE.getErrorCode());
-        }
+  @Test
+  public void testFromString_InvalidDataType() {
+    try {
+      ColumnInfo.fromString("COLNAME:badType");
+    } catch (RuntimeException e) {
+      assertTrue(e.getCause() instanceof SQLException);
+      SQLException sqlE = (SQLException) e.getCause();
+      assertEquals(SQLExceptionCode.ILLEGAL_DATA.getErrorCode(), sqlE.getErrorCode());
     }
-    
-    @Test
-    public void testToFromColonInColumnName() {
-        ColumnInfo columnInfo = new ColumnInfo(":myColumn", Types.INTEGER);
-        assertEquals(columnInfo, ColumnInfo.fromString(columnInfo.toString()));
-    }
+  }
+
+  @Test
+  public void testToFromColonInColumnName() {
+    ColumnInfo columnInfo = new ColumnInfo(":myColumn", Types.INTEGER);
+    assertEquals(columnInfo, ColumnInfo.fromString(columnInfo.toString()));
+  }
 }

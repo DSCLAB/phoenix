@@ -31,63 +31,66 @@ import org.apache.phoenix.hbase.index.covered.update.ColumnReference;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * 
- * Class used to construct a {@link Tuple} in order to evaluate an {@link Expression}
+ *
+ * Class used to construct a {@link Tuple} in order to evaluate an
+ * {@link Expression}
  */
 public class ValueGetterTuple extends BaseTuple {
-	private ValueGetter valueGetter;
-    
-    public ValueGetterTuple(ValueGetter valueGetter) {
-        this.valueGetter = valueGetter;
-    }
-    
-    public ValueGetterTuple() {
-    }
-    
-    @Override
-    public void getKey(ImmutableBytesWritable ptr) {
-        ptr.set(valueGetter.getRowKey());
-    }
 
-    @Override
-    public boolean isImmutable() {
-        return true;
-    }
+  private ValueGetter valueGetter;
 
-    @Override
-    public KeyValue getValue(byte[] family, byte[] qualifier) {
-    	ImmutableBytesPtr value = null;
-        try {
-            value = valueGetter.getLatestValue(new ColumnReference(family, qualifier));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    	return new KeyValue(valueGetter.getRowKey(), family, qualifier, HConstants.LATEST_TIMESTAMP, Type.Put, value!=null? copyBytesIfNecessary(value) : null);
-    }
+  public ValueGetterTuple(ValueGetter valueGetter) {
+    this.valueGetter = valueGetter;
+  }
 
-    @Override
-    public String toString() {
-        throw new UnsupportedOperationException();
-    }
+  public ValueGetterTuple() {
+  }
 
-    @Override
-    public int size() {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public void getKey(ImmutableBytesWritable ptr) {
+    ptr.set(valueGetter.getRowKey());
+  }
 
-    @Override
-    public KeyValue getValue(int index) {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public boolean isImmutable() {
+    return true;
+  }
 
-    @Override
-    public boolean getValue(byte[] family, byte[] qualifier,
-            ImmutableBytesWritable ptr) {
-        KeyValue kv = getValue(family, qualifier);
-        if (kv == null)
-            return false;
-        ptr.set(kv.getBuffer(), kv.getValueOffset(), kv.getValueLength());
-        return true;
+  @Override
+  public KeyValue getValue(byte[] family, byte[] qualifier) {
+    ImmutableBytesPtr value = null;
+    try {
+      value = valueGetter.getLatestValue(new ColumnReference(family, qualifier));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+    return new KeyValue(valueGetter.getRowKey(), family, qualifier, HConstants.LATEST_TIMESTAMP, Type.Put, value != null ? copyBytesIfNecessary(value) : null);
+  }
+
+  @Override
+  public String toString() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public int size() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public KeyValue getValue(int index) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean getValue(byte[] family, byte[] qualifier,
+          ImmutableBytesWritable ptr) {
+    KeyValue kv = getValue(family, qualifier);
+    if (kv == null) {
+      return false;
+    }
+    ptr.set(kv.getBuffer(), kv.getValueOffset(), kv.getValueLength());
+    return true;
+  }
 
 }

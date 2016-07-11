@@ -23,40 +23,39 @@ import java.util.List;
 
 import org.apache.phoenix.compile.ColumnResolver;
 
-
-
 /**
- * 
+ *
  * Node representing an OR in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public class OrParseNode extends CompoundParseNode {
-    public static final String NAME = "OR";
 
-    OrParseNode(List<ParseNode> children) {
-        super(children);
-    }
+  public static final String NAME = "OR";
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  OrParseNode(List<ParseNode> children) {
+    super(children);
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
-    
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        buf.append('(');
-        List<ParseNode> children = getChildren();
-        children.get(0).toSQL(resolver, buf);
-        for (int i = 1 ; i < children.size(); i++) {
-            buf.append(" " + NAME + " ");
-            children.get(i).toSQL(resolver, buf);
-        }
-        buf.append(')');
+    return visitor.visitLeave(this, l);
+  }
+
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    buf.append('(');
+    List<ParseNode> children = getChildren();
+    children.get(0).toSQL(resolver, buf);
+    for (int i = 1; i < children.size(); i++) {
+      buf.append(" " + NAME + " ");
+      children.get(i).toSQL(resolver, buf);
     }
+    buf.append(')');
+  }
 }

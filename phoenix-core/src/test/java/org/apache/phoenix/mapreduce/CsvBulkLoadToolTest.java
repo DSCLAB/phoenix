@@ -25,56 +25,56 @@ import static org.junit.Assert.assertEquals;
 
 public class CsvBulkLoadToolTest {
 
-    private CsvBulkLoadTool bulkLoadTool;
+  private CsvBulkLoadTool bulkLoadTool;
 
-    @Before
-    public void setUp() {
-        bulkLoadTool = new CsvBulkLoadTool();
-    }
+  @Before
+  public void setUp() {
+    bulkLoadTool = new CsvBulkLoadTool();
+  }
 
-    @Test
-    public void testParseOptions() {
-        CommandLine cmdLine = bulkLoadTool.parseOptions(new String[] { "--input", "/input",
-                "--table", "mytable" });
+  @Test
+  public void testParseOptions() {
+    CommandLine cmdLine = bulkLoadTool.parseOptions(new String[]{"--input", "/input",
+      "--table", "mytable"});
 
-        assertEquals("mytable", cmdLine.getOptionValue(CsvBulkLoadTool.TABLE_NAME_OPT.getOpt()));
-        assertEquals("/input", cmdLine.getOptionValue(CsvBulkLoadTool.INPUT_PATH_OPT.getOpt()));
-    }
+    assertEquals("mytable", cmdLine.getOptionValue(CsvBulkLoadTool.TABLE_NAME_OPT.getOpt()));
+    assertEquals("/input", cmdLine.getOptionValue(CsvBulkLoadTool.INPUT_PATH_OPT.getOpt()));
+  }
 
-    @Test(expected=IllegalStateException.class)
-    public void testParseOptions_ExtraArguments() {
-        bulkLoadTool.parseOptions(new String[] { "--input", "/input",
-                "--table", "mytable", "these", "shouldnt", "be", "here" });
-    }
+  @Test(expected = IllegalStateException.class)
+  public void testParseOptions_ExtraArguments() {
+    bulkLoadTool.parseOptions(new String[]{"--input", "/input",
+      "--table", "mytable", "these", "shouldnt", "be", "here"});
+  }
 
-    @Test(expected=IllegalStateException.class)
-    public void testParseOptions_NoInput() {
-        bulkLoadTool.parseOptions(new String[] { "--table", "mytable" });
-    }
+  @Test(expected = IllegalStateException.class)
+  public void testParseOptions_NoInput() {
+    bulkLoadTool.parseOptions(new String[]{"--table", "mytable"});
+  }
 
-    @Test(expected=IllegalStateException.class)
-    public void testParseOptions_NoTable() {
-        bulkLoadTool.parseOptions(new String[] { "--input", "/input" });
-    }
+  @Test(expected = IllegalStateException.class)
+  public void testParseOptions_NoTable() {
+    bulkLoadTool.parseOptions(new String[]{"--input", "/input"});
+  }
 
-    @Test
-    public void testGetQualifiedTableName() {
-        assertEquals("MYSCHEMA.MYTABLE", CsvBulkLoadTool.getQualifiedTableName("mySchema", "myTable"));
-    }
+  @Test
+  public void testGetQualifiedTableName() {
+    assertEquals("MYSCHEMA.MYTABLE", CsvBulkLoadTool.getQualifiedTableName("mySchema", "myTable"));
+  }
 
-    @Test
-    public void testGetQualifiedTableName_NullSchema() {
-        assertEquals("MYTABLE", CsvBulkLoadTool.getQualifiedTableName(null, "myTable"));
-    }
+  @Test
+  public void testGetQualifiedTableName_NullSchema() {
+    assertEquals("MYTABLE", CsvBulkLoadTool.getQualifiedTableName(null, "myTable"));
+  }
 
-    @Test
-    public void testGetJdbcUrl_WithQuorumSupplied() {
-        assertEquals("jdbc:phoenix:myzkhost:2181", bulkLoadTool.getJdbcUrl("myzkhost:2181"));
-    }
+  @Test
+  public void testGetJdbcUrl_WithQuorumSupplied() {
+    assertEquals("jdbc:phoenix:myzkhost:2181", bulkLoadTool.getJdbcUrl("myzkhost:2181"));
+  }
 
-    @Test
-    public void testGetJdbcUrl_NoQuorumSupplied() {
-        assertEquals("jdbc:phoenix:localhost:2181", bulkLoadTool.getJdbcUrl(null));
-    }
+  @Test
+  public void testGetJdbcUrl_NoQuorumSupplied() {
+    assertEquals("jdbc:phoenix:localhost:2181", bulkLoadTool.getJdbcUrl(null));
+  }
 
 }

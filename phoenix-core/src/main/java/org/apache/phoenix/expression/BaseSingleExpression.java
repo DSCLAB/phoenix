@@ -27,90 +27,97 @@ import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 
 import com.google.common.collect.ImmutableList;
 
-
 /**
- * 
+ *
  * Base class for expressions which have a single child expression
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class BaseSingleExpression extends BaseExpression {
 
-    protected List<Expression> children;
-    
-    public BaseSingleExpression() {
-    }
+  protected List<Expression> children;
 
-    public BaseSingleExpression(Expression expression) {
-        this(ImmutableList.of(expression));
-    }
+  public BaseSingleExpression() {
+  }
 
-    public BaseSingleExpression(List<Expression> children) {
-        this.children = children;
-    }
+  public BaseSingleExpression(Expression expression) {
+    this(ImmutableList.of(expression));
+  }
 
-    @Override
-    public List<Expression> getChildren() {
-        return children;
-    }
-    
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        Expression expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
-        expression.readFields(input);
-        children = ImmutableList.of(expression);
-    }
+  public BaseSingleExpression(List<Expression> children) {
+    this.children = children;
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        WritableUtils.writeVInt(output, ExpressionType.valueOf(children.get(0)).ordinal());
-        children.get(0).write(output);
-    }
+  @Override
+  public List<Expression> getChildren() {
+    return children;
+  }
 
-    @Override
-    public boolean isNullable() {
-        return children.get(0).isNullable();
-    }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    Expression expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
+    expression.readFields(input);
+    children = ImmutableList.of(expression);
+  }
 
-    @Override
-    public void reset() {
-        children.get(0).reset();
-    }
+  @Override
+  public void write(DataOutput output) throws IOException {
+    WritableUtils.writeVInt(output, ExpressionType.valueOf(children.get(0)).ordinal());
+    children.get(0).write(output);
+  }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + children.get(0).hashCode();
-        return result;
-    }
+  @Override
+  public boolean isNullable() {
+    return children.get(0).isNullable();
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        BaseSingleExpression other = (BaseSingleExpression)obj;
-        if (!children.get(0).equals(other.children.get(0))) return false;
-        return true;
-    }
+  @Override
+  public void reset() {
+    children.get(0).reset();
+  }
 
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, null);
-        if (l.isEmpty()) {
-            return visitor.defaultReturn(this, l);
-        }
-        return l.get(0);
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + children.get(0).hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-    
-    public Expression getChild() {
-        return children.get(0);
+    if (obj == null) {
+      return false;
     }
-    
-    @Override
-    public boolean requiresFinalEvaluation() {
-        return children.get(0).requiresFinalEvaluation();
+    if (getClass() != obj.getClass()) {
+      return false;
     }
+    BaseSingleExpression other = (BaseSingleExpression) obj;
+    if (!children.get(0).equals(other.children.get(0))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, null);
+    if (l.isEmpty()) {
+      return visitor.defaultReturn(this, l);
+    }
+    return l.get(0);
+  }
+
+  public Expression getChild() {
+    return children.get(0);
+  }
+
+  @Override
+  public boolean requiresFinalEvaluation() {
+    return children.get(0).requiresFinalEvaluation();
+  }
 }

@@ -29,38 +29,38 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 
 /**
- * Base class for tests that let HBase set timestamps.
- * We need to separate these from tests that rely on clients 
- * to set timestamps, because we create/destroy the Phoenix tables
- * between tests and only allow a table time stamp to increase.
- * Without this separation table deletion/creation would fail.
- * 
- * All tests extending this class use the mini cluster that is
- * different from the mini cluster used by test classes extending 
+ * Base class for tests that let HBase set timestamps. We need to separate these
+ * from tests that rely on clients to set timestamps, because we create/destroy
+ * the Phoenix tables between tests and only allow a table time stamp to
+ * increase. Without this separation table deletion/creation would fail.
+ *
+ * All tests extending this class use the mini cluster that is different from
+ * the mini cluster used by test classes extending
  * {@link BaseClientManagedTimeIT}.
- * 
+ *
  * @since 0.1
  */
 @NotThreadSafe
 @Category(HBaseManagedTimeTest.class)
 public abstract class BaseHBaseManagedTimeIT extends BaseTest {
-    protected static Configuration getTestClusterConfig() {
-        // don't want callers to modify config.
-        return new Configuration(config);
-    }
-    
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        setUpTestDriver(ReadOnlyProps.EMPTY_PROPS);
-    }
-    
-    @AfterClass
-    public static void doTeardown() throws Exception {
-        dropNonSystemTables();
-    }
-    
-    @After
-    public void cleanUpAfterTest() throws Exception {
-        deletePriorTables(HConstants.LATEST_TIMESTAMP, getUrl());    
-    }
+
+  protected static Configuration getTestClusterConfig() {
+    // don't want callers to modify config.
+    return new Configuration(config);
+  }
+
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    setUpTestDriver(ReadOnlyProps.EMPTY_PROPS);
+  }
+
+  @AfterClass
+  public static void doTeardown() throws Exception {
+    dropNonSystemTables();
+  }
+
+  @After
+  public void cleanUpAfterTest() throws Exception {
+    deletePriorTables(HConstants.LATEST_TIMESTAMP, getUrl());
+  }
 }

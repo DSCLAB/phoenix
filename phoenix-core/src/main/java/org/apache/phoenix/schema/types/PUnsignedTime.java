@@ -44,7 +44,7 @@ public class PUnsignedTime extends PDataType<Time> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     java.sql.Time t = (java.sql.Time) PTime.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeDate(t);
     return t;
@@ -115,6 +115,6 @@ public class PUnsignedTime extends PDataType<Time> {
   @Override
   public Object getSampleValue(Integer maxLength, Integer arrayLength) {
     return new java.sql.Time(
-        (Long) PUnsignedLong.INSTANCE.getSampleValue(maxLength, arrayLength));
+            (Long) PUnsignedLong.INSTANCE.getSampleValue(maxLength, arrayLength));
   }
 }

@@ -29,35 +29,39 @@ import org.apache.phoenix.schema.types.PTime;
 import org.apache.phoenix.schema.types.PVarchar;
 
 /**
-*
-* Implementation of the {@code TO_TIME(<string>,[<format-string>,[<timezone-string>]])} built-in function.
-* The second argument is optional and defaults to the phoenix.query.dateFormat value
-* from the HBase config. If present it must be a constant string. The third argument is either a
-* valid (constant) timezone id, or the string "LOCAL". The third argument is also optional, and
-* it defaults to GMT.
-*
-*/
-@BuiltInFunction(name=ToTimeFunction.NAME, nodeClass=ToTimeParseNode.class,
-       args={@Argument(allowedTypes={PVarchar.class}),
-               @Argument(allowedTypes={PVarchar.class},isConstant=true,defaultValue="null"),
-               @Argument(allowedTypes={PVarchar.class}, isConstant=true, defaultValue = "null") } )
+ *
+ * Implementation of the
+ * {@code TO_TIME(<string>,[<format-string>,[<timezone-string>]])} built-in
+ * function. The second argument is optional and defaults to the
+ * phoenix.query.dateFormat value from the HBase config. If present it must be a
+ * constant string. The third argument is either a valid (constant) timezone id,
+ * or the string "LOCAL". The third argument is also optional, and it defaults
+ * to GMT.
+ *
+ */
+@BuiltInFunction(name = ToTimeFunction.NAME, nodeClass = ToTimeParseNode.class,
+        args = {
+          @Argument(allowedTypes = {PVarchar.class}),
+          @Argument(allowedTypes = {PVarchar.class}, isConstant = true, defaultValue = "null"),
+          @Argument(allowedTypes = {PVarchar.class}, isConstant = true, defaultValue = "null")})
 public class ToTimeFunction extends ToDateFunction {
-    public static final String NAME = "TO_TIME";
 
-    public ToTimeFunction() {
-    }
+  public static final String NAME = "TO_TIME";
 
-    public ToTimeFunction(List<Expression> children, String dateFormat, String timeZoneId) throws SQLException {
-        super(children, dateFormat, timeZoneId);
-    }
+  public ToTimeFunction() {
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PTime.INSTANCE;
-    }
+  public ToTimeFunction(List<Expression> children, String dateFormat, String timeZoneId) throws SQLException {
+    super(children, dateFormat, timeZoneId);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PTime.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

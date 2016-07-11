@@ -26,26 +26,27 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class AddColumnStatement extends AlterTableStatement {
-    private final List<ColumnDef> columnDefs;
-    private final boolean ifNotExists;
-    private final ListMultimap<String,Pair<String,Object>> props;
-    
-    protected AddColumnStatement(NamedTableNode table, PTableType tableType, List<ColumnDef> columnDefs, boolean ifNotExists, ListMultimap<String,Pair<String,Object>> props) {
-        super(table, tableType);
-        this.columnDefs = columnDefs;
-        this.props = props == null ? ImmutableListMultimap.<String,Pair<String,Object>>of()  : props;
-        this.ifNotExists = ifNotExists;
-    }
 
-    public List<ColumnDef> getColumnDefs() {
-        return columnDefs;
-    }
-    
-    public boolean ifNotExists() {
-        return ifNotExists;
-    }
+  private final List<ColumnDef> columnDefs;
+  private final boolean ifNotExists;
+  private final ListMultimap<String, Pair<String, Object>> props;
 
-    public ListMultimap<String,Pair<String,Object>> getProps() {
-        return props;
-    }
+  protected AddColumnStatement(NamedTableNode table, PTableType tableType, List<ColumnDef> columnDefs, boolean ifNotExists, ListMultimap<String, Pair<String, Object>> props) {
+    super(table, tableType);
+    this.columnDefs = columnDefs;
+    this.props = props == null ? ImmutableListMultimap.<String, Pair<String, Object>>of() : props;
+    this.ifNotExists = ifNotExists;
+  }
+
+  public List<ColumnDef> getColumnDefs() {
+    return columnDefs;
+  }
+
+  public boolean ifNotExists() {
+    return ifNotExists;
+  }
+
+  public ListMultimap<String, Pair<String, Object>> getProps() {
+    return props;
+  }
 }

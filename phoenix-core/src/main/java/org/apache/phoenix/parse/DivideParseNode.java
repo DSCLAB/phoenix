@@ -21,34 +21,32 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-
-
 /**
- * 
+ *
  * Node representing division in a SQL expression
  *
- * 
+ *
  * @since 0.1
  */
 public class DivideParseNode extends ArithmeticParseNode {
-    public static final String OPERATOR = "/";
 
-    @Override
-    public String getOperator() {
-        return OPERATOR;
-    }
-    
+  public static final String OPERATOR = "/";
 
-    DivideParseNode(List<ParseNode> children) {
-        super(children);
-    }
+  @Override
+  public String getOperator() {
+    return OPERATOR;
+  }
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  DivideParseNode(List<ParseNode> children) {
+    super(children);
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
+    return visitor.visitLeave(this, l);
+  }
 }

@@ -22,64 +22,64 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Incrementing only counter that keeps track of the 
- * number of occurrences of something.
- * 
+ * Incrementing only counter that keeps track of the number of occurrences of
+ * something.
+ *
  */
 @ThreadSafe
 class Counter implements Metric {
-    
-    private final AtomicLong counter;
-    private final String name;
-    private final String description;
-    
-    public Counter(String name, String description) {
-        this.name = name;
-        this.description = description;
-        this.counter = new AtomicLong(0);
-    }
-    
-    public long increment() {
-        return counter.incrementAndGet();
-    }
-    
-    public long getCurrentCount() {
-        return counter.get();
-    }
-    
-    @Override
-    public String getName() {
-        return name;
-    }
-    
-    @Override
-    public String getDescription() {
-        return description;
-    }
-    
-    @Override
-    public void reset() {
-        counter.set(0);
-    }
-    
-    @Override
-    public String toString() {
-        return "Name: " + name + ", Current count: " + counter.get();
-    }
-    
-    @Override
-    public String getCurrentMetricState() {
-        return toString();
-    }
 
-    @Override
-    public long getNumberOfSamples() {
-        return getCurrentCount();
-    }
+  private final AtomicLong counter;
+  private final String name;
+  private final String description;
 
-    @Override
-    public long getTotalSum() {
-        return getCurrentCount();
-    }
-    
+  public Counter(String name, String description) {
+    this.name = name;
+    this.description = description;
+    this.counter = new AtomicLong(0);
+  }
+
+  public long increment() {
+    return counter.incrementAndGet();
+  }
+
+  public long getCurrentCount() {
+    return counter.get();
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String getDescription() {
+    return description;
+  }
+
+  @Override
+  public void reset() {
+    counter.set(0);
+  }
+
+  @Override
+  public String toString() {
+    return "Name: " + name + ", Current count: " + counter.get();
+  }
+
+  @Override
+  public String getCurrentMetricState() {
+    return toString();
+  }
+
+  @Override
+  public long getNumberOfSamples() {
+    return getCurrentCount();
+  }
+
+  @Override
+  public long getTotalSum() {
+    return getCurrentCount();
+  }
+
 }

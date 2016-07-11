@@ -31,7 +31,7 @@ public class PUnsignedDate extends PDataType<Date> {
 
   private PUnsignedDate() {
     super("UNSIGNED_DATE", 19, Date.class,
-        new UnsignedDateCodec(), 14); // After TIMESTAMP and DATE to ensure toLiteral finds those first
+            new UnsignedDateCodec(), 14); // After TIMESTAMP and DATE to ensure toLiteral finds those first
   }
 
   @Override
@@ -75,7 +75,7 @@ public class PUnsignedDate extends PDataType<Date> {
   @Override
   public boolean isCoercibleTo(PDataType targetType) {
     return equalsAny(targetType, this, PUnsignedTime.INSTANCE, PUnsignedTimestamp.INSTANCE)
-        || PDate.INSTANCE.isCoercibleTo(targetType);
+            || PDate.INSTANCE.isCoercibleTo(targetType);
   }
 
   @Override
@@ -121,16 +121,16 @@ public class PUnsignedDate extends PDataType<Date> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifier,
-      Integer desiredMaxLength, Integer desiredScale,
-      SortOrder expectedModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifier,
+          Integer desiredMaxLength, Integer desiredScale,
+          SortOrder expectedModifier) {
     if (ptr.getLength() > 0 && actualType == PUnsignedTimestamp.INSTANCE
-        && actualModifier == expectedModifier) {
+            && actualModifier == expectedModifier) {
       ptr.set(ptr.get(), ptr.getOffset(), getByteSize());
       return;
     }
     super.coerceBytes(ptr, object, actualType, maxLength, scale, actualModifier, desiredMaxLength,
-        desiredScale, expectedModifier);
+            desiredScale, expectedModifier);
   }
 
   @Override

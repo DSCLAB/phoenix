@@ -28,46 +28,45 @@ import org.apache.phoenix.jdbc.PhoenixStatement;
 import org.apache.phoenix.parse.DropSequenceStatement;
 import org.apache.phoenix.schema.MetaDataClient;
 
-
 public class DropSequenceCompiler {
-    private final PhoenixStatement statement;
 
-    public DropSequenceCompiler(PhoenixStatement statement) {
-        this.statement = statement;
-    }
-    
+  private final PhoenixStatement statement;
 
-    public MutationPlan compile(final DropSequenceStatement sequence) throws SQLException {
-        final PhoenixConnection connection = statement.getConnection();
-        final MetaDataClient client = new MetaDataClient(connection);        
-        final StatementContext context = new StatementContext(statement);
-        return new MutationPlan() {           
+  public DropSequenceCompiler(PhoenixStatement statement) {
+    this.statement = statement;
+  }
 
-            @Override
-            public MutationState execute() throws SQLException {
-                return client.dropSequence(sequence);
-            }
+  public MutationPlan compile(final DropSequenceStatement sequence) throws SQLException {
+    final PhoenixConnection connection = statement.getConnection();
+    final MetaDataClient client = new MetaDataClient(connection);
+    final StatementContext context = new StatementContext(statement);
+    return new MutationPlan() {
 
-            @Override
-            public ExplainPlan getExplainPlan() throws SQLException {
-                return new ExplainPlan(Collections.singletonList("DROP SEQUENCE"));
-            }
+      @Override
+      public MutationState execute() throws SQLException {
+        return client.dropSequence(sequence);
+      }
 
-            @Override
-            public StatementContext getContext() {
-                return context;
-            }
+      @Override
+      public ExplainPlan getExplainPlan() throws SQLException {
+        return new ExplainPlan(Collections.singletonList("DROP SEQUENCE"));
+      }
 
-            @Override
-            public PhoenixConnection getConnection() {
-                return connection;
-            }
+      @Override
+      public StatementContext getContext() {
+        return context;
+      }
 
-            @Override
-            public ParameterMetaData getParameterMetaData() {                
-                return PhoenixParameterMetaData.EMPTY_PARAMETER_META_DATA;
-            }
+      @Override
+      public PhoenixConnection getConnection() {
+        return connection;
+      }
 
-        };
-    }
+      @Override
+      public ParameterMetaData getParameterMetaData() {
+        return PhoenixParameterMetaData.EMPTY_PARAMETER_META_DATA;
+      }
+
+    };
+  }
 }

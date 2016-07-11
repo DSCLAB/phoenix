@@ -12,24 +12,24 @@ package org.apache.phoenix.schema.types;
 
 public class PrimitiveLongPhoenixArrayToStringTest extends BasePrimitiveIntPhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PLong.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PLong.INSTANCE;
+  }
 
-    @Override
-    protected Number getElement1() {
-        return 1L;
-    }
+  @Override
+  protected Number getElement1() {
+    return 1L;
+  }
 
-    @Override
-    protected Number getElement2() {
-        return 2L;
-    }
+  @Override
+  protected Number getElement2() {
+    return 2L;
+  }
 
-    @Override
-    protected Number getElement3() {
-        return 3L;
-    }
+  @Override
+  protected Number getElement3() {
+    return 3L;
+  }
 
 }

@@ -28,7 +28,7 @@ public class PUnsignedLongArray extends PArrayDataType<long[]> {
 
   private PUnsignedLongArray() {
     super("UNSIGNED_LONG ARRAY", PDataType.ARRAY_TYPE_BASE + PUnsignedLong.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 42);
+            PhoenixArray.class, null, 42);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PUnsignedLongArray extends PArrayDataType<long[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PUnsignedLong.INSTANCE, sortOrder, maxLength,
-        scale, PUnsignedLong.INSTANCE);
+            scale, PUnsignedLong.INSTANCE);
   }
 
   @Override
@@ -96,10 +96,10 @@ public class PUnsignedLongArray extends PArrayDataType<long[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

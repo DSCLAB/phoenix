@@ -30,13 +30,15 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * A simple cache that just uses usual GC mechanisms to cleanup unused {@link HTableInterface}s.
- * When requesting an {@link HTableInterface} via {@link #getTable}, you may get the same table as
- * last time, or it may be a new table.
+ * A simple cache that just uses usual GC mechanisms to cleanup unused
+ * {@link HTableInterface}s. When requesting an {@link HTableInterface} via
+ * {@link #getTable}, you may get the same table as last time, or it may be a
+ * new table.
  * <p>
- * You <b>should not call {@link HTableInterface#close()} </b> that is handled when the table goes
- * out of scope. Along the same lines, you must ensure to not keep a reference to the table for
- * longer than necessary - this leak will ensure that the table never gets closed.
+ * You <b>should not call {@link HTableInterface#close()} </b> that is handled
+ * when the table goes out of scope. Along the same lines, you must ensure to
+ * not keep a reference to the table for longer than necessary - this leak will
+ * ensure that the table never gets closed.
  */
 public class CachingHTableFactory implements HTableFactory {
 
@@ -55,13 +57,13 @@ public class CachingHTableFactory implements HTableFactory {
       HTableInterface table = (HTableInterface) entry.getValue();
       if (LOG.isDebugEnabled()) {
         LOG.debug("Closing connection to table: " + Bytes.toString(table.getTableName())
-            + " because it was evicted from the cache.");
+                + " because it was evicted from the cache.");
       }
       try {
         table.close();
       } catch (IOException e) {
         LOG.info("Failed to correctly close HTable: " + Bytes.toString(table.getTableName())
-            + " ignoring since being removed from queue.");
+                + " ignoring since being removed from queue.");
       }
       return true;
     }

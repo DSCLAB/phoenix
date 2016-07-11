@@ -15,33 +15,32 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.configuration;
 
 import java.sql.Types;
 
 public enum DataTypeMapping {
-    VARCHAR("VARCHAR", Types.VARCHAR),
-    CHAR("CHAR", Types.CHAR),
-    DECIMAL("DECIMAL", Types.DECIMAL),
-    INTEGER("INTEGER", Types.INTEGER),
-    DATE("DATE", Types.DATE);
+  VARCHAR("VARCHAR", Types.VARCHAR),
+  CHAR("CHAR", Types.CHAR),
+  DECIMAL("DECIMAL", Types.DECIMAL),
+  INTEGER("INTEGER", Types.INTEGER),
+  DATE("DATE", Types.DATE);
 
-    private final String sType;
+  private final String sType;
 
-    private final int dType;
+  private final int dType;
 
-    private DataTypeMapping(String sType, int dType) {
-        this.dType = dType;
-        this.sType = sType;
-    }
+  private DataTypeMapping(String sType, int dType) {
+    this.dType = dType;
+    this.sType = sType;
+  }
 
-    @Override
-    public String toString() {
-        return this.sType;
-    }
+  @Override
+  public String toString() {
+    return this.sType;
+  }
 
-    public int getdType() {
-        return dType;
-    }
+  public int getdType() {
+    return dType;
+  }
 }

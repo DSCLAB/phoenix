@@ -26,17 +26,17 @@ import org.apache.flume.conf.ConfigurableComponent;
 
 import org.apache.phoenix.util.SQLCloseable;
 
-public interface EventSerializer extends Configurable,ConfigurableComponent,SQLCloseable {
+public interface EventSerializer extends Configurable, ConfigurableComponent, SQLCloseable {
 
-    /**
-     * called during the start of the process to initialize the table columns.
-     */
-    public void initialize() throws SQLException;
-    
-    /**
-     * @param events to be written to HBase.
-     * @throws SQLException 
-     */
-    public void upsertEvents(List<Event> events) throws SQLException;
-    
+  /**
+   * called during the start of the process to initialize the table columns.
+   */
+  public void initialize() throws SQLException;
+
+  /**
+   * @param events to be written to HBase.
+   * @throws SQLException
+   */
+  public void upsertEvents(List<Event> events) throws SQLException;
+
 }

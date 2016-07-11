@@ -28,8 +28,8 @@ public class PUnsignedSmallintArray extends PArrayDataType<short[]> {
 
   private PUnsignedSmallintArray() {
     super("UNSIGNED_SMALLINT ARRAY",
-        PDataType.ARRAY_TYPE_BASE + PUnsignedSmallint.INSTANCE.getSqlType(), PhoenixArray.class,
-        null, 44);
+            PDataType.ARRAY_TYPE_BASE + PUnsignedSmallint.INSTANCE.getSqlType(), PhoenixArray.class,
+            null, 44);
   }
 
   @Override
@@ -64,10 +64,10 @@ public class PUnsignedSmallintArray extends PArrayDataType<short[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PUnsignedSmallint.INSTANCE, sortOrder, maxLength,
-        scale, PUnsignedSmallint.INSTANCE);
+            scale, PUnsignedSmallint.INSTANCE);
   }
 
   @Override
@@ -97,10 +97,10 @@ public class PUnsignedSmallintArray extends PArrayDataType<short[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

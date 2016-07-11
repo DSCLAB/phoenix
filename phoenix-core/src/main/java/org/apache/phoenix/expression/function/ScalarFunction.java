@@ -25,64 +25,64 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 import org.apache.phoenix.util.ByteUtil;
 
-
 public abstract class ScalarFunction extends FunctionExpression {
-    public static final int NO_TRAVERSAL = -1;
-    
-    public ScalarFunction() {
-    }
-    
-    public ScalarFunction(List<Expression> children) {
-        super(children);
-    }
-    
-    public ScalarFunction clone(List<Expression> children) {
-        try {
-            // FIXME: we could potentially implement this on each subclass and not use reflection
-            return getClass().getConstructor(List.class).newInstance(children);
-        } catch (Exception e) {
-            throw new RuntimeException(e); // Impossible, since it was originally constructed this way
-        }
-    }
-    
-    protected static byte[] evaluateExpression(Expression rhs) {
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        rhs.evaluate(null, ptr);
-        byte[] key = ByteUtil.copyKeyBytesIfNecessary(ptr);
-        return key;
-    }
-    
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
-    }
-    
-    /**
-     * Determines whether or not a function may be used to form
-     * the start/stop key of a scan
-     * @return the zero-based position of the argument to traverse
-     *  into to look for a primary key column reference, or
-     *  {@value #NO_TRAVERSAL} if the function cannot be used to
-     *  form the scan key.
-     */
-    public int getKeyFormationTraversalIndex() {
-        return NO_TRAVERSAL;
-    }
 
-    /**
-     * Manufactures a KeyPart used to construct the KeyRange given
-     * a constant and a comparison operator.
-     * @param childPart the KeyPart formulated for the child expression
-     *  at the {@link #getKeyFormationTraversalIndex()} position.
-     * @return the KeyPart for constructing the KeyRange for this
-     *  function.
-     */
-    public KeyPart newKeyPart(KeyPart childPart) {
-        return null;
+  public static final int NO_TRAVERSAL = -1;
+
+  public ScalarFunction() {
+  }
+
+  public ScalarFunction(List<Expression> children) {
+    super(children);
+  }
+
+  public ScalarFunction clone(List<Expression> children) {
+    try {
+      // FIXME: we could potentially implement this on each subclass and not use reflection
+      return getClass().getConstructor(List.class).newInstance(children);
+    } catch (Exception e) {
+      throw new RuntimeException(e); // Impossible, since it was originally constructed this way
     }
+  }
+
+  protected static byte[] evaluateExpression(Expression rhs) {
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    rhs.evaluate(null, ptr);
+    byte[] key = ByteUtil.copyKeyBytesIfNecessary(ptr);
+    return key;
+  }
+
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
+    }
+    return t;
+  }
+
+  /**
+   * Determines whether or not a function may be used to form the start/stop key
+   * of a scan
+   *
+   * @return the zero-based position of the argument to traverse into to look
+   * for a primary key column reference, or {@value #NO_TRAVERSAL} if the
+   * function cannot be used to form the scan key.
+   */
+  public int getKeyFormationTraversalIndex() {
+    return NO_TRAVERSAL;
+  }
+
+  /**
+   * Manufactures a KeyPart used to construct the KeyRange given a constant and
+   * a comparison operator.
+   *
+   * @param childPart the KeyPart formulated for the child expression at the
+   * {@link #getKeyFormationTraversalIndex()} position.
+   * @return the KeyPart for constructing the KeyRange for this function.
+   */
+  public KeyPart newKeyPart(KeyPart childPart) {
+    return null;
+  }
 }

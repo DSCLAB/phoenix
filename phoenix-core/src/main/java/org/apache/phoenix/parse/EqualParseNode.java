@@ -19,27 +19,26 @@ package org.apache.phoenix.parse;
 
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 
-
 /**
- * 
+ *
  * Node representing the equal operator in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public class EqualParseNode extends ComparisonParseNode {
 
-    EqualParseNode(ParseNode lhs, ParseNode rhs) {
-        super(lhs, rhs);
-    }
+  EqualParseNode(ParseNode lhs, ParseNode rhs) {
+    super(lhs, rhs);
+  }
 
-    @Override
-    public CompareOp getFilterOp() {
-        return CompareOp.EQUAL;
-    }
+  @Override
+  public CompareOp getFilterOp() {
+    return CompareOp.EQUAL;
+  }
 
-    @Override
-    public CompareOp getInvertFilterOp() {
-        return CompareOp.EQUAL;
-    }
+  @Override
+  public CompareOp getInvertFilterOp() {
+    return CompareOp.EQUAL;
+  }
 }

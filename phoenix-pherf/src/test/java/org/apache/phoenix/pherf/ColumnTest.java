@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.pherf.configuration.Column;
@@ -25,26 +24,27 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class ColumnTest {
-    @Test
-    public void testColumnMutate() {
-        Column columnA = new Column();
-        Column columnB = new Column();
-        Column columnC = new Column();
-        columnA.setType(DataTypeMapping.VARCHAR);
-        columnB.setType(DataTypeMapping.VARCHAR);
-        columnA.setLength(15);
-        columnA.setMinValue(20);
-        columnA.setMaxValue(25);
-        columnB.setLength(30);
-        columnC.setMaxValue(45);
 
-        columnA.mutate(columnB);
-        assertTrue("Mutation failed length", columnA.getLength() == columnB.getLength());
-        columnA.mutate(columnC);
-        assertTrue("Mutation failed length", columnA.getLength() == columnB.getLength());
-        assertTrue("Mutation failed min", columnA.getMinValue() == 20);
-        assertTrue("Mutation failed max", columnA.getMaxValue() == columnC.getMaxValue());
-        assertTrue("Mutation failed name", columnA.getName() == null);
+  @Test
+  public void testColumnMutate() {
+    Column columnA = new Column();
+    Column columnB = new Column();
+    Column columnC = new Column();
+    columnA.setType(DataTypeMapping.VARCHAR);
+    columnB.setType(DataTypeMapping.VARCHAR);
+    columnA.setLength(15);
+    columnA.setMinValue(20);
+    columnA.setMaxValue(25);
+    columnB.setLength(30);
+    columnC.setMaxValue(45);
 
-    }
+    columnA.mutate(columnB);
+    assertTrue("Mutation failed length", columnA.getLength() == columnB.getLength());
+    columnA.mutate(columnC);
+    assertTrue("Mutation failed length", columnA.getLength() == columnB.getLength());
+    assertTrue("Mutation failed min", columnA.getMinValue() == 20);
+    assertTrue("Mutation failed max", columnA.getMaxValue() == columnC.getMaxValue());
+    assertTrue("Mutation failed name", columnA.getName() == null);
+
+  }
 }

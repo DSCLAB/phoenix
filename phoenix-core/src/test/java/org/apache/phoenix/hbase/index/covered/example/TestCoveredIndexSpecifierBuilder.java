@@ -31,11 +31,11 @@ import org.apache.phoenix.hbase.index.covered.example.CoveredColumnIndexSpecifie
 import org.junit.Test;
 
 public class TestCoveredIndexSpecifierBuilder {
+
   private static final String FAMILY = "FAMILY";
   private static final String FAMILY2 = "FAMILY2";
   private static final String INDEX_TABLE = "INDEX_TABLE";
   private static final String INDEX_TABLE2 = "INDEX_TABLE2";
-
 
   @Test
   public void testSimpleSerialziationDeserialization() throws Exception {
@@ -56,11 +56,11 @@ public class TestCoveredIndexSpecifierBuilder {
     CoveredColumn col3 = new CoveredColumn(FAMILY2, indexed_qualifer);
     fam2.add(col3);
     builder.addIndexGroup(fam2);
-    
+
     Configuration conf = new Configuration(false);
     //convert the map that HTableDescriptor gets into the conf the coprocessor receives
     Map<String, String> map = builder.convertToMap();
-    for(Entry<String, String> entry: map.entrySet()){
+    for (Entry<String, String> entry : map.entrySet()) {
       conf.set(entry.getKey(), entry.getValue());
     }
 

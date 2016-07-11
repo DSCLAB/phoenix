@@ -26,9 +26,10 @@ import org.apache.phoenix.hbase.index.covered.filter.NewerTimestampFilter;
 import org.junit.Test;
 
 public class TestNewerTimestampFilter {
-  byte[] row = new byte[] { 'a' };
+
+  byte[] row = new byte[]{'a'};
   byte[] fam = Bytes.toBytes("family");
-  byte[] qual = new byte[] { 'b' };
+  byte[] qual = new byte[]{'b'};
   byte[] val = Bytes.toBytes("val");
 
   @Test

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression.function;
 
 import java.sql.SQLException;
@@ -32,53 +31,54 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.joda.time.DateTimeZone;
 
 /**
- * Returns offset (shift in minutes) of timezone at particular datetime in minutes.
+ * Returns offset (shift in minutes) of timezone at particular datetime in
+ * minutes.
  */
 @FunctionParseNode.BuiltInFunction(name = TimezoneOffsetFunction.NAME, args = {
-    @FunctionParseNode.Argument(allowedTypes = {PVarchar.class}),
-    @FunctionParseNode.Argument(allowedTypes = {PDate.class})})
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PDate.class})})
 public class TimezoneOffsetFunction extends ScalarFunction {
 
-    public static final String NAME = "TIMEZONE_OFFSET";
-    private static final int MILLIS_TO_MINUTES = 60 * 1000;
+  public static final String NAME = "TIMEZONE_OFFSET";
+  private static final int MILLIS_TO_MINUTES = 60 * 1000;
 
-    public TimezoneOffsetFunction() {
+  public TimezoneOffsetFunction() {
+  }
+
+  public TimezoneOffsetFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!children.get(0).evaluate(tuple, ptr)) {
+      return false;
     }
+    DateTimeZone timezoneInstance = JodaTimezoneCache.getInstance(ptr);
 
-    public TimezoneOffsetFunction(List<Expression> children) throws SQLException {
-        super(children);
+    if (!children.get(1).evaluate(tuple, ptr)) {
+      return false;
     }
+    long date = PDate.INSTANCE.getCodec().decodeLong(ptr, children.get(1).getSortOrder());
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+    int offset = timezoneInstance.getOffset(date);
+    ptr.set(PInteger.INSTANCE.toBytes(offset / MILLIS_TO_MINUTES));
+    return true;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!children.get(0).evaluate(tuple, ptr)) {
-            return false;
-        }
-        DateTimeZone timezoneInstance = JodaTimezoneCache.getInstance(ptr);
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-        if (!children.get(1).evaluate(tuple, ptr)) {
-            return false;
-        }
-        long date = PDate.INSTANCE.getCodec().decodeLong(ptr, children.get(1).getSortOrder());
-
-        int offset = timezoneInstance.getOffset(date);
-        ptr.set(PInteger.INSTANCE.toBytes(offset / MILLIS_TO_MINUTES));
-        return true;
-    }
-
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
-    }
-
-	@Override
-    public boolean isNullable() {
-        return children.get(0).isNullable() || children.get(1).isNullable();
-    }
+  @Override
+  public boolean isNullable() {
+    return children.get(0).isNullable() || children.get(1).isNullable();
+  }
 
 }

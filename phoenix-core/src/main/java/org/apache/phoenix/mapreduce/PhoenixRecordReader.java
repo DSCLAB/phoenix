@@ -48,96 +48,96 @@ import com.google.common.collect.Lists;
 /**
  * {@link RecordReader} implementation that iterates over the the records.
  */
-public class PhoenixRecordReader<T extends DBWritable> extends RecordReader<NullWritable,T> {
-    
-    private static final Log LOG = LogFactory.getLog(PhoenixRecordReader.class);
-    private final Configuration  configuration;
-    private final QueryPlan queryPlan;
-    private NullWritable key =  NullWritable.get();
-    private T value = null;
-    private Class<T> inputClass;
-    private ResultIterator resultIterator = null;
-    private PhoenixResultSet resultSet;
-    
-    public PhoenixRecordReader(Class<T> inputClass,final Configuration configuration,final QueryPlan queryPlan) {
-        Preconditions.checkNotNull(configuration);
-        Preconditions.checkNotNull(queryPlan);
-        this.inputClass = inputClass;
-        this.configuration = configuration;
-        this.queryPlan = queryPlan;
-    }
+public class PhoenixRecordReader<T extends DBWritable> extends RecordReader<NullWritable, T> {
 
-    @Override
-    public void close() throws IOException {
-       if(resultIterator != null) {
-           try {
-               resultIterator.close();
-        } catch (SQLException e) {
-           LOG.error(" Error closing resultset.");
-           throw new RuntimeException(e);
-        }
-       }
-    }
+  private static final Log LOG = LogFactory.getLog(PhoenixRecordReader.class);
+  private final Configuration configuration;
+  private final QueryPlan queryPlan;
+  private NullWritable key = NullWritable.get();
+  private T value = null;
+  private Class<T> inputClass;
+  private ResultIterator resultIterator = null;
+  private PhoenixResultSet resultSet;
 
-    @Override
-    public NullWritable getCurrentKey() throws IOException, InterruptedException {
-        return key;
-    }
+  public PhoenixRecordReader(Class<T> inputClass, final Configuration configuration, final QueryPlan queryPlan) {
+    Preconditions.checkNotNull(configuration);
+    Preconditions.checkNotNull(queryPlan);
+    this.inputClass = inputClass;
+    this.configuration = configuration;
+    this.queryPlan = queryPlan;
+  }
 
-    @Override
-    public T getCurrentValue() throws IOException, InterruptedException {
-        return value;
+  @Override
+  public void close() throws IOException {
+    if (resultIterator != null) {
+      try {
+        resultIterator.close();
+      } catch (SQLException e) {
+        LOG.error(" Error closing resultset.");
+        throw new RuntimeException(e);
+      }
     }
+  }
 
-    @Override
-    public float getProgress() throws IOException, InterruptedException {
-        return 0;
-    }
+  @Override
+  public NullWritable getCurrentKey() throws IOException, InterruptedException {
+    return key;
+  }
 
-    @Override
-    public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
-        final PhoenixInputSplit pSplit = (PhoenixInputSplit)split;
-        final List<Scan> scans = pSplit.getScans();
-        try {
-            List<PeekingResultIterator> iterators = Lists.newArrayListWithExpectedSize(scans.size());
-            for (Scan scan : scans) {
-                final TableResultIterator tableResultIterator = new TableResultIterator(queryPlan.getContext(), queryPlan.getTableRef(), scan);
-                PeekingResultIterator peekingResultIterator = LookAheadResultIterator.wrap(tableResultIterator);
-                iterators.add(peekingResultIterator);
-            }
-            ResultIterator iterator = queryPlan.useRoundRobinIterator() ? RoundRobinResultIterator.newIterator(iterators, queryPlan) : ConcatResultIterator.newIterator(iterators);
-            if(queryPlan.getContext().getSequenceManager().getSequenceCount() > 0) {
-                iterator = new SequenceResultIterator(iterator, queryPlan.getContext().getSequenceManager());
-            }
-            this.resultIterator = iterator;
-            // Clone the row projector as it's not thread safe and would be used simultaneously by
-            // multiple threads otherwise.
-            this.resultSet = new PhoenixResultSet(this.resultIterator, queryPlan.getProjector().cloneIfNecessary(),queryPlan.getContext().getStatement());
-        } catch (SQLException e) {
-            LOG.error(String.format(" Error [%s] initializing PhoenixRecordReader. ",e.getMessage()));
-            Throwables.propagate(e);
-        }
-   }
-    
-   @Override
-    public boolean nextKeyValue() throws IOException, InterruptedException {
-        if (key == null) {
-            key = NullWritable.get();
-        }
-        if (value == null) {
-            value =  ReflectionUtils.newInstance(inputClass, this.configuration);
-        }
-        Preconditions.checkNotNull(this.resultSet);
-        try {
-            if(!resultSet.next()) {
-                return false;
-            }
-            value.readFields(resultSet);
-            return true;
-        } catch (SQLException e) {
-            LOG.error(String.format(" Error [%s] occurred while iterating over the resultset. ",e.getMessage()));
-            throw new RuntimeException(e);
-        }
+  @Override
+  public T getCurrentValue() throws IOException, InterruptedException {
+    return value;
+  }
+
+  @Override
+  public float getProgress() throws IOException, InterruptedException {
+    return 0;
+  }
+
+  @Override
+  public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+    final PhoenixInputSplit pSplit = (PhoenixInputSplit) split;
+    final List<Scan> scans = pSplit.getScans();
+    try {
+      List<PeekingResultIterator> iterators = Lists.newArrayListWithExpectedSize(scans.size());
+      for (Scan scan : scans) {
+        final TableResultIterator tableResultIterator = new TableResultIterator(queryPlan.getContext(), queryPlan.getTableRef(), scan);
+        PeekingResultIterator peekingResultIterator = LookAheadResultIterator.wrap(tableResultIterator);
+        iterators.add(peekingResultIterator);
+      }
+      ResultIterator iterator = queryPlan.useRoundRobinIterator() ? RoundRobinResultIterator.newIterator(iterators, queryPlan) : ConcatResultIterator.newIterator(iterators);
+      if (queryPlan.getContext().getSequenceManager().getSequenceCount() > 0) {
+        iterator = new SequenceResultIterator(iterator, queryPlan.getContext().getSequenceManager());
+      }
+      this.resultIterator = iterator;
+      // Clone the row projector as it's not thread safe and would be used simultaneously by
+      // multiple threads otherwise.
+      this.resultSet = new PhoenixResultSet(this.resultIterator, queryPlan.getProjector().cloneIfNecessary(), queryPlan.getContext().getStatement());
+    } catch (SQLException e) {
+      LOG.error(String.format(" Error [%s] initializing PhoenixRecordReader. ", e.getMessage()));
+      Throwables.propagate(e);
     }
+  }
+
+  @Override
+  public boolean nextKeyValue() throws IOException, InterruptedException {
+    if (key == null) {
+      key = NullWritable.get();
+    }
+    if (value == null) {
+      value = ReflectionUtils.newInstance(inputClass, this.configuration);
+    }
+    Preconditions.checkNotNull(this.resultSet);
+    try {
+      if (!resultSet.next()) {
+        return false;
+      }
+      value.readFields(resultSet);
+      return true;
+    } catch (SQLException e) {
+      LOG.error(String.format(" Error [%s] occurred while iterating over the resultset. ", e.getMessage()));
+      throw new RuntimeException(e);
+    }
+  }
 
 }

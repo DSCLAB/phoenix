@@ -51,8 +51,8 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
 
   /**
    * @param groups to initialize the codec with
-   * @return an instance that is initialized with the given {@link ColumnGroup}s, for testing
-   *         purposes
+   * @return an instance that is initialized with the given
+   * {@link ColumnGroup}s, for testing purposes
    */
   public static CoveredColumnIndexCodec getCodecForTesting(List<ColumnGroup> groups) {
     CoveredColumnIndexCodec codec = new CoveredColumnIndexCodec();
@@ -85,8 +85,8 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
     try {
       Pair<Scanner, IndexUpdate> stateInfo = state.getIndexedColumnsTableState(refs);
       Scanner kvs = stateInfo.getFirst();
-      Pair<Integer, List<ColumnEntry>> columns =
-          getNextEntries(refs, kvs, state.getCurrentRowKey());
+      Pair<Integer, List<ColumnEntry>> columns
+              = getNextEntries(refs, kvs, state.getCurrentRowKey());
       // make sure we close the scanner
       kvs.close();
       if (columns.getFirst().intValue() == 0) {
@@ -94,8 +94,8 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
       }
       // have all the column entries, so just turn it into a Delete for the row
       // convert the entries to the needed values
-      byte[] rowKey =
-          composeRowKey(state.getCurrentRowKey(), columns.getFirst(), columns.getSecond());
+      byte[] rowKey
+              = composeRowKey(state.getCurrentRowKey(), columns.getFirst(), columns.getSecond());
       Put p = new Put(rowKey, state.getCurrentTimestamp());
       // add the columns to the put
       addColumnsToPut(p, columns.getSecond());
@@ -115,13 +115,13 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
     int count = 0;
     for (ColumnEntry column : columns) {
       indexInsert.add(INDEX_ROW_COLUMN_FAMILY,
-        ArrayUtils.addAll(Bytes.toBytes(count++), toIndexQualifier(column.ref)), null);
+              ArrayUtils.addAll(Bytes.toBytes(count++), toIndexQualifier(column.ref)), null);
     }
   }
 
   private static byte[] toIndexQualifier(CoveredColumn column) {
     return ArrayUtils.addAll(Bytes.toBytes(column.familyString + CoveredColumn.SEPARATOR),
-      column.getQualifier());
+            column.getQualifier());
   }
 
   @Override
@@ -133,19 +133,20 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
     return deletes;
   }
 
-
   /**
-   * Get all the deletes necessary for a group of columns - logically, the cleanup the index table
-   * for a given index.
+   * Get all the deletes necessary for a group of columns - logically, the
+   * cleanup the index table for a given index.
+   *
    * @param group index information
-   * @return the cleanup for the given index, or <tt>null</tt> if no cleanup is necessary
+   * @return the cleanup for the given index, or <tt>null</tt> if no cleanup is
+   * necessary
    */
   private IndexUpdate getDeleteForGroup(ColumnGroup group, TableState state) {
     List<CoveredColumn> refs = group.getColumns();
     try {
       Pair<Scanner, IndexUpdate> kvs = state.getIndexedColumnsTableState(refs);
-      Pair<Integer, List<ColumnEntry>> columns =
-          getNextEntries(refs, kvs.getFirst(), state.getCurrentRowKey());
+      Pair<Integer, List<ColumnEntry>> columns
+              = getNextEntries(refs, kvs.getFirst(), state.getCurrentRowKey());
       // make sure we close the scanner reference
       kvs.getFirst().close();
       // no change, just return the passed update
@@ -154,8 +155,8 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
       }
       // have all the column entries, so just turn it into a Delete for the row
       // convert the entries to the needed values
-      byte[] rowKey =
-          composeRowKey(state.getCurrentRowKey(), columns.getFirst(), columns.getSecond());
+      byte[] rowKey
+              = composeRowKey(state.getCurrentRowKey(), columns.getFirst(), columns.getSecond());
       Delete d = new Delete(rowKey);
       d.setTimestamp(state.getCurrentTimestamp());
       IndexUpdate update = kvs.getSecond();
@@ -169,13 +170,15 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
 
   /**
    * Get the next batch of primary table values for the given columns
+   *
    * @param refs columns to match against
    * @param kvs
    * @param currentRow
-   * @return the total length of all values found and the entries to add for the index
+   * @return the total length of all values found and the entries to add for the
+   * index
    */
   private Pair<Integer, List<ColumnEntry>> getNextEntries(List<CoveredColumn> refs, Scanner kvs,
-      byte[] currentRow) throws IOException {
+          byte[] currentRow) throws IOException {
     int totalValueLength = 0;
     List<ColumnEntry> entries = new ArrayList<ColumnEntry>(refs.size());
 
@@ -229,6 +232,7 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
   }
 
   static class ColumnEntry {
+
     byte[] value = EMPTY_BYTES;
     CoveredColumn ref;
 
@@ -241,8 +245,9 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
   /**
    * Compose the final index row key.
    * <p>
-   * This is faster than adding each value independently as we can just build a single a array and
-   * copy everything over once.
+   * This is faster than adding each value independently as we can just build a
+   * single a array and copy everything over once.
+   *
    * @param pk primary key of the original row
    * @param length total number of bytes of all the values that should be added
    * @param values to use when building the key
@@ -278,15 +283,16 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
 
   /**
    * Essentially a short-cut from building a {@link Put}.
+   *
    * @param pk row key
    * @param timestamp timestamp of all the keyvalues
    * @param values expected value--column pair
-   * @return a keyvalues that the index contains for a given row at a timestamp with the given value
-   *         -- column pairs.
+   * @return a keyvalues that the index contains for a given row at a timestamp
+   * with the given value -- column pairs.
    */
   public static List<KeyValue> getIndexKeyValueForTesting(byte[] pk, long timestamp,
-      List<Pair<byte[], CoveredColumn>> values) {
-  
+          List<Pair<byte[], CoveredColumn>> values) {
+
     int length = 0;
     List<ColumnEntry> expected = new ArrayList<ColumnEntry>(values.size());
     for (Pair<byte[], CoveredColumn> value : values) {
@@ -294,7 +300,7 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
       length += value.getFirst().length;
       expected.add(entry);
     }
-  
+
     byte[] rowKey = CoveredColumnIndexCodec.composeRowKey(pk, length, expected);
     Put p = new Put(rowKey, timestamp);
     CoveredColumnIndexCodec.addColumnsToPut(p, expected);
@@ -302,7 +308,7 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
     for (Entry<byte[], List<KeyValue>> entry : p.getFamilyMap().entrySet()) {
       kvs.addAll(entry.getValue());
     }
-  
+
     return kvs;
   }
 
@@ -331,10 +337,12 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
 
   /**
    * Read an integer from the preceding {@value Bytes#SIZEOF_INT} bytes
+   *
    * @param bytes array to read from
-   * @param start start point, backwards from which to read. For example, if specifying "25", we
-   *          would try to read an integer from 21 -> 25
-   * @return an integer from the proceeding {@value Bytes#SIZEOF_INT} bytes, if it exists.
+   * @param start start point, backwards from which to read. For example, if
+   * specifying "25", we would try to read an integer from 21 -> 25
+   * @return an integer from the proceeding {@value Bytes#SIZEOF_INT} bytes, if
+   * it exists.
    */
   private static int getPreviousInteger(byte[] bytes, int start) {
     return Bytes.toInt(bytes, start - Bytes.SIZEOF_INT);
@@ -342,8 +350,10 @@ public class CoveredColumnIndexCodec extends BaseIndexCodec {
 
   /**
    * Check to see if an row key just contains a list of null values.
+   *
    * @param bytes row key to examine
-   * @return <tt>true</tt> if all the values are zero-length, <tt>false</tt> otherwise
+   * @return <tt>true</tt> if all the values are zero-length, <tt>false</tt>
+   * otherwise
    */
   public static boolean checkRowKeyForAllNulls(byte[] bytes) {
     int keyCount = CoveredColumnIndexCodec.getPreviousInteger(bytes, bytes.length);

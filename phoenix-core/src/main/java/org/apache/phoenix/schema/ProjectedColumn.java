@@ -18,42 +18,42 @@
 package org.apache.phoenix.schema;
 
 public class ProjectedColumn extends DelegateColumn {
-    
-    private final PName name;
-    private final PName familyName;
-    private final int position;
-    private final boolean nullable;
-    private final ColumnRef sourceColumnRef;
 
-    public ProjectedColumn(PName name, PName familyName, int position, boolean nullable, ColumnRef sourceColumnRef) {
-        super(sourceColumnRef.getColumn());
-        this.name = name;
-        this.familyName = familyName;
-        this.position = position;
-        this.nullable = nullable;
-        this.sourceColumnRef = sourceColumnRef;
-    }
-    
-    @Override
-    public PName getName() {
-        return name;
-    }
-    
-    public PName getFamilyName() {
-        return familyName;
-    }
-    
-    @Override
-    public int getPosition() {
-        return position;
-    }
-    
-    @Override
-    public boolean isNullable() {
-        return nullable;
-    }
+  private final PName name;
+  private final PName familyName;
+  private final int position;
+  private final boolean nullable;
+  private final ColumnRef sourceColumnRef;
 
-    public ColumnRef getSourceColumnRef() {
-        return sourceColumnRef;
-    }
+  public ProjectedColumn(PName name, PName familyName, int position, boolean nullable, ColumnRef sourceColumnRef) {
+    super(sourceColumnRef.getColumn());
+    this.name = name;
+    this.familyName = familyName;
+    this.position = position;
+    this.nullable = nullable;
+    this.sourceColumnRef = sourceColumnRef;
+  }
+
+  @Override
+  public PName getName() {
+    return name;
+  }
+
+  public PName getFamilyName() {
+    return familyName;
+  }
+
+  @Override
+  public int getPosition() {
+    return position;
+  }
+
+  @Override
+  public boolean isNullable() {
+    return nullable;
+  }
+
+  public ColumnRef getSourceColumnRef() {
+    return sourceColumnRef;
+  }
 }

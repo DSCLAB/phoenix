@@ -31,33 +31,34 @@ import org.apache.phoenix.hbase.index.util.GenericKeyValueBuilder;
 import org.apache.phoenix.memory.MemoryManager.MemoryChunk;
 
 public class IndexMetaDataCacheFactory implements ServerCacheFactory {
-    public IndexMetaDataCacheFactory() {
-    }
 
-    @Override
-    public void readFields(DataInput arg0) throws IOException {
-    }
+  public IndexMetaDataCacheFactory() {
+  }
 
-    @Override
-    public void write(DataOutput arg0) throws IOException {
-    }
+  @Override
+  public void readFields(DataInput arg0) throws IOException {
+  }
 
-    @Override
-    public Closeable newCache (ImmutableBytesWritable cachePtr, final MemoryChunk chunk) throws SQLException {
-        // just use the standard keyvalue builder - this doesn't really need to be fast
-        final List<IndexMaintainer> maintainers =
-                IndexMaintainer.deserialize(cachePtr, GenericKeyValueBuilder.INSTANCE);
-        return new IndexMetaDataCache() {
+  @Override
+  public void write(DataOutput arg0) throws IOException {
+  }
 
-            @Override
-            public void close() throws IOException {
-                chunk.close();
-            }
+  @Override
+  public Closeable newCache(ImmutableBytesWritable cachePtr, final MemoryChunk chunk) throws SQLException {
+    // just use the standard keyvalue builder - this doesn't really need to be fast
+    final List<IndexMaintainer> maintainers
+            = IndexMaintainer.deserialize(cachePtr, GenericKeyValueBuilder.INSTANCE);
+    return new IndexMetaDataCache() {
 
-            @Override
-            public List<IndexMaintainer> getIndexMaintainers() {
-                return maintainers;
-            }
-        };
-    }
+      @Override
+      public void close() throws IOException {
+        chunk.close();
+      }
+
+      @Override
+      public List<IndexMaintainer> getIndexMaintainers() {
+        return maintainers;
+      }
+    };
+  }
 }

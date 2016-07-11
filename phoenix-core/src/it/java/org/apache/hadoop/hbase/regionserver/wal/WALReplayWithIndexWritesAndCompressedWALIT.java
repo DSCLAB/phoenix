@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hbase.regionserver.wal;
 
 import static org.junit.Assert.assertEquals;
@@ -67,16 +66,17 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 /**
- * For pre-0.94.9 instances, this class tests correctly deserializing WALEdits w/o compression. Post
- * 0.94.9 we can support a custom  {@link WALCellCodec} which handles reading/writing the compressed
- * edits.
+ * For pre-0.94.9 instances, this class tests correctly deserializing WALEdits
+ * w/o compression. Post 0.94.9 we can support a custom {@link WALCellCodec}
+ * which handles reading/writing the compressed edits.
  * <p>
  * Most of the underlying work (creating/splitting the WAL, etc) is from
- * org.apache.hadoop.hhbase.regionserver.wal.TestWALReplay, copied here for completeness and ease of
- * use.
+ * org.apache.hadoop.hhbase.regionserver.wal.TestWALReplay, copied here for
+ * completeness and ease of use.
  * <p>
- * This test should only have a single test - otherwise we will start/stop the minicluster multiple
- * times, which is probably not what you want to do (mostly because its so much effort).
+ * This test should only have a single test - otherwise we will start/stop the
+ * minicluster multiple times, which is probably not what you want to do (mostly
+ * because its so much effort).
  */
 @Category(NeedsOwnMiniClusterTest.class)
 public class WALReplayWithIndexWritesAndCompressedWALIT {
@@ -149,7 +149,6 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
     UTIL.shutdownMiniZKCluster();
   }
 
-
   private void deleteDir(final Path p) throws IOException {
     if (this.fs.exists(p)) {
       if (!this.fs.delete(p, true)) {
@@ -159,23 +158,24 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
   }
 
   /**
-   * Test writing edits into an HRegion, closing it, splitting logs, opening Region again. Verify
-   * seqids.
+   * Test writing edits into an HRegion, closing it, splitting logs, opening
+   * Region again. Verify seqids.
+   *
    * @throws Exception on failure
    */
   @SuppressWarnings("deprecation")
-@Test
+  @Test
   public void testReplayEditsWrittenViaHRegion() throws Exception {
     final String tableNameStr = "testReplayEditsWrittenViaHRegion";
-    final HRegionInfo hri = new HRegionInfo(org.apache.hadoop.hbase.TableName.valueOf(tableNameStr), 
-        null, null, false);
+    final HRegionInfo hri = new HRegionInfo(org.apache.hadoop.hbase.TableName.valueOf(tableNameStr),
+            null, null, false);
     final Path basedir = FSUtils.getTableDir(hbaseRootDir, org.apache.hadoop.hbase.TableName.valueOf(tableNameStr));
     deleteDir(basedir);
     final HTableDescriptor htd = createBasic3FamilyHTD(tableNameStr);
-    
+
     //setup basic indexing for the table
     // enable indexing to a non-existant index table
-    byte[] family = new byte[] { 'a' };
+    byte[] family = new byte[]{'a'};
     ColumnGroup fam1 = new ColumnGroup(INDEX_TABLE_NAME);
     fam1.add(new CoveredColumn(family, CoveredColumn.ALL_QUALIFIERS));
     CoveredColumnIndexSpecifierBuilder builder = new CoveredColumnIndexSpecifierBuilder();
@@ -210,7 +210,7 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
 
     // we should then see the server go down
     Mockito.verify(mockRS, Mockito.times(1)).abort(Mockito.anyString(),
-      Mockito.any(Exception.class));
+            Mockito.any(Exception.class));
 
     // then create the index table so we are successful on WAL replay
     CoveredColumnIndexer.createIndexTable(UTIL.getHBaseAdmin(), INDEX_TABLE_NAME);
@@ -240,6 +240,7 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
 
   /**
    * Create simple HTD with three families: 'a', 'b', and 'c'
+   *
    * @param tableName name of the table descriptor
    * @return
    */
@@ -277,9 +278,9 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
    */
   private Path runWALSplit(final Configuration c, WALFactory walFactory) throws IOException {
     FileSystem fs = FileSystem.get(c);
-    
+
     List<Path> splits = WALSplitter.split(this.hbaseRootDir, new Path(this.logDir, "localhost,1234"),
-        this.oldLogDir, fs, c, walFactory);
+            this.oldLogDir, fs, c, walFactory);
     // Split should generate only 1 file since there's only 1 region
     assertEquals("splits=" + splits, 1, splits.size());
     // Make sure the file exists
@@ -289,7 +290,7 @@ public class WALReplayWithIndexWritesAndCompressedWALIT {
   }
 
   @SuppressWarnings("deprecation")
-private int getKeyValueCount(HTable table) throws IOException {
+  private int getKeyValueCount(HTable table) throws IOException {
     Scan scan = new Scan();
     scan.setMaxVersions(Integer.MAX_VALUE - 1);
 
@@ -304,4 +305,3 @@ private int getKeyValueCount(HTable table) throws IOException {
     return count;
   }
 }
-

@@ -23,16 +23,17 @@ import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
 /**
- * Exception thrown when we try to use use an argument that has the wrong type. 
- * 
- * 
+ * Exception thrown when we try to use use an argument that has the wrong type.
+ *
+ *
  * @since 1.1.2
  */
-public class ValueRangeExcpetion extends SQLException{
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.VALUE_OUTSIDE_RANGE;
-    
-    public ValueRangeExcpetion(Object minValue, Object maxValue, Object actualValue, String location){
-        super(new SQLExceptionInfo.Builder(code).setMessage("expected: [" + minValue + " , " + maxValue + "] but was: " + actualValue + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
-    }
+public class ValueRangeExcpetion extends SQLException {
+
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.VALUE_OUTSIDE_RANGE;
+
+  public ValueRangeExcpetion(Object minValue, Object maxValue, Object actualValue, String location) {
+    super(new SQLExceptionInfo.Builder(code).setMessage("expected: [" + minValue + " , " + maxValue + "] but was: " + actualValue + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
+  }
 }

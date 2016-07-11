@@ -22,50 +22,50 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 /**
- * 
+ *
  * Exception thrown when a table name could not be found in the schema
  *
- * 
+ *
  * @since 0.1
  */
 public class TableNotFoundException extends MetaDataEntityNotFoundException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.TABLE_UNDEFINED;
-    private final String schemaName;
-    private final String tableName;
-    private final long timestamp;
 
-    public TableNotFoundException(TableNotFoundException e, long timestamp) {
-        this(e.schemaName,e.tableName, timestamp);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.TABLE_UNDEFINED;
+  private final String schemaName;
+  private final String tableName;
+  private final long timestamp;
 
-    public TableNotFoundException(String tableName) {
-        this(null, tableName);
-    }
+  public TableNotFoundException(TableNotFoundException e, long timestamp) {
+    this(e.schemaName, e.tableName, timestamp);
+  }
 
-    public TableNotFoundException(String schemaName, String tableName) {
-        this(schemaName, tableName, HConstants.LATEST_TIMESTAMP);
-    }
-    
-    public TableNotFoundException(String schemaName, String tableName, long timestamp) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).build().toString(),
-                code.getSQLState(), code.getErrorCode(), null);
-        this.tableName = tableName;
-        this.schemaName = schemaName;
-        this.timestamp = timestamp;
-    }
+  public TableNotFoundException(String tableName) {
+    this(null, tableName);
+  }
 
-    public String getTableName() {
-        return tableName;
-    }
+  public TableNotFoundException(String schemaName, String tableName) {
+    this(schemaName, tableName, HConstants.LATEST_TIMESTAMP);
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  public TableNotFoundException(String schemaName, String tableName, long timestamp) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).build().toString(),
+            code.getSQLState(), code.getErrorCode(), null);
+    this.tableName = tableName;
+    this.schemaName = schemaName;
+    this.timestamp = timestamp;
+  }
 
-    public long getTimeStamp() {
-        return timestamp;
-    }
+  public String getTableName() {
+    return tableName;
+  }
+
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public long getTimeStamp() {
+    return timestamp;
+  }
 }

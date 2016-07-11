@@ -29,37 +29,37 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
- * A codec to transform a {@link ColumnInfo} to a {@link String} and decode back.
+ * A codec to transform a {@link ColumnInfo} to a {@link String} and decode
+ * back.
  */
 public class ColumnInfoToStringEncoderDecoder {
 
-    private static final String COLUMN_INFO_DELIMITER = "|";
-    
-    private ColumnInfoToStringEncoderDecoder() {
-        
-    }
-    
-    public static String encode(List<ColumnInfo> columnInfos) {
-        Preconditions.checkNotNull(columnInfos);
-        return Joiner.on(COLUMN_INFO_DELIMITER)
-                     .skipNulls()
-                     .join(columnInfos);
-    }
-    
-    public static List<ColumnInfo> decode(final String columnInfoStr) {
-        Preconditions.checkNotNull(columnInfoStr);
-        List<ColumnInfo> columnInfos = Lists.newArrayList(
-                                Iterables.transform(
-                                        Splitter.on(COLUMN_INFO_DELIMITER).omitEmptyStrings().split(columnInfoStr),
-                                        new Function<String, ColumnInfo>() {
-                                            @Override
-                                            public ColumnInfo apply(String colInfo) {
-                                               return ColumnInfo.fromString(colInfo);
-                                            }
-                                        }));
-        return columnInfos;
-        
-    }
+  private static final String COLUMN_INFO_DELIMITER = "|";
 
-    
+  private ColumnInfoToStringEncoderDecoder() {
+
+  }
+
+  public static String encode(List<ColumnInfo> columnInfos) {
+    Preconditions.checkNotNull(columnInfos);
+    return Joiner.on(COLUMN_INFO_DELIMITER)
+            .skipNulls()
+            .join(columnInfos);
+  }
+
+  public static List<ColumnInfo> decode(final String columnInfoStr) {
+    Preconditions.checkNotNull(columnInfoStr);
+    List<ColumnInfo> columnInfos = Lists.newArrayList(
+            Iterables.transform(
+                    Splitter.on(COLUMN_INFO_DELIMITER).omitEmptyStrings().split(columnInfoStr),
+                    new Function<String, ColumnInfo>() {
+              @Override
+              public ColumnInfo apply(String colInfo) {
+                return ColumnInfo.fromString(colInfo);
+              }
+            }));
+    return columnInfos;
+
+  }
+
 }

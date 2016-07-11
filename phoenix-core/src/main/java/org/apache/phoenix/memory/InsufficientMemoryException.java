@@ -18,28 +18,29 @@
 package org.apache.phoenix.memory;
 
 /**
- * 
+ *
  * Exception thrown by MemoryManager when insufficient memory is available
  *
- * 
+ *
  * @since 0.1
  */
 public class InsufficientMemoryException extends RuntimeException {
-	private static final long serialVersionUID = 1L;
 
-    public InsufficientMemoryException() {
-    }
+  private static final long serialVersionUID = 1L;
 
-    public InsufficientMemoryException(String message) {
-        super(message);
-    }
+  public InsufficientMemoryException() {
+  }
 
-    public InsufficientMemoryException(Throwable cause) {
-        super(cause);
-    }
+  public InsufficientMemoryException(String message) {
+    super(message);
+  }
 
-    public InsufficientMemoryException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public InsufficientMemoryException(Throwable cause) {
+    super(cause);
+  }
+
+  public InsufficientMemoryException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

@@ -18,12 +18,13 @@
 package org.apache.phoenix.util;
 
 public interface TimeKeeper {
-    static final TimeKeeper SYSTEM = new TimeKeeper() {
-        @Override
-        public long getCurrentTime() {
-            return System.currentTimeMillis();
-        }
-    };
-    
-    long getCurrentTime();
+
+  static final TimeKeeper SYSTEM = new TimeKeeper() {
+    @Override
+    public long getCurrentTime() {
+      return System.currentTimeMillis();
+    }
+  };
+
+  long getCurrentTime();
 }

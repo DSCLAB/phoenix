@@ -29,55 +29,56 @@ import org.apache.phoenix.schema.types.PLong;
 import org.apache.phoenix.util.SchemaUtil;
 
 public class SequenceValueExpression extends BaseTerminalExpression {
-    private final SequenceKey key;
-    final Op op;
-    private final int index;
 
-    public SequenceValueExpression(SequenceKey key, Op op, int index) {
-        this.key = key;
-        this.op = op;
-        this.index = index;
-    }
+  private final SequenceKey key;
+  final Op op;
+  private final int index;
 
-    public int getIndex() {
-        return index;
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-    		byte[] valueBuffer = new byte[PLong.INSTANCE.getByteSize()];
-        PLong.INSTANCE.getCodec().encodeLong(tuple.getSequenceValue(index), valueBuffer, 0);
-        ptr.set(valueBuffer);
-        return true;
-    }
+  public SequenceValueExpression(SequenceKey key, Op op, int index) {
+    this.key = key;
+    this.op = op;
+    this.index = index;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PLong.INSTANCE;
-    }
-    
-    @Override
-    public boolean isNullable() {
-        return false;
-    }
-    
-    @Override
-    public Determinism getDeterminism() {
-        return Determinism.PER_ROW;
-    }
-    
-    @Override
-    public boolean isStateless() {
-        return true;
-    }
+  public int getIndex() {
+    return index;
+  }
 
-    @Override
-    public String toString() {
-        return op.getName() + " VALUE FOR " + SchemaUtil.getTableName(key.getSchemaName(),key.getSequenceName());
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    byte[] valueBuffer = new byte[PLong.INSTANCE.getByteSize()];
+    PLong.INSTANCE.getCodec().encodeLong(tuple.getSequenceValue(index), valueBuffer, 0);
+    ptr.set(valueBuffer);
+    return true;
+  }
 
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+  @Override
+  public PDataType getDataType() {
+    return PLong.INSTANCE;
+  }
+
+  @Override
+  public boolean isNullable() {
+    return false;
+  }
+
+  @Override
+  public Determinism getDeterminism() {
+    return Determinism.PER_ROW;
+  }
+
+  @Override
+  public boolean isStateless() {
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return op.getName() + " VALUE FOR " + SchemaUtil.getTableName(key.getSchemaName(), key.getSequenceName());
+  }
+
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    return visitor.visit(this);
+  }
 }

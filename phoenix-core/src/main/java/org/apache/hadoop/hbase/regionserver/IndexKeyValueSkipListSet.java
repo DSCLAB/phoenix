@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import org.apache.hadoop.hbase.KeyValue;
 
 /**
- * Like a {@link KeyValueSkipListSet}, but also exposes useful, atomic methods (e.g.
- * {@link #putIfAbsent(KeyValue)}).
+ * Like a {@link KeyValueSkipListSet}, but also exposes useful, atomic methods
+ * (e.g. {@link #putIfAbsent(KeyValue)}).
  */
 public class IndexKeyValueSkipListSet extends KeyValueSkipListSet {
 
@@ -33,14 +33,16 @@ public class IndexKeyValueSkipListSet extends KeyValueSkipListSet {
   private ConcurrentSkipListMap<KeyValue, KeyValue> delegate;
 
   /**
-   * Create a new {@link IndexKeyValueSkipListSet} based on the passed comparator.
-   * @param comparator to use when comparing keyvalues. It is used both to determine sort order as
-   *          well as object equality in the map.
+   * Create a new {@link IndexKeyValueSkipListSet} based on the passed
+   * comparator.
+   *
+   * @param comparator to use when comparing keyvalues. It is used both to
+   * determine sort order as well as object equality in the map.
    * @return a map that uses the passed comparator
    */
   public static IndexKeyValueSkipListSet create(Comparator<KeyValue> comparator) {
-    ConcurrentSkipListMap<KeyValue, KeyValue> delegate =
-        new ConcurrentSkipListMap<KeyValue, KeyValue>(comparator);
+    ConcurrentSkipListMap<KeyValue, KeyValue> delegate
+            = new ConcurrentSkipListMap<KeyValue, KeyValue>(comparator);
     IndexKeyValueSkipListSet ret = new IndexKeyValueSkipListSet(delegate);
     return ret;
   }
@@ -54,20 +56,20 @@ public class IndexKeyValueSkipListSet extends KeyValueSkipListSet {
   }
 
   /**
-   * Add the passed {@link KeyValue} to the set, only if one is not already set. This is equivalent
-   * to
+   * Add the passed {@link KeyValue} to the set, only if one is not already set.
+   * This is equivalent to
    * <pre>
    * if (!set.containsKey(key))
    *   return set.put(key);
    * else
    *  return map.set(key);
-   * </pre>
-   * except that the action is performed atomically.
+   * </pre> except that the action is performed atomically.
+   *
    * @param kv {@link KeyValue} to add
-   * @return the previous value associated with the specified key, or <tt>null</tt> if there was no
-   *         previously stored key
-   * @throws ClassCastException if the specified key cannot be compared with the keys currently in
-   *           the map
+   * @return the previous value associated with the specified key, or
+   * <tt>null</tt> if there was no previously stored key
+   * @throws ClassCastException if the specified key cannot be compared with the
+   * keys currently in the map
    * @throws NullPointerException if the specified key is null
    */
   public KeyValue putIfAbsent(KeyValue kv) {

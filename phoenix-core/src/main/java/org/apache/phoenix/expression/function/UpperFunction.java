@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression.function;
 
 import java.sql.SQLException;
@@ -29,49 +28,50 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-@FunctionParseNode.BuiltInFunction(name=UpperFunction.NAME,  args={
-        @FunctionParseNode.Argument(allowedTypes={PVarchar.class})} )
+@FunctionParseNode.BuiltInFunction(name = UpperFunction.NAME, args = {
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class})})
 public class UpperFunction extends ScalarFunction {
-    public static final String NAME = "UPPER";
 
-    public UpperFunction() {
+  public static final String NAME = "UPPER";
+
+  public UpperFunction() {
+  }
+
+  public UpperFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!getStrExpression().evaluate(tuple, ptr)) {
+      return false;
     }
 
-    public UpperFunction(List<Expression> children) throws SQLException {
-        super(children);
+    String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getStrExpression().getSortOrder());
+    if (sourceStr == null) {
+      return true;
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!getStrExpression().evaluate(tuple, ptr)) {
-            return false;
-        }
+    ptr.set(PVarchar.INSTANCE.toBytes(sourceStr.toUpperCase()));
+    return true;
+  }
 
-        String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getStrExpression().getSortOrder());
-        if (sourceStr == null) {
-            return true;
-        }
+  @Override
+  public PDataType getDataType() {
+    return getStrExpression().getDataType();
+  }
 
-        ptr.set(PVarchar.INSTANCE.toBytes(sourceStr.toUpperCase()));
-        return true;
-    }
+  @Override
+  public boolean isNullable() {
+    return getStrExpression().isNullable();
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return getStrExpression().getDataType();
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public boolean isNullable() {
-        return getStrExpression().isNullable();
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    private Expression getStrExpression() {
-        return children.get(0);
-    }
+  private Expression getStrExpression() {
+    return children.get(0);
+  }
 }

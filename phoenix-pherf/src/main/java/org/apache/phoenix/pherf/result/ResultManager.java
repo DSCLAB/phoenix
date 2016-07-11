@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -29,75 +28,76 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ResultManager {
-    private final List<ResultHandler> resultHandlers;
-    private final ResultUtil util;
-    private final PherfConstants.RunMode runMode;
 
+  private final List<ResultHandler> resultHandlers;
+  private final ResultUtil util;
+  private final PherfConstants.RunMode runMode;
 
-    public ResultManager(String fileNameSeed, PherfConstants.RunMode runMode) {
-        this(runMode, Arrays.asList(
-                new XMLResultHandler(fileNameSeed, ResultFileDetails.XML),
-                new ImageResultHandler(fileNameSeed, ResultFileDetails.IMAGE),
-						new CSVResultHandler(
-								fileNameSeed,
-								runMode == RunMode.PERFORMANCE ? ResultFileDetails.CSV_DETAILED_PERFORMANCE
-										: ResultFileDetails.CSV_DETAILED_FUNCTIONAL),
-                new CSVResultHandler(fileNameSeed, ResultFileDetails.CSV_AGGREGATE_PERFORMANCE)
-        ));
-    }
+  public ResultManager(String fileNameSeed, PherfConstants.RunMode runMode) {
+    this(runMode, Arrays.asList(
+            new XMLResultHandler(fileNameSeed, ResultFileDetails.XML),
+            new ImageResultHandler(fileNameSeed, ResultFileDetails.IMAGE),
+            new CSVResultHandler(
+                    fileNameSeed,
+                    runMode == RunMode.PERFORMANCE ? ResultFileDetails.CSV_DETAILED_PERFORMANCE
+                            : ResultFileDetails.CSV_DETAILED_FUNCTIONAL),
+            new CSVResultHandler(fileNameSeed, ResultFileDetails.CSV_AGGREGATE_PERFORMANCE)
+    ));
+  }
 
-    public ResultManager(PherfConstants.RunMode runMode, List<ResultHandler> resultHandlers) {
-        this.resultHandlers = resultHandlers;
-        util = new ResultUtil();
-        this.runMode = runMode;
-    }
+  public ResultManager(PherfConstants.RunMode runMode, List<ResultHandler> resultHandlers) {
+    this.resultHandlers = resultHandlers;
+    util = new ResultUtil();
+    this.runMode = runMode;
+  }
 
-    /**
-     * Write out the result to each writer in the pool
-     *
-     * @param result {@link DataModelResult}
-     * @throws Exception
-     */
-    public synchronized void write(DataModelResult result) throws Exception {
+  /**
+   * Write out the result to each writer in the pool
+   *
+   * @param result {@link DataModelResult}
+   * @throws Exception
+   */
+  public synchronized void write(DataModelResult result) throws Exception {
+    try {
+      util.ensureBaseResultDirExists();
+      final DataModelResult dataModelResultCopy = new DataModelResult(result);
+      for (ResultHandler handler : resultHandlers) {
+        util.write(handler, dataModelResultCopy, runMode);
+      }
+    } finally {
+      for (ResultHandler handler : resultHandlers) {
         try {
-            util.ensureBaseResultDirExists();
-            final DataModelResult dataModelResultCopy = new DataModelResult(result);
-            for (ResultHandler handler : resultHandlers) {
-                util.write(handler, dataModelResultCopy, runMode);
-            }
-        } finally {
-            for (ResultHandler handler : resultHandlers) {
-                try {
-                    if (handler != null) {
-                        handler.flush();
-                        handler.close();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+          if (handler != null) {
+            handler.flush();
+            handler.close();
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
         }
+      }
     }
+  }
 
-    /**
-     * Write a combined set of results for each result in the list.
-     * @param dataModelResults List<{@link DataModelResult > </>}
-     * @throws Exception
-     */
-    public synchronized void write(List<DataModelResult> dataModelResults) throws Exception {
-        util.ensureBaseResultDirExists();
+  /**
+   * Write a combined set of results for each result in the list.
+   *
+   * @param dataModelResults List<{@link DataModelResult > </>}
+   * @throws Exception
+   */
+  public synchronized void write(List<DataModelResult> dataModelResults) throws Exception {
+    util.ensureBaseResultDirExists();
 
-        CSVResultHandler detailsCSVWriter = null;
-        try {
-            detailsCSVWriter = new CSVResultHandler(PherfConstants.COMBINED_FILE_NAME, ResultFileDetails.CSV_DETAILED_PERFORMANCE);
-            for (DataModelResult dataModelResult : dataModelResults) {
-                util.write(detailsCSVWriter, dataModelResult, runMode);
-            }
-        } finally {
-            if (detailsCSVWriter != null) {
-                detailsCSVWriter.flush();
-                detailsCSVWriter.close();
-            }
-        }
+    CSVResultHandler detailsCSVWriter = null;
+    try {
+      detailsCSVWriter = new CSVResultHandler(PherfConstants.COMBINED_FILE_NAME, ResultFileDetails.CSV_DETAILED_PERFORMANCE);
+      for (DataModelResult dataModelResult : dataModelResults) {
+        util.write(detailsCSVWriter, dataModelResult, runMode);
+      }
+    } finally {
+      if (detailsCSVWriter != null) {
+        detailsCSVWriter.flush();
+        detailsCSVWriter.close();
+      }
     }
+  }
 }

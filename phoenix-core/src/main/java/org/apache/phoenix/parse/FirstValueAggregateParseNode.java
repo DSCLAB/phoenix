@@ -27,12 +27,12 @@ import org.apache.phoenix.expression.function.FunctionExpression;
 
 public class FirstValueAggregateParseNode extends DelegateConstantToCountParseNode {
 
-    public FirstValueAggregateParseNode(String name, List<ParseNode> children, FunctionParseNode.BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  public FirstValueAggregateParseNode(String name, List<ParseNode> children, FunctionParseNode.BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        return new FirstValueFunction(children, getDelegateFunction(children, context));
-    }
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    return new FirstValueFunction(children, getDelegateFunction(children, context));
+  }
 }

@@ -25,16 +25,16 @@ import org.apache.phoenix.expression.util.regex.JavaPattern;
 
 public class StringBasedRegexpReplaceFunction extends RegexpReplaceFunction {
 
-    public StringBasedRegexpReplaceFunction() {
-    }
+  public StringBasedRegexpReplaceFunction() {
+  }
 
-    public StringBasedRegexpReplaceFunction(List<Expression> children) {
-        super(children);
-    }
+  public StringBasedRegexpReplaceFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JavaPattern(value);
-    }
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JavaPattern(value);
+  }
 
 }

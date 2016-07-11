@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.query;
 
 import static org.apache.phoenix.query.KeyRange.EMPTY_RANGE;
@@ -35,62 +34,59 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class KeyRangeUnionTest extends TestCase {
-    private final KeyRange a, b, union;
 
-    public KeyRangeUnionTest(KeyRange a, KeyRange b, KeyRange union) {
-        this.a = a;
-        this.b = b;
-        this.union = union;
-    }
+  private final KeyRange a, b, union;
 
-    @Parameters(name="union of {0} and {1} is {2}")
-    public static Collection<?> data() {
-        return Arrays.asList(new Object[][] {
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("F"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("F"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("E"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
-                    EMPTY_RANGE,
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
-                },
-                {
-                    EVERYTHING_RANGE,
-                    PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
-                    EVERYTHING_RANGE,
-                },
-                {
-                    EVERYTHING_RANGE,
-                    EVERYTHING_RANGE,
-                    EVERYTHING_RANGE,
-                },
-                {
-                    EMPTY_RANGE,
-                    EVERYTHING_RANGE,
-                    EVERYTHING_RANGE,
-                },
-        });
-    }
-    @Test
-    public void union() {
-        assertEquals(union, a.union(b));
-        assertEquals(union, b.union(a));
-    }
+  public KeyRangeUnionTest(KeyRange a, KeyRange b, KeyRange union) {
+    this.a = a;
+    this.b = b;
+    this.union = union;
+  }
+
+  @Parameters(name = "union of {0} and {1} is {2}")
+  public static Collection<?> data() {
+    return Arrays.asList(new Object[][]{
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("F"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("F"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("E"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), false, toBytes("E"), false),
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
+        EMPTY_RANGE,
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),},
+      {
+        EVERYTHING_RANGE,
+        PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
+        EVERYTHING_RANGE,},
+      {
+        EVERYTHING_RANGE,
+        EVERYTHING_RANGE,
+        EVERYTHING_RANGE,},
+      {
+        EMPTY_RANGE,
+        EVERYTHING_RANGE,
+        EVERYTHING_RANGE,},});
+  }
+
+  @Test
+  public void union() {
+    assertEquals(union, a.union(b));
+    assertEquals(union, b.union(a));
+  }
 }

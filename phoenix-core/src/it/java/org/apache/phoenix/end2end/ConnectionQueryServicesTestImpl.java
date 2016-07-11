@@ -25,46 +25,47 @@ import org.apache.phoenix.query.ConnectionQueryServicesImpl;
 import org.apache.phoenix.query.QueryServices;
 
 /**
- * 
- * Implementation of ConnectionQueryServices for tests running against
- * the mini cluster
  *
- * 
+ * Implementation of ConnectionQueryServices for tests running against the mini
+ * cluster
+ *
+ *
  * @since 0.1
  */
 public class ConnectionQueryServicesTestImpl extends ConnectionQueryServicesImpl {
-    protected int NUM_SLAVES_BASE = 1; // number of slaves for the cluster
-    
-    public ConnectionQueryServicesTestImpl(QueryServices services, ConnectionInfo info) throws SQLException {
-        super(services, info, null);
-    }
-    
-    @Override
-    public void init(String url, Properties props) throws SQLException {
-        try {
-            super.init(url, props);
-            /**
-             * Clear the server-side meta data cache on initialization. Otherwise, if we
-             * query for meta data tables, we'll get nothing (since the server just came
-             * up). However, our server-side cache (which is a singleton) will claim
-             * that we do have tables and our create table calls will return the cached
-             * meta data instead of creating new metadata.
-             */
-            clearCache();
-        } catch (SQLException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SQLException(e);
-        }
-    }
 
-    @Override
-    public void close() throws SQLException {
-        try {
-            // Attempt to fix apparent memory leak...
-            clearCache();
-        } finally {
-            super.close();
-        }
+  protected int NUM_SLAVES_BASE = 1; // number of slaves for the cluster
+
+  public ConnectionQueryServicesTestImpl(QueryServices services, ConnectionInfo info) throws SQLException {
+    super(services, info, null);
+  }
+
+  @Override
+  public void init(String url, Properties props) throws SQLException {
+    try {
+      super.init(url, props);
+      /**
+       * Clear the server-side meta data cache on initialization. Otherwise, if
+       * we query for meta data tables, we'll get nothing (since the server just
+       * came up). However, our server-side cache (which is a singleton) will
+       * claim that we do have tables and our create table calls will return the
+       * cached meta data instead of creating new metadata.
+       */
+      clearCache();
+    } catch (SQLException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new SQLException(e);
     }
+  }
+
+  @Override
+  public void close() throws SQLException {
+    try {
+      // Attempt to fix apparent memory leak...
+      clearCache();
+    } finally {
+      super.close();
+    }
+  }
 }

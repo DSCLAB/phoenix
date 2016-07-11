@@ -19,23 +19,24 @@ package org.apache.phoenix.parse;
 
 public class DropFunctionStatement extends MutableStatement {
 
-    private final String functionName;
-    private final boolean ifExists;
-    public DropFunctionStatement(String functionName, boolean ifExists) {
-        this.functionName = functionName;
-        this.ifExists = ifExists;
-    }
+  private final String functionName;
+  private final boolean ifExists;
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  public DropFunctionStatement(String functionName, boolean ifExists) {
+    this.functionName = functionName;
+    this.ifExists = ifExists;
+  }
 
-    public String getFunctionName() {
-        return functionName;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
+  public String getFunctionName() {
+    return functionName;
+  }
+
+  public boolean ifExists() {
+    return ifExists;
+  }
 }

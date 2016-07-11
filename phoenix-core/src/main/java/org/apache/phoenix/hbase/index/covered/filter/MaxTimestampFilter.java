@@ -24,9 +24,9 @@ import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
- * Inclusive filter on the maximum timestamp allowed. Excludes all elements greater than (but not
- * equal to) the given timestamp, so given ts = 5, a {@link KeyValue} with ts 6 is excluded, but not
- * one with ts = 5.
+ * Inclusive filter on the maximum timestamp allowed. Excludes all elements
+ * greater than (but not equal to) the given timestamp, so given ts = 5, a
+ * {@link KeyValue} with ts 6 is excluded, but not one with ts = 5.
  */
 public class MaxTimestampFilter extends FilterBase {
 
@@ -42,12 +42,12 @@ public class MaxTimestampFilter extends FilterBase {
     // with other filters too much.
     KeyValue kv = null;
     try {
-        kv = KeyValueUtil.ensureKeyValue(currentKV).clone();
+      kv = KeyValueUtil.ensureKeyValue(currentKV).clone();
     } catch (CloneNotSupportedException e) {
-        // the exception should not happen at all
-        throw new IllegalArgumentException(e);
+      // the exception should not happen at all
+      throw new IllegalArgumentException(e);
     }
-    int offset =kv.getTimestampOffset();
+    int offset = kv.getTimestampOffset();
     //set the timestamp in the buffer
     byte[] buffer = kv.getBuffer();
     byte[] ts = Bytes.toBytes(this.ts);

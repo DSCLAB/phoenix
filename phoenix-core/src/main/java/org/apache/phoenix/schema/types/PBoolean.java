@@ -57,14 +57,14 @@ public class PBoolean extends PDataType<Boolean> {
       // TODO: review - return null?
       throw newIllegalDataException(this + " may not be null");
     }
-    return ((Boolean) object).booleanValue() ^ sortOrder == SortOrder.ASC ?
-        TRUE_BYTES :
-        FALSE_BYTES;
+    return ((Boolean) object).booleanValue() ^ sortOrder == SortOrder.ASC
+            ? TRUE_BYTES
+            : FALSE_BYTES;
   }
 
   @Override
   public Boolean toObject(byte[] bytes, int offset, int length, PDataType actualType,
-      SortOrder sortOrder, Integer maxLength, Integer scale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale) {
     Preconditions.checkNotNull(sortOrder);
     if (length == 0) {
       return null;
@@ -73,14 +73,14 @@ public class PBoolean extends PDataType<Boolean> {
       if (length > 1) {
         throw newIllegalDataException("BOOLEAN may only be a single byte");
       }
-      return ((bytes[offset] == FALSE_BYTE ^ sortOrder == SortOrder.DESC) ?
-          Boolean.FALSE :
-          Boolean.TRUE);
+      return ((bytes[offset] == FALSE_BYTE ^ sortOrder == SortOrder.DESC)
+              ? Boolean.FALSE
+              : Boolean.TRUE);
     } else if (actualType == PDecimal.INSTANCE) {
       // false translated to the ZERO_BYTE
-      return ((bytes[offset] == ZERO_BYTE ^ sortOrder == SortOrder.DESC) ?
-          Boolean.FALSE :
-          Boolean.TRUE);
+      return ((bytes[offset] == ZERO_BYTE ^ sortOrder == SortOrder.DESC)
+              ? Boolean.FALSE
+              : Boolean.TRUE);
     }
     throwConstraintViolationException(actualType, this);
     return null;
@@ -138,15 +138,15 @@ public class PBoolean extends PDataType<Boolean> {
   public Object getSampleValue(Integer maxLength, Integer arrayLength) {
     return RANDOM.get().nextBoolean();
   }
-  
-    @Override
-    public PhoenixArrayFactory getArrayFactory() {
-        return new PhoenixArrayFactory() {
 
-            @Override
-            public PhoenixArray newArray(PDataType type, Object[] elements) {
-                return new PhoenixArray.PrimitiveBooleanPhoenixArray(type, elements);
-            }
-        };
-    }
+  @Override
+  public PhoenixArrayFactory getArrayFactory() {
+    return new PhoenixArrayFactory() {
+
+      @Override
+      public PhoenixArray newArray(PDataType type, Object[] elements) {
+        return new PhoenixArray.PrimitiveBooleanPhoenixArray(type, elements);
+      }
+    };
+  }
 }

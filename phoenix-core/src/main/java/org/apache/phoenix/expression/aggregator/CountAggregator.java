@@ -25,67 +25,67 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.SizedUtil;
 
 /**
- * 
+ *
  * Aggregator for COUNT aggregations
- * 
- * 
+ *
+ *
  * @since 0.1
  */
 public class CountAggregator extends BaseAggregator {
 
-    private long count = 0;
-    private byte[] buffer = null;
+  private long count = 0;
+  private byte[] buffer = null;
 
-    public CountAggregator() {
-        super(SortOrder.getDefault());
-    }
+  public CountAggregator() {
+    super(SortOrder.getDefault());
+  }
 
-    public CountAggregator(LongSumAggregator clientAgg) {
-        this();
-        count = clientAgg.getSum();
-    }
+  public CountAggregator(LongSumAggregator clientAgg) {
+    this();
+    count = clientAgg.getSum();
+  }
 
-    @Override
-    public void aggregate(Tuple tuple, ImmutableBytesWritable ptr) {
-        count++;
-    }
+  @Override
+  public void aggregate(Tuple tuple, ImmutableBytesWritable ptr) {
+    count++;
+  }
 
-    @Override
-    public boolean isNullable() {
-        return false;
-    }
+  @Override
+  public boolean isNullable() {
+    return false;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (buffer == null) {
-            buffer = new byte[getDataType().getByteSize()];
-        }
-        getDataType().getCodec().encodeLong(count, buffer, 0);
-        ptr.set(buffer);
-        return true;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (buffer == null) {
+      buffer = new byte[getDataType().getByteSize()];
     }
+    getDataType().getCodec().encodeLong(count, buffer, 0);
+    ptr.set(buffer);
+    return true;
+  }
 
-    @Override
-    public final PDataType getDataType() {
-        return PLong.INSTANCE;
-    }
+  @Override
+  public final PDataType getDataType() {
+    return PLong.INSTANCE;
+  }
 
-    @Override
-    public void reset() {
-        count = 0;
-        buffer = null;
-        super.reset();
-    }
+  @Override
+  public void reset() {
+    count = 0;
+    buffer = null;
+    super.reset();
+  }
 
-    @Override
-    public String toString() {
-        return "COUNT [count=" + count + "]";
-    }
+  @Override
+  public String toString() {
+    return "COUNT [count=" + count + "]";
+  }
 
-    @Override
-    public int getSize() {
-        return super.getSize() + SizedUtil.LONG_SIZE + SizedUtil.ARRAY_SIZE
-                + getDataType().getByteSize();
-    }
+  @Override
+  public int getSize() {
+    return super.getSize() + SizedUtil.LONG_SIZE + SizedUtil.ARRAY_SIZE
+            + getDataType().getByteSize();
+  }
 
 }

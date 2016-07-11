@@ -42,6 +42,7 @@ import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 public class IndexUpdateManager {
 
   public Comparator<Mutation> COMPARATOR = new MutationComparator();
+
   class MutationComparator implements Comparator<Mutation> {
 
     @Override
@@ -75,7 +76,7 @@ public class IndexUpdateManager {
       }
 
       throw new RuntimeException(
-          "Got unexpected mutation types! Can only be Put or Delete, but got: " + o1 + ", and "
+              "Got unexpected mutation types! Can only be Put or Delete, but got: " + o1 + ", and "
               + o2);
     }
 
@@ -95,13 +96,14 @@ public class IndexUpdateManager {
   }
 
   private static final String PHOENIX_HBASE_TEMP_DELETE_MARKER = "phoenix.hbase.temp.delete.marker";
-  private static final byte[] TRUE_MARKER = new byte[] { 1 };
+  private static final byte[] TRUE_MARKER = new byte[]{1};
 
-  protected final Map<ImmutableBytesPtr, Collection<Mutation>> map =
-      new HashMap<ImmutableBytesPtr, Collection<Mutation>>();
+  protected final Map<ImmutableBytesPtr, Collection<Mutation>> map
+          = new HashMap<ImmutableBytesPtr, Collection<Mutation>>();
 
   /**
    * Add an index update. Keeps the latest {@link Put} for a given timestamp
+   *
    * @param tableName
    * @param m
    */
@@ -118,6 +120,7 @@ public class IndexUpdateManager {
 
   /**
    * Fix up the current updates, given the pending mutation.
+   *
    * @param updates current updates
    * @param pendingMutation
    */
@@ -168,7 +171,7 @@ public class IndexUpdateManager {
         break;
       }
     }
-    
+
     updates.remove(toRemove);
     updates.add(pendingMutation);
   }
@@ -220,7 +223,7 @@ public class IndexUpdateManager {
           sb.append("[REMOVED]");
         }
         sb.append(m.getClass().getSimpleName() + ":"
-            + ((m instanceof Put) ? m.getTimeStamp() + " " : ""));
+                + ((m instanceof Put) ? m.getTimeStamp() + " " : ""));
         sb.append(" row=" + Bytes.toString(m.getRow()));
         sb.append("\n");
         if (m.getFamilyCellMap().isEmpty()) {
@@ -228,8 +231,8 @@ public class IndexUpdateManager {
         }
         for (List<Cell> kvs : m.getFamilyCellMap().values()) {
           for (Cell kv : kvs) {
-            sb.append("\t\t" + kv.toString() + "/value=" + Bytes.toStringBinary(kv.getValueArray(), 
-            		kv.getValueOffset(), kv.getValueLength()));
+            sb.append("\t\t" + kv.toString() + "/value=" + Bytes.toStringBinary(kv.getValueArray(),
+                    kv.getValueOffset(), kv.getValueLength()));
             sb.append("\n");
           }
         }

@@ -19,19 +19,18 @@ package org.apache.phoenix.parse;
 
 import java.util.List;
 
-
 public class AggregateFunctionParseNode extends FunctionParseNode {
 
-    public AggregateFunctionParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
-    
-    /**
-     * Aggregate function are not stateless, even though all the args may be stateless,
-     * for example, COUNT(1)
-     */
-    @Override
-    public boolean isStateless() {
-        return false;
-    }
+  public AggregateFunctionParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  /**
+   * Aggregate function are not stateless, even though all the args may be
+   * stateless, for example, COUNT(1)
+   */
+  @Override
+  public boolean isStateless() {
+    return false;
+  }
 }

@@ -21,31 +21,31 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class DropSequenceStatement extends MutableStatement {
 
-    private final TableName sequenceName;
-    private final boolean ifExists;
-    private final int bindCount;
+  private final TableName sequenceName;
+  private final boolean ifExists;
+  private final int bindCount;
 
-    protected DropSequenceStatement(TableName sequenceName, boolean ifExists, int bindCount) {
-        this.sequenceName = sequenceName;
-        this.ifExists = ifExists;
-        this.bindCount = bindCount;
-    }
+  protected DropSequenceStatement(TableName sequenceName, boolean ifExists, int bindCount) {
+    this.sequenceName = sequenceName;
+    this.ifExists = ifExists;
+    this.bindCount = bindCount;
+  }
 
-    @Override
-    public int getBindCount() {
-        return bindCount;
-    }
+  @Override
+  public int getBindCount() {
+    return bindCount;
+  }
 
-    public TableName getSequenceName() {
-        return sequenceName;
-    }
+  public TableName getSequenceName() {
+    return sequenceName;
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
-    
-    @Override
-    public Operation getOperation() {
-        return Operation.DELETE;
-    }
+  public boolean ifExists() {
+    return ifExists;
+  }
+
+  @Override
+  public Operation getOperation() {
+    return Operation.DELETE;
+  }
 }

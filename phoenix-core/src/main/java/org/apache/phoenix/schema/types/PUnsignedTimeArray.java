@@ -28,7 +28,7 @@ public class PUnsignedTimeArray extends PArrayDataType<Time[]> {
 
   private PUnsignedTimeArray() {
     super("UNSIGNED_TIME ARRAY", PDataType.ARRAY_TYPE_BASE + PUnsignedTime.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 39);
+            PhoenixArray.class, null, 39);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PUnsignedTimeArray extends PArrayDataType<Time[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PUnsignedTime.INSTANCE, sortOrder, maxLength,
-        scale, PUnsignedTime.INSTANCE);
+            scale, PUnsignedTime.INSTANCE);
   }
 
   @Override
@@ -91,10 +91,10 @@ public class PUnsignedTimeArray extends PArrayDataType<Time[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

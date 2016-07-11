@@ -22,18 +22,18 @@ import org.apache.phoenix.schema.SortOrder;
 
 public abstract class PRealNumber<T> extends PNumericType<T> {
 
-    protected PRealNumber(String sqlTypeName, int sqlType, Class clazz,
-            org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
-        super(sqlTypeName, sqlType, clazz, codec, ordinal);
-    }
+  protected PRealNumber(String sqlTypeName, int sqlType, Class clazz,
+          org.apache.phoenix.schema.types.PDataType.PDataCodec codec, int ordinal) {
+    super(sqlTypeName, sqlType, clazz, codec, ordinal);
+  }
 
-    @Override
-    public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
-            Integer scale) {
-        double d = getCodec().decodeDouble(bytes, offset, sortOrder);
-        if (Double.isNaN(d)) {
-            throw new IllegalDataException();
-        }
-        return (d > 0) ? 1 : ((d < 0) ? -1 : 0);
+  @Override
+  public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
+    double d = getCodec().decodeDouble(bytes, offset, sortOrder);
+    if (Double.isNaN(d)) {
+      throw new IllegalDataException();
     }
+    return (d > 0) ? 1 : ((d < 0) ? -1 : 0);
+  }
 }

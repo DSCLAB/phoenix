@@ -56,155 +56,156 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Test that the logging sink stores the expected metrics/stats
  */
-
 public class PhoenixTracingEndToEndIT extends BaseTracingTestIT {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixTracingEndToEndIT.class);
-    private static final int MAX_RETRIES = 10;
-    private final String table = "ENABLED_FOR_LOGGING";
-    private final String index = "ENABALED_FOR_LOGGING_INDEX";
+  private static final Log LOG = LogFactory.getLog(PhoenixTracingEndToEndIT.class);
+  private static final int MAX_RETRIES = 10;
+  private final String table = "ENABLED_FOR_LOGGING";
+  private final String index = "ENABALED_FOR_LOGGING_INDEX";
 
-    private static DisableableMetricsWriter sink;
+  private static DisableableMetricsWriter sink;
 
-    @BeforeClass
-    public static void setupMetrics() throws Exception {
-        PhoenixMetricsSink pWriter = new PhoenixMetricsSink();
-        Connection conn = getConnectionWithoutTracing();
-        pWriter.initForTesting(conn);
-        sink = new DisableableMetricsWriter(pWriter);
+  @BeforeClass
+  public static void setupMetrics() throws Exception {
+    PhoenixMetricsSink pWriter = new PhoenixMetricsSink();
+    Connection conn = getConnectionWithoutTracing();
+    pWriter.initForTesting(conn);
+    sink = new DisableableMetricsWriter(pWriter);
 
-        TracingTestUtil.registerSink(sink);
-    }
+    TracingTestUtil.registerSink(sink);
+  }
 
-    @After
-    public void cleanup() {
-        sink.disable();
-        sink.clear();
-        sink.enable();
+  @After
+  public void cleanup() {
+    sink.disable();
+    sink.clear();
+    sink.enable();
 
-        // LISTENABLE.clearListeners();
-    }
+    // LISTENABLE.clearListeners();
+  }
 
-    private static void waitForCommit(CountDownLatch latch) throws SQLException {
-        Connection conn = new CountDownConnection(getConnectionWithoutTracing(), latch);
-        replaceWriterConnection(conn);
-    }
+  private static void waitForCommit(CountDownLatch latch) throws SQLException {
+    Connection conn = new CountDownConnection(getConnectionWithoutTracing(), latch);
+    replaceWriterConnection(conn);
+  }
 
-    private static void replaceWriterConnection(Connection conn) throws SQLException {
-        // disable the writer
-        sink.disable();
+  private static void replaceWriterConnection(Connection conn) throws SQLException {
+    // disable the writer
+    sink.disable();
 
-        // swap the connection for one that listens
-        sink.getDelegate().initForTesting(conn);
+    // swap the connection for one that listens
+    sink.getDelegate().initForTesting(conn);
 
-        // enable the writer
-        sink.enable();
-    }
+    // enable the writer
+    sink.enable();
+  }
 
-    /**
-     * Simple test that we can correctly write spans to the phoenix table
-     * @throws Exception on failure
-     */
-    @Test
-    public void testWriteSpans() throws Exception {
-        // get a receiver for the spans
-        SpanReceiver receiver = new TraceMetricSource();
-        // which also needs to a source for the metrics system
-        Metrics.initialize().register("testWriteSpans-source", "source for testWriteSpans",
-                (MetricsSource) receiver);
+  /**
+   * Simple test that we can correctly write spans to the phoenix table
+   *
+   * @throws Exception on failure
+   */
+  @Test
+  public void testWriteSpans() throws Exception {
+    // get a receiver for the spans
+    SpanReceiver receiver = new TraceMetricSource();
+    // which also needs to a source for the metrics system
+    Metrics.initialize().register("testWriteSpans-source", "source for testWriteSpans",
+            (MetricsSource) receiver);
 
-        // watch our sink so we know when commits happen
-        CountDownLatch latch = new CountDownLatch(1);
-        waitForCommit(latch);
+    // watch our sink so we know when commits happen
+    CountDownLatch latch = new CountDownLatch(1);
+    waitForCommit(latch);
 
-        // write some spans
-        TraceScope trace = Trace.startSpan("Start write test", Sampler.ALWAYS);
-        Span span = trace.getSpan();
+    // write some spans
+    TraceScope trace = Trace.startSpan("Start write test", Sampler.ALWAYS);
+    Span span = trace.getSpan();
 
-        // add a child with some annotations
-        Span child = span.child("child 1");
-        child.addTimelineAnnotation("timeline annotation");
-        TracingUtils.addAnnotation(child, "test annotation", 10);
-        child.stop();
+    // add a child with some annotations
+    Span child = span.child("child 1");
+    child.addTimelineAnnotation("timeline annotation");
+    TracingUtils.addAnnotation(child, "test annotation", 10);
+    child.stop();
 
-        // sleep a little bit to get some time difference
-        Thread.sleep(100);
+    // sleep a little bit to get some time difference
+    Thread.sleep(100);
 
-        trace.close();
+    trace.close();
 
-        // pass the trace on
-        receiver.receiveSpan(span);
+    // pass the trace on
+    receiver.receiveSpan(span);
 
-        // wait for the tracer to actually do the write
-        latch.await();
+    // wait for the tracer to actually do the write
+    latch.await();
 
-        // look for the writes to make sure they were made
-        Connection conn = getConnectionWithoutTracing();
-        checkStoredTraces(conn, new TraceChecker() {
-            @Override
-            public boolean foundTrace(TraceHolder trace, SpanInfo info) {
-                if (info.description.equals("child 1")) {
-                    assertEquals("Not all annotations present", 1, info.annotationCount);
-                    assertEquals("Not all tags present", 1, info.tagCount);
-                    boolean found = false;
-                    for (String annotation : info.annotations) {
-                        if (annotation.startsWith("test annotation")) {
-                            found = true;
-                        }
-                    }
-                    assertTrue("Missing the annotations in span: " + info, found);
-                    found = false;
-                    for (String tag : info.tags) {
-                        if (tag.endsWith("timeline annotation")) {
-                            found = true;
-                        }
-                    }
-                    assertTrue("Missing the tags in span: " + info, found);
-                    return true;
-                }
-                return false;
+    // look for the writes to make sure they were made
+    Connection conn = getConnectionWithoutTracing();
+    checkStoredTraces(conn, new TraceChecker() {
+      @Override
+      public boolean foundTrace(TraceHolder trace, SpanInfo info) {
+        if (info.description.equals("child 1")) {
+          assertEquals("Not all annotations present", 1, info.annotationCount);
+          assertEquals("Not all tags present", 1, info.tagCount);
+          boolean found = false;
+          for (String annotation : info.annotations) {
+            if (annotation.startsWith("test annotation")) {
+              found = true;
             }
-        });
-    }
+          }
+          assertTrue("Missing the annotations in span: " + info, found);
+          found = false;
+          for (String tag : info.tags) {
+            if (tag.endsWith("timeline annotation")) {
+              found = true;
+            }
+          }
+          assertTrue("Missing the tags in span: " + info, found);
+          return true;
+        }
+        return false;
+      }
+    });
+  }
 
-    /**
-     * Test that span will actually go into the this sink and be written on both side of the wire,
-     * through the indexing code.
-     * @throws Exception
-     */
-    @Test
-    public void testClientServerIndexingTracing() throws Exception {
-        // one call for client side, one call for server side
-        final CountDownLatch updated = new CountDownLatch(2);
-        waitForCommit(updated);
+  /**
+   * Test that span will actually go into the this sink and be written on both
+   * side of the wire, through the indexing code.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testClientServerIndexingTracing() throws Exception {
+    // one call for client side, one call for server side
+    final CountDownLatch updated = new CountDownLatch(2);
+    waitForCommit(updated);
 
-        // separate connection so we don't create extra traces
-        Connection conn = getConnectionWithoutTracing();
-        createTestTable(conn, true);
+    // separate connection so we don't create extra traces
+    Connection conn = getConnectionWithoutTracing();
+    createTestTable(conn, true);
 
-        // trace the requests we send
-        Connection traceable = getTracingConnection();
-        LOG.debug("Doing dummy the writes to the tracked table");
-        String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
-        PreparedStatement stmt = traceable.prepareStatement(insert);
-        stmt.setString(1, "key1");
-        stmt.setLong(2, 1);
-        // this first trace just does a simple open/close of the span. Its not doing anything
-        // terribly interesting because we aren't auto-committing on the connection, so it just
-        // updates the mutation state and returns.
-        stmt.execute();
-        stmt.setString(1, "key2");
-        stmt.setLong(2, 2);
-        stmt.execute();
-        traceable.commit();
+    // trace the requests we send
+    Connection traceable = getTracingConnection();
+    LOG.debug("Doing dummy the writes to the tracked table");
+    String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
+    PreparedStatement stmt = traceable.prepareStatement(insert);
+    stmt.setString(1, "key1");
+    stmt.setLong(2, 1);
+    // this first trace just does a simple open/close of the span. Its not doing anything
+    // terribly interesting because we aren't auto-committing on the connection, so it just
+    // updates the mutation state and returns.
+    stmt.execute();
+    stmt.setString(1, "key2");
+    stmt.setLong(2, 2);
+    stmt.execute();
+    traceable.commit();
 
-        // wait for the latch to countdown, as the metrics system is time-based
-        LOG.debug("Waiting for latch to complete!");
-        updated.await(200, TimeUnit.SECONDS);// should be way more than GC pauses
+    // wait for the latch to countdown, as the metrics system is time-based
+    LOG.debug("Waiting for latch to complete!");
+    updated.await(200, TimeUnit.SECONDS);// should be way more than GC pauses
 
-        // read the traces back out
+    // read the traces back out
 
-        /* Expected:
+    /* Expected:
          * 1. Single element trace - for first PreparedStatement#execute span
          * 2. Two element trace for second PreparedStatement#execute span
          *  a. execute call
@@ -217,299 +218,302 @@ public class PhoenixTracingEndToEndIT extends BaseTracingTestIT {
          *    i.II. building index updates
          *    i.III. waiting for latch
          * where '*' is a generically named thread (e.g phoenix-1-thread-X)
-         */
-        boolean indexingCompleted = checkStoredTraces(conn, new TraceChecker() {
-            @Override
-            public boolean foundTrace(TraceHolder trace, SpanInfo span) {
-                String traceInfo = trace.toString();
-                // skip logging traces that are just traces about tracing
-                if (traceInfo.contains(QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME)) {
-                    return false;
-                }
-                return traceInfo.contains("Completing index");
-            }
-        });
-
-        assertTrue("Never found indexing updates", indexingCompleted);
-    }
-
-    private void createTestTable(Connection conn, boolean withIndex) throws SQLException {
-        // create a dummy table
-        String ddl =
-                "create table if not exists " + table + "(" + "k varchar not null, " + "c1 bigint"
-                        + " CONSTRAINT pk PRIMARY KEY (k))";
-        conn.createStatement().execute(ddl);
-
-        // early exit if we don't need to create an index
-        if (!withIndex) {
-            return;
+     */
+    boolean indexingCompleted = checkStoredTraces(conn, new TraceChecker() {
+      @Override
+      public boolean foundTrace(TraceHolder trace, SpanInfo span) {
+        String traceInfo = trace.toString();
+        // skip logging traces that are just traces about tracing
+        if (traceInfo.contains(QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME)) {
+          return false;
         }
-        // create an index on the table - we know indexing has some basic tracing
-        ddl = "CREATE INDEX IF NOT EXISTS " + index + " on " + table + " (c1)";
-        conn.createStatement().execute(ddl);
-        conn.commit();
+        return traceInfo.contains("Completing index");
+      }
+    });
+
+    assertTrue("Never found indexing updates", indexingCompleted);
+  }
+
+  private void createTestTable(Connection conn, boolean withIndex) throws SQLException {
+    // create a dummy table
+    String ddl
+            = "create table if not exists " + table + "(" + "k varchar not null, " + "c1 bigint"
+            + " CONSTRAINT pk PRIMARY KEY (k))";
+    conn.createStatement().execute(ddl);
+
+    // early exit if we don't need to create an index
+    if (!withIndex) {
+      return;
     }
+    // create an index on the table - we know indexing has some basic tracing
+    ddl = "CREATE INDEX IF NOT EXISTS " + index + " on " + table + " (c1)";
+    conn.createStatement().execute(ddl);
+    conn.commit();
+  }
 
-    @Test
-    public void testScanTracing() throws Exception {
-        // separate connections to minimize amount of traces that are generated
-        Connection traceable = getTracingConnection();
-        Connection conn = getConnectionWithoutTracing();
+  @Test
+  public void testScanTracing() throws Exception {
+    // separate connections to minimize amount of traces that are generated
+    Connection traceable = getTracingConnection();
+    Connection conn = getConnectionWithoutTracing();
 
-        // one call for client side, one call for server side
-        CountDownLatch updated = new CountDownLatch(2);
-        waitForCommit(updated);
+    // one call for client side, one call for server side
+    CountDownLatch updated = new CountDownLatch(2);
+    waitForCommit(updated);
 
-        // create a dummy table
-        createTestTable(conn, false);
+    // create a dummy table
+    createTestTable(conn, false);
 
-        // update the table, but don't trace these, to simplify the traces we read
-        LOG.debug("Doing dummy the writes to the tracked table");
-        String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(insert);
-        stmt.setString(1, "key1");
-        stmt.setLong(2, 1);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
+    // update the table, but don't trace these, to simplify the traces we read
+    LOG.debug("Doing dummy the writes to the tracked table");
+    String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
+    PreparedStatement stmt = conn.prepareStatement(insert);
+    stmt.setString(1, "key1");
+    stmt.setLong(2, 1);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
 
-        // setup for next set of updates
-        stmt.setString(1, "key2");
-        stmt.setLong(2, 2);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
+    // setup for next set of updates
+    stmt.setString(1, "key2");
+    stmt.setLong(2, 2);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
 
-        // do a scan of the table
-        String read = "SELECT * FROM " + table;
-        ResultSet results = traceable.createStatement().executeQuery(read);
-        assertTrue("Didn't get first result", results.next());
-        assertTrue("Didn't get second result", results.next());
-        results.close();
+    // do a scan of the table
+    String read = "SELECT * FROM " + table;
+    ResultSet results = traceable.createStatement().executeQuery(read);
+    assertTrue("Didn't get first result", results.next());
+    assertTrue("Didn't get second result", results.next());
+    results.close();
 
-        assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
-        // don't trace reads either
-        boolean tracingComplete = checkStoredTraces(conn, new TraceChecker(){
+    assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
+    // don't trace reads either
+    boolean tracingComplete = checkStoredTraces(conn, new TraceChecker() {
 
-            @Override
-            public boolean foundTrace(TraceHolder currentTrace) {
-                String traceInfo = currentTrace.toString();
-                return traceInfo.contains("Parallel scanner");
-            }
-        });
-        assertTrue("Didn't find the parallel scanner in the tracing", tracingComplete);
+      @Override
+      public boolean foundTrace(TraceHolder currentTrace) {
+        String traceInfo = currentTrace.toString();
+        return traceInfo.contains("Parallel scanner");
+      }
+    });
+    assertTrue("Didn't find the parallel scanner in the tracing", tracingComplete);
+  }
+
+  @Test
+  public void testScanTracingOnServer() throws Exception {
+    // separate connections to minimize amount of traces that are generated
+    Connection traceable = getTracingConnection();
+    Connection conn = getConnectionWithoutTracing();
+
+    // one call for client side, one call for server side
+    CountDownLatch updated = new CountDownLatch(2);
+    waitForCommit(updated);
+
+    // create a dummy table
+    createTestTable(conn, false);
+
+    // update the table, but don't trace these, to simplify the traces we read
+    LOG.debug("Doing dummy the writes to the tracked table");
+    String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
+    PreparedStatement stmt = conn.prepareStatement(insert);
+    stmt.setString(1, "key1");
+    stmt.setLong(2, 1);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
+
+    // setup for next set of updates
+    stmt.setString(1, "key2");
+    stmt.setLong(2, 2);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
+
+    // do a scan of the table
+    String read = "SELECT COUNT(*) FROM " + table;
+    ResultSet results = traceable.createStatement().executeQuery(read);
+    assertTrue("Didn't get count result", results.next());
+    // make sure we got the expected count
+    assertEquals("Didn't get the expected number of row", 2, results.getInt(1));
+    results.close();
+
+    assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
+    // don't trace reads either
+    boolean found = checkStoredTraces(conn, new TraceChecker() {
+      @Override
+      public boolean foundTrace(TraceHolder trace) {
+        String traceInfo = trace.toString();
+        return traceInfo.contains(BaseScannerRegionObserver.SCANNER_OPENED_TRACE_INFO);
+      }
+    });
+    assertTrue("Didn't find the parallel scanner in the tracing", found);
+  }
+
+  @Test
+  public void testCustomAnnotationTracing() throws Exception {
+    final String customAnnotationKey = "myannot";
+    final String customAnnotationValue = "a1";
+    final String tenantId = "tenant1";
+    // separate connections to minimize amount of traces that are generated
+    Connection traceable = getTracingConnection(ImmutableMap.of(customAnnotationKey, customAnnotationValue), tenantId);
+    Connection conn = getConnectionWithoutTracing();
+
+    // one call for client side, one call for server side
+    CountDownLatch updated = new CountDownLatch(2);
+    waitForCommit(updated);
+
+    // create a dummy table
+    createTestTable(conn, false);
+
+    // update the table, but don't trace these, to simplify the traces we read
+    LOG.debug("Doing dummy the writes to the tracked table");
+    String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
+    PreparedStatement stmt = conn.prepareStatement(insert);
+    stmt.setString(1, "key1");
+    stmt.setLong(2, 1);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
+
+    // setup for next set of updates
+    stmt.setString(1, "key2");
+    stmt.setLong(2, 2);
+    stmt.execute();
+    conn.commit();
+    conn.rollback();
+
+    // do a scan of the table
+    String read = "SELECT * FROM " + table;
+    ResultSet results = traceable.createStatement().executeQuery(read);
+    assertTrue("Didn't get first result", results.next());
+    assertTrue("Didn't get second result", results.next());
+    results.close();
+
+    assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
+
+    assertAnnotationPresent(customAnnotationKey, customAnnotationValue, conn);
+    assertAnnotationPresent(TENANT_ID_ATTRIB, tenantId, conn);
+    // CurrentSCN is also added as an annotation. Not tested here because it screws up test setup.
+  }
+
+  @Test
+  public void testTraceOnOrOff() throws Exception {
+    Connection conn1 = DriverManager.getConnection(getUrl());
+    try {
+      Statement statement = conn1.createStatement();
+      ResultSet rs = statement.executeQuery("TRACE ON");
+      assertTrue(rs.next());
+      PhoenixConnection pconn = (PhoenixConnection) conn1;
+      long traceId = pconn.getTraceScope().getSpan().getTraceId();
+      assertEquals(traceId, rs.getLong(1));
+      assertEquals(traceId, rs.getLong("trace_id"));
+      assertFalse(rs.next());
+      assertEquals(Sampler.ALWAYS, pconn.getSampler());
+
+      rs = statement.executeQuery("TRACE OFF");
+      assertTrue(rs.next());
+      assertEquals(traceId, rs.getLong(1));
+      assertEquals(traceId, rs.getLong("trace_id"));
+      assertFalse(rs.next());
+      assertEquals(Sampler.NEVER, pconn.getSampler());
+
+      rs = statement.executeQuery("TRACE OFF");
+      assertFalse(rs.next());
+
+      rs = statement.executeQuery("TRACE ON  WITH SAMPLING 0.5");
+      rs.next();
+      assertTrue(((PhoenixConnection) conn1).getSampler() instanceof ProbabilitySampler);
+
+      rs = statement.executeQuery("TRACE ON  WITH SAMPLING 1.0");
+      assertTrue(rs.next());
+      traceId = pconn.getTraceScope().getSpan()
+              .getTraceId();
+      assertEquals(traceId, rs.getLong(1));
+      assertEquals(traceId, rs.getLong("trace_id"));
+      assertFalse(rs.next());
+      assertEquals(Sampler.ALWAYS, pconn.getSampler());
+
+      rs = statement.executeQuery("TRACE ON  WITH SAMPLING 0.5");
+      rs.next();
+      assertTrue(((PhoenixConnection) conn1).getSampler() instanceof ProbabilitySampler);
+
+      rs = statement.executeQuery("TRACE ON WITH SAMPLING 0.0");
+      rs.next();
+      assertEquals(Sampler.NEVER, pconn.getSampler());
+
+      rs = statement.executeQuery("TRACE OFF");
+      assertFalse(rs.next());
+    } finally {
+      conn1.close();
     }
+  }
 
-    @Test
-    public void testScanTracingOnServer() throws Exception {
-        // separate connections to minimize amount of traces that are generated
-        Connection traceable = getTracingConnection();
-        Connection conn = getConnectionWithoutTracing();
+  private void assertAnnotationPresent(final String annotationKey, final String annotationValue, Connection conn) throws Exception {
+    boolean tracingComplete = checkStoredTraces(conn, new TraceChecker() {
+      @Override
+      public boolean foundTrace(TraceHolder currentTrace) {
+        return currentTrace.toString().contains(annotationKey + " - " + annotationValue);
+      }
+    });
 
-        // one call for client side, one call for server side
-        CountDownLatch updated = new CountDownLatch(2);
-        waitForCommit(updated);
+    assertTrue("Didn't find the custom annotation in the tracing", tracingComplete);
+  }
 
-        // create a dummy table
-        createTestTable(conn, false);
-
-        // update the table, but don't trace these, to simplify the traces we read
-        LOG.debug("Doing dummy the writes to the tracked table");
-        String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(insert);
-        stmt.setString(1, "key1");
-        stmt.setLong(2, 1);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
-
-        // setup for next set of updates
-        stmt.setString(1, "key2");
-        stmt.setLong(2, 2);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
-
-        // do a scan of the table
-        String read = "SELECT COUNT(*) FROM " + table;
-        ResultSet results = traceable.createStatement().executeQuery(read);
-        assertTrue("Didn't get count result", results.next());
-        // make sure we got the expected count
-        assertEquals("Didn't get the expected number of row", 2, results.getInt(1));
-        results.close();
-
-        assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
-        // don't trace reads either
-        boolean found = checkStoredTraces(conn, new TraceChecker() {
-            @Override
-            public boolean foundTrace(TraceHolder trace) {
-                String traceInfo = trace.toString();
-                return traceInfo.contains(BaseScannerRegionObserver.SCANNER_OPENED_TRACE_INFO);
-            }
-        });
-        assertTrue("Didn't find the parallel scanner in the tracing", found);
-    }
-
-    @Test
-    public void testCustomAnnotationTracing() throws Exception {
-    	final String customAnnotationKey = "myannot";
-    	final String customAnnotationValue = "a1";
-    	final String tenantId = "tenant1";
-        // separate connections to minimize amount of traces that are generated
-        Connection traceable = getTracingConnection(ImmutableMap.of(customAnnotationKey, customAnnotationValue), tenantId);
-        Connection conn = getConnectionWithoutTracing();
-
-        // one call for client side, one call for server side
-        CountDownLatch updated = new CountDownLatch(2);
-        waitForCommit(updated);
-
-        // create a dummy table
-        createTestTable(conn, false);
-
-        // update the table, but don't trace these, to simplify the traces we read
-        LOG.debug("Doing dummy the writes to the tracked table");
-        String insert = "UPSERT INTO " + table + " VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(insert);
-        stmt.setString(1, "key1");
-        stmt.setLong(2, 1);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
-
-        // setup for next set of updates
-        stmt.setString(1, "key2");
-        stmt.setLong(2, 2);
-        stmt.execute();
-        conn.commit();
-        conn.rollback();
-
-        // do a scan of the table
-        String read = "SELECT * FROM " + table;
-        ResultSet results = traceable.createStatement().executeQuery(read);
-        assertTrue("Didn't get first result", results.next());
-        assertTrue("Didn't get second result", results.next());
-        results.close();
-
-        assertTrue("Get expected updates to trace table", updated.await(200, TimeUnit.SECONDS));
-
-        assertAnnotationPresent(customAnnotationKey, customAnnotationValue, conn);
-        assertAnnotationPresent(TENANT_ID_ATTRIB, tenantId, conn);
-        // CurrentSCN is also added as an annotation. Not tested here because it screws up test setup.
-    }
-
-    @Test
-    public void testTraceOnOrOff() throws Exception {
-        Connection conn1 = DriverManager.getConnection(getUrl());
-        try{
-            Statement statement = conn1.createStatement();
-            ResultSet  rs = statement.executeQuery("TRACE ON");
-            assertTrue(rs.next());
-            PhoenixConnection pconn= (PhoenixConnection) conn1;
-            long traceId = pconn.getTraceScope().getSpan().getTraceId();
-            assertEquals(traceId, rs.getLong(1));
-            assertEquals(traceId, rs.getLong("trace_id"));
-            assertFalse(rs.next());
-            assertEquals(Sampler.ALWAYS, pconn.getSampler());
-
-            rs = statement.executeQuery("TRACE OFF");
-            assertTrue(rs.next());
-            assertEquals(traceId, rs.getLong(1));
-            assertEquals(traceId, rs.getLong("trace_id"));
-            assertFalse(rs.next());
-            assertEquals(Sampler.NEVER, pconn.getSampler());
-
-            rs = statement.executeQuery("TRACE OFF");
-            assertFalse(rs.next());
-
-            rs = statement.executeQuery("TRACE ON  WITH SAMPLING 0.5");
-            rs.next();
-            assertTrue(((PhoenixConnection) conn1).getSampler() instanceof ProbabilitySampler);
-
-            rs = statement.executeQuery("TRACE ON  WITH SAMPLING 1.0");
-            assertTrue(rs.next());
-            traceId = pconn.getTraceScope().getSpan()
-            .getTraceId();
-            assertEquals(traceId, rs.getLong(1));
-            assertEquals(traceId, rs.getLong("trace_id"));
-            assertFalse(rs.next());
-            assertEquals(Sampler.ALWAYS, pconn.getSampler());
-
-            rs = statement.executeQuery("TRACE ON  WITH SAMPLING 0.5");
-            rs.next();
-            assertTrue(((PhoenixConnection) conn1).getSampler() instanceof ProbabilitySampler);
-
-            rs = statement.executeQuery("TRACE ON WITH SAMPLING 0.0");
-            rs.next();
-            assertEquals(Sampler.NEVER, pconn.getSampler());
-
-            rs = statement.executeQuery("TRACE OFF");
-            assertFalse(rs.next());
-       } finally {
-            conn1.close();
+  private boolean checkStoredTraces(Connection conn, TraceChecker checker) throws Exception {
+    TraceReader reader = new TraceReader(conn);
+    int retries = 0;
+    boolean found = false;
+    outer:
+    while (retries < MAX_RETRIES) {
+      Collection<TraceHolder> traces = reader.readAll(100);
+      for (TraceHolder trace : traces) {
+        LOG.info("Got trace: " + trace);
+        found = checker.foundTrace(trace);
+        if (found) {
+          break outer;
         }
+        for (SpanInfo span : trace.spans) {
+          found = checker.foundTrace(trace, span);
+          if (found) {
+            break outer;
+          }
+        }
+      }
+      LOG.info("======  Waiting for tracing updates to be propagated ========");
+      Thread.sleep(1000);
+      retries++;
+    }
+    return found;
+  }
+
+  private abstract class TraceChecker {
+
+    public boolean foundTrace(TraceHolder currentTrace) {
+      return false;
     }
 
-    private void assertAnnotationPresent(final String annotationKey, final String annotationValue, Connection conn) throws Exception {
-        boolean tracingComplete = checkStoredTraces(conn, new TraceChecker(){
-            @Override
-            public boolean foundTrace(TraceHolder currentTrace) {
-            	return currentTrace.toString().contains(annotationKey + " - " + annotationValue);
-            }
-        });
+    public boolean foundTrace(TraceHolder currentTrace, SpanInfo currentSpan) {
+      return false;
+    }
+  }
 
-        assertTrue("Didn't find the custom annotation in the tracing", tracingComplete);
+  private static class CountDownConnection extends DelegatingConnection {
+
+    private CountDownLatch commit;
+
+    @SuppressWarnings("unchecked")
+    public CountDownConnection(Connection conn, CountDownLatch commit) {
+      super(conn);
+      this.commit = commit;
     }
 
-    private boolean checkStoredTraces(Connection conn, TraceChecker checker) throws Exception {
-        TraceReader reader = new TraceReader(conn);
-        int retries = 0;
-        boolean found = false;
-        outer: while (retries < MAX_RETRIES) {
-            Collection<TraceHolder> traces = reader.readAll(100);
-            for (TraceHolder trace : traces) {
-                LOG.info("Got trace: " + trace);
-                found = checker.foundTrace(trace);
-                if (found) {
-                    break outer;
-                }
-                for (SpanInfo span : trace.spans) {
-                    found = checker.foundTrace(trace, span);
-                    if (found) {
-                        break outer;
-                    }
-                }
-            }
-            LOG.info("======  Waiting for tracing updates to be propagated ========");
-            Thread.sleep(1000);
-            retries++;
-        }
-        return found;
+    @Override
+    public void commit() throws SQLException {
+      commit.countDown();
+      super.commit();
     }
 
-    private abstract class TraceChecker {
-        public boolean foundTrace(TraceHolder currentTrace) {
-            return false;
-        }
-
-        public boolean foundTrace(TraceHolder currentTrace, SpanInfo currentSpan) {
-            return false;
-        }
-    }
-
-    private static class CountDownConnection extends DelegatingConnection {
-        private CountDownLatch commit;
-
-        @SuppressWarnings("unchecked")
-        public CountDownConnection(Connection conn, CountDownLatch commit) {
-            super(conn);
-            this.commit = commit;
-        }
-
-        @Override
-        public void commit() throws SQLException {
-            commit.countDown();
-            super.commit();
-        }
-
-    }
+  }
 }

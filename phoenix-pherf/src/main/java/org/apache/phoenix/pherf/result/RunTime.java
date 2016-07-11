@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import java.util.Comparator;
@@ -24,98 +23,99 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlAttribute;
 
 public class RunTime implements Comparator<RunTime>, Comparable<RunTime> {
-	private Date startTime;
-	private Integer elapsedDurationInMs;
-	private String message;
-	private Long resultRowCount;
-	private String explainPlan;
 
-    @SuppressWarnings("unused")
-    public RunTime() {
-    }
+  private Date startTime;
+  private Integer elapsedDurationInMs;
+  private String message;
+  private Long resultRowCount;
+  private String explainPlan;
 
-    @SuppressWarnings("unused")
-    public RunTime(Integer elapsedDurationInMs) {
-		this(null, elapsedDurationInMs);
-	}
-	
-	public RunTime(Long resultRowCount, Integer elapsedDurationInMs) {
-		this(null, resultRowCount, elapsedDurationInMs);
-	}
-	
-	public RunTime(Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
-		this(null, null, startTime, resultRowCount, elapsedDurationInMs);
-	}
-	
-	public RunTime(String message, Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
-		this(message, null, startTime, resultRowCount, elapsedDurationInMs);
-	}
-	
-	public RunTime(String message, String explainPlan, Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
-		this.elapsedDurationInMs = elapsedDurationInMs;
-		this.startTime = startTime;
-		this.resultRowCount = resultRowCount;
-		this.message = message;
-		this.explainPlan = explainPlan;
-	}
+  @SuppressWarnings("unused")
+  public RunTime() {
+  }
 
-	@XmlAttribute()
-	public Date getStartTime() {
-		return startTime;
-	}
+  @SuppressWarnings("unused")
+  public RunTime(Integer elapsedDurationInMs) {
+    this(null, elapsedDurationInMs);
+  }
 
-    @SuppressWarnings("unused")
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-	
-	@XmlAttribute()
-	public Integer getElapsedDurationInMs() {
-		return elapsedDurationInMs;
-	}
+  public RunTime(Long resultRowCount, Integer elapsedDurationInMs) {
+    this(null, resultRowCount, elapsedDurationInMs);
+  }
 
-    @SuppressWarnings("unused")
-    public void setElapsedDurationInMs(Integer elapsedDurationInMs) {
-		this.elapsedDurationInMs = elapsedDurationInMs;
-	}
+  public RunTime(Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
+    this(null, null, startTime, resultRowCount, elapsedDurationInMs);
+  }
 
-	@Override
-	public int compare(RunTime r1, RunTime r2) {
-		return r1.getElapsedDurationInMs().compareTo(r2.getElapsedDurationInMs());
-	}
+  public RunTime(String message, Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
+    this(message, null, startTime, resultRowCount, elapsedDurationInMs);
+  }
 
-	@Override
-	public int compareTo(RunTime o) {
-		return compare(this, o);
-	}
+  public RunTime(String message, String explainPlan, Date startTime, Long resultRowCount, Integer elapsedDurationInMs) {
+    this.elapsedDurationInMs = elapsedDurationInMs;
+    this.startTime = startTime;
+    this.resultRowCount = resultRowCount;
+    this.message = message;
+    this.explainPlan = explainPlan;
+  }
 
-	@XmlAttribute()
-	public String getMessage() {
-		return message;
-	}
+  @XmlAttribute()
+  public Date getStartTime() {
+    return startTime;
+  }
 
-    @SuppressWarnings("unused")
-    public void setMessage(String message) {
-		this.message = message;
-	}
-	
-	@XmlAttribute()
-	public String getExplainPlan() {
-		return explainPlan;
-	}
+  @SuppressWarnings("unused")
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
+  }
 
-    @SuppressWarnings("unused")
-    public void setExplainPlan(String explainPlan) {
-		this.explainPlan = explainPlan;
-	}
+  @XmlAttribute()
+  public Integer getElapsedDurationInMs() {
+    return elapsedDurationInMs;
+  }
 
-	@XmlAttribute()
-	public Long getResultRowCount() {
-		return resultRowCount;
-	}
+  @SuppressWarnings("unused")
+  public void setElapsedDurationInMs(Integer elapsedDurationInMs) {
+    this.elapsedDurationInMs = elapsedDurationInMs;
+  }
 
-    @SuppressWarnings("unused")
-	public void setResultRowCount(Long resultRowCount) {
-		this.resultRowCount = resultRowCount;
-	}
+  @Override
+  public int compare(RunTime r1, RunTime r2) {
+    return r1.getElapsedDurationInMs().compareTo(r2.getElapsedDurationInMs());
+  }
+
+  @Override
+  public int compareTo(RunTime o) {
+    return compare(this, o);
+  }
+
+  @XmlAttribute()
+  public String getMessage() {
+    return message;
+  }
+
+  @SuppressWarnings("unused")
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  @XmlAttribute()
+  public String getExplainPlan() {
+    return explainPlan;
+  }
+
+  @SuppressWarnings("unused")
+  public void setExplainPlan(String explainPlan) {
+    this.explainPlan = explainPlan;
+  }
+
+  @XmlAttribute()
+  public Long getResultRowCount() {
+    return resultRowCount;
+  }
+
+  @SuppressWarnings("unused")
+  public void setResultRowCount(Long resultRowCount) {
+    this.resultRowCount = resultRowCount;
+  }
 }

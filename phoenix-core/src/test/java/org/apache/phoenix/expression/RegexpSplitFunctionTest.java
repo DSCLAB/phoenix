@@ -34,61 +34,67 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 public class RegexpSplitFunctionTest {
-    private final static PVarchar TYPE = PVarchar.INSTANCE;
 
-    private String[] evalExp(Expression exp) throws SQLException {
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        boolean eval = exp.evaluate(null, ptr);
-        assertTrue(eval);
-        PhoenixArray evalRes = (PhoenixArray) exp.getDataType().toObject(ptr);
-        String[] res = (String[]) evalRes.getArray();
-        return res;
-    }
+  private final static PVarchar TYPE = PVarchar.INSTANCE;
 
-    private String[] testExpression(String srcStr, String patternStr, SortOrder sortOrder)
-            throws SQLException {
-        Expression srcExp, patternExp;
-        srcExp = LiteralExpression.newConstant(srcStr, TYPE, sortOrder);
-        patternExp = LiteralExpression.newConstant(patternStr, TYPE, sortOrder);
-        List<Expression> expressions = Lists.newArrayList(srcExp, patternExp);
-        String[] res1, res2;
-        res1 = evalExp(new ByteBasedRegexpSplitFunction(expressions));
-        res2 = evalExp(new StringBasedRegexpSplitFunction(expressions));
-        testEqual(res2, res1);
-        return res1;
-    }
+  private String[] evalExp(Expression exp) throws SQLException {
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    boolean eval = exp.evaluate(null, ptr);
+    assertTrue(eval);
+    PhoenixArray evalRes = (PhoenixArray) exp.getDataType().toObject(ptr);
+    String[] res = (String[]) evalRes.getArray();
+    return res;
+  }
 
-    private String[] testExpression(String srcStr, String patternStr) throws SQLException {
-        String[] result1 = testExpression(srcStr, patternStr, SortOrder.ASC);
-        String[] result2 = testExpression(srcStr, patternStr, SortOrder.DESC);
-        testEqual(result1, result2);
-        return result1;
-    }
+  private String[] testExpression(String srcStr, String patternStr, SortOrder sortOrder)
+          throws SQLException {
+    Expression srcExp, patternExp;
+    srcExp = LiteralExpression.newConstant(srcStr, TYPE, sortOrder);
+    patternExp = LiteralExpression.newConstant(patternStr, TYPE, sortOrder);
+    List<Expression> expressions = Lists.newArrayList(srcExp, patternExp);
+    String[] res1, res2;
+    res1 = evalExp(new ByteBasedRegexpSplitFunction(expressions));
+    res2 = evalExp(new StringBasedRegexpSplitFunction(expressions));
+    testEqual(res2, res1);
+    return res1;
+  }
 
-    private void testEqual(String[] expectedStr, String[] result) {
-        if (result == null ^ expectedStr == null) return;
-        if (expectedStr == null) return;
-        assertEquals(expectedStr.length, result.length);
-        for (int i = 0; i < expectedStr.length; ++i)
-            assertEquals(expectedStr[i], result[i]);
-    }
+  private String[] testExpression(String srcStr, String patternStr) throws SQLException {
+    String[] result1 = testExpression(srcStr, patternStr, SortOrder.ASC);
+    String[] result2 = testExpression(srcStr, patternStr, SortOrder.DESC);
+    testEqual(result1, result2);
+    return result1;
+  }
 
-    private void testExpression(String srcStr, String patternStr, String[] expectedStr)
-            throws SQLException {
-        String[] result = testExpression(srcStr, patternStr);
-        testEqual(expectedStr, result);
+  private void testEqual(String[] expectedStr, String[] result) {
+    if (result == null ^ expectedStr == null) {
+      return;
     }
+    if (expectedStr == null) {
+      return;
+    }
+    assertEquals(expectedStr.length, result.length);
+    for (int i = 0; i < expectedStr.length; ++i) {
+      assertEquals(expectedStr[i], result[i]);
+    }
+  }
 
-    @Test
-    public void test() throws Exception {
-        String[] res = new String[] { "ONE", "TWO", "THREE" };
-        testExpression("ONE:TWO:THREE", ":", res);
-        testExpression("ONE,TWO,THREE", ",", res);
-        testExpression("12ONE34TWO56THREE78", "[0-9]+", new String[] { null, "ONE", "TWO", "THREE",
-                null });
-        testExpression("ONE34TWO56THREE78", "[0-9]+", new String[] { "ONE", "TWO", "THREE", null });
-        testExpression("123ONE34TWO56THREE", "[0-9]+", new String[] { null, "ONE", "TWO", "THREE" });
-        testExpression("123", "[0-9]+", new String[] { null, null });
-        testExpression("ONE", "[0-9]+", new String[] { "ONE" });
-    }
+  private void testExpression(String srcStr, String patternStr, String[] expectedStr)
+          throws SQLException {
+    String[] result = testExpression(srcStr, patternStr);
+    testEqual(expectedStr, result);
+  }
+
+  @Test
+  public void test() throws Exception {
+    String[] res = new String[]{"ONE", "TWO", "THREE"};
+    testExpression("ONE:TWO:THREE", ":", res);
+    testExpression("ONE,TWO,THREE", ",", res);
+    testExpression("12ONE34TWO56THREE78", "[0-9]+", new String[]{null, "ONE", "TWO", "THREE",
+      null});
+    testExpression("ONE34TWO56THREE78", "[0-9]+", new String[]{"ONE", "TWO", "THREE", null});
+    testExpression("123ONE34TWO56THREE", "[0-9]+", new String[]{null, "ONE", "TWO", "THREE"});
+    testExpression("123", "[0-9]+", new String[]{null, null});
+    testExpression("ONE", "[0-9]+", new String[]{"ONE"});
+  }
 }

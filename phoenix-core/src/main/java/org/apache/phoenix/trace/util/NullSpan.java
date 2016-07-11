@@ -26,7 +26,8 @@ import org.apache.htrace.TimelineAnnotation;
 import org.apache.phoenix.util.StringUtil;
 
 /**
- * Fake {@link Span} that doesn't save any state, in place of <tt>null</tt> return values, to avoid
+ * Fake {@link Span} that doesn't save any state, in place of <tt>null</tt>
+ * return values, to avoid
  * <tt>null</tt> check.
  */
 public class NullSpan implements Span {
@@ -84,21 +85,11 @@ public class NullSpan implements Span {
   }
 
   @Override
-  public long getParentId() {
-    return 0;
-  }
-
-  @Override
   public void addKVAnnotation(byte[] key, byte[] value) {
   }
 
   @Override
   public void addTimelineAnnotation(String msg) {
-  }
-
-  @Override
-  public Map<byte[], byte[]> getKVAnnotations() {
-    return Collections.emptyMap();
   }
 
   @Override
@@ -114,5 +105,27 @@ public class NullSpan implements Span {
   @Override
   public String toJson() {
     return StringUtil.EMPTY_STRING;
+  }
+
+  @Override
+  public long[] getParents() {
+    return new long[0];
+  }
+
+  @Override
+  public void setParents(long[] parents) {
+  }
+
+  @Override
+  public void addKVAnnotation(String key, String value) {
+  }
+
+  @Override
+  public void setProcessId(String s) {
+  }
+
+  @Override
+  public Map<String, String> getKVAnnotations() {
+    return Collections.EMPTY_MAP;
   }
 }

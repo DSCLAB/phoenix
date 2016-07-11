@@ -30,45 +30,47 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PVarbinary;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-@BuiltInFunction(name = ArrayLengthFunction.NAME, args = { @Argument(allowedTypes = {
-		PBinaryArray.class, PVarbinary.class }) })
+@BuiltInFunction(name = ArrayLengthFunction.NAME, args = {
+  @Argument(allowedTypes = {
+    PBinaryArray.class, PVarbinary.class})})
 public class ArrayLengthFunction extends ScalarFunction {
-	public static final String NAME = "ARRAY_LENGTH";
 
-	public ArrayLengthFunction() {
-	}
+  public static final String NAME = "ARRAY_LENGTH";
 
-	public ArrayLengthFunction(List<Expression> children) {
-		super(children);
-	}
+  public ArrayLengthFunction() {
+  }
 
-	@Override
-	public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-		Expression arrayExpr = children.get(0);
-		if (!arrayExpr.evaluate(tuple, ptr)) {
-			return false;
-		} else if (ptr.getLength() == 0) {
-			return true;
-		}
-		PDataType baseType = PDataType.fromTypeId(children.get(0).getDataType()
-				.getSqlType()
-				- PDataType.ARRAY_TYPE_BASE);
-		int length = PArrayDataType.getArrayLength(ptr, baseType, arrayExpr.getMaxLength());
-		byte[] lengthBuf = new byte[PInteger.INSTANCE.getByteSize()];
+  public ArrayLengthFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression arrayExpr = children.get(0);
+    if (!arrayExpr.evaluate(tuple, ptr)) {
+      return false;
+    } else if (ptr.getLength() == 0) {
+      return true;
+    }
+    PDataType baseType = PDataType.fromTypeId(children.get(0).getDataType()
+            .getSqlType()
+            - PDataType.ARRAY_TYPE_BASE);
+    int length = PArrayDataType.getArrayLength(ptr, baseType, arrayExpr.getMaxLength());
+    byte[] lengthBuf = new byte[PInteger.INSTANCE.getByteSize()];
     PInteger.INSTANCE.getCodec().encodeInt(length, lengthBuf, 0);
-		ptr.set(lengthBuf);
-		return true;
-	}
+    ptr.set(lengthBuf);
+    return true;
+  }
 
-	@Override
-	public PDataType getDataType() {
-		// Array length will return an Integer
-		return PInteger.INSTANCE;
-	}
+  @Override
+  public PDataType getDataType() {
+    // Array length will return an Integer
+    return PInteger.INSTANCE;
+  }
 
-	@Override
-	public String getName() {
-		return NAME;
-	}
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
 }

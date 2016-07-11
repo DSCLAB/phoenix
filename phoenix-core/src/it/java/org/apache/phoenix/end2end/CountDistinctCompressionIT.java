@@ -38,33 +38,33 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-
 public class CountDistinctCompressionIT extends BaseOwnClusterHBaseManagedTimeIT {
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        Map<String, String> props = Maps.newHashMapWithExpectedSize(3);
-        // Must update config before starting server
-        props.put(QueryServices.DISTINCT_VALUE_COMPRESS_THRESHOLD_ATTRIB, Long.toString(1));
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(3);
+    // Must update config before starting server
+    props.put(QueryServices.DISTINCT_VALUE_COMPRESS_THRESHOLD_ATTRIB, Long.toString(1));
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
+
+  @Test
+  public void testDistinctCountOnColumn() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), (Date) null, getUrl());
+
+    String query = "SELECT count(DISTINCT A_STRING) FROM aTable";
+
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(3, rs.getLong(1));
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
-
-    @Test
-    public void testDistinctCountOnColumn() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), (Date)null, getUrl());
-
-        String query = "SELECT count(DISTINCT A_STRING) FROM aTable";
-
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet rs = statement.executeQuery();
-            assertTrue(rs.next());
-            assertEquals(3, rs.getLong(1));
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
-    }
+  }
 }

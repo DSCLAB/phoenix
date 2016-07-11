@@ -98,7 +98,7 @@ public class PUnsignedSmallint extends PWholeNumber<Short> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Short v = (Short) PSmallint.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeNumber(v);
     return v;
@@ -112,13 +112,13 @@ public class PUnsignedSmallint extends PWholeNumber<Short> {
   @Override
   public boolean isCoercibleTo(PDataType targetType) {
     return targetType.equals(this) || PUnsignedInt.INSTANCE.isCoercibleTo(targetType) || PSmallint.INSTANCE
-        .isCoercibleTo(targetType);
+            .isCoercibleTo(targetType);
   }
 
   @Override
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     return super.isCoercibleTo(targetType, value) || PSmallint.INSTANCE
-        .isCoercibleTo(targetType, value);
+            .isCoercibleTo(targetType, value);
   }
 
   @Override

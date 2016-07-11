@@ -22,25 +22,25 @@ import java.sql.SQLException;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 public class ConcurrentTableMutationException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.CONCURRENT_TABLE_MUTATION;
-    private final String schemaName;
-    private final String tableName;
 
-    public ConcurrentTableMutationException(String schemaName, String tableName) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).build().toString(), 
-                code.getSQLState(), code.getErrorCode());
-        this.schemaName = schemaName;
-        this.tableName = tableName;
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.CONCURRENT_TABLE_MUTATION;
+  private final String schemaName;
+  private final String tableName;
 
-    public String getTableName() {
-        return tableName;
-    }
+  public ConcurrentTableMutationException(String schemaName, String tableName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).build().toString(),
+            code.getSQLState(), code.getErrorCode());
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  public String getTableName() {
+    return tableName;
+  }
+
+  public String getSchemaName() {
+    return schemaName;
+  }
 }

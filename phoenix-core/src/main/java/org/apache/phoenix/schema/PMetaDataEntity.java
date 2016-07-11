@@ -18,5 +18,6 @@
 package org.apache.phoenix.schema;
 
 public interface PMetaDataEntity {
-    public int getEstimatedSize();
+
+  public int getEstimatedSize();
 }

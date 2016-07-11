@@ -28,7 +28,7 @@ public class PIntegerArray extends PArrayDataType<int[]> {
 
   private PIntegerArray() {
     super("INTEGER ARRAY", PDataType.ARRAY_TYPE_BASE + PInteger.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 24);
+            PhoenixArray.class, null, 24);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PIntegerArray extends PArrayDataType<int[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PInteger.INSTANCE, sortOrder, maxLength, scale,
-        PInteger.INSTANCE);
+            PInteger.INSTANCE);
   }
 
   @Override
@@ -76,10 +76,10 @@ public class PIntegerArray extends PArrayDataType<int[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

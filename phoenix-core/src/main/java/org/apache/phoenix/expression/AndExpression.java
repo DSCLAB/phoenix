@@ -25,82 +25,82 @@ import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 import org.apache.phoenix.schema.types.PBoolean;
 import org.apache.phoenix.schema.TypeMismatchException;
 
-
 /**
- * 
+ *
  * AND expression implementation
  *
- * 
+ *
  * @since 0.1
  */
 public class AndExpression extends AndOrExpression {
-    private static final String AND = "AND";
-    
-    public static Expression create(List<Expression> children) throws SQLException {
-    	Determinism determinism = Determinism.ALWAYS;
-        Iterator<Expression> iterator = children.iterator();
-        while (iterator.hasNext()) {
-            Expression child = iterator.next();
-            if (child.getDataType() != PBoolean.INSTANCE) {
-                throw TypeMismatchException.newException(PBoolean.INSTANCE, child.getDataType(), child.toString());
-            }
-            if (LiteralExpression.isFalse(child)) {
-                return child;
-            }
-            if (LiteralExpression.isTrue(child)) {
-                iterator.remove();
-            }
-			determinism.combine(child.getDeterminism());
-        }
-        if (children.size() == 0) {
-            return LiteralExpression.newConstant(true, determinism);
-        }
-        if (children.size() == 1) {
-            return children.get(0);
-        }
-        return new AndExpression(children);
-    }
-    
-    public static String combine(String expression1, String expression2) {
-        if (expression1 == null) {
-            return expression2;
-        }
-        if (expression2 == null) {
-            return expression1;
-        }
-        return "(" + expression1 + ") " + AND + " (" + expression2 + ")";
-    }
-    
-    public AndExpression() {
-    }
 
-    public AndExpression(List<Expression> children) {
-        super(children);
-    }
+  private static final String AND = "AND";
 
-    @Override
-    protected boolean isStopValue(Boolean value) {
-        return !Boolean.TRUE.equals(value);
+  public static Expression create(List<Expression> children) throws SQLException {
+    Determinism determinism = Determinism.ALWAYS;
+    Iterator<Expression> iterator = children.iterator();
+    while (iterator.hasNext()) {
+      Expression child = iterator.next();
+      if (child.getDataType() != PBoolean.INSTANCE) {
+        throw TypeMismatchException.newException(PBoolean.INSTANCE, child.getDataType(), child.toString());
+      }
+      if (LiteralExpression.isFalse(child)) {
+        return child;
+      }
+      if (LiteralExpression.isTrue(child)) {
+        iterator.remove();
+      }
+      determinism.combine(child.getDeterminism());
     }
+    if (children.size() == 0) {
+      return LiteralExpression.newConstant(true, determinism);
+    }
+    if (children.size() == 1) {
+      return children.get(0);
+    }
+    return new AndExpression(children);
+  }
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder("(");
-        for (int i = 0; i < children.size() - 1; i++) {
-            buf.append(children.get(i) + " " + AND + " ");
-        }
-        buf.append(children.get(children.size()-1));
-        buf.append(')');
-        return buf.toString();
+  public static String combine(String expression1, String expression2) {
+    if (expression1 == null) {
+      return expression2;
     }
-    
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
+    if (expression2 == null) {
+      return expression1;
     }
+    return "(" + expression1 + ") " + AND + " (" + expression2 + ")";
+  }
+
+  public AndExpression() {
+  }
+
+  public AndExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected boolean isStopValue(Boolean value) {
+    return !Boolean.TRUE.equals(value);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder("(");
+    for (int i = 0; i < children.size() - 1; i++) {
+      buf.append(children.get(i) + " " + AND + " ");
+    }
+    buf.append(children.get(children.size() - 1));
+    buf.append(')');
+    return buf.toString();
+  }
+
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
+    }
+    return t;
+  }
 }

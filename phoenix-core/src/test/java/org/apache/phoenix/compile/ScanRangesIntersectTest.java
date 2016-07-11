@@ -42,65 +42,69 @@ import com.google.common.collect.Lists;
 
 public class ScanRangesIntersectTest {
 
-    @Test
-    public void testPointLookupIntersect() throws Exception {
-        RowKeySchema schema = schema();
-        int[] slotSpan = ScanUtil.SINGLE_COLUMN_SLOT_SPAN;
-        List<KeyRange> keys = points("a","j","m","z");
-        ScanRanges ranges = ScanRanges.create(schema, Collections.singletonList(keys), slotSpan);
-        assertIntersect(ranges, "b", "l", "j");
-        
+  @Test
+  public void testPointLookupIntersect() throws Exception {
+    RowKeySchema schema = schema();
+    int[] slotSpan = ScanUtil.SINGLE_COLUMN_SLOT_SPAN;
+    List<KeyRange> keys = points("a", "j", "m", "z");
+    ScanRanges ranges = ScanRanges.create(schema, Collections.singletonList(keys), slotSpan);
+    assertIntersect(ranges, "b", "l", "j");
+
+  }
+
+  private static void assertIntersect(ScanRanges ranges, String lowerRange, String upperRange, String... expectedPoints) {
+    List<KeyRange> expectedKeys = points(expectedPoints);
+    Collections.sort(expectedKeys, KeyRange.COMPARATOR);
+    Scan scan = new Scan();
+    scan.setFilter(ranges.getSkipScanFilter());
+    byte[] startKey = lowerRange == null ? KeyRange.UNBOUND : PVarchar.INSTANCE.toBytes(lowerRange);
+    byte[] stopKey = upperRange == null ? KeyRange.UNBOUND : PVarchar.INSTANCE.toBytes(upperRange);
+    Scan newScan = ranges.intersectScan(scan, startKey, stopKey, 0, true);
+    if (expectedPoints.length == 0) {
+      assertNull(newScan);
+    } else {
+      assertNotNull(newScan);
+      SkipScanFilter filter = (SkipScanFilter) newScan.getFilter();
+      assertEquals(expectedKeys, filter.getSlots().get(0));
     }
-    
-    private static void assertIntersect(ScanRanges ranges, String lowerRange, String upperRange, String... expectedPoints) {
-        List<KeyRange> expectedKeys = points(expectedPoints);
-        Collections.sort(expectedKeys,KeyRange.COMPARATOR);
-        Scan scan = new Scan();
-        scan.setFilter(ranges.getSkipScanFilter());
-        byte[] startKey = lowerRange == null ? KeyRange.UNBOUND : PVarchar.INSTANCE.toBytes(lowerRange);
-        byte[] stopKey = upperRange == null ? KeyRange.UNBOUND : PVarchar.INSTANCE.toBytes(upperRange);
-        Scan newScan = ranges.intersectScan(scan, startKey, stopKey, 0, true);
-        if (expectedPoints.length == 0) {
-            assertNull(newScan);
-        } else {
-            assertNotNull(newScan);
-            SkipScanFilter filter = (SkipScanFilter)newScan.getFilter();
-            assertEquals(expectedKeys, filter.getSlots().get(0));
-        }
+  }
+
+  private static List<KeyRange> points(String... points) {
+    List<KeyRange> keys = Lists.newArrayListWithExpectedSize(points.length);
+    for (String point : points) {
+      keys.add(KeyRange.getKeyRange(PVarchar.INSTANCE.toBytes(point)));
     }
-    
-    private static List<KeyRange> points(String... points) {
-        List<KeyRange> keys = Lists.newArrayListWithExpectedSize(points.length);
-        for (String point : points) {
-            keys.add(KeyRange.getKeyRange(PVarchar.INSTANCE.toBytes(point)));
-        }
-        return keys;
-    }
-    
-    private static RowKeySchema schema() {
-        RowKeySchemaBuilder builder = new RowKeySchemaBuilder(1);
-        builder.addField(new PDatum() {
-            @Override
-            public boolean isNullable() {
-                return false;
-            }
-            @Override
-            public PDataType getDataType() {
-                return PVarchar.INSTANCE;
-            }
-            @Override
-            public Integer getMaxLength() {
-                return null;
-            }
-            @Override
-            public Integer getScale() {
-                return null;
-            }
-            @Override
-            public SortOrder getSortOrder() {
-                return SortOrder.getDefault();
-            }
-        }, false, SortOrder.getDefault());
-        return builder.build();
-    }
+    return keys;
+  }
+
+  private static RowKeySchema schema() {
+    RowKeySchemaBuilder builder = new RowKeySchemaBuilder(1);
+    builder.addField(new PDatum() {
+      @Override
+      public boolean isNullable() {
+        return false;
+      }
+
+      @Override
+      public PDataType getDataType() {
+        return PVarchar.INSTANCE;
+      }
+
+      @Override
+      public Integer getMaxLength() {
+        return null;
+      }
+
+      @Override
+      public Integer getScale() {
+        return null;
+      }
+
+      @Override
+      public SortOrder getSortOrder() {
+        return SortOrder.getDefault();
+      }
+    }, false, SortOrder.getDefault());
+    return builder.build();
+  }
 }

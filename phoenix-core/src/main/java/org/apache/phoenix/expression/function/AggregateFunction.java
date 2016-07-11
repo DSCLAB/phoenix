@@ -22,32 +22,29 @@ import java.util.List;
 import org.apache.phoenix.expression.Determinism;
 import org.apache.phoenix.expression.Expression;
 
-
-
-
 /**
- * 
- * Compiled representation of a built-in aggregate function 
  *
- * 
+ * Compiled representation of a built-in aggregate function
+ *
+ *
  * @since 0.1
  */
 abstract public class AggregateFunction extends FunctionExpression {
 
-    public AggregateFunction() {
-    }
+  public AggregateFunction() {
+  }
 
-    public AggregateFunction(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public boolean isStateless() {
-        return false;
-    }
+  public AggregateFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public Determinism getDeterminism() {
-        return Determinism.PER_ROW;
-    }
+  @Override
+  public boolean isStateless() {
+    return false;
+  }
+
+  @Override
+  public Determinism getDeterminism() {
+    return Determinism.PER_ROW;
+  }
 }

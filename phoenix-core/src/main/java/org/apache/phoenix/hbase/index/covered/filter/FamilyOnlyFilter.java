@@ -23,8 +23,8 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.FamilyFilter;
 
 /**
- * Similar to the {@link FamilyFilter} but stops when the end of the family is reached and only
- * supports equality
+ * Similar to the {@link FamilyFilter} but stops when the end of the family is
+ * reached and only supports equality
  */
 public class FamilyOnlyFilter extends FamilyFilter {
 
@@ -33,6 +33,7 @@ public class FamilyOnlyFilter extends FamilyFilter {
 
   /**
    * Filter on exact binary matches to the passed family
+   *
    * @param family to compare against
    */
   public FamilyOnlyFilter(final byte[] family) {
@@ -42,7 +43,6 @@ public class FamilyOnlyFilter extends FamilyFilter {
   public FamilyOnlyFilter(final ByteArrayComparable familyComparator) {
     super(CompareOp.EQUAL, familyComparator);
   }
-
 
   @Override
   public boolean filterAllRemaining() {
@@ -65,11 +65,11 @@ public class FamilyOnlyFilter extends FamilyFilter {
       // we found a match before, and now we are skipping the key because of the family, therefore
       // we are done (no more of the family).
       if (code.equals(ReturnCode.SKIP)) {
-      done = true;
+        done = true;
       }
-    } else {
-      // if we haven't seen a match before, then it doesn't matter what we see now, except to mark
-      // if we've seen a match
+    } else // if we haven't seen a match before, then it doesn't matter what we see now, except to mark
+    // if we've seen a match
+    {
       if (code.equals(ReturnCode.INCLUDE)) {
         previousMatchFound = true;
       }

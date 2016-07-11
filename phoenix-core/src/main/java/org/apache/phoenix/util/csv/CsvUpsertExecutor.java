@@ -44,225 +44,230 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
- * Executes upsert statements on a provided {@code PreparedStatement} based on incoming CSV records, notifying a
- * listener each time the prepared statement is executed.
+ * Executes upsert statements on a provided {@code PreparedStatement} based on
+ * incoming CSV records, notifying a listener each time the prepared statement
+ * is executed.
  */
 public class CsvUpsertExecutor implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CsvUpsertExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CsvUpsertExecutor.class);
 
-    private final String arrayElementSeparator;
-    private final Connection conn;
-    private final List<PDataType> dataTypes;
-    private final List<Function<String,Object>> conversionFunctions;
-    private final PreparedStatement preparedStatement;
-    private final UpsertListener upsertListener;
-    private long upsertCount = 0L;
+  private final String arrayElementSeparator;
+  private final Connection conn;
+  private final List<PDataType> dataTypes;
+  private final List<Function<String, Object>> conversionFunctions;
+  private final PreparedStatement preparedStatement;
+  private final UpsertListener upsertListener;
+  private long upsertCount = 0L;
 
-    /**
-     * A listener that is called for events based on incoming CSV data.
-     */
-    public static interface UpsertListener {
-
-        /**
-         * Called when an upsert has been sucessfully completed. The given upsertCount is the total number of upserts
-         * completed on the caller up to this point.
-         *
-         * @param upsertCount total number of upserts that have been completed
-         */
-        void upsertDone(long upsertCount);
-
-
-        /**
-         * Called when executing a prepared statement has failed on a given record.
-         *
-         * @param csvRecord the CSV record that was being upserted when the error occurred
-         */
-        void errorOnRecord(CSVRecord csvRecord, String errorMessage);
-    }
-
+  /**
+   * A listener that is called for events based on incoming CSV data.
+   */
+  public static interface UpsertListener {
 
     /**
-     * Static constructor method for creating a CsvUpsertExecutor.
+     * Called when an upsert has been sucessfully completed. The given
+     * upsertCount is the total number of upserts completed on the caller up to
+     * this point.
      *
-     * @param conn Phoenix connection upon which upserts are to be performed
-     * @param tableName name of the table in which upserts are to be performed
-     * @param columnInfoList description of the columns to be upserted to, in the same order as in the CSV input
-     * @param upsertListener listener that will be notified of upserts, can be null
-     * @param arrayElementSeparator separator string to delimit string representations of arrays
-     * @return the created CsvUpsertExecutor
+     * @param upsertCount total number of upserts that have been completed
      */
-    public static CsvUpsertExecutor create(PhoenixConnection conn, String tableName, List<ColumnInfo> columnInfoList,
-            UpsertListener upsertListener, String arrayElementSeparator) {
-        PreparedStatement preparedStatement = null;
-        try {
-            String upsertSql = QueryUtil.constructUpsertStatement(tableName, columnInfoList);
-            LOG.info("Upserting SQL data with {}", upsertSql);
-            preparedStatement = conn.prepareStatement(upsertSql);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return new CsvUpsertExecutor(conn, columnInfoList, preparedStatement, upsertListener,
-                arrayElementSeparator);
-    }
+    void upsertDone(long upsertCount);
 
     /**
-     * Construct with the definition of incoming columns, and the statement upon which upsert statements
-     * are to be performed.
-     */
-    CsvUpsertExecutor(Connection conn, List<ColumnInfo> columnInfoList, PreparedStatement preparedStatement,
-            UpsertListener upsertListener, String arrayElementSeparator) {
-        this.conn = conn;
-        this.preparedStatement = preparedStatement;
-        this.upsertListener = upsertListener;
-        this.arrayElementSeparator = arrayElementSeparator;
-        this.dataTypes = Lists.newArrayList();
-        this.conversionFunctions = Lists.newArrayList();
-        for (ColumnInfo columnInfo : columnInfoList) {
-            PDataType dataType = PDataType.fromTypeId(columnInfo.getSqlType());
-            dataTypes.add(dataType);
-            conversionFunctions.add(createConversionFunction(dataType));
-        }
-    }
-
-    /**
-     * Execute upserts for each CSV record contained in the given iterable, notifying this instance's
-     * {@code UpsertListener} for each completed upsert.
+     * Called when executing a prepared statement has failed on a given record.
      *
-     * @param csvRecords iterable of CSV records to be upserted
+     * @param csvRecord the CSV record that was being upserted when the error
+     * occurred
      */
-    public void execute(Iterable<CSVRecord> csvRecords) {
-        for (CSVRecord csvRecord : csvRecords) {
-            execute(csvRecord);
-        }
-    }
+    void errorOnRecord(CSVRecord csvRecord, String errorMessage);
+  }
 
-    /**
-     * Upsert a single record.
-     *
-     * @param csvRecord CSV record containing the data to be upserted
-     */
-    void execute(CSVRecord csvRecord) {
-        try {
-            if (csvRecord.size() < conversionFunctions.size()) {
-                String message = String.format("CSV record does not have enough values (has %d, but needs %d)",
-                        csvRecord.size(), conversionFunctions.size());
-                throw new IllegalArgumentException(message);
-            }
-            for (int fieldIndex = 0; fieldIndex < conversionFunctions.size(); fieldIndex++) {
-                Object sqlValue = conversionFunctions.get(fieldIndex).apply(csvRecord.get(fieldIndex));
-                if (sqlValue != null) {
-                    preparedStatement.setObject(fieldIndex + 1, sqlValue);
-                } else {
-                    preparedStatement.setNull(fieldIndex + 1, dataTypes.get(fieldIndex).getSqlType());
-                }
-            }
-            preparedStatement.execute();
-            upsertListener.upsertDone(++upsertCount);
-        } catch (Exception e) {
-            if (LOG.isDebugEnabled()) {
-                // Even though this is an error we only log it with debug logging because we're notifying the
-                // listener, and it can do its own logging if needed
-                LOG.debug("Error on CSVRecord " + csvRecord, e);
-            }
-            upsertListener.errorOnRecord(csvRecord, e.getMessage());
-        }
+  /**
+   * Static constructor method for creating a CsvUpsertExecutor.
+   *
+   * @param conn Phoenix connection upon which upserts are to be performed
+   * @param tableName name of the table in which upserts are to be performed
+   * @param columnInfoList description of the columns to be upserted to, in the
+   * same order as in the CSV input
+   * @param upsertListener listener that will be notified of upserts, can be
+   * null
+   * @param arrayElementSeparator separator string to delimit string
+   * representations of arrays
+   * @return the created CsvUpsertExecutor
+   */
+  public static CsvUpsertExecutor create(PhoenixConnection conn, String tableName, List<ColumnInfo> columnInfoList,
+          UpsertListener upsertListener, String arrayElementSeparator) {
+    PreparedStatement preparedStatement = null;
+    try {
+      String upsertSql = QueryUtil.constructUpsertStatement(tableName, columnInfoList);
+      LOG.info("Upserting SQL data with {}", upsertSql);
+      preparedStatement = conn.prepareStatement(upsertSql);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
+    return new CsvUpsertExecutor(conn, columnInfoList, preparedStatement, upsertListener,
+            arrayElementSeparator);
+  }
 
-    @Override
-    public void close() throws IOException {
-        try {
-            preparedStatement.close();
-        } catch (SQLException e) {
-            // An exception while closing the prepared statement is most likely a sign of a real problem, so we don't
-            // want to hide it with closeQuietly or something similar
-            throw new RuntimeException(e);
-        }
+  /**
+   * Construct with the definition of incoming columns, and the statement upon
+   * which upsert statements are to be performed.
+   */
+  CsvUpsertExecutor(Connection conn, List<ColumnInfo> columnInfoList, PreparedStatement preparedStatement,
+          UpsertListener upsertListener, String arrayElementSeparator) {
+    this.conn = conn;
+    this.preparedStatement = preparedStatement;
+    this.upsertListener = upsertListener;
+    this.arrayElementSeparator = arrayElementSeparator;
+    this.dataTypes = Lists.newArrayList();
+    this.conversionFunctions = Lists.newArrayList();
+    for (ColumnInfo columnInfo : columnInfoList) {
+      PDataType dataType = PDataType.fromTypeId(columnInfo.getSqlType());
+      dataTypes.add(dataType);
+      conversionFunctions.add(createConversionFunction(dataType));
     }
+  }
 
-    private Function<String, Object> createConversionFunction(PDataType dataType) {
-        if (dataType.isArrayType()) {
-            return new ArrayDatatypeConversionFunction(
-                    new StringToArrayConverter(
-                            conn,
-                            arrayElementSeparator,
-                            PDataType.fromTypeId(dataType.getSqlType() - PDataType.ARRAY_TYPE_BASE)));
+  /**
+   * Execute upserts for each CSV record contained in the given iterable,
+   * notifying this instance's {@code UpsertListener} for each completed upsert.
+   *
+   * @param csvRecords iterable of CSV records to be upserted
+   */
+  public void execute(Iterable<CSVRecord> csvRecords) {
+    for (CSVRecord csvRecord : csvRecords) {
+      execute(csvRecord);
+    }
+  }
+
+  /**
+   * Upsert a single record.
+   *
+   * @param csvRecord CSV record containing the data to be upserted
+   */
+  void execute(CSVRecord csvRecord) {
+    try {
+      if (csvRecord.size() < conversionFunctions.size()) {
+        String message = String.format("CSV record does not have enough values (has %d, but needs %d)",
+                csvRecord.size(), conversionFunctions.size());
+        throw new IllegalArgumentException(message);
+      }
+      for (int fieldIndex = 0; fieldIndex < conversionFunctions.size(); fieldIndex++) {
+        Object sqlValue = conversionFunctions.get(fieldIndex).apply(csvRecord.get(fieldIndex));
+        if (sqlValue != null) {
+          preparedStatement.setObject(fieldIndex + 1, sqlValue);
         } else {
-            return new SimpleDatatypeConversionFunction(dataType, this.conn);
+          preparedStatement.setNull(fieldIndex + 1, dataTypes.get(fieldIndex).getSqlType());
         }
+      }
+      preparedStatement.execute();
+      upsertListener.upsertDone(++upsertCount);
+    } catch (Exception e) {
+      if (LOG.isDebugEnabled()) {
+        // Even though this is an error we only log it with debug logging because we're notifying the
+        // listener, and it can do its own logging if needed
+        LOG.debug("Error on CSVRecord " + csvRecord, e);
+      }
+      upsertListener.errorOnRecord(csvRecord, e.getMessage());
+    }
+  }
+
+  @Override
+  public void close() throws IOException {
+    try {
+      preparedStatement.close();
+    } catch (SQLException e) {
+      // An exception while closing the prepared statement is most likely a sign of a real problem, so we don't
+      // want to hide it with closeQuietly or something similar
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Function<String, Object> createConversionFunction(PDataType dataType) {
+    if (dataType.isArrayType()) {
+      return new ArrayDatatypeConversionFunction(
+              new StringToArrayConverter(
+                      conn,
+                      arrayElementSeparator,
+                      PDataType.fromTypeId(dataType.getSqlType() - PDataType.ARRAY_TYPE_BASE)));
+    } else {
+      return new SimpleDatatypeConversionFunction(dataType, this.conn);
+    }
+  }
+
+  /**
+   * Performs typed conversion from String values to a given column value type.
+   */
+  static class SimpleDatatypeConversionFunction implements Function<String, Object> {
+
+    private final PDataType dataType;
+    private final DateUtil.DateTimeParser dateTimeParser;
+
+    SimpleDatatypeConversionFunction(PDataType dataType, Connection conn) {
+      Properties props = null;
+      try {
+        props = conn.getClientInfo();
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+      this.dataType = dataType;
+      if (dataType.isCoercibleTo(PTimestamp.INSTANCE)) {
+        // TODO: move to DateUtil
+        String dateFormat;
+        int dateSqlType = dataType.getResultSetSqlType();
+        if (dateSqlType == Types.DATE) {
+          dateFormat = props.getProperty(QueryServices.DATE_FORMAT_ATTRIB,
+                  DateUtil.DEFAULT_DATE_FORMAT);
+        } else if (dateSqlType == Types.TIME) {
+          dateFormat = props.getProperty(QueryServices.TIME_FORMAT_ATTRIB,
+                  DateUtil.DEFAULT_TIME_FORMAT);
+        } else {
+          dateFormat = props.getProperty(QueryServices.TIMESTAMP_FORMAT_ATTRIB,
+                  DateUtil.DEFAULT_TIMESTAMP_FORMAT);
+        }
+        String timeZoneId = props.getProperty(QueryServices.DATE_FORMAT_TIMEZONE_ATTRIB,
+                QueryServicesOptions.DEFAULT_DATE_FORMAT_TIMEZONE);
+        this.dateTimeParser = DateUtil.getDateTimeParser(dateFormat, dataType, timeZoneId);
+      } else {
+        this.dateTimeParser = null;
+      }
     }
 
-    /**
-     * Performs typed conversion from String values to a given column value type.
-     */
-    static class SimpleDatatypeConversionFunction implements Function<String, Object> {
+    @Nullable
+    @Override
+    public Object apply(@Nullable String input) {
+      if (dateTimeParser != null) {
+        long epochTime = dateTimeParser.parseDateTime(input);
+        byte[] byteValue = new byte[dataType.getByteSize()];
+        dataType.getCodec().encodeLong(epochTime, byteValue, 0);
+        return dataType.toObject(byteValue);
+      }
+      return dataType.toObject(input);
+    }
+  }
 
-        private final PDataType dataType;
-        private final DateUtil.DateTimeParser dateTimeParser;
+  /**
+   * Converts string representations of arrays into Phoenix arrays of the
+   * correct type.
+   */
+  private static class ArrayDatatypeConversionFunction implements Function<String, Object> {
 
-        SimpleDatatypeConversionFunction(PDataType dataType, Connection conn) {
-            Properties props = null;
-            try {
-                props = conn.getClientInfo();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            this.dataType = dataType;
-            if(dataType.isCoercibleTo(PTimestamp.INSTANCE)) {
-                // TODO: move to DateUtil
-                String dateFormat;
-                int dateSqlType = dataType.getResultSetSqlType();
-                if (dateSqlType == Types.DATE) {
-                    dateFormat = props.getProperty(QueryServices.DATE_FORMAT_ATTRIB,
-                            DateUtil.DEFAULT_DATE_FORMAT);
-                } else if (dateSqlType == Types.TIME) {
-                    dateFormat = props.getProperty(QueryServices.TIME_FORMAT_ATTRIB,
-                            DateUtil.DEFAULT_TIME_FORMAT);
-                } else {
-                    dateFormat = props.getProperty(QueryServices.TIMESTAMP_FORMAT_ATTRIB,
-                            DateUtil.DEFAULT_TIMESTAMP_FORMAT);                    
-                }
-                String timeZoneId = props.getProperty(QueryServices.DATE_FORMAT_TIMEZONE_ATTRIB,
-                        QueryServicesOptions.DEFAULT_DATE_FORMAT_TIMEZONE);
-                this.dateTimeParser = DateUtil.getDateTimeParser(dateFormat, dataType, timeZoneId);
-            } else {
-                this.dateTimeParser = null;
-            }
-        }
+    private final StringToArrayConverter arrayConverter;
 
-        @Nullable
-        @Override
-        public Object apply(@Nullable String input) {
-            if(dateTimeParser != null) {
-                long epochTime = dateTimeParser.parseDateTime(input);
-                byte[] byteValue = new byte[dataType.getByteSize()];
-                dataType.getCodec().encodeLong(epochTime, byteValue, 0);
-                return dataType.toObject(byteValue);
-            }
-            return dataType.toObject(input);
-        }
+    private ArrayDatatypeConversionFunction(StringToArrayConverter arrayConverter) {
+      this.arrayConverter = arrayConverter;
     }
 
-    /**
-     * Converts string representations of arrays into Phoenix arrays of the correct type.
-     */
-    private static class ArrayDatatypeConversionFunction implements Function<String, Object> {
-
-        private final StringToArrayConverter arrayConverter;
-
-        private ArrayDatatypeConversionFunction(StringToArrayConverter arrayConverter) {
-            this.arrayConverter = arrayConverter;
-        }
-
-        @Nullable
-        @Override
-        public Object apply(@Nullable String input) {
-            try {
-                return arrayConverter.toArray(input);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    @Nullable
+    @Override
+    public Object apply(@Nullable String input) {
+      try {
+        return arrayConverter.toArray(input);
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
     }
+  }
 
 }

@@ -26,214 +26,215 @@ import org.apache.phoenix.jdbc.PhoenixConnection;
 import org.apache.phoenix.schema.stats.PTableStats;
 
 public class DelegateTable implements PTable {
-    @Override
-    public long getTimeStamp() {
-        return delegate.getTimeStamp();
-    }
 
-    @Override
-    public long getSequenceNumber() {
-        return delegate.getSequenceNumber();
-    }
+  @Override
+  public long getTimeStamp() {
+    return delegate.getTimeStamp();
+  }
 
-    @Override
-    public PName getName() {
-        return delegate.getName();
-    }
+  @Override
+  public long getSequenceNumber() {
+    return delegate.getSequenceNumber();
+  }
 
-    @Override
-    public PName getSchemaName() {
-        return delegate.getSchemaName();
-    }
+  @Override
+  public PName getName() {
+    return delegate.getName();
+  }
 
-    @Override
-    public PName getTableName() {
-        return delegate.getTableName();
-    }
+  @Override
+  public PName getSchemaName() {
+    return delegate.getSchemaName();
+  }
 
-    @Override
-    public PName getTenantId() {
-        return delegate.getTenantId();
-    }
+  @Override
+  public PName getTableName() {
+    return delegate.getTableName();
+  }
 
-    @Override
-    public PTableType getType() {
-        return delegate.getType();
-    }
+  @Override
+  public PName getTenantId() {
+    return delegate.getTenantId();
+  }
 
-    @Override
-    public PName getPKName() {
-        return delegate.getPKName();
-    }
+  @Override
+  public PTableType getType() {
+    return delegate.getType();
+  }
 
-    @Override
-    public List<PColumn> getPKColumns() {
-        return delegate.getPKColumns();
-    }
+  @Override
+  public PName getPKName() {
+    return delegate.getPKName();
+  }
 
-    @Override
-    public List<PColumn> getColumns() {
-        return delegate.getColumns();
-    }
+  @Override
+  public List<PColumn> getPKColumns() {
+    return delegate.getPKColumns();
+  }
 
-    @Override
-    public List<PColumnFamily> getColumnFamilies() {
-        return delegate.getColumnFamilies();
-    }
+  @Override
+  public List<PColumn> getColumns() {
+    return delegate.getColumns();
+  }
 
-    @Override
-    public PColumnFamily getColumnFamily(byte[] family) throws ColumnFamilyNotFoundException {
-        return delegate.getColumnFamily(family);
-    }
+  @Override
+  public List<PColumnFamily> getColumnFamilies() {
+    return delegate.getColumnFamilies();
+  }
 
-    @Override
-    public PColumnFamily getColumnFamily(String family) throws ColumnFamilyNotFoundException {
-        return delegate.getColumnFamily(family);
-    }
+  @Override
+  public PColumnFamily getColumnFamily(byte[] family) throws ColumnFamilyNotFoundException {
+    return delegate.getColumnFamily(family);
+  }
 
-    @Override
-    public PColumn getColumn(String name) throws ColumnNotFoundException, AmbiguousColumnException {
-        return delegate.getColumn(name);
-    }
+  @Override
+  public PColumnFamily getColumnFamily(String family) throws ColumnFamilyNotFoundException {
+    return delegate.getColumnFamily(family);
+  }
 
-    @Override
-    public PColumn getPKColumn(String name) throws ColumnNotFoundException {
-        return delegate.getPKColumn(name);
-    }
+  @Override
+  public PColumn getColumn(String name) throws ColumnNotFoundException, AmbiguousColumnException {
+    return delegate.getColumn(name);
+  }
 
-    @Override
-    public PRow newRow(KeyValueBuilder builder, long ts, ImmutableBytesWritable key, byte[]... values) {
-        return delegate.newRow(builder, ts, key, values);
-    }
+  @Override
+  public PColumn getPKColumn(String name) throws ColumnNotFoundException {
+    return delegate.getPKColumn(name);
+  }
 
-    @Override
-    public PRow newRow(KeyValueBuilder builder, ImmutableBytesWritable key, byte[]... values) {
-        return delegate.newRow(builder, key, values);
-    }
+  @Override
+  public PRow newRow(KeyValueBuilder builder, long ts, ImmutableBytesWritable key, byte[]... values) {
+    return delegate.newRow(builder, ts, key, values);
+  }
 
-    @Override
-    public int newKey(ImmutableBytesWritable key, byte[][] values) {
-        return delegate.newKey(key, values);
-    }
+  @Override
+  public PRow newRow(KeyValueBuilder builder, ImmutableBytesWritable key, byte[]... values) {
+    return delegate.newRow(builder, key, values);
+  }
 
-    @Override
-    public RowKeySchema getRowKeySchema() {
-        return delegate.getRowKeySchema();
-    }
+  @Override
+  public int newKey(ImmutableBytesWritable key, byte[][] values) {
+    return delegate.newKey(key, values);
+  }
 
-    @Override
-    public Integer getBucketNum() {
-        return delegate.getBucketNum();
-    }
+  @Override
+  public RowKeySchema getRowKeySchema() {
+    return delegate.getRowKeySchema();
+  }
 
-    @Override
-    public List<PTable> getIndexes() {
-        return delegate.getIndexes();
-    }
+  @Override
+  public Integer getBucketNum() {
+    return delegate.getBucketNum();
+  }
 
-    @Override
-    public PIndexState getIndexState() {
-        return delegate.getIndexState();
-    }
+  @Override
+  public List<PTable> getIndexes() {
+    return delegate.getIndexes();
+  }
 
-    @Override
-    public PName getParentName() {
-        return delegate.getParentName();
-    }
+  @Override
+  public PIndexState getIndexState() {
+    return delegate.getIndexState();
+  }
 
-    @Override
-    public PName getParentTableName() {
-        return delegate.getParentTableName();
-    }
+  @Override
+  public PName getParentName() {
+    return delegate.getParentName();
+  }
 
-    @Override
-    public List<PName> getPhysicalNames() {
-        return delegate.getPhysicalNames();
-    }
+  @Override
+  public PName getParentTableName() {
+    return delegate.getParentTableName();
+  }
 
-    @Override
-    public PName getPhysicalName() {
-        return delegate.getPhysicalName();
-    }
+  @Override
+  public List<PName> getPhysicalNames() {
+    return delegate.getPhysicalNames();
+  }
 
-    @Override
-    public boolean isImmutableRows() {
-        return delegate.isImmutableRows();
-    }
+  @Override
+  public PName getPhysicalName() {
+    return delegate.getPhysicalName();
+  }
 
-    @Override
-    public void getIndexMaintainers(ImmutableBytesWritable ptr, PhoenixConnection connection) {
-        delegate.getIndexMaintainers(ptr, connection);
-    }
+  @Override
+  public boolean isImmutableRows() {
+    return delegate.isImmutableRows();
+  }
 
-    @Override
-    public IndexMaintainer getIndexMaintainer(PTable dataTable, PhoenixConnection connection) {
-        return delegate.getIndexMaintainer(dataTable, connection);
-    }
+  @Override
+  public void getIndexMaintainers(ImmutableBytesWritable ptr, PhoenixConnection connection) {
+    delegate.getIndexMaintainers(ptr, connection);
+  }
 
-    @Override
-    public PName getDefaultFamilyName() {
-        return delegate.getDefaultFamilyName();
-    }
+  @Override
+  public IndexMaintainer getIndexMaintainer(PTable dataTable, PhoenixConnection connection) {
+    return delegate.getIndexMaintainer(dataTable, connection);
+  }
 
-    @Override
-    public boolean isWALDisabled() {
-        return delegate.isWALDisabled();
-    }
+  @Override
+  public PName getDefaultFamilyName() {
+    return delegate.getDefaultFamilyName();
+  }
 
-    @Override
-    public boolean isMultiTenant() {
-        return delegate.isMultiTenant();
-    }
+  @Override
+  public boolean isWALDisabled() {
+    return delegate.isWALDisabled();
+  }
 
-    @Override
-    public boolean getStoreNulls() {
-        return delegate.getStoreNulls();
-    }
+  @Override
+  public boolean isMultiTenant() {
+    return delegate.isMultiTenant();
+  }
 
-    @Override
-    public ViewType getViewType() {
-        return delegate.getViewType();
-    }
+  @Override
+  public boolean getStoreNulls() {
+    return delegate.getStoreNulls();
+  }
 
-    @Override
-    public String getViewStatement() {
-        return delegate.getViewStatement();
-    }
+  @Override
+  public ViewType getViewType() {
+    return delegate.getViewType();
+  }
 
-    @Override
-    public Short getViewIndexId() {
-        return delegate.getViewIndexId();
-    }
+  @Override
+  public String getViewStatement() {
+    return delegate.getViewStatement();
+  }
 
-    @Override
-    public PTableKey getKey() {
-        return delegate.getKey();
-    }
+  @Override
+  public Short getViewIndexId() {
+    return delegate.getViewIndexId();
+  }
 
-    @Override
-    public int getEstimatedSize() {
-        return delegate.getEstimatedSize();
-    }
+  @Override
+  public PTableKey getKey() {
+    return delegate.getKey();
+  }
 
-    @Override
-    public IndexType getIndexType() {
-        return delegate.getIndexType();
-    }
+  @Override
+  public int getEstimatedSize() {
+    return delegate.getEstimatedSize();
+  }
 
-    @Override
-    public PTableStats getTableStats() {
-        return delegate.getTableStats();
-    }
+  @Override
+  public IndexType getIndexType() {
+    return delegate.getIndexType();
+  }
 
-    private final PTable delegate;
+  @Override
+  public PTableStats getTableStats() {
+    return delegate.getTableStats();
+  }
 
-    public DelegateTable(PTable delegate) {
-        this.delegate = delegate;
-    }
+  private final PTable delegate;
 
-    @Override
-    public PName getParentSchemaName() {
-        return delegate.getParentSchemaName();
-    }
+  public DelegateTable(PTable delegate) {
+    this.delegate = delegate;
+  }
+
+  @Override
+  public PName getParentSchemaName() {
+    return delegate.getParentSchemaName();
+  }
 }

@@ -33,42 +33,42 @@ import org.junit.Test;
 
 public class PhoenixDriverTest extends BaseConnectionlessQueryTest {
 
+  @Test
+  public void testFirstConnectionWhenPropsHasTenantId() throws Exception {
+    Properties props = new Properties();
+    final String tenantId = "00Dxx0000001234";
+    props.put(PhoenixRuntime.TENANT_ID_ATTRIB, tenantId);
 
-    @Test
-    public void testFirstConnectionWhenPropsHasTenantId() throws Exception {
-        Properties props = new Properties();
-        final String tenantId = "00Dxx0000001234";
-        props.put(PhoenixRuntime.TENANT_ID_ATTRIB, tenantId);
+    Connection connection = new PhoenixTestDriver().connect(getUrl(), props);
+    assertEquals(tenantId, connection.getClientInfo(PhoenixRuntime.TENANT_ID_ATTRIB));
+  }
 
-        Connection connection = new PhoenixTestDriver().connect(getUrl(), props);
-        assertEquals(tenantId, connection.getClientInfo(PhoenixRuntime.TENANT_ID_ATTRIB));
+  @Test
+  public void testFirstConnectionWhenUrlHasTenantId() throws Exception {
+    final String tenantId = "00Dxx0000001234";
+    String url = getUrl() + ";" + PhoenixRuntime.TENANT_ID_ATTRIB + "=" + tenantId;
+    Driver driver = new PhoenixTestDriver();
+
+    driver.connect(url, new Properties());
+  }
+
+  @Test
+  public void testMaxMutationSizeSetCorrectly() throws Exception {
+    Properties connectionProperties = new Properties();
+    connectionProperties.setProperty(QueryServices.MAX_MUTATION_SIZE_ATTRIB, "100");
+    connectionProperties.setProperty(QueryServices.IMMUTABLE_ROWS_ATTRIB, "100");
+    Connection connection = DriverManager.getConnection(getUrl(), connectionProperties);
+
+    PreparedStatement stmt = connection.prepareStatement("upsert into " + ATABLE + " (organization_id, entity_id, a_integer) values (?,?,?)");
+    try {
+      for (int i = 0; i < 200; i++) {
+        stmt.setString(1, "AAAA" + i);
+        stmt.setString(2, "BBBB" + i);
+        stmt.setInt(3, 1);
+        stmt.execute();
+      }
+      fail("Upsert should have failed since the number of upserts (200) is greater than the MAX_MUTATION_SIZE_ATTRIB (100)");
+    } catch (IllegalArgumentException expected) {
     }
-
-    @Test
-    public void testFirstConnectionWhenUrlHasTenantId() throws Exception {
-        final String tenantId = "00Dxx0000001234";
-        String url = getUrl() + ";" + PhoenixRuntime.TENANT_ID_ATTRIB + "=" + tenantId;
-        Driver driver = new PhoenixTestDriver();
-
-        driver.connect(url, new Properties());
-    }
-
-    @Test
-    public void testMaxMutationSizeSetCorrectly() throws Exception {
-        Properties connectionProperties = new Properties();
-        connectionProperties.setProperty(QueryServices.MAX_MUTATION_SIZE_ATTRIB,"100");
-        connectionProperties.setProperty(QueryServices.IMMUTABLE_ROWS_ATTRIB,"100");
-        Connection connection = DriverManager.getConnection(getUrl(), connectionProperties);
-
-        PreparedStatement stmt = connection.prepareStatement("upsert into " + ATABLE + " (organization_id, entity_id, a_integer) values (?,?,?)");
-        try {
-            for (int i = 0; i < 200; i++) {
-                stmt.setString(1, "AAAA" + i);
-                stmt.setString(2, "BBBB" + i);
-                stmt.setInt(3, 1);
-                stmt.execute();
-            }
-            fail("Upsert should have failed since the number of upserts (200) is greater than the MAX_MUTATION_SIZE_ATTRIB (100)");
-        } catch (IllegalArgumentException expected) {}
-    }
+  }
 }

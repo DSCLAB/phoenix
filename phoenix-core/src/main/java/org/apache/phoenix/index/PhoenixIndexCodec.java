@@ -54,142 +54,144 @@ import org.apache.phoenix.util.ServerUtil;
 import com.google.common.collect.Lists;
 
 /**
- * Phoenix-based {@link IndexCodec}. Manages all the logic of how to cleanup an index (
- * {@link #getIndexDeletes(TableState)}) as well as what the new index state should be (
- * {@link #getIndexUpserts(TableState)}).
+ * Phoenix-based {@link IndexCodec}. Manages all the logic of how to cleanup an
+ * index ( {@link #getIndexDeletes(TableState)}) as well as what the new index
+ * state should be ( {@link #getIndexUpserts(TableState)}).
  */
 public class PhoenixIndexCodec extends BaseIndexCodec {
-    public static final String INDEX_MD = "IdxMD";
-    public static final String INDEX_UUID = "IdxUUID";
 
-    private RegionCoprocessorEnvironment env;
-    private KeyValueBuilder kvBuilder;
+  public static final String INDEX_MD = "IdxMD";
+  public static final String INDEX_UUID = "IdxUUID";
 
-    @Override
-    public void initialize(RegionCoprocessorEnvironment env) {
-        this.env = env;
-        Configuration conf = env.getConfiguration();
-        // Install handler that will attempt to disable the index first before killing the region
-        // server
-        conf.setIfUnset(IndexWriter.INDEX_FAILURE_POLICY_CONF_KEY,
+  private RegionCoprocessorEnvironment env;
+  private KeyValueBuilder kvBuilder;
+
+  @Override
+  public void initialize(RegionCoprocessorEnvironment env) {
+    this.env = env;
+    Configuration conf = env.getConfiguration();
+    // Install handler that will attempt to disable the index first before killing the region
+    // server
+    conf.setIfUnset(IndexWriter.INDEX_FAILURE_POLICY_CONF_KEY,
             PhoenixIndexFailurePolicy.class.getName());
-        // Use the GenericKeyValueBuilder, as it's been shown in perf testing that ClientKeyValue doesn't help
-        // TODO: Jesse to investigate more
-        this.kvBuilder = GenericKeyValueBuilder.INSTANCE;
+    // Use the GenericKeyValueBuilder, as it's been shown in perf testing that ClientKeyValue doesn't help
+    // TODO: Jesse to investigate more
+    this.kvBuilder = GenericKeyValueBuilder.INSTANCE;
+  }
+
+  List<IndexMaintainer> getIndexMaintainers(Map<String, byte[]> attributes) throws IOException {
+    if (attributes == null) {
+      return Collections.emptyList();
+    }
+    byte[] uuid = attributes.get(INDEX_UUID);
+    if (uuid == null) {
+      return Collections.emptyList();
+    }
+    byte[] md = attributes.get(INDEX_MD);
+    List<IndexMaintainer> indexMaintainers;
+    if (md != null) {
+      indexMaintainers = IndexMaintainer.deserialize(md);
+    } else {
+      byte[] tenantIdBytes = attributes.get(PhoenixRuntime.TENANT_ID_ATTRIB);
+      ImmutableBytesWritable tenantId
+              = tenantIdBytes == null ? null : new ImmutableBytesWritable(tenantIdBytes);
+      TenantCache cache = GlobalCache.getTenantCache(env, tenantId);
+      IndexMetaDataCache indexCache
+              = (IndexMetaDataCache) cache.getServerCache(new ImmutableBytesPtr(uuid));
+      if (indexCache == null) {
+        String msg = "key=" + ServerCacheClient.idToString(uuid) + " region=" + env.getRegion();
+        SQLException e = new SQLExceptionInfo.Builder(SQLExceptionCode.INDEX_METADATA_NOT_FOUND)
+                .setMessage(msg).build().buildException();
+        ServerUtil.throwIOException("Index update failed", e); // will not return
+      }
+      indexMaintainers = indexCache.getIndexMaintainers();
     }
 
-    List<IndexMaintainer> getIndexMaintainers(Map<String, byte[]> attributes) throws IOException{
-        if (attributes == null) {
-            return Collections.emptyList();
+    return indexMaintainers;
+  }
+
+  @Override
+  public Iterable<IndexUpdate> getIndexUpserts(TableState state) throws IOException {
+    return getIndexUpdates(state, true);
+  }
+
+  @Override
+  public Iterable<IndexUpdate> getIndexDeletes(TableState state) throws IOException {
+    return getIndexUpdates(state, false);
+  }
+
+  /**
+   *
+   * @param state
+   * @param upsert prepare index upserts if it's true otherwise prepare index
+   * deletes.
+   * @return
+   * @throws IOException
+   */
+  private Iterable<IndexUpdate> getIndexUpdates(TableState state, boolean upsert) throws IOException {
+    List<IndexMaintainer> indexMaintainers = getIndexMaintainers(state.getUpdateAttributes());
+    if (indexMaintainers.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<IndexUpdate> indexUpdates = Lists.newArrayList();
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    // TODO: state.getCurrentRowKey() should take an ImmutableBytesWritable arg to prevent byte copy
+    byte[] dataRowKey = state.getCurrentRowKey();
+    ptr.set(dataRowKey);
+    byte[] localIndexTableName = MetaDataUtil.getLocalIndexPhysicalName(env.getRegion().getTableDesc().getName());
+    ValueGetter valueGetter = null;
+    Scanner scanner = null;
+    for (IndexMaintainer maintainer : indexMaintainers) {
+      if (upsert) {
+        // Short-circuit building state when we know it's a row deletion
+        if (maintainer.isRowDeleted(state.getPendingUpdate())) {
+          continue;
         }
-        byte[] uuid = attributes.get(INDEX_UUID);
-        if (uuid == null) {
-            return Collections.emptyList();
-        }
-        byte[] md = attributes.get(INDEX_MD);
-        List<IndexMaintainer> indexMaintainers;
-        if (md != null) {
-            indexMaintainers = IndexMaintainer.deserialize(md);
+      }
+      IndexUpdate indexUpdate = null;
+      if (maintainer.isImmutableRows()) {
+        indexUpdate = new IndexUpdate(new ColumnTracker(maintainer.getAllColumns()));
+        if (maintainer.isLocalIndex()) {
+          indexUpdate.setTable(localIndexTableName);
         } else {
-            byte[] tenantIdBytes = attributes.get(PhoenixRuntime.TENANT_ID_ATTRIB);
-            ImmutableBytesWritable tenantId =
-                tenantIdBytes == null ? null : new ImmutableBytesWritable(tenantIdBytes);
-            TenantCache cache = GlobalCache.getTenantCache(env, tenantId);
-            IndexMetaDataCache indexCache =
-                (IndexMetaDataCache) cache.getServerCache(new ImmutableBytesPtr(uuid));
-            if (indexCache == null) {
-                String msg = "key="+ServerCacheClient.idToString(uuid) + " region=" + env.getRegion();
-                SQLException e = new SQLExceptionInfo.Builder(SQLExceptionCode.INDEX_METADATA_NOT_FOUND)
-                    .setMessage(msg).build().buildException();
-                ServerUtil.throwIOException("Index update failed", e); // will not return
-            }
-            indexMaintainers = indexCache.getIndexMaintainers();
+          indexUpdate.setTable(maintainer.getIndexTableName());
         }
-    
-        return indexMaintainers;
+        valueGetter = maintainer.createGetterFromKeyValues(dataRowKey, state.getPendingUpdate());
+      } else {
+        // TODO: if more efficient, I could do this just once with all columns in all indexes
+        Pair<Scanner, IndexUpdate> statePair = state.getIndexedColumnsTableState(maintainer.getAllColumns());
+        scanner = statePair.getFirst();
+        indexUpdate = statePair.getSecond();
+        indexUpdate.setTable(maintainer.getIndexTableName());
+        valueGetter = IndexManagementUtil.createGetterFromScanner(scanner, dataRowKey);
+      }
+      Mutation mutation = null;
+      if (upsert) {
+        mutation
+                = maintainer.buildUpdateMutation(kvBuilder, valueGetter, ptr, state
+                        .getCurrentTimestamp(), env.getRegion().getStartKey(), env
+                        .getRegion().getEndKey());
+      } else {
+        mutation
+                = maintainer.buildDeleteMutation(kvBuilder, valueGetter, ptr, state
+                        .getPendingUpdate(), state.getCurrentTimestamp(), env.getRegion()
+                        .getStartKey(), env.getRegion().getEndKey());
+      }
+      indexUpdate.setUpdate(mutation);
+      if (scanner != null) {
+        scanner.close();
+        scanner = null;
+      }
+      indexUpdates.add(indexUpdate);
     }
-    
-    @Override
-    public Iterable<IndexUpdate> getIndexUpserts(TableState state) throws IOException {
-        return getIndexUpdates(state, true);
-    }
+    return indexUpdates;
+  }
 
-    @Override
-    public Iterable<IndexUpdate> getIndexDeletes(TableState state) throws IOException {
-        return getIndexUpdates(state, false);
-    }
-
-    /**
-     * 
-     * @param state
-     * @param upsert prepare index upserts if it's true otherwise prepare index deletes. 
-     * @return
-     * @throws IOException
-     */
-    private Iterable<IndexUpdate> getIndexUpdates(TableState state, boolean upsert) throws IOException {
-        List<IndexMaintainer> indexMaintainers = getIndexMaintainers(state.getUpdateAttributes());
-        if (indexMaintainers.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<IndexUpdate> indexUpdates = Lists.newArrayList();
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        // TODO: state.getCurrentRowKey() should take an ImmutableBytesWritable arg to prevent byte copy
-        byte[] dataRowKey = state.getCurrentRowKey();
-        ptr.set(dataRowKey);
-        byte[] localIndexTableName = MetaDataUtil.getLocalIndexPhysicalName(env.getRegion().getTableDesc().getName());
-        ValueGetter valueGetter = null;
-        Scanner scanner = null;
-        for (IndexMaintainer maintainer : indexMaintainers) {
-            if(upsert) {
-                // Short-circuit building state when we know it's a row deletion
-                if (maintainer.isRowDeleted(state.getPendingUpdate())) {
-                    continue;
-                }
-            }
-            IndexUpdate indexUpdate = null;
-            if (maintainer.isImmutableRows()) {
-                indexUpdate = new IndexUpdate(new ColumnTracker(maintainer.getAllColumns()));
-                if(maintainer.isLocalIndex()) {
-                    indexUpdate.setTable(localIndexTableName);
-                } else {
-                    indexUpdate.setTable(maintainer.getIndexTableName());
-                }
-                valueGetter = maintainer.createGetterFromKeyValues(dataRowKey, state.getPendingUpdate());
-            } else {
-                // TODO: if more efficient, I could do this just once with all columns in all indexes
-                Pair<Scanner,IndexUpdate> statePair = state.getIndexedColumnsTableState(maintainer.getAllColumns());
-                scanner = statePair.getFirst();
-                indexUpdate = statePair.getSecond();
-                indexUpdate.setTable(maintainer.getIndexTableName());
-                valueGetter = IndexManagementUtil.createGetterFromScanner(scanner, dataRowKey);
-            }
-            Mutation mutation = null;
-            if (upsert) {
-                mutation =
-                        maintainer.buildUpdateMutation(kvBuilder, valueGetter, ptr, state
-                                .getCurrentTimestamp(), env.getRegion().getStartKey(), env
-                                .getRegion().getEndKey());
-            } else {
-                mutation =
-                        maintainer.buildDeleteMutation(kvBuilder, valueGetter, ptr, state
-                                .getPendingUpdate(), state.getCurrentTimestamp(), env.getRegion()
-                                .getStartKey(), env.getRegion().getEndKey());
-            }
-            indexUpdate.setUpdate(mutation);
-            if (scanner != null) {
-                scanner.close();
-                scanner = null;
-            }
-            indexUpdates.add(indexUpdate);
-        }
-        return indexUpdates;
-    }
-    
   @Override
   public boolean isEnabled(Mutation m) throws IOException {
-      return !getIndexMaintainers(m.getAttributesMap()).isEmpty();
+    return !getIndexMaintainers(m.getAttributesMap()).isEmpty();
   }
-  
+
   @Override
   public byte[] getBatchId(Mutation m) {
     Map<String, byte[]> attributes = m.getAttributesMap();

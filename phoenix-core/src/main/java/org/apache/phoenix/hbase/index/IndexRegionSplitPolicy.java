@@ -24,13 +24,13 @@ import org.apache.hadoop.hbase.regionserver.RegionSplitPolicy;
  */
 public class IndexRegionSplitPolicy extends RegionSplitPolicy {
 
-    @Override
-    protected boolean shouldSplit() {
-        return false;
-    }
+  @Override
+  protected boolean shouldSplit() {
+    return false;
+  }
 
-    protected boolean skipStoreFileRangeCheck() {
-        return true;
-    }
+  protected boolean skipStoreFileRangeCheck() {
+    return true;
+  }
 
 }

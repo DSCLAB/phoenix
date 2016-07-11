@@ -25,83 +25,84 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.hbase.index.util.GenericKeyValueBuilder;
 import org.apache.phoenix.util.KeyValueUtil;
 
-
 public class ResultTuple extends BaseTuple {
-    private Result result;
-    
-    public ResultTuple(Result result) {
-        this.result = result;
-    }
-    
-    public ResultTuple() {
-    }
-    
-    public Result getResult() {
-        return this.result;
-    }
 
-    public void setResult(Result result) {
-        this.result = result;
-    }
-    
-    @Override
-    public void getKey(ImmutableBytesWritable ptr) {
-        ptr.set(result.getRow());
-    }
+  private Result result;
 
-    @Override
-    public boolean isImmutable() {
-        return true;
-    }
+  public ResultTuple(Result result) {
+    this.result = result;
+  }
 
-    @Override
-    public KeyValue getValue(byte[] family, byte[] qualifier) {
-        Cell cell = KeyValueUtil.getColumnLatest(GenericKeyValueBuilder.INSTANCE, 
-          result.rawCells(), family, qualifier);
-        return org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(cell);
-    }
+  public ResultTuple() {
+  }
 
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("keyvalues=");
-      if(this.result == null || this.result.isEmpty()) {
-        sb.append("NONE");
-        return sb.toString();
-      }
-      sb.append("{");
-      boolean moreThanOne = false;
-      for(Cell kv : this.result.listCells()) {
-        if(moreThanOne) {
-          sb.append(", \n");
-        } else {
-          moreThanOne = true;
-        }
-        sb.append(kv.toString()+"/value="+Bytes.toString(kv.getValueArray(), 
-          kv.getValueOffset(), kv.getValueLength()));
-      }
-      sb.append("}\n");
+  public Result getResult() {
+    return this.result;
+  }
+
+  public void setResult(Result result) {
+    this.result = result;
+  }
+
+  @Override
+  public void getKey(ImmutableBytesWritable ptr) {
+    ptr.set(result.getRow());
+  }
+
+  @Override
+  public boolean isImmutable() {
+    return true;
+  }
+
+  @Override
+  public KeyValue getValue(byte[] family, byte[] qualifier) {
+    Cell cell = KeyValueUtil.getColumnLatest(GenericKeyValueBuilder.INSTANCE,
+            result.rawCells(), family, qualifier);
+    return org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(cell);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("keyvalues=");
+    if (this.result == null || this.result.isEmpty()) {
+      sb.append("NONE");
       return sb.toString();
     }
-
-    @Override
-    public int size() {
-        return result.size();
+    sb.append("{");
+    boolean moreThanOne = false;
+    for (Cell kv : this.result.listCells()) {
+      if (moreThanOne) {
+        sb.append(", \n");
+      } else {
+        moreThanOne = true;
+      }
+      sb.append(kv.toString() + "/value=" + Bytes.toString(kv.getValueArray(),
+              kv.getValueOffset(), kv.getValueLength()));
     }
+    sb.append("}\n");
+    return sb.toString();
+  }
 
-    @Override
-    public KeyValue getValue(int index) {
-        return  org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(
-          result.rawCells()[index]);
-    }
+  @Override
+  public int size() {
+    return result.size();
+  }
 
-    @Override
-    public boolean getValue(byte[] family, byte[] qualifier,
-            ImmutableBytesWritable ptr) {
-        KeyValue kv = getValue(family, qualifier);
-        if (kv == null)
-            return false;
-        ptr.set(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
-        return true;
+  @Override
+  public KeyValue getValue(int index) {
+    return org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(
+            result.rawCells()[index]);
+  }
+
+  @Override
+  public boolean getValue(byte[] family, byte[] qualifier,
+          ImmutableBytesWritable ptr) {
+    KeyValue kv = getValue(family, qualifier);
+    if (kv == null) {
+      return false;
     }
+    ptr.set(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
+    return true;
+  }
 }

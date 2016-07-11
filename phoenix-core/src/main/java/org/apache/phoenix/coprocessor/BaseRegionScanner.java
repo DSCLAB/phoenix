@@ -28,38 +28,38 @@ import org.apache.hadoop.hbase.regionserver.ScannerContext;
 
 public abstract class BaseRegionScanner implements RegionScanner {
 
-    @Override
-    public boolean isFilterDone() {
-        return false; 
-    }
+  @Override
+  public boolean isFilterDone() {
+    return false;
+  }
 
-    @Override
-    public boolean next(List<Cell> results) throws IOException {
-        return next(results);
-    }
+  @Override
+  public boolean next(List<Cell> results) throws IOException {
+    return next(results);
+  }
 
-    @Override
-    public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return next(result);
-    }
-    
-    @Override
-    public boolean reseek(byte[] row) throws IOException {
-        throw new DoNotRetryIOException("Unsupported");
-    }
+  @Override
+  public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
+    return next(result);
+  }
 
-    @Override
-    public long getMvccReadPoint() {
-        return Long.MAX_VALUE;
-    }
+  @Override
+  public boolean reseek(byte[] row) throws IOException {
+    throw new DoNotRetryIOException("Unsupported");
+  }
 
-    @Override
-    public boolean nextRaw(List<Cell> result) throws IOException {
-        return next(result);
-    }
+  @Override
+  public long getMvccReadPoint() {
+    return Long.MAX_VALUE;
+  }
 
-    @Override
-    public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return next(result, scannerContext);
-    }
+  @Override
+  public boolean nextRaw(List<Cell> result) throws IOException {
+    return next(result);
+  }
+
+  @Override
+  public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
+    return next(result, scannerContext);
+  }
 }

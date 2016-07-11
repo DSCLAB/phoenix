@@ -24,15 +24,16 @@ import org.apache.phoenix.expression.util.regex.AbstractBaseSplitter;
 import org.apache.phoenix.expression.util.regex.GuavaSplitter;
 
 public class StringBasedRegexpSplitFunction extends RegexpSplitFunction {
-    public StringBasedRegexpSplitFunction() {
-    }
 
-    public StringBasedRegexpSplitFunction(List<Expression> children) {
-        super(children);
-    }
+  public StringBasedRegexpSplitFunction() {
+  }
 
-    @Override
-    protected AbstractBaseSplitter compilePatternSpec(String value) {
-        return new GuavaSplitter(value);
-    }
+  public StringBasedRegexpSplitFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected AbstractBaseSplitter compilePatternSpec(String value) {
+    return new GuavaSplitter(value);
+  }
 }

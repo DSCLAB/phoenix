@@ -13,24 +13,24 @@ package org.apache.phoenix.schema.types;
 public class PrimitiveShortPhoenixArrayToStringTest extends
         BasePrimitiveIntPhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PSmallint.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PSmallint.INSTANCE;
+  }
 
-    @Override
-    protected Short getElement1() {
-        return (short) 1;
-    }
+  @Override
+  protected Short getElement1() {
+    return (short) 1;
+  }
 
-    @Override
-    protected Short getElement2() {
-        return (short) 2;
-    }
+  @Override
+  protected Short getElement2() {
+    return (short) 2;
+  }
 
-    @Override
-    protected Short getElement3() {
-        return (short) 3;
-    }
+  @Override
+  protected Short getElement3() {
+    return (short) 3;
+  }
 
 }

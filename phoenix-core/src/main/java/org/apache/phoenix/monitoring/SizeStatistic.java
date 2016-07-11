@@ -20,59 +20,59 @@ package org.apache.phoenix.monitoring;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 
- * Statistic that keeps track of the sum of long values that 
- * could be used to represent a phoenix metric. For performance 
- * reasons the internal state in this metric is not strictly covariant
- * and hence should only be used for monitoring and debugging purposes. 
+ *
+ * Statistic that keeps track of the sum of long values that could be used to
+ * represent a phoenix metric. For performance reasons the internal state in
+ * this metric is not strictly covariant and hence should only be used for
+ * monitoring and debugging purposes.
  */
 class SizeStatistic implements Metric {
-    
-    private final AtomicLong total = new AtomicLong(0);
-    private final AtomicLong numSamples = new AtomicLong(0);
-    private final String name;
-    private final String description;
-    
-    public SizeStatistic(String name, String description) {
-        this.name = name;
-        this.description = description;
-    }
-    
-    @Override
-    public String getName() {
-        return name;
-    }
-    
-    @Override
-    public String getDescription() {
-        return description;
-    }   
 
-    @Override
-    public void reset() {
-        total.set(0);
-        numSamples.set(0);
-    }
-    
-    @Override
-    public String getCurrentMetricState() {
-        return "Name:" + description + ", Total: " + total.get() + ", Number of samples: " + numSamples.get();
-    }
+  private final AtomicLong total = new AtomicLong(0);
+  private final AtomicLong numSamples = new AtomicLong(0);
+  private final String name;
+  private final String description;
 
-    @Override
-    public long getNumberOfSamples() {
-        return numSamples.get();
-    }
+  public SizeStatistic(String name, String description) {
+    this.name = name;
+    this.description = description;
+  }
 
-    @Override
-    public long getTotalSum() {
-        return total.get();
-    }
-    
-    public long add(long value) {
-        // there is a race condition here but what the heck.
-        numSamples.incrementAndGet();
-        return total.addAndGet(value);
-    }
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String getDescription() {
+    return description;
+  }
+
+  @Override
+  public void reset() {
+    total.set(0);
+    numSamples.set(0);
+  }
+
+  @Override
+  public String getCurrentMetricState() {
+    return "Name:" + description + ", Total: " + total.get() + ", Number of samples: " + numSamples.get();
+  }
+
+  @Override
+  public long getNumberOfSamples() {
+    return numSamples.get();
+  }
+
+  @Override
+  public long getTotalSum() {
+    return total.get();
+  }
+
+  public long add(long value) {
+    // there is a race condition here but what the heck.
+    numSamples.incrementAndGet();
+    return total.addAndGet(value);
+  }
 
 }

@@ -31,8 +31,8 @@ import org.apache.phoenix.hbase.index.covered.TableState;
 import org.apache.phoenix.index.BaseIndexCodec;
 
 /**
- * An {@link IndexCodec} for testing that allow you to specify the index updates/deletes, regardless
- * of the current tables' state.
+ * An {@link IndexCodec} for testing that allow you to specify the index
+ * updates/deletes, regardless of the current tables' state.
  */
 public class CoveredIndexCodecForTesting extends BaseIndexCodec {
 
@@ -42,7 +42,7 @@ public class CoveredIndexCodecForTesting extends BaseIndexCodec {
   public void addIndexDelete(IndexUpdate... deletes) {
     this.deletes.addAll(Arrays.asList(deletes));
   }
-  
+
   public void addIndexUpserts(IndexUpdate... updates) {
     this.updates.addAll(Arrays.asList(updates));
   }
@@ -51,7 +51,7 @@ public class CoveredIndexCodecForTesting extends BaseIndexCodec {
     this.deletes.clear();
     this.updates.clear();
   }
-  
+
   @Override
   public Iterable<IndexUpdate> getIndexDeletes(TableState state) {
     return this.deletes;

@@ -35,14 +35,14 @@ public class PDecimal extends PRealNumber<BigDecimal> {
 
   public static final PDecimal INSTANCE = new PDecimal();
 
-  private static final BigDecimal MIN_DOUBLE_AS_BIG_DECIMAL =
-      BigDecimal.valueOf(-Double.MAX_VALUE);
-  private static final BigDecimal MAX_DOUBLE_AS_BIG_DECIMAL =
-      BigDecimal.valueOf(Double.MAX_VALUE);
-  private static final BigDecimal MIN_FLOAT_AS_BIG_DECIMAL =
-      BigDecimal.valueOf(-Float.MAX_VALUE);
-  private static final BigDecimal MAX_FLOAT_AS_BIG_DECIMAL =
-      BigDecimal.valueOf(Float.MAX_VALUE);
+  private static final BigDecimal MIN_DOUBLE_AS_BIG_DECIMAL
+          = BigDecimal.valueOf(-Double.MAX_VALUE);
+  private static final BigDecimal MAX_DOUBLE_AS_BIG_DECIMAL
+          = BigDecimal.valueOf(Double.MAX_VALUE);
+  private static final BigDecimal MIN_FLOAT_AS_BIG_DECIMAL
+          = BigDecimal.valueOf(-Float.MAX_VALUE);
+  private static final BigDecimal MAX_FLOAT_AS_BIG_DECIMAL
+          = BigDecimal.valueOf(Float.MAX_VALUE);
 
   private PDecimal() {
     super("DECIMAL", Types.DECIMAL, BigDecimal.class, null, 8);
@@ -77,7 +77,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
     if (signum == 0) { // Special case for zero
       return 1;
     }
-            /*
+    /*
              * Size of DECIMAL includes:
              * 1) one byte for exponent
              * 2) one byte for terminal byte if negative
@@ -85,7 +85,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
              *    a) add one to round up in the case when there is an odd number of digits
              *    b) add one in the case that the scale is odd to account for 10x of lowest significant digit
              *       (basically done to increase the range of exponents that can be represented)
-             */
+     */
     return (signum < 0 ? 2 : 1) + (v.precision() + 1 + (v.scale() % 2 == 0 ? 0 : 1)) / 2;
   }
 
@@ -115,7 +115,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Preconditions.checkNotNull(sortOrder);
     if (l == 0) {
       return null;
@@ -127,26 +127,26 @@ public class PDecimal extends PRealNumber<BigDecimal> {
       }
       return toBigDecimal(b, o, l);
     } else if (equalsAny(actualType, PDate.INSTANCE, PTime.INSTANCE, PUnsignedDate.INSTANCE,
-        PUnsignedTime.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE, PInteger.INSTANCE,
-        PUnsignedInt.INSTANCE, PSmallint.INSTANCE, PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE,
-        PUnsignedTinyint.INSTANCE)) {
+            PUnsignedTime.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE, PInteger.INSTANCE,
+            PUnsignedInt.INSTANCE, PSmallint.INSTANCE, PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE,
+            PUnsignedTinyint.INSTANCE)) {
       return BigDecimal.valueOf(actualType.getCodec().decodeLong(b, o, sortOrder));
     } else if (equalsAny(actualType, PFloat.INSTANCE, PUnsignedFloat.INSTANCE)) {
       return BigDecimal.valueOf(actualType.getCodec().decodeFloat(b, o, sortOrder));
     } else if (equalsAny(actualType, PDouble.INSTANCE, PUnsignedDouble.INSTANCE)) {
       return BigDecimal.valueOf(actualType.getCodec().decodeDouble(b, o, sortOrder));
     } else if (equalsAny(actualType, PTimestamp.INSTANCE,
-        PUnsignedTimestamp.INSTANCE)) {
+            PUnsignedTimestamp.INSTANCE)) {
       long millisPart = actualType.getCodec().decodeLong(b, o, sortOrder);
       int nanoPart = PUnsignedInt.INSTANCE.getCodec().decodeInt(b, o + Bytes.SIZEOF_LONG, sortOrder);
       BigDecimal nanosPart = BigDecimal.valueOf(
-          (nanoPart % QueryConstants.MILLIS_TO_NANOS_CONVERTOR)
+              (nanoPart % QueryConstants.MILLIS_TO_NANOS_CONVERTOR)
               / QueryConstants.MILLIS_TO_NANOS_CONVERTOR);
       return BigDecimal.valueOf(millisPart).add(nanosPart);
     } else if (actualType == PBoolean.INSTANCE) {
-      return (Boolean) PBoolean.INSTANCE.toObject(b, o, l, actualType, sortOrder) ?
-          BigDecimal.ONE :
-          BigDecimal.ZERO;
+      return (Boolean) PBoolean.INSTANCE.toObject(b, o, l, actualType, sortOrder)
+              ? BigDecimal.ONE
+              : BigDecimal.ZERO;
     }
     return throwConstraintViolationException(actualType, this);
   }
@@ -171,15 +171,15 @@ public class PDecimal extends PRealNumber<BigDecimal> {
     } else if (actualType == PDecimal.INSTANCE) {
       return object;
     } else if (equalsAny(actualType, PDate.INSTANCE, PUnsignedDate.INSTANCE, PTime.INSTANCE,
-        PUnsignedTime.INSTANCE)) {
+            PUnsignedTime.INSTANCE)) {
       java.util.Date d = (java.util.Date) object;
       return BigDecimal.valueOf(d.getTime());
     } else if (equalsAny(actualType, PTimestamp.INSTANCE,
-        PUnsignedTimestamp.INSTANCE)) {
+            PUnsignedTimestamp.INSTANCE)) {
       Timestamp ts = (Timestamp) object;
       long millisPart = ts.getTime();
       BigDecimal nanosPart = BigDecimal.valueOf(
-          (ts.getNanos() % QueryConstants.MILLIS_TO_NANOS_CONVERTOR)
+              (ts.getNanos() % QueryConstants.MILLIS_TO_NANOS_CONVERTOR)
               / QueryConstants.MILLIS_TO_NANOS_CONVERTOR);
       BigDecimal value = BigDecimal.valueOf(millisPart).add(nanosPart);
       return value;
@@ -210,7 +210,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
   @Override
   public boolean isCastableTo(PDataType targetType) {
     return super.isCastableTo(targetType) || targetType.isCoercibleTo(
-        PTimestamp.INSTANCE) || targetType.equals(PBoolean.INSTANCE);
+            PTimestamp.INSTANCE) || targetType.equals(PBoolean.INSTANCE);
   }
 
   @Override
@@ -218,7 +218,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
     if (value != null) {
       BigDecimal bd;
       if (equalsAny(targetType, PUnsignedLong.INSTANCE, PUnsignedInt.INSTANCE,
-          PUnsignedSmallint.INSTANCE, PUnsignedTinyint.INSTANCE)) {
+              PUnsignedSmallint.INSTANCE, PUnsignedTinyint.INSTANCE)) {
         bd = (BigDecimal) value;
         if (bd.signum() == -1) {
           return false;
@@ -300,7 +300,7 @@ public class PDecimal extends PRealNumber<BigDecimal> {
 
   @Override
   public boolean isSizeCompatible(ImmutableBytesWritable ptr, Object value, PDataType srcType,
-      Integer maxLength, Integer scale, Integer desiredMaxLength, Integer desiredScale) {
+          Integer maxLength, Integer scale, Integer desiredMaxLength, Integer desiredScale) {
     if (ptr.getLength() == 0) {
       return true;
     }
@@ -317,9 +317,9 @@ public class PDecimal extends PRealNumber<BigDecimal> {
       maxLength = v[0];
       scale = v[1];
     }
-    if (desiredMaxLength != null && desiredScale != null && maxLength != null && scale != null &&
-        ((desiredScale == null && desiredMaxLength < maxLength) ||
-            (desiredMaxLength - desiredScale) < (maxLength - scale))) {
+    if (desiredMaxLength != null && desiredScale != null && maxLength != null && scale != null
+            && ((desiredScale == null && desiredMaxLength < maxLength)
+            || (desiredMaxLength - desiredScale) < (maxLength - scale))) {
       return false;
     }
     return true;
@@ -327,12 +327,12 @@ public class PDecimal extends PRealNumber<BigDecimal> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifier, Integer desiredMaxLength, Integer desiredScale,
-      SortOrder expectedModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifier, Integer desiredMaxLength, Integer desiredScale,
+          SortOrder expectedModifier) {
     if (desiredScale == null) {
       // deiredScale not available, or we do not have scale requirement, delegate to parents.
       super.coerceBytes(ptr, object, actualType, maxLength, scale, actualModifier, desiredMaxLength,
-          desiredScale, expectedModifier);
+              desiredScale, expectedModifier);
       return;
     }
     if (ptr.getLength() == 0) {
@@ -392,10 +392,10 @@ public class PDecimal extends PRealNumber<BigDecimal> {
 
   @Override
   public String toStringLiteral(Object o, Format formatter) {
-      if (formatter == null) {
-          return ((BigDecimal)o).toPlainString();
-        }
-        return super.toStringLiteral(o, formatter);
+    if (formatter == null) {
+      return ((BigDecimal) o).toPlainString();
+    }
+    return super.toStringLiteral(o, formatter);
   }
 
   @Override
@@ -403,19 +403,19 @@ public class PDecimal extends PRealNumber<BigDecimal> {
     return new BigDecimal((Long) PLong.INSTANCE.getSampleValue(maxLength, arrayLength));
   }
 
-    // take details from org.apache.phoenix.schema.types.PDataType#toBigDecimal(byte[], int, int)
-    @Override
-    public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
-            Integer scale) {
-        byte signByte;
-        if (sortOrder == SortOrder.DESC) {
-            signByte = SortOrder.invert(bytes[offset]);
-        } else {
-            signByte = bytes[offset];
-        }
-        if (length == 1 && signByte == ZERO_BYTE) {
-            return 0;
-        }
-        return ((signByte & 0x80) == 0) ? -1 : 1;
+  // take details from org.apache.phoenix.schema.types.PDataType#toBigDecimal(byte[], int, int)
+  @Override
+  public int signum(byte[] bytes, int offset, int length, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
+    byte signByte;
+    if (sortOrder == SortOrder.DESC) {
+      signByte = SortOrder.invert(bytes[offset]);
+    } else {
+      signByte = bytes[offset];
     }
+    if (length == 1 && signByte == ZERO_BYTE) {
+      return 0;
+    }
+    return ((signByte & 0x80) == 0) ? -1 : 1;
+  }
 }

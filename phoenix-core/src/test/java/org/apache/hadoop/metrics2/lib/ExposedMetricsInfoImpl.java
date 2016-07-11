@@ -20,15 +20,16 @@ package org.apache.hadoop.metrics2.lib;
 import org.apache.hadoop.metrics2.lib.MetricsInfoImpl;
 
 /**
- * Helper class to expose access to the {@link org.apache.hadoop.metrics2.lib.MetricsInfoImpl}
+ * Helper class to expose access to the
+ * {@link org.apache.hadoop.metrics2.lib.MetricsInfoImpl}
  */
 public class ExposedMetricsInfoImpl extends MetricsInfoImpl {
 
-    /**
-     * @param name
-     * @param description
-     */
-    public ExposedMetricsInfoImpl(String name, String description) {
-        super(name, description);
-    }
+  /**
+   * @param name
+   * @param description
+   */
+  public ExposedMetricsInfoImpl(String name, String description) {
+    super(name, description);
+  }
 }

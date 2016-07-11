@@ -22,14 +22,14 @@ import java.util.List;
 
 import org.apache.phoenix.query.KeyRange;
 
-
 /**
- * Interface for strategies determining how to split regions in ParallelIterators.
- * 
- * 
+ * Interface for strategies determining how to split regions in
+ * ParallelIterators.
+ *
+ *
  */
 public interface ParallelIteratorRegionSplitter {
 
-    public List<KeyRange> getSplits() throws SQLException;
+  public List<KeyRange> getSplits() throws SQLException;
 
 }

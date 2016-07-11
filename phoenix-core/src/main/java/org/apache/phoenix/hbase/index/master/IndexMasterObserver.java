@@ -40,77 +40,80 @@ import org.apache.phoenix.util.MetaDataUtil;
  * {@link org.apache.hadoop.hbase.master.HMaster} process.
  */
 public class IndexMasterObserver extends BaseMasterObserver {
-    IndexLoadBalancer balancer = null;
 
-    @Override
-    public void preMasterInitialization(ObserverContext<MasterCoprocessorEnvironment> ctx)
-            throws IOException {
-        LoadBalancer loadBalancer =
-                ctx.getEnvironment().getMasterServices().getAssignmentManager().getBalancer();
-        if (loadBalancer instanceof IndexLoadBalancer) {
-            balancer = (IndexLoadBalancer) loadBalancer;
-        }
-        super.preMasterInitialization(ctx);
-    }
+  IndexLoadBalancer balancer = null;
 
-    @Override
-    public void preCreateTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
-            HTableDescriptor desc, HRegionInfo[] regions) throws IOException {
-        TableName userTableName = null;
-        if (balancer != null && desc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) != null) {
-            userTableName =
-                    TableName.valueOf(desc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY));
-            balancer.addTablesToColocate(userTableName, desc.getTableName());
-        }
-        if (userTableName != null) balancer.populateRegionLocations(userTableName);
-        super.preCreateTableHandler(ctx, desc, regions);
+  @Override
+  public void preMasterInitialization(ObserverContext<MasterCoprocessorEnvironment> ctx)
+          throws IOException {
+    LoadBalancer loadBalancer
+            = ctx.getEnvironment().getMasterServices().getAssignmentManager().getBalancer();
+    if (loadBalancer instanceof IndexLoadBalancer) {
+      balancer = (IndexLoadBalancer) loadBalancer;
     }
+    super.preMasterInitialization(ctx);
+  }
 
-    @Override
-    public void preModifyTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
-            TableName tableName, HTableDescriptor htd) throws IOException {
-        HTableDescriptor oldDesc =
-                ctx.getEnvironment().getMasterServices().getTableDescriptors().get(tableName);
-        if (oldDesc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) == null
-                && htd.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) != null) {
-            TableName userTableName =
-                    TableName.valueOf(htd.getValue(IndexLoadBalancer.PARENT_TABLE_KEY));
-            balancer.addTablesToColocate(userTableName, htd.getTableName());
-        }
-        super.preModifyTableHandler(ctx, tableName, htd);
+  @Override
+  public void preCreateTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
+          HTableDescriptor desc, HRegionInfo[] regions) throws IOException {
+    TableName userTableName = null;
+    if (balancer != null && desc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) != null) {
+      userTableName
+              = TableName.valueOf(desc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY));
+      balancer.addTablesToColocate(userTableName, desc.getTableName());
     }
+    if (userTableName != null) {
+      balancer.populateRegionLocations(userTableName);
+    }
+    super.preCreateTableHandler(ctx, desc, regions);
+  }
 
-    @Override
-    public void postMove(ObserverContext<MasterCoprocessorEnvironment> ctx, HRegionInfo region,
-            ServerName srcServer, ServerName destServer) throws IOException {
-        if (balancer != null && balancer.isTableColocated(region.getTable())) {
-            AssignmentManager am = ctx.getEnvironment().getMasterServices().getAssignmentManager();
-            RegionStates regionStates = am.getRegionStates();
-            String tableName = region.getTable().getNameAsString();
-            String correspondingTable =
-                    region.getTable().getNameAsString()
-                            .startsWith(MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX) ? MetaDataUtil
-                            .getUserTableName(tableName) : MetaDataUtil
-                            .getLocalIndexTableName(tableName);
-            List<HRegionInfo> regions =
-                    regionStates.getRegionsOfTable(TableName.valueOf(correspondingTable));
-            for (HRegionInfo hri : regions) {
-                if (Bytes.compareTo(region.getStartKey(), hri.getStartKey()) == 0
-                        && destServer != null) {
-                    balancer.regionOnline(hri, destServer);
-                    am.addPlan(hri.getEncodedName(), new RegionPlan(hri, null, destServer));
-                    am.unassign(hri);
-                }
-            }
-        }
-        super.postMove(ctx, region, srcServer, destServer);
+  @Override
+  public void preModifyTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
+          TableName tableName, HTableDescriptor htd) throws IOException {
+    HTableDescriptor oldDesc
+            = ctx.getEnvironment().getMasterServices().getTableDescriptors().get(tableName);
+    if (oldDesc.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) == null
+            && htd.getValue(IndexLoadBalancer.PARENT_TABLE_KEY) != null) {
+      TableName userTableName
+              = TableName.valueOf(htd.getValue(IndexLoadBalancer.PARENT_TABLE_KEY));
+      balancer.addTablesToColocate(userTableName, htd.getTableName());
     }
+    super.preModifyTableHandler(ctx, tableName, htd);
+  }
 
-    @Override
-    public void postDeleteTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
-            TableName tableName) throws IOException {
-        if (balancer != null && balancer.isTableColocated(tableName)) {
-            balancer.removeTablesFromColocation(tableName);
+  @Override
+  public void postMove(ObserverContext<MasterCoprocessorEnvironment> ctx, HRegionInfo region,
+          ServerName srcServer, ServerName destServer) throws IOException {
+    if (balancer != null && balancer.isTableColocated(region.getTable())) {
+      AssignmentManager am = ctx.getEnvironment().getMasterServices().getAssignmentManager();
+      RegionStates regionStates = am.getRegionStates();
+      String tableName = region.getTable().getNameAsString();
+      String correspondingTable
+              = region.getTable().getNameAsString()
+              .startsWith(MetaDataUtil.LOCAL_INDEX_TABLE_PREFIX) ? MetaDataUtil
+              .getUserTableName(tableName) : MetaDataUtil
+              .getLocalIndexTableName(tableName);
+      List<HRegionInfo> regions
+              = regionStates.getRegionsOfTable(TableName.valueOf(correspondingTable));
+      for (HRegionInfo hri : regions) {
+        if (Bytes.compareTo(region.getStartKey(), hri.getStartKey()) == 0
+                && destServer != null) {
+          balancer.regionOnline(hri, destServer);
+          am.addPlan(hri.getEncodedName(), new RegionPlan(hri, null, destServer));
+          am.unassign(hri);
         }
+      }
     }
+    super.postMove(ctx, region, srcServer, destServer);
+  }
+
+  @Override
+  public void postDeleteTableHandler(ObserverContext<MasterCoprocessorEnvironment> ctx,
+          TableName tableName) throws IOException {
+    if (balancer != null && balancer.isTableColocated(tableName)) {
+      balancer.removeTablesFromColocation(tableName);
+    }
+  }
 }

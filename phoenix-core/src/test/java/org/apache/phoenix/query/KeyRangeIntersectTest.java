@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.query;
 
 import static org.apache.phoenix.query.KeyRange.EMPTY_RANGE;
@@ -35,62 +34,61 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class KeyRangeIntersectTest extends TestCase {
-    private final KeyRange a, b, intersection;
 
-    public KeyRangeIntersectTest(KeyRange a, KeyRange b, KeyRange intersection) {
-        this.a = a;
-        this.b = b;
-        this.intersection = intersection;
-    }
+  private final KeyRange a, b, intersection;
 
-    @Parameters(name="intersection of {0} and {1} is {2}")
-    public static Collection<?> data() {
-        return Arrays.asList(new Object[][] {
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("E"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("E"), true)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("E"), false)
-                },
-                {
-                    PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
-                    PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
-                    EMPTY_RANGE
-                },
-                {
-                    EVERYTHING_RANGE,
-                    PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
-                    PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
-                },
-                {
-                    EVERYTHING_RANGE,
-                    EVERYTHING_RANGE,
-                    EVERYTHING_RANGE,
-                },
-                {
-                    EMPTY_RANGE,
-                    EVERYTHING_RANGE,
-                    EMPTY_RANGE
-                },
-                {
-                    EMPTY_RANGE,
-                    PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
-                    EMPTY_RANGE
-                },
-        });
-    }
-    @Test
-    public void intersect() {
-        assertEquals(intersection, a.intersect(b));
-        assertEquals(intersection, b.intersect(a));
-    }
+  public KeyRangeIntersectTest(KeyRange a, KeyRange b, KeyRange intersection) {
+    this.a = a;
+    this.b = b;
+    this.intersection = intersection;
+  }
+
+  @Parameters(name = "intersection of {0} and {1} is {2}")
+  public static Collection<?> data() {
+    return Arrays.asList(new Object[][]{
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), true, toBytes("E"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("E"), true)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("D"), false, toBytes("E"), false)
+      },
+      {
+        PChar.INSTANCE.getKeyRange(toBytes("C"), true, toBytes("E"), false),
+        PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
+        EMPTY_RANGE
+      },
+      {
+        EVERYTHING_RANGE,
+        PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
+        PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),},
+      {
+        EVERYTHING_RANGE,
+        EVERYTHING_RANGE,
+        EVERYTHING_RANGE,},
+      {
+        EMPTY_RANGE,
+        EVERYTHING_RANGE,
+        EMPTY_RANGE
+      },
+      {
+        EMPTY_RANGE,
+        PChar.INSTANCE.getKeyRange(toBytes("E"), false, toBytes("F"), true),
+        EMPTY_RANGE
+      },});
+  }
+
+  @Test
+  public void intersect() {
+    assertEquals(intersection, a.intersect(b));
+    assertEquals(intersection, b.intersect(a));
+  }
 }

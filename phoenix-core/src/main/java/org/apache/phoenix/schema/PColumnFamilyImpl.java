@@ -29,61 +29,62 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class PColumnFamilyImpl implements PColumnFamily {
-    private final PName name;
-    private final List<PColumn> columns;
-    private final Map<String, PColumn> columnByString;
-    private final Map<byte[], PColumn> columnByBytes;
-    private final int estimatedSize;
 
-    @Override
-    public int getEstimatedSize() {
-        return estimatedSize;
-    }
-    
-    public PColumnFamilyImpl(PName name, List<PColumn> columns) {
-        Preconditions.checkNotNull(name);
-        // Include guidePosts also in estimating the size
-        long estimatedSize = SizedUtil.OBJECT_SIZE + SizedUtil.POINTER_SIZE * 5 + SizedUtil.INT_SIZE + name.getEstimatedSize() +
-                SizedUtil.sizeOfMap(columns.size()) * 2 + SizedUtil.sizeOfArrayList(columns.size());
-        this.name = name;
-        this.columns = ImmutableList.copyOf(columns);
-        ImmutableMap.Builder<String, PColumn> columnByStringBuilder = ImmutableMap.builder();
-        ImmutableSortedMap.Builder<byte[], PColumn> columnByBytesBuilder = ImmutableSortedMap.orderedBy(Bytes.BYTES_COMPARATOR);
-        for (PColumn column : columns) {
-            estimatedSize += column.getEstimatedSize();
-            columnByBytesBuilder.put(column.getName().getBytes(), column);
-            columnByStringBuilder.put(column.getName().getString(), column);
-        }
-        this.columnByBytes = columnByBytesBuilder.build();
-        this.columnByString = columnByStringBuilder.build();
-        this.estimatedSize = (int)estimatedSize;
-    }
-    
-    @Override
-    public PName getName() {
-        return name;
-    }
+  private final PName name;
+  private final List<PColumn> columns;
+  private final Map<String, PColumn> columnByString;
+  private final Map<byte[], PColumn> columnByBytes;
+  private final int estimatedSize;
 
-    @Override
-    public List<PColumn> getColumns() {
-        return columns;
-    }
+  @Override
+  public int getEstimatedSize() {
+    return estimatedSize;
+  }
 
-    @Override
-    public PColumn getColumn(byte[] qualifier) throws ColumnNotFoundException  {
-        PColumn column = columnByBytes.get(qualifier);
-        if (column == null) {
-            throw new ColumnNotFoundException(Bytes.toString(qualifier));
-        }
-        return column;
+  public PColumnFamilyImpl(PName name, List<PColumn> columns) {
+    Preconditions.checkNotNull(name);
+    // Include guidePosts also in estimating the size
+    long estimatedSize = SizedUtil.OBJECT_SIZE + SizedUtil.POINTER_SIZE * 5 + SizedUtil.INT_SIZE + name.getEstimatedSize()
+            + SizedUtil.sizeOfMap(columns.size()) * 2 + SizedUtil.sizeOfArrayList(columns.size());
+    this.name = name;
+    this.columns = ImmutableList.copyOf(columns);
+    ImmutableMap.Builder<String, PColumn> columnByStringBuilder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<byte[], PColumn> columnByBytesBuilder = ImmutableSortedMap.orderedBy(Bytes.BYTES_COMPARATOR);
+    for (PColumn column : columns) {
+      estimatedSize += column.getEstimatedSize();
+      columnByBytesBuilder.put(column.getName().getBytes(), column);
+      columnByStringBuilder.put(column.getName().getString(), column);
     }
-    
-    @Override
-    public PColumn getColumn(String name) throws ColumnNotFoundException  {
-        PColumn column = columnByString.get(name);
-        if (column == null) {
-            throw new ColumnNotFoundException(name);
-        }
-        return column;
+    this.columnByBytes = columnByBytesBuilder.build();
+    this.columnByString = columnByStringBuilder.build();
+    this.estimatedSize = (int) estimatedSize;
+  }
+
+  @Override
+  public PName getName() {
+    return name;
+  }
+
+  @Override
+  public List<PColumn> getColumns() {
+    return columns;
+  }
+
+  @Override
+  public PColumn getColumn(byte[] qualifier) throws ColumnNotFoundException {
+    PColumn column = columnByBytes.get(qualifier);
+    if (column == null) {
+      throw new ColumnNotFoundException(Bytes.toString(qualifier));
     }
+    return column;
+  }
+
+  @Override
+  public PColumn getColumn(String name) throws ColumnNotFoundException {
+    PColumn column = columnByString.get(name);
+    if (column == null) {
+      throw new ColumnNotFoundException(name);
+    }
+    return column;
+  }
 }

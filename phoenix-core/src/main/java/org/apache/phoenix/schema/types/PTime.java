@@ -46,13 +46,13 @@ public class PTime extends PDataType<Time> {
 
   @Override
   public java.sql.Time toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     if (l == 0) {
       return null;
     }
     if (equalsAny(actualType, PTimestamp.INSTANCE, PUnsignedTimestamp.INSTANCE, PDate.INSTANCE,
-        PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE, PLong.INSTANCE,
-        PUnsignedLong.INSTANCE)) {
+            PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE, PLong.INSTANCE,
+            PUnsignedLong.INSTANCE)) {
       return new java.sql.Time(actualType.getCodec().decodeLong(b, o, sortOrder));
     } else if (actualType == PDecimal.INSTANCE) {
       BigDecimal bd = (BigDecimal) actualType.toObject(b, o, l, actualType, sortOrder);
@@ -128,10 +128,10 @@ public class PTime extends PDataType<Time> {
 
   @Override
   public String toStringLiteral(Object o, Format formatter) {
-      if (formatter == null) {
-          formatter = DateUtil.DEFAULT_TIME_FORMATTER;
-        }
-        return "'" + super.toStringLiteral(o, formatter) + "'";
+    if (formatter == null) {
+      formatter = DateUtil.DEFAULT_TIME_FORMATTER;
+    }
+    return "'" + super.toStringLiteral(o, formatter) + "'";
   }
 
   @Override

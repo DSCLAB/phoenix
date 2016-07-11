@@ -41,7 +41,7 @@ public class TestCachingHTableFactory {
     Mockito.when(delegate.getTable(t1)).thenReturn(table1);
     Mockito.when(delegate.getTable(t2)).thenReturn(table2);
     Mockito.when(delegate.getTable(t3)).thenReturn(table3);
-    
+
     // setup our factory with a cache size of 2
     CachingHTableFactory factory = new CachingHTableFactory(delegate, 2);
     factory.getTable(t1);
@@ -49,7 +49,7 @@ public class TestCachingHTableFactory {
     factory.getTable(t3);
     // get the same table a second time, after it has gone out of cache
     factory.getTable(t1);
-    
+
     Mockito.verify(delegate, Mockito.times(2)).getTable(t1);
     Mockito.verify(delegate, Mockito.times(1)).getTable(t2);
     Mockito.verify(delegate, Mockito.times(1)).getTable(t3);

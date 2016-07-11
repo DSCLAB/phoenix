@@ -64,7 +64,7 @@ public class PLong extends PWholeNumber<Long> {
     if (equalsAny(actualType, PLong.INSTANCE, PUnsignedLong.INSTANCE)) {
       return object;
     } else if (equalsAny(actualType, PUnsignedInt.INSTANCE,
-        PInteger.INSTANCE)) {
+            PInteger.INSTANCE)) {
       s = (Integer) object;
       return s;
     } else if (equalsAny(actualType, PTinyint.INSTANCE, PUnsignedTinyint.INSTANCE)) {
@@ -77,7 +77,7 @@ public class PLong extends PWholeNumber<Long> {
       Float f = (Float) object;
       if (f > Long.MAX_VALUE || f < Long.MIN_VALUE) {
         throw newIllegalDataException(
-            actualType + " value " + f + " cannot be cast to Long without changing its value");
+                actualType + " value " + f + " cannot be cast to Long without changing its value");
       }
       s = f.longValue();
       return s;
@@ -85,7 +85,7 @@ public class PLong extends PWholeNumber<Long> {
       Double de = (Double) object;
       if (de > Long.MAX_VALUE || de < Long.MIN_VALUE) {
         throw newIllegalDataException(
-            actualType + " value " + de + " cannot be cast to Long without changing its value");
+                actualType + " value " + de + " cannot be cast to Long without changing its value");
       }
       s = de.longValue();
       return s;
@@ -93,7 +93,7 @@ public class PLong extends PWholeNumber<Long> {
       BigDecimal d = (BigDecimal) object;
       return d.longValueExact();
     } else if (equalsAny(actualType, PDate.INSTANCE, PUnsignedDate.INSTANCE, PTime.INSTANCE,
-        PUnsignedTime.INSTANCE)) {
+            PUnsignedTime.INSTANCE)) {
       java.util.Date date = (java.util.Date) object;
       return date.getTime();
     }
@@ -102,15 +102,15 @@ public class PLong extends PWholeNumber<Long> {
 
   @Override
   public Long toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     if (l == 0) {
       return null;
     }
     if (equalsAny(actualType, PLong.INSTANCE, PUnsignedLong.INSTANCE,
-        PInteger.INSTANCE, PUnsignedInt.INSTANCE, PSmallint.INSTANCE,
-        PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE, PUnsignedTinyint.INSTANCE, PFloat.INSTANCE,
-        PUnsignedFloat.INSTANCE, PDouble.INSTANCE, PUnsignedDouble.INSTANCE, PDate.INSTANCE,
-        PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE)) {
+            PInteger.INSTANCE, PUnsignedInt.INSTANCE, PSmallint.INSTANCE,
+            PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE, PUnsignedTinyint.INSTANCE, PFloat.INSTANCE,
+            PUnsignedFloat.INSTANCE, PDouble.INSTANCE, PUnsignedDouble.INSTANCE, PDate.INSTANCE,
+            PUnsignedDate.INSTANCE, PTime.INSTANCE, PUnsignedTime.INSTANCE)) {
       return actualType.getCodec().decodeLong(b, o, sortOrder);
     } else if (actualType == PDecimal.INSTANCE) {
       BigDecimal bd = (BigDecimal) actualType.toObject(b, o, l, actualType, sortOrder);
@@ -138,7 +138,7 @@ public class PLong extends PWholeNumber<Long> {
     if (value != null) {
       long l;
       if (equalsAny(targetType, PUnsignedDouble.INSTANCE, PUnsignedFloat.INSTANCE,
-          PUnsignedLong.INSTANCE)) {
+              PUnsignedLong.INSTANCE)) {
         l = (Long) value;
         return l >= 0;
       } else if (targetType.equals(PUnsignedInt.INSTANCE)) {
@@ -252,7 +252,7 @@ public class PLong extends PWholeNumber<Long> {
       long v = decodeLong(b, o, sortOrder);
       if (v < Integer.MIN_VALUE || v > Integer.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be cast to Integer without changing its value");
+                "Value " + v + " cannot be cast to Integer without changing its value");
       }
       return (int) v;
     }
@@ -261,7 +261,7 @@ public class PLong extends PWholeNumber<Long> {
     public int encodeFloat(float v, byte[] b, int o) {
       if (v < Long.MIN_VALUE || v > Long.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Long without changing its value");
+                "Value " + v + " cannot be encoded as an Long without changing its value");
       }
       return encodeLong((long) v, b, o);
     }
@@ -270,7 +270,7 @@ public class PLong extends PWholeNumber<Long> {
     public int encodeDouble(double v, byte[] b, int o) {
       if (v < Long.MIN_VALUE || v > Long.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Long without changing its value");
+                "Value " + v + " cannot be encoded as an Long without changing its value");
       }
       return encodeLong((long) v, b, o);
     }
@@ -294,7 +294,7 @@ public class PLong extends PWholeNumber<Long> {
       long v = decodeLong(b, o, sortOrder);
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be cast to Byte without changing its value");
+                "Value " + v + " cannot be cast to Byte without changing its value");
       }
       return (byte) v;
     }
@@ -304,7 +304,7 @@ public class PLong extends PWholeNumber<Long> {
       long v = decodeLong(b, o, sortOrder);
       if (v < Short.MIN_VALUE || v > Short.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be cast to Short without changing its value");
+                "Value " + v + " cannot be cast to Short without changing its value");
       }
       return (short) v;
     }

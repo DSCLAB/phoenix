@@ -36,128 +36,131 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ByteUtil;
 import org.apache.phoenix.util.StringUtil;
 
-
 /**
- * 
- * Implementation of the RTrim(<string>) build-in function. It removes from the right end of
- * <string> space character and other function bytes in single byte utf8 characters set 
- * 
- * 
+ *
+ * Implementation of the RTrim(<string>) build-in function. It removes from the
+ * right end of
+ * <string> space character and other function bytes in single byte utf8
+ * characters set
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=RTrimFunction.NAME, args={
-    @Argument(allowedTypes={PVarchar.class})})
+@BuiltInFunction(name = RTrimFunction.NAME, args = {
+  @Argument(allowedTypes = {PVarchar.class})})
 public class RTrimFunction extends ScalarFunction {
-    public static final String NAME = "RTRIM";
 
-    public RTrimFunction() { }
+  public static final String NAME = "RTRIM";
 
-    public RTrimFunction(List<Expression> children) throws SQLException {
-        super(children);
+  public RTrimFunction() {
+  }
+
+  public RTrimFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  private Expression getStringExpression() {
+    return children.get(0);
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return children.get(0).getSortOrder();
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    // Starting from the end of the byte, look for all single bytes at the end of the string
+    // that is below SPACE_UTF8 (space and control characters) or above (control chars).
+    if (!getStringExpression().evaluate(tuple, ptr)) {
+      return false;
     }
-
-    private Expression getStringExpression() {
-        return children.get(0);
+    if (ptr.getLength() == 0) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+      return true;
     }
+    byte[] string = ptr.get();
+    int offset = ptr.getOffset();
+    int length = ptr.getLength();
 
-    @Override
-    public SortOrder getSortOrder() {
-        return children.get(0).getSortOrder();
-    }    
+    SortOrder sortOrder = getStringExpression().getSortOrder();
+    int i = StringUtil.getFirstNonBlankCharIdxFromEnd(string, offset, length, sortOrder);
+    if (i == offset - 1) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+      return true;
+    }
+    ptr.set(string, offset, i - offset + 1);
+    return true;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        // Starting from the end of the byte, look for all single bytes at the end of the string
-        // that is below SPACE_UTF8 (space and control characters) or above (control chars).
-        if (!getStringExpression().evaluate(tuple, ptr)) {
-            return false;
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES_IF_LAST;
+  }
+
+  @Override
+  public int getKeyFormationTraversalIndex() {
+    return 0;
+  }
+
+  @Override
+  public KeyPart newKeyPart(final KeyPart childPart) {
+    return new KeyPart() {
+      @Override
+      public KeyRange getKeyRange(CompareOp op, Expression rhs) {
+        byte[] lowerRange = KeyRange.UNBOUND;
+        byte[] upperRange = KeyRange.UNBOUND;
+        boolean lowerInclusive = true;
+
+        PDataType type = getColumn().getDataType();
+        switch (op) {
+          case EQUAL:
+            lowerRange = evaluateExpression(rhs);
+            upperRange = ByteUtil.nextKey(ByteUtil.concat(lowerRange, new byte[]{StringUtil.SPACE_UTF8}));
+            break;
+          case LESS_OR_EQUAL:
+            lowerInclusive = false;
+            upperRange = ByteUtil.nextKey(ByteUtil.concat(evaluateExpression(rhs), new byte[]{StringUtil.SPACE_UTF8}));
+            break;
+          default:
+            return childPart.getKeyRange(op, rhs);
         }
-        if (ptr.getLength() == 0) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-            return true;
+        Integer length = getColumn().getMaxLength();
+        if (type.isFixedWidth() && length != null) {
+          if (lowerRange != KeyRange.UNBOUND) {
+            lowerRange = StringUtil.padChar(lowerRange, length);
+          }
+          if (upperRange != KeyRange.UNBOUND) {
+            upperRange = StringUtil.padChar(upperRange, length);
+          }
         }
-        byte[] string = ptr.get();
-        int offset = ptr.getOffset();
-        int length = ptr.getLength();
-        
-        SortOrder sortOrder = getStringExpression().getSortOrder();
-        int i = StringUtil.getFirstNonBlankCharIdxFromEnd(string, offset, length, sortOrder);
-        if (i == offset - 1) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-            return true;
-            }
-        ptr.set(string, offset, i - offset + 1);
-        return true;
-    }
+        return KeyRange.getKeyRange(lowerRange, lowerInclusive, upperRange, false);
+      }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES_IF_LAST;
-    }
+      @Override
+      public List<Expression> getExtractNodes() {
+        return Collections.<Expression>emptyList();
+      }
 
-    @Override
-    public int getKeyFormationTraversalIndex() {
-        return 0;
-    }
+      @Override
+      public PColumn getColumn() {
+        return childPart.getColumn();
+      }
+    };
+  }
 
-    @Override
-    public KeyPart newKeyPart(final KeyPart childPart) {
-        return new KeyPart() {
-            @Override
-            public KeyRange getKeyRange(CompareOp op, Expression rhs) {
-                byte[] lowerRange = KeyRange.UNBOUND;
-                byte[] upperRange = KeyRange.UNBOUND;
-                boolean lowerInclusive = true;
-                
-                PDataType type = getColumn().getDataType();
-                switch (op) {
-                case EQUAL:
-                    lowerRange = evaluateExpression(rhs);
-                    upperRange = ByteUtil.nextKey(ByteUtil.concat(lowerRange, new byte[] {StringUtil.SPACE_UTF8}));
-                    break;
-                case LESS_OR_EQUAL:
-                    lowerInclusive = false;
-                    upperRange = ByteUtil.nextKey(ByteUtil.concat(evaluateExpression(rhs), new byte[] {StringUtil.SPACE_UTF8}));
-                    break;
-                default:
-                    return childPart.getKeyRange(op, rhs);
-                }
-                Integer length = getColumn().getMaxLength();
-                if (type.isFixedWidth() && length != null) {
-                    if (lowerRange != KeyRange.UNBOUND) {
-                        lowerRange = StringUtil.padChar(lowerRange, length);
-                    }
-                    if (upperRange != KeyRange.UNBOUND) {
-                        upperRange = StringUtil.padChar(upperRange, length);
-                    }
-                }
-                return KeyRange.getKeyRange(lowerRange, lowerInclusive, upperRange, false);
-            }
+  @Override
+  public Integer getMaxLength() {
+    return getStringExpression().getMaxLength();
+  }
 
-            @Override
-            public List<Expression> getExtractNodes() {
-                return Collections.<Expression>emptyList();
-            }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
 
-            @Override
-            public PColumn getColumn() {
-                return childPart.getColumn();
-            }
-        };
-    }
-
-    @Override
-    public Integer getMaxLength() {
-        return getStringExpression().getMaxLength();
-    }
-
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

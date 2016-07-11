@@ -30,98 +30,97 @@ import org.apache.phoenix.schema.types.*;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 @FunctionParseNode.BuiltInFunction(name = ArrayAppendFunction.NAME, args = {
-        @FunctionParseNode.Argument(allowedTypes = {PBinaryArray.class,
-                PVarbinaryArray.class}),
-        @FunctionParseNode.Argument(allowedTypes = {PVarbinary.class}, defaultValue = "null")})
+  @FunctionParseNode.Argument(allowedTypes = {PBinaryArray.class,
+    PVarbinaryArray.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PVarbinary.class}, defaultValue = "null")})
 public class ArrayAppendFunction extends ScalarFunction {
 
-    public static final String NAME = "ARRAY_APPEND";
+  public static final String NAME = "ARRAY_APPEND";
 
-    public ArrayAppendFunction() {
+  public ArrayAppendFunction() {
+  }
+
+  public ArrayAppendFunction(List<Expression> children) throws TypeMismatchException {
+    super(children);
+
+    if (getDataType() != null && !(getElementExpr() instanceof LiteralExpression && getElementExpr().isNullable()) && !getElementDataType().isCoercibleTo(getBaseType())) {
+      throw TypeMismatchException.newException(getBaseType(), getElementDataType());
     }
 
-    public ArrayAppendFunction(List<Expression> children) throws TypeMismatchException {
-        super(children);
+    // If the base type of an element is fixed width, make sure the element being appended will fit
+    if (getDataType() != null && getElementExpr().getDataType().getByteSize() == null && getElementDataType() != null && getBaseType().isFixedWidth() && getElementDataType().isFixedWidth() && getArrayExpr().getMaxLength() != null
+            && getElementExpr().getMaxLength() != null && getElementExpr().getMaxLength() > getArrayExpr().getMaxLength()) {
+      throw new DataExceedsCapacityException("");
+    }
+    // If the base type has a scale, make sure the element being appended has a scale less than or equal to it
+    if (getDataType() != null && getArrayExpr().getScale() != null && getElementExpr().getScale() != null
+            && getElementExpr().getScale() > getArrayExpr().getScale()) {
+      throw new DataExceedsCapacityException(getBaseType(), getArrayExpr().getMaxLength(), getArrayExpr().getScale());
+    }
+  }
 
-        if (getDataType() != null && !(getElementExpr() instanceof LiteralExpression && getElementExpr().isNullable()) && !getElementDataType().isCoercibleTo(getBaseType())) {
-            throw TypeMismatchException.newException(getBaseType(), getElementDataType());
-        }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
 
-        // If the base type of an element is fixed width, make sure the element being appended will fit
-        if (getDataType() != null && getElementExpr().getDataType().getByteSize() == null && getElementDataType() != null && getBaseType().isFixedWidth() && getElementDataType().isFixedWidth() && getArrayExpr().getMaxLength() != null &&
-                getElementExpr().getMaxLength() != null && getElementExpr().getMaxLength() > getArrayExpr().getMaxLength()) {
-            throw new DataExceedsCapacityException("");
-        }
-        // If the base type has a scale, make sure the element being appended has a scale less than or equal to it
-        if (getDataType() != null && getArrayExpr().getScale() != null && getElementExpr().getScale() != null &&
-                getElementExpr().getScale() > getArrayExpr().getScale()) {
-            throw new DataExceedsCapacityException(getBaseType(), getArrayExpr().getMaxLength(), getArrayExpr().getScale());
-        }
+    if (!getArrayExpr().evaluate(tuple, ptr)) {
+      return false;
+    } else if (ptr.getLength() == 0) {
+      return true;
+    }
+    int arrayLength = PArrayDataType.getArrayLength(ptr, getBaseType(), getArrayExpr().getMaxLength());
+
+    int length = ptr.getLength();
+    int offset = ptr.getOffset();
+    byte[] arrayBytes = ptr.get();
+
+    if (!getElementExpr().evaluate(tuple, ptr) || ptr.getLength() == 0) {
+      ptr.set(arrayBytes, offset, length);
+      return true;
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-
-        if (!getArrayExpr().evaluate(tuple, ptr)) {
-            return false;
-        } else if (ptr.getLength() == 0) {
-            return true;
-        }
-        int arrayLength = PArrayDataType.getArrayLength(ptr, getBaseType(), getArrayExpr().getMaxLength());
-
-        int length = ptr.getLength();
-        int offset = ptr.getOffset();
-        byte[] arrayBytes = ptr.get();
-
-        if (!getElementExpr().evaluate(tuple, ptr) || ptr.getLength() == 0) {
-            ptr.set(arrayBytes, offset, length);
-            return true;
-        }
-
-        if (!getBaseType().isSizeCompatible(ptr, null, getElementDataType(), getElementExpr().getMaxLength(), getElementExpr().getScale(), getArrayExpr().getMaxLength(), getArrayExpr().getScale())) {
-            throw new DataExceedsCapacityException("");
-        }
-
-        getBaseType().coerceBytes(ptr, null, getElementDataType(), getElementExpr().getMaxLength(), getElementExpr().getScale(), getElementExpr().getSortOrder(), getArrayExpr().getMaxLength(), getArrayExpr().getScale(), getArrayExpr().getSortOrder());
-
-        return PArrayDataType.appendItemToArray(ptr, length, offset, arrayBytes, getBaseType(), arrayLength, getMaxLength(), getArrayExpr().getSortOrder());
+    if (!getBaseType().isSizeCompatible(ptr, null, getElementDataType(), getElementExpr().getMaxLength(), getElementExpr().getScale(), getArrayExpr().getMaxLength(), getArrayExpr().getScale())) {
+      throw new DataExceedsCapacityException("");
     }
 
-    @Override
-    public PDataType getDataType() {
-        return children.get(0).getDataType();
-    }
+    getBaseType().coerceBytes(ptr, null, getElementDataType(), getElementExpr().getMaxLength(), getElementExpr().getScale(), getElementExpr().getSortOrder(), getArrayExpr().getMaxLength(), getArrayExpr().getScale(), getArrayExpr().getSortOrder());
 
-    @Override
-    public Integer getMaxLength() {
-        return this.children.get(0).getMaxLength();
-    }
+    return PArrayDataType.appendItemToArray(ptr, length, offset, arrayBytes, getBaseType(), arrayLength, getMaxLength(), getArrayExpr().getSortOrder());
+  }
 
-    @Override
-    public SortOrder getSortOrder() {
-        return getChildren().get(0).getSortOrder();
-    }
+  @Override
+  public PDataType getDataType() {
+    return children.get(0).getDataType();
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public Integer getMaxLength() {
+    return this.children.get(0).getMaxLength();
+  }
 
-    public Expression getArrayExpr() {
-        return getChildren().get(0);
-    }
+  @Override
+  public SortOrder getSortOrder() {
+    return getChildren().get(0).getSortOrder();
+  }
 
-    public Expression getElementExpr() {
-        return getChildren().get(1);
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    public PDataType getBaseType() {
-        return PDataType.arrayBaseType(getArrayExpr().getDataType());
-    }
+  public Expression getArrayExpr() {
+    return getChildren().get(0);
+  }
 
-    public PDataType getElementDataType() {
-        return getElementExpr().getDataType();
-    }
+  public Expression getElementExpr() {
+    return getChildren().get(1);
+  }
 
+  public PDataType getBaseType() {
+    return PDataType.arrayBaseType(getArrayExpr().getDataType());
+  }
+
+  public PDataType getElementDataType() {
+    return getElementExpr().getDataType();
+  }
 
 }

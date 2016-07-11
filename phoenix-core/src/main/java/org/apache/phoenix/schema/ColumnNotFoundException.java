@@ -20,44 +20,44 @@ package org.apache.phoenix.schema;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 /**
- * 
- * Exception thrown when a column name referenced in a select
- * statement cannot be found in any table.
  *
- * 
+ * Exception thrown when a column name referenced in a select statement cannot
+ * be found in any table.
+ *
+ *
  * @since 0.1
  */
 public class ColumnNotFoundException extends MetaDataEntityNotFoundException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.COLUMN_NOT_FOUND;
-    private final String schemaName;
-    private final String tableName;
-    private final String columnName;
 
-    public ColumnNotFoundException(String columnName) {
-        this(null, null, null, columnName);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.COLUMN_NOT_FOUND;
+  private final String schemaName;
+  private final String tableName;
+  private final String columnName;
 
-    public ColumnNotFoundException(String schemaName, String tableName, String familyName, String columnName) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
-                .setFamilyName(familyName).setColumnName(columnName).build().toString(),
-                code.getSQLState(), code.getErrorCode(), null);
-        this.schemaName = schemaName;
-        this.tableName = tableName;
-        this.columnName = columnName;
-    }
+  public ColumnNotFoundException(String columnName) {
+    this(null, null, null, columnName);
+  }
 
-    public String getTableName() {
-        return tableName;
-    }
+  public ColumnNotFoundException(String schemaName, String tableName, String familyName, String columnName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
+            .setFamilyName(familyName).setColumnName(columnName).build().toString(),
+            code.getSQLState(), code.getErrorCode(), null);
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+    this.columnName = columnName;
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  public String getTableName() {
+    return tableName;
+  }
 
-    public String getColumnName() {
-        return columnName;
-    }
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public String getColumnName() {
+    return columnName;
+  }
 }

@@ -18,20 +18,21 @@
 package org.apache.phoenix.parse;
 
 public abstract class SingleTableStatement extends MutableStatement {
-    private final NamedTableNode table;
-    private final int bindCount;
 
-    public SingleTableStatement(NamedTableNode table, int bindCount) {
-        this.table = table;
-        this.bindCount = bindCount;
-    }
-    
-    public NamedTableNode getTable() {
-        return table;
-    }
+  private final NamedTableNode table;
+  private final int bindCount;
 
-    @Override
-    public int getBindCount() {
-        return bindCount;
-    }
+  public SingleTableStatement(NamedTableNode table, int bindCount) {
+    this.table = table;
+    this.bindCount = bindCount;
+  }
+
+  public NamedTableNode getTable() {
+    return table;
+  }
+
+  @Override
+  public int getBindCount() {
+    return bindCount;
+  }
 }

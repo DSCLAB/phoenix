@@ -30,50 +30,49 @@ import org.apache.phoenix.schema.types.PUnsignedTinyint;
 import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
+ *
  * Function used to get the SQL view type name from the serialized view type.
- * Usage:
- * SQLViewType('v') will return 'VIEW' based on
+ * Usage: SQLViewType('v') will return 'VIEW' based on
  * {@link java.sql.DatabaseMetaData#getTableTypes()}
- * 
- * 
+ *
+ *
  * @since 2.2
  */
-@BuiltInFunction(name=SQLIndexTypeFunction.NAME, args= {
-    @Argument(allowedTypes= PUnsignedTinyint.class)} )
+@BuiltInFunction(name = SQLIndexTypeFunction.NAME, args = {
+  @Argument(allowedTypes = PUnsignedTinyint.class)})
 public class SQLIndexTypeFunction extends ScalarFunction {
-    public static final String NAME = "SQLIndexType";
 
-    public SQLIndexTypeFunction() {
-    }
-    
-    public SQLIndexTypeFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression child = children.get(0);
-        if (!child.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if (ptr.getLength() == 0) {
-            return true;
-        }
-        IndexType viewType = IndexType.fromSerializedValue(ptr.get()[ptr.getOffset()]);
-        ptr.set(viewType.getBytes());
-        return true;
-    }
+  public static final String NAME = "SQLIndexType";
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
+  public SQLIndexTypeFunction() {
+  }
+
+  public SQLIndexTypeFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression child = children.get(0);
+    if (!child.evaluate(tuple, ptr)) {
+      return false;
     }
-    
-    @Override
-    public String getName() {
-        return NAME;
+    if (ptr.getLength() == 0) {
+      return true;
     }
+    IndexType viewType = IndexType.fromSerializedValue(ptr.get()[ptr.getOffset()]);
+    ptr.set(viewType.getBytes());
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

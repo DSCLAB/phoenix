@@ -13,27 +13,27 @@ package org.apache.phoenix.schema.types;
 public abstract class BasePrimitiveDoublePhoenixArrayToStringTest extends
         BasePhoenixArrayToStringTest {
 
-    public BasePrimitiveDoublePhoenixArrayToStringTest() {
-        super();
-    }
+  public BasePrimitiveDoublePhoenixArrayToStringTest() {
+    super();
+  }
 
-    @Override
-    protected String getString1() {
-        return "1.1";
-    }
+  @Override
+  protected String getString1() {
+    return "1.1";
+  }
 
-    @Override
-    protected String getString2() {
-        return "2.2";
-    }
+  @Override
+  protected String getString2() {
+    return "2.2";
+  }
 
-    @Override
-    protected String getString3() {
-        return "3.3";
-    }
+  @Override
+  protected String getString3() {
+    return "3.3";
+  }
 
-    @Override
-    protected String getNullString() {
-        return "0.0";
-    }
+  @Override
+  protected String getNullString() {
+    return "0.0";
+  }
 }

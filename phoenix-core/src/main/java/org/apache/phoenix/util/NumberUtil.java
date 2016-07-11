@@ -24,33 +24,34 @@ import org.apache.phoenix.schema.types.PDataType;
 /**
  * Utility methods for numbers like decimal, long, etc.
  *
- * 
+ *
  * @since 0.1
  */
 public class NumberUtil {
-    
-    public static final String DEFAULT_NUMBER_FORMAT = "#,##0.###";
 
-    /**
-     * Strip all trailing zeros to ensure that no digit will be zero and
-     * round using our default context to ensure precision doesn't exceed max allowed.
-     * @return new {@link BigDecimal} instance
-     */
-    public static BigDecimal normalize(BigDecimal bigDecimal) {
-        return bigDecimal.round(PDataType.DEFAULT_MATH_CONTEXT).stripTrailingZeros();
-    }
+  public static final String DEFAULT_NUMBER_FORMAT = "#,##0.###";
 
-    public static BigDecimal setDecimalWidthAndScale(BigDecimal decimal, Integer precisionOrNull, Integer scaleOrNull) {
-        int precision = precisionOrNull == null ? PDataType.MAX_PRECISION : precisionOrNull;
-        int scale = scaleOrNull == null ? 0 : scaleOrNull;
-        // If we could not fit all the digits before decimal point into the new desired precision and
-        // scale, return null and the caller method should handle the error.
-        if (((precision - scale) < (decimal.precision() - decimal.scale()))){
-            return null;
-        }
-        if (scaleOrNull != null) {
-            decimal = decimal.setScale(scale, BigDecimal.ROUND_DOWN); // FIXME: should this be ROUND_UP?
-        }
-        return decimal;
+  /**
+   * Strip all trailing zeros to ensure that no digit will be zero and round
+   * using our default context to ensure precision doesn't exceed max allowed.
+   *
+   * @return new {@link BigDecimal} instance
+   */
+  public static BigDecimal normalize(BigDecimal bigDecimal) {
+    return bigDecimal.round(PDataType.DEFAULT_MATH_CONTEXT).stripTrailingZeros();
+  }
+
+  public static BigDecimal setDecimalWidthAndScale(BigDecimal decimal, Integer precisionOrNull, Integer scaleOrNull) {
+    int precision = precisionOrNull == null ? PDataType.MAX_PRECISION : precisionOrNull;
+    int scale = scaleOrNull == null ? 0 : scaleOrNull;
+    // If we could not fit all the digits before decimal point into the new desired precision and
+    // scale, return null and the caller method should handle the error.
+    if (((precision - scale) < (decimal.precision() - decimal.scale()))) {
+      return null;
     }
+    if (scaleOrNull != null) {
+      decimal = decimal.setScale(scale, BigDecimal.ROUND_DOWN); // FIXME: should this be ROUND_UP?
+    }
+    return decimal;
+  }
 }

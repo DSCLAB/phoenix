@@ -22,34 +22,36 @@ import org.apache.phoenix.util.InstanceResolver;
 /**
  * Manages factories that provide extension points for HBase.
  * <p/>
- * Dependent modules may register their own implementations of the following using {@link java.util.ServiceLoader}:
+ * Dependent modules may register their own implementations of the following
+ * using {@link java.util.ServiceLoader}:
  * <ul>
- *     <li>{@link ConfigurationFactory}</li>
- *     <li>{@link HTableFactory}</li>
- *     <li> {@link HConnectionFactory} </li>
+ * <li>{@link ConfigurationFactory}</li>
+ * <li>{@link HTableFactory}</li>
+ * <li> {@link HConnectionFactory} </li>
  * </ul>
  *
- * If a custom implementation is not registered, the default implementations will be used.
+ * If a custom implementation is not registered, the default implementations
+ * will be used.
  *
- * 
+ *
  * @since 0.2
  */
 public class HBaseFactoryProvider {
 
-    private static final HTableFactory DEFAULT_HTABLE_FACTORY = new HTableFactory.HTableFactoryImpl();
-    private static final HConnectionFactory DEFAULT_HCONNECTION_FACTORY =
-        new HConnectionFactory.HConnectionFactoryImpl();
-    private static final ConfigurationFactory DEFAULT_CONFIGURATION_FACTORY = new ConfigurationFactory.ConfigurationFactoryImpl();
+  private static final HTableFactory DEFAULT_HTABLE_FACTORY = new HTableFactory.HTableFactoryImpl();
+  private static final HConnectionFactory DEFAULT_HCONNECTION_FACTORY
+          = new HConnectionFactory.HConnectionFactoryImpl();
+  private static final ConfigurationFactory DEFAULT_CONFIGURATION_FACTORY = new ConfigurationFactory.ConfigurationFactoryImpl();
 
-    public static HTableFactory getHTableFactory() {
-        return InstanceResolver.getSingleton(HTableFactory.class, DEFAULT_HTABLE_FACTORY);
-    }
+  public static HTableFactory getHTableFactory() {
+    return InstanceResolver.getSingleton(HTableFactory.class, DEFAULT_HTABLE_FACTORY);
+  }
 
-    public static HConnectionFactory getHConnectionFactory() {
-        return InstanceResolver.getSingleton(HConnectionFactory.class, DEFAULT_HCONNECTION_FACTORY);
-    }
+  public static HConnectionFactory getHConnectionFactory() {
+    return InstanceResolver.getSingleton(HConnectionFactory.class, DEFAULT_HCONNECTION_FACTORY);
+  }
 
-    public static ConfigurationFactory getConfigurationFactory() {
-        return InstanceResolver.getSingleton(ConfigurationFactory.class, DEFAULT_CONFIGURATION_FACTORY);
-    }
+  public static ConfigurationFactory getConfigurationFactory() {
+    return InstanceResolver.getSingleton(ConfigurationFactory.class, DEFAULT_CONFIGURATION_FACTORY);
+  }
 }

@@ -28,7 +28,7 @@ public class PSmallintArray extends PArrayDataType<short[]> {
 
   private PSmallintArray() {
     super("SMALLINT ARRAY", PDataType.ARRAY_TYPE_BASE + PSmallint.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 31);
+            PhoenixArray.class, null, 31);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PSmallintArray extends PArrayDataType<short[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PSmallint.INSTANCE, sortOrder, maxLength, scale,
-        PSmallint.INSTANCE);
+            PSmallint.INSTANCE);
   }
 
   @Override
@@ -96,10 +96,10 @@ public class PSmallintArray extends PArrayDataType<short[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

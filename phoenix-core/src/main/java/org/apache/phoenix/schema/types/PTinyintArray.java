@@ -28,7 +28,7 @@ public class PTinyintArray extends PArrayDataType<byte[]> {
 
   private PTinyintArray() {
     super("TINYINT ARRAY", PDataType.ARRAY_TYPE_BASE + PTinyint.INSTANCE.getSqlType(),
-        PhoenixArray.class, null, 32);
+            PhoenixArray.class, null, 32);
   }
 
   @Override
@@ -63,10 +63,10 @@ public class PTinyintArray extends PArrayDataType<byte[]> {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length,
-      PDataType actualType, SortOrder sortOrder, Integer maxLength,
-      Integer scale) {
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
     return toObject(bytes, offset, length, PTinyint.INSTANCE, sortOrder, maxLength, scale,
-        PTinyint.INSTANCE);
+            PTinyint.INSTANCE);
   }
 
   @Override
@@ -76,10 +76,10 @@ public class PTinyintArray extends PArrayDataType<byte[]> {
 
   @Override
   public void coerceBytes(ImmutableBytesWritable ptr, Object object, PDataType actualType,
-      Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
-      Integer desiredScale, SortOrder desiredModifier) {
+          Integer maxLength, Integer scale, SortOrder actualModifer, Integer desiredMaxLength,
+          Integer desiredScale, SortOrder desiredModifier) {
     coerceBytes(ptr, object, actualType, maxLength, scale, desiredMaxLength, desiredScale,
-        this, actualModifer, desiredModifier);
+            this, actualModifer, desiredModifier);
   }
 
   @Override

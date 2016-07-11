@@ -38,92 +38,102 @@ import com.google.common.collect.Lists;
  */
 public class PhoenixInputSplit extends InputSplit implements Writable {
 
-    private List<Scan> scans;
-    private KeyRange keyRange;
-   
-    /**
-     * No Arg constructor
-     */
-    public PhoenixInputSplit() {
-    }
-    
-   /**
-    * 
-    * @param keyRange
-    */
-    public PhoenixInputSplit(final List<Scan> scans) {
-        Preconditions.checkNotNull(scans);
-        Preconditions.checkState(!scans.isEmpty());
-        this.scans = scans;
-        init();
-    }
-    
-    public List<Scan> getScans() {
-        return scans;
-    }
-    
-    public KeyRange getKeyRange() {
-        return keyRange;
-    }
-    
-    private void init() {
-        this.keyRange = KeyRange.getKeyRange(scans.get(0).getStartRow(), scans.get(scans.size()-1).getStopRow());
-    }
-    
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        int count = WritableUtils.readVInt(input);
-        scans = Lists.newArrayListWithExpectedSize(count);
-        for (int i = 0; i < count; i++) {
-            byte[] protoScanBytes = new byte[WritableUtils.readVInt(input)];
-            input.readFully(protoScanBytes);
-            ClientProtos.Scan protoScan = ClientProtos.Scan.parseFrom(protoScanBytes);
-            Scan scan = ProtobufUtil.toScan(protoScan);
-            scans.add(scan);
-        }
-        init();
-    }
-    
-    @Override
-    public void write(DataOutput output) throws IOException {
-        Preconditions.checkNotNull(scans);
-        WritableUtils.writeVInt(output, scans.size());
-        for (Scan scan : scans) {
-            ClientProtos.Scan protoScan = ProtobufUtil.toScan(scan);
-            byte[] protoScanBytes = protoScan.toByteArray();
-            WritableUtils.writeVInt(output, protoScanBytes.length);
-            output.write(protoScanBytes);
-        }
-    }
+  private List<Scan> scans;
+  private KeyRange keyRange;
 
-    @Override
-    public long getLength() throws IOException, InterruptedException {
-         return 0;
-    }
+  /**
+   * No Arg constructor
+   */
+  public PhoenixInputSplit() {
+  }
 
-    @Override
-    public String[] getLocations() throws IOException, InterruptedException {
-        return new String[]{};
-    }
+  /**
+   *
+   * @param keyRange
+   */
+  public PhoenixInputSplit(final List<Scan> scans) {
+    Preconditions.checkNotNull(scans);
+    Preconditions.checkState(!scans.isEmpty());
+    this.scans = scans;
+    init();
+  }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + keyRange.hashCode();
-        return result;
-    }
+  public List<Scan> getScans() {
+    return scans;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) { return true; }
-        if (obj == null) { return false; }
-        if (!(obj instanceof PhoenixInputSplit)) { return false; }
-        PhoenixInputSplit other = (PhoenixInputSplit)obj;
-        if (keyRange == null) {
-            if (other.keyRange != null) { return false; }
-        } else if (!keyRange.equals(other.keyRange)) { return false; }
-        return true;
+  public KeyRange getKeyRange() {
+    return keyRange;
+  }
+
+  private void init() {
+    this.keyRange = KeyRange.getKeyRange(scans.get(0).getStartRow(), scans.get(scans.size() - 1).getStopRow());
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    int count = WritableUtils.readVInt(input);
+    scans = Lists.newArrayListWithExpectedSize(count);
+    for (int i = 0; i < count; i++) {
+      byte[] protoScanBytes = new byte[WritableUtils.readVInt(input)];
+      input.readFully(protoScanBytes);
+      ClientProtos.Scan protoScan = ClientProtos.Scan.parseFrom(protoScanBytes);
+      Scan scan = ProtobufUtil.toScan(protoScan);
+      scans.add(scan);
     }
+    init();
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    Preconditions.checkNotNull(scans);
+    WritableUtils.writeVInt(output, scans.size());
+    for (Scan scan : scans) {
+      ClientProtos.Scan protoScan = ProtobufUtil.toScan(scan);
+      byte[] protoScanBytes = protoScan.toByteArray();
+      WritableUtils.writeVInt(output, protoScanBytes.length);
+      output.write(protoScanBytes);
+    }
+  }
+
+  @Override
+  public long getLength() throws IOException, InterruptedException {
+    return 0;
+  }
+
+  @Override
+  public String[] getLocations() throws IOException, InterruptedException {
+    return new String[]{};
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + keyRange.hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof PhoenixInputSplit)) {
+      return false;
+    }
+    PhoenixInputSplit other = (PhoenixInputSplit) obj;
+    if (keyRange == null) {
+      if (other.keyRange != null) {
+        return false;
+      }
+    } else if (!keyRange.equals(other.keyRange)) {
+      return false;
+    }
+    return true;
+  }
 
 }

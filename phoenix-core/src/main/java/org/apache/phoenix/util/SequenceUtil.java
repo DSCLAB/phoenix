@@ -23,41 +23,43 @@ import com.google.common.math.LongMath;
  */
 public class SequenceUtil {
 
-    /**
-     * Returns the nextValue of a sequence 
-     * @throws SQLException if cycle is false and the sequence limit has been reached
-     */
-    public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
-            long incrementBy, long cacheSize) throws SQLException {
-        long nextValue = 0;
-        boolean increasingSeq = incrementBy > 0 ? true : false;
-        // advance currentValue while checking for overflow    
-        try {
-            long incrementValue = LongMath.checkedMultiply(incrementBy, cacheSize);
-            nextValue = LongMath.checkedAdd(currentValue, incrementValue);
-        } catch (ArithmeticException e) {
-            return true;
-        }
+  /**
+   * Returns the nextValue of a sequence
+   *
+   * @throws SQLException if cycle is false and the sequence limit has been
+   * reached
+   */
+  public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
+          long incrementBy, long cacheSize) throws SQLException {
+    long nextValue = 0;
+    boolean increasingSeq = incrementBy > 0 ? true : false;
+    // advance currentValue while checking for overflow    
+    try {
+      long incrementValue = LongMath.checkedMultiply(incrementBy, cacheSize);
+      nextValue = LongMath.checkedAdd(currentValue, incrementValue);
+    } catch (ArithmeticException e) {
+      return true;
+    }
 
-        // check if limit was reached
-		if ((increasingSeq && nextValue > maxValue)
-				|| (!increasingSeq && nextValue < minValue)) {
-            return true;
-        }
-        return false;
+    // check if limit was reached
+    if ((increasingSeq && nextValue > maxValue)
+            || (!increasingSeq && nextValue < minValue)) {
+      return true;
     }
-    
-    public static boolean checkIfLimitReached(SequenceInfo info) throws SQLException {
-        return checkIfLimitReached(info.sequenceValue, info.minValue, info.maxValue, info.incrementBy, info.cacheSize);
-    }
-    
-    /**
-     * Helper function that returns a {@link SQLException}
-     */
-    public static SQLException getException(String schemaName, String tableName,
-            SQLExceptionCode code) {
-        return new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
-                .build().buildException();
-    }
+    return false;
+  }
+
+  public static boolean checkIfLimitReached(SequenceInfo info) throws SQLException {
+    return checkIfLimitReached(info.sequenceValue, info.minValue, info.maxValue, info.incrementBy, info.cacheSize);
+  }
+
+  /**
+   * Helper function that returns a {@link SQLException}
+   */
+  public static SQLException getException(String schemaName, String tableName,
+          SQLExceptionCode code) {
+    return new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
+            .build().buildException();
+  }
 
 }

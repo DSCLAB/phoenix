@@ -19,18 +19,18 @@ package org.apache.phoenix.flume.serializer;
 
 public enum EventSerializers {
 
-    REGEX(RegexEventSerializer.class.getName());
-    
-    private final String className;
-    
-    private EventSerializers(String serializerClassName) {
-        this.className = serializerClassName;
-    }
+  REGEX(RegexEventSerializer.class.getName());
 
-    /**
-     * @return Returns the serializer className.
-     */
-    public String getClassName() {
-        return className;
-    }
+  private final String className;
+
+  private EventSerializers(String serializerClassName) {
+    this.className = serializerClassName;
+  }
+
+  /**
+   * @return Returns the serializer className.
+   */
+  public String getClassName() {
+    return className;
+  }
 }

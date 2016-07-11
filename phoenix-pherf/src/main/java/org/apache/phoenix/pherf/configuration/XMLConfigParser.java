@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.configuration;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -37,122 +36,122 @@ import java.util.List;
 
 public class XMLConfigParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(XMLConfigParser.class);
-    private String filePattern;
-    private List<DataModel> dataModels;
-    private List<Scenario> scenarios = null;
-    private ResourceList resourceList;
-    private Collection<Path> paths = null;
+  private static final Logger logger = LoggerFactory.getLogger(XMLConfigParser.class);
+  private String filePattern;
+  private List<DataModel> dataModels;
+  private List<Scenario> scenarios = null;
+  private ResourceList resourceList;
+  private Collection<Path> paths = null;
 
-    public XMLConfigParser(String pattern) throws Exception {
-        init(pattern);
+  public XMLConfigParser(String pattern) throws Exception {
+    init(pattern);
+  }
+
+  public List<DataModel> getDataModels() {
+    return dataModels;
+  }
+
+  public synchronized Collection<Path> getPaths(String strPattern) throws Exception {
+    if (paths != null) {
+      return paths;
+    }
+    paths = getResources(strPattern);
+    return paths;
+  }
+
+  public synchronized List<Scenario> getScenarios() throws Exception {
+    if (scenarios != null) {
+      return scenarios;
     }
 
-    public List<DataModel> getDataModels() {
-        return dataModels;
-    }
-
-    public synchronized Collection<Path> getPaths(String strPattern) throws Exception {
-        if (paths != null) {
-            return paths;
+    scenarios = Collections.synchronizedList(new ArrayList<Scenario>());
+    for (Path path : getPaths(getFilePattern())) {
+      try {
+        List<Scenario> scenarioList = XMLConfigParser.readDataModel(path).getScenarios();
+        for (Scenario scenario : scenarioList) {
+          scenarios.add(scenario);
         }
-        paths = getResources(strPattern);
-        return paths;
+      } catch (JAXBException e) {
+        e.printStackTrace();
+      }
     }
+    return scenarios;
+  }
 
-    public synchronized List<Scenario> getScenarios() throws Exception {
-        if (scenarios != null) {
-            return scenarios;
-        }
+  public String getFilePattern() {
+    return filePattern;
+  }
 
-        scenarios = Collections.synchronizedList(new ArrayList<Scenario>());
-        for (Path path : getPaths(getFilePattern())) {
-            try {
-                List<Scenario> scenarioList = XMLConfigParser.readDataModel(path).getScenarios();
-                for (Scenario scenario : scenarioList) {
-                    scenarios.add(scenario);
-                }
-            } catch (JAXBException e) {
-                e.printStackTrace();
-            }
-        }
-        return scenarios;
+  /**
+   * Unmarshall an XML data file
+   *
+   * @param file Name of File
+   * @return
+   * @throws JAXBException
+   */
+  // TODO Remove static calls
+  public static DataModel readDataModel(Path file) throws JAXBException {
+    JAXBContext jaxbContext = JAXBContext.newInstance(DataModel.class);
+    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+    String fName = PherfConstants.RESOURCE_SCENARIO + "/" + file.getFileName().toString();
+    logger.info("Open config file: " + fName);
+    return (DataModel) jaxbUnmarshaller
+            .unmarshal(XMLConfigParser.class.getResourceAsStream(fName));
+  }
+
+  // TODO Remove static calls
+  public static String parseSchemaName(String fullTableName) {
+    String ret = null;
+    if (fullTableName.contains(".")) {
+      ret = fullTableName.substring(0, fullTableName.indexOf("."));
     }
+    return ret;
+  }
 
-    public String getFilePattern() {
-        return filePattern;
+  // TODO Remove static calls
+  public static String parseTableName(String fullTableName) {
+    String ret = fullTableName;
+    if (fullTableName.contains(".")) {
+      ret = fullTableName.substring(fullTableName.indexOf(".") + 1, fullTableName.length());
     }
+    return ret;
+  }
 
-    /**
-     * Unmarshall an XML data file
-     *
-     * @param file Name of File
-     * @return
-     * @throws JAXBException
-     */
-    // TODO Remove static calls
-    public static DataModel readDataModel(Path file) throws JAXBException {
-        JAXBContext jaxbContext = JAXBContext.newInstance(DataModel.class);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        String fName = PherfConstants.RESOURCE_SCENARIO + "/" + file.getFileName().toString();
-        logger.info("Open config file: " + fName);
-        return (DataModel) jaxbUnmarshaller
-                .unmarshal(XMLConfigParser.class.getResourceAsStream(fName));
+  // TODO Remove static calls
+  @SuppressWarnings("unused")
+  public static void writeDataModel(DataModel data, OutputStream output) throws JAXBException {
+    // create JAXB context and initializing Marshaller
+    JAXBContext jaxbContext = JAXBContext.newInstance(DataModel.class);
+    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+    // for getting nice formatted output
+    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+    // Writing to console
+    jaxbMarshaller.marshal(data, output);
+  }
+
+  private void init(String pattern) throws Exception {
+    if (dataModels != null) {
+      return;
     }
-
-    // TODO Remove static calls
-    public static String parseSchemaName(String fullTableName) {
-        String ret = null;
-        if (fullTableName.contains(".")) {
-            ret = fullTableName.substring(0, fullTableName.indexOf("."));
-        }
-        return ret;
+    this.filePattern = pattern;
+    this.dataModels = new ArrayList<>();
+    this.resourceList = new ResourceList(PherfConstants.RESOURCE_SCENARIO);
+    this.paths = getResources(this.filePattern);
+    if (this.paths.isEmpty()) {
+      throw new FileLoaderException(
+              "Could not load the resource files using the pattern: " + pattern);
     }
-
-    // TODO Remove static calls
-    public static String parseTableName(String fullTableName) {
-        String ret = fullTableName;
-        if (fullTableName.contains(".")) {
-            ret = fullTableName.substring(fullTableName.indexOf(".") + 1, fullTableName.length());
-        }
-        return ret;
+    for (Path path : this.paths) {
+      System.out.println("Adding model for path:" + path.toString());
+      this.dataModels.add(XMLConfigParser.readDataModel(path));
     }
+  }
 
-    // TODO Remove static calls
-    @SuppressWarnings("unused")
-    public static void writeDataModel(DataModel data, OutputStream output) throws JAXBException {
-        // create JAXB context and initializing Marshaller
-        JAXBContext jaxbContext = JAXBContext.newInstance(DataModel.class);
-        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-
-        // for getting nice formatted output
-        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-        // Writing to console
-        jaxbMarshaller.marshal(data, output);
-    }
-
-    private void init(String pattern) throws Exception {
-        if (dataModels != null) {
-            return;
-        }
-        this.filePattern = pattern;
-        this.dataModels = new ArrayList<>();
-        this.resourceList = new ResourceList(PherfConstants.RESOURCE_SCENARIO);
-        this.paths = getResources(this.filePattern);
-        if (this.paths.isEmpty()) {
-            throw new FileLoaderException(
-                    "Could not load the resource files using the pattern: " + pattern);
-        }
-        for (Path path : this.paths) {
-            System.out.println("Adding model for path:" + path.toString());
-            this.dataModels.add(XMLConfigParser.readDataModel(path));
-        }
-    }
-
-    private Collection<Path> getResources(String pattern) throws Exception {
-        Collection<Path> resourceFiles = new ArrayList<Path>();
-        resourceFiles = resourceList.getResourceList(pattern);
-        return resourceFiles;
-    }
+  private Collection<Path> getResources(String pattern) throws Exception {
+    Collection<Path> resourceFiles = new ArrayList<Path>();
+    resourceFiles = resourceList.getResourceList(pattern);
+    return resourceFiles;
+  }
 }

@@ -29,40 +29,40 @@ import org.apache.phoenix.parse.FunctionParseNode;
 import org.apache.phoenix.schema.types.PBoolean;
 
 /**
- * Built-in function for FIRST_VALUE(<expression>) WITHIN GROUP (ORDER BY <expression> ASC/DESC) aggregate
- * function
+ * Built-in function for FIRST_VALUE(<expression>) WITHIN GROUP (ORDER BY
+ * <expression> ASC/DESC) aggregate function
  *
  */
 @FunctionParseNode.BuiltInFunction(name = FirstValueFunction.NAME, nodeClass = FirstValueAggregateParseNode.class, args = {
-    @FunctionParseNode.Argument(),
-    @FunctionParseNode.Argument(allowedTypes = { PBoolean.class }, isConstant = true),
-    @FunctionParseNode.Argument()})
+  @FunctionParseNode.Argument(),
+  @FunctionParseNode.Argument(allowedTypes = {PBoolean.class}, isConstant = true),
+  @FunctionParseNode.Argument()})
 public class FirstValueFunction extends FirstLastValueBaseFunction {
 
-    public static final String NAME = "FIRST_VALUE";
+  public static final String NAME = "FIRST_VALUE";
 
-    public FirstValueFunction() {
-    }
+  public FirstValueFunction() {
+  }
 
-    public FirstValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
+  public FirstValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
 
-        boolean order = (Boolean) ((LiteralExpression) children.get(1)).getValue();
-        aggregator.init(children, order, 0);
+    boolean order = (Boolean) ((LiteralExpression) children.get(1)).getValue();
+    aggregator.init(children, order, 0);
 
-        return aggregator;
-    }
+    return aggregator;
+  }
 
-    @Override
-    public Aggregator newClientAggregator() {
-        FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
-        aggregator.init(0);
+  @Override
+  public Aggregator newClientAggregator() {
+    FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
+    aggregator.init(0);
 
-        return aggregator;
-    }
+    return aggregator;
+  }
 }

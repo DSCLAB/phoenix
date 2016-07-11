@@ -25,15 +25,14 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.FunctionExpression;
 import org.apache.phoenix.expression.function.MaxAggregateFunction;
 
-
 public class MaxAggregateParseNode extends DelegateConstantToCountParseNode {
 
-    public MaxAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
-    
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        return new MaxAggregateFunction(children, getDelegateFunction(children,context));
-    }
+  public MaxAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    return new MaxAggregateFunction(children, getDelegateFunction(children, context));
+  }
 }

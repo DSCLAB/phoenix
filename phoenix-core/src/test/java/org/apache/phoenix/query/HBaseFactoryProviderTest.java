@@ -22,21 +22,22 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class HBaseFactoryProviderTest {
-    @Test
-    public void testDefaultHTableFactory() {
-        HTableFactory provided = HBaseFactoryProvider.getHTableFactory();
-        assertTrue(provided instanceof HTableFactory.HTableFactoryImpl);
-    }
 
-    @Test
-    public void testDefaultConfigurationFactory() {
-        ConfigurationFactory provided = HBaseFactoryProvider.getConfigurationFactory();
-        assertTrue(provided instanceof ConfigurationFactory.ConfigurationFactoryImpl);
-    }
+  @Test
+  public void testDefaultHTableFactory() {
+    HTableFactory provided = HBaseFactoryProvider.getHTableFactory();
+    assertTrue(provided instanceof HTableFactory.HTableFactoryImpl);
+  }
 
-    @Test
-    public void testDefaultHConnectionFactory() {
-        HConnectionFactory provided = HBaseFactoryProvider.getHConnectionFactory();
-        assertTrue(provided instanceof HConnectionFactory.HConnectionFactoryImpl);
-    }
+  @Test
+  public void testDefaultConfigurationFactory() {
+    ConfigurationFactory provided = HBaseFactoryProvider.getConfigurationFactory();
+    assertTrue(provided instanceof ConfigurationFactory.ConfigurationFactoryImpl);
+  }
+
+  @Test
+  public void testDefaultHConnectionFactory() {
+    HConnectionFactory provided = HBaseFactoryProvider.getHConnectionFactory();
+    assertTrue(provided instanceof HConnectionFactory.HConnectionFactoryImpl);
+  }
 }

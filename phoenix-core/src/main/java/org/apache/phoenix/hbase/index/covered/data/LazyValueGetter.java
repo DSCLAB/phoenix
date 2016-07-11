@@ -31,17 +31,19 @@ import org.apache.phoenix.hbase.index.scanner.Scanner;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * {@link ValueGetter} that uses lazy initialization to get the value for the given
- * {@link ColumnReference}. Once stored, the mapping for that reference is retained.
+ * {@link ValueGetter} that uses lazy initialization to get the value for the
+ * given {@link ColumnReference}. Once stored, the mapping for that reference is
+ * retained.
  */
 public class LazyValueGetter implements ValueGetter {
 
   private Scanner scan;
   private volatile Map<ColumnReference, ImmutableBytesPtr> values;
   private byte[] row;
-  
+
   /**
    * Back the getter with a {@link Scanner} to actually access the local data.
+   *
    * @param scan backing scanner
    * @param currentRow row key for the row to seek in the scanner
    */
@@ -88,6 +90,6 @@ public class LazyValueGetter implements ValueGetter {
 
   @Override
   public byte[] getRowKey() {
-	return this.row; 
+    return this.row;
   }
 }

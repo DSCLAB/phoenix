@@ -17,7 +17,6 @@
  */
 package org.apache.phoenix.expression;
 
-
 import java.util.List;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -29,66 +28,65 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ByteUtil;
 
-
 /**
- * 
+ *
  * Implementation for || string concatenation expression.
- * 
+ *
  * @since 0.1
  */
-
 public class StringConcatExpression extends BaseCompoundExpression {
-    public StringConcatExpression() {
-    }
 
-    public StringConcatExpression(List<Expression> children) {
-        super(children);
-    }
+  public StringConcatExpression() {
+  }
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder("(");
-        for (int i = 0; i < children.size() - 1; i++) {
-            buf.append(children.get(i) + " || ");
-        }
-        buf.append(children.get(children.size()-1));
-        buf.append(')');
-        return buf.toString();
-    }
+  public StringConcatExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder("(");
+    for (int i = 0; i < children.size() - 1; i++) {
+      buf.append(children.get(i) + " || ");
     }
+    buf.append(children.get(children.size() - 1));
+    buf.append(')');
+    return buf.toString();
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        byte[] result = ByteUtil.EMPTY_BYTE_ARRAY;
-        for (int i=0; i<children.size(); i++) {
-            if (children.get(i).getDataType() == null || !children.get(i).evaluate(tuple, ptr)) {
-                continue;
-            }
-            PDataType childType = children.get(i).getDataType();
-            SortOrder sortOrder = children.get(i).getSortOrder();
-            // We could potentially not invert the bytes, but we might as well since we're allocating
-            // additional space here anyway.
-            if (childType.isCoercibleTo(PVarchar.INSTANCE)) {
-                result = ByteUtil.concat(result, ByteUtil.concat(sortOrder, ptr));
-            } else {
-                result = ByteUtil.concat(result, PVarchar.INSTANCE.toBytes(childType.toObject(ptr, sortOrder).toString()));
-            }
-        }
-        ptr.set(result);
-        return true;
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
     }
+    return t;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    byte[] result = ByteUtil.EMPTY_BYTE_ARRAY;
+    for (int i = 0; i < children.size(); i++) {
+      if (children.get(i).getDataType() == null || !children.get(i).evaluate(tuple, ptr)) {
+        continue;
+      }
+      PDataType childType = children.get(i).getDataType();
+      SortOrder sortOrder = children.get(i).getSortOrder();
+      // We could potentially not invert the bytes, but we might as well since we're allocating
+      // additional space here anyway.
+      if (childType.isCoercibleTo(PVarchar.INSTANCE)) {
+        result = ByteUtil.concat(result, ByteUtil.concat(sortOrder, ptr));
+      } else {
+        result = ByteUtil.concat(result, PVarchar.INSTANCE.toBytes(childType.toObject(ptr, sortOrder).toString()));
+      }
     }
+    ptr.set(result);
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
 }

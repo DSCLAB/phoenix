@@ -25,24 +25,24 @@ import org.apache.phoenix.parse.LikeParseNode.LikeType;
 
 public class ByteBasedLikeExpression extends LikeExpression {
 
-    public ByteBasedLikeExpression() {
-    }
+  public ByteBasedLikeExpression() {
+  }
 
-    public ByteBasedLikeExpression(List<Expression> children) {
-        super(children);
-    }
+  public ByteBasedLikeExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JONIPattern(value);
-    }
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JONIPattern(value);
+  }
 
-    public static LikeExpression create(List<Expression> children, LikeType likeType) {
-        return new ByteBasedLikeExpression(addLikeTypeChild(children, likeType));
-    }
+  public static LikeExpression create(List<Expression> children, LikeType likeType) {
+    return new ByteBasedLikeExpression(addLikeTypeChild(children, likeType));
+  }
 
-    @Override
-    public LikeExpression clone(List<Expression> children) {
-        return new ByteBasedLikeExpression(children);
-    }
+  @Override
+  public LikeExpression clone(List<Expression> children) {
+    return new ByteBasedLikeExpression(children);
+  }
 }

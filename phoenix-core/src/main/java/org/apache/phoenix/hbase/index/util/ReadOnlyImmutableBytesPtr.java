@@ -20,40 +20,40 @@ package org.apache.phoenix.hbase.index.util;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 public class ReadOnlyImmutableBytesPtr extends ImmutableBytesPtr {
-    
-    private static final String ERROR_MESSAGE = "Read-only bytes pointer may not be changed";
 
-    public ReadOnlyImmutableBytesPtr() {
-    }
+  private static final String ERROR_MESSAGE = "Read-only bytes pointer may not be changed";
 
-    public ReadOnlyImmutableBytesPtr(byte[] bytes) {
-        super(bytes);
-    }
+  public ReadOnlyImmutableBytesPtr() {
+  }
 
-    public ReadOnlyImmutableBytesPtr(ImmutableBytesWritable ibw) {
-        super(ibw.get(), ibw.getOffset(), ibw.getLength());
-    }
+  public ReadOnlyImmutableBytesPtr(byte[] bytes) {
+    super(bytes);
+  }
 
-    public ReadOnlyImmutableBytesPtr(ImmutableBytesPtr ibp) {
-        super(ibp.get(), ibp.getOffset(), ibp.getLength());
-    }
+  public ReadOnlyImmutableBytesPtr(ImmutableBytesWritable ibw) {
+    super(ibw.get(), ibw.getOffset(), ibw.getLength());
+  }
 
-    public ReadOnlyImmutableBytesPtr(byte[] bytes, int offset, int length) {
-        super(bytes, offset, length);
-    }
+  public ReadOnlyImmutableBytesPtr(ImmutableBytesPtr ibp) {
+    super(ibp.get(), ibp.getOffset(), ibp.getLength());
+  }
 
-    @Override
-    public void set(byte[] b) {
-        throw new UnsupportedOperationException(ERROR_MESSAGE);
-    }
+  public ReadOnlyImmutableBytesPtr(byte[] bytes, int offset, int length) {
+    super(bytes, offset, length);
+  }
 
-    @Override
-    public void set(ImmutableBytesWritable ptr) {
-        throw new UnsupportedOperationException(ERROR_MESSAGE);
-    }
+  @Override
+  public void set(byte[] b) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
 
-    @Override
-    public void set(byte[] b, int offset, int length) {
-        throw new UnsupportedOperationException(ERROR_MESSAGE);
-    }
+  @Override
+  public void set(ImmutableBytesWritable ptr) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
+
+  @Override
+  public void set(byte[] b, int offset, int length) {
+    throw new UnsupportedOperationException(ERROR_MESSAGE);
+  }
 }

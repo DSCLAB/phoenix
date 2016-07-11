@@ -34,7 +34,7 @@ public class TestColumnTracker {
   @Test
   public void testEnsureGuarranteedMinValid() {
     assertFalse("Guarranted min wasn't recognized as having newer timestamps!",
-      ColumnTracker.isNewestTime(ColumnTracker.GUARANTEED_NEWER_UPDATES));
+            ColumnTracker.isNewestTime(ColumnTracker.GUARANTEED_NEWER_UPDATES));
   }
 
   @Test
@@ -47,7 +47,7 @@ public class TestColumnTracker {
     assertEquals("Column tracker allowed newer timestamp to be set.", 10, tracker.getTS());
     tracker.setTs(9);
     assertEquals("Column tracker didn't decrease set timestamp for smaller value", 9,
-      tracker.getTS());
+            tracker.getTS());
   }
 
   @Test

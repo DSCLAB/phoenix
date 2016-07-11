@@ -31,76 +31,79 @@ import org.apache.phoenix.util.Base62Encoder;
 
 /**
  * Implementation of ENCODE(input number, format encodeformat)
- * 
- * Converts the given base 10 number to a base 62 number and returns a string representing the number.
+ *
+ * Converts the given base 10 number to a base 62 number and returns a string
+ * representing the number.
  */
-@BuiltInFunction(name = EncodeFunction.NAME, args = { @Argument(allowedTypes = { PLong.class }),
-    @Argument(enumeration = "EncodeFormat") })
+@BuiltInFunction(name = EncodeFunction.NAME, args = {
+  @Argument(allowedTypes = {PLong.class}),
+  @Argument(enumeration = "EncodeFormat")})
 public class EncodeFunction extends ScalarFunction {
-    public static final String NAME = "ENCODE";
-    
-    public EncodeFunction() {
+
+  public static final String NAME = "ENCODE";
+
+  public EncodeFunction() {
+  }
+
+  public EncodeFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression numExpr = getNumExpr();
+    if (!numExpr.evaluate(tuple, ptr)) {
+      return false;
+    }
+    long num = numExpr.getDataType().getCodec().decodeLong(ptr, numExpr.getSortOrder());
+
+    Expression encodingExpression = getEncodingExpr();
+    if (!encodingExpression.evaluate(tuple, ptr)) {
+      return false;
     }
 
-    public EncodeFunction(List<Expression> children) {
-        super(children);
+    if (ptr.getLength() == 0) {
+      throw new IllegalDataException(getMissingEncodeFormatMsg());
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression numExpr = getNumExpr();
-        if (!numExpr.evaluate(tuple, ptr)) {
-            return false;
-        }
-        long num = numExpr.getDataType().getCodec().decodeLong(ptr, numExpr.getSortOrder());
-        
-        Expression encodingExpression = getEncodingExpr();
-        if (!encodingExpression.evaluate(tuple, ptr)) {
-            return false;
-        }
+    PDataType type = encodingExpression.getDataType();
+    String encodingFormat = ((String) type.toObject(ptr)).toUpperCase();
+    EncodeFormat format = EncodeFormat.valueOf(encodingFormat);
+    switch (format) {
+      case BASE62:
+        String encodedString = Base62Encoder.toString(num);
+        ptr.set(PVarchar.INSTANCE.toBytes(encodedString));
+        break;
+      default:
+        throw new IllegalDataException(getUnsupportedEncodeFormatMsg(encodingFormat));
+    }
+    return true;
+  }
 
-        if (ptr.getLength() == 0) {
-            throw new IllegalDataException(getMissingEncodeFormatMsg());
-        }
+  public static String getMissingEncodeFormatMsg() {
+    return "Missing Encode Format";
+  }
 
-        PDataType type = encodingExpression.getDataType();
-        String encodingFormat = ((String) type.toObject(ptr)).toUpperCase();
-        EncodeFormat format = EncodeFormat.valueOf(encodingFormat);
-        switch (format) {
-            case BASE62:
-                String encodedString = Base62Encoder.toString(num);
-                ptr.set(PVarchar.INSTANCE.toBytes(encodedString));
-                break;
-            default:
-                throw new IllegalDataException(getUnsupportedEncodeFormatMsg(encodingFormat));
-        }
-        return true;
-    }
-    
-    public static String getMissingEncodeFormatMsg() {
-        return "Missing Encode Format";
-    }
-    
-    public static String getUnsupportedEncodeFormatMsg(String encodeFormat) {
-        return "Unsupported Encode Format : " + encodeFormat;
-    }
+  public static String getUnsupportedEncodeFormatMsg(String encodeFormat) {
+    return "Unsupported Encode Format : " + encodeFormat;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    private Expression getNumExpr() {
-        return children.get(0);
-    }
+  private Expression getNumExpr() {
+    return children.get(0);
+  }
 
-    private Expression getEncodingExpr() {
-        return children.get(1);
-    }
+  private Expression getEncodingExpr() {
+    return children.get(1);
+  }
 
 }

@@ -27,34 +27,34 @@ import org.apache.phoenix.expression.function.DistinctCountAggregateFunction;
 import org.apache.phoenix.expression.function.FunctionExpression;
 
 /**
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
 public class DistinctCountParseNode extends DelegateConstantToCountParseNode {
-    
-    public DistinctCountParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context)
-            throws SQLException {
-        return new DistinctCountAggregateFunction(children, getDelegateFunction(children, context));
+  public DistinctCountParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context)
+          throws SQLException {
+    return new DistinctCountAggregateFunction(children, getDelegateFunction(children, context));
+  }
+
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    buf.append(' ');
+    buf.append("COUNT(DISTINCT ");
+    List<ParseNode> children = getChildren();
+    if (!children.isEmpty()) {
+      for (ParseNode child : children) {
+        child.toSQL(resolver, buf);
+        buf.append(',');
+      }
+      buf.setLength(buf.length() - 1);
     }
-    
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        buf.append(' ');
-        buf.append("COUNT(DISTINCT ");
-        List<ParseNode> children = getChildren();
-        if (!children.isEmpty()) {
-            for (ParseNode child : children) {
-                child.toSQL(resolver, buf);
-                buf.append(',');
-            }
-            buf.setLength(buf.length()-1);
-        }
-        buf.append(')');
-    }
+    buf.append(')');
+  }
 }

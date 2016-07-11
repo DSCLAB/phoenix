@@ -20,14 +20,15 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.schema.PTableType;
 
 public abstract class AlterTableStatement extends SingleTableStatement {
-    private final PTableType tableType;
 
-    AlterTableStatement(NamedTableNode table, PTableType tableType) {
-        super(table, 0);
-        this.tableType = tableType;
-    }
+  private final PTableType tableType;
 
-    public PTableType getTableType() {
-        return tableType;
-    }
+  AlterTableStatement(NamedTableNode table, PTableType tableType) {
+    super(table, 0);
+    this.tableType = tableType;
+  }
+
+  public PTableType getTableType() {
+    return tableType;
+  }
 }

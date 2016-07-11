@@ -28,103 +28,110 @@ import org.apache.phoenix.util.SchemaUtil;
 
 /**
  * Node representing a reference to a column in a SQL expression
- * 
- * 
+ *
+ *
  * @since 0.1
  */
 public class ColumnParseNode extends NamedParseNode {
-    // table name can also represent a column family 
-    private final TableName tableName;
-    private final String fullName;
-    private final String alias;
+  // table name can also represent a column family 
 
-    public ColumnParseNode(TableName tableName, String name, String alias) {
-        // Upper case here so our Maps can depend on this (and we don't have to upper case and create a string on every
-        // lookup
-        super(name);
-        this.alias = alias;
-        this.tableName = tableName;
-        fullName = tableName == null ? getName() : tableName.toString() + QueryConstants.NAME_SEPARATOR + getName();
-    }
+  private final TableName tableName;
+  private final String fullName;
+  private final String alias;
 
-    public ColumnParseNode(TableName tableName, String name) {
-        this(tableName, name, null);
-    }
-    
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        return visitor.visit(this);
-    }
+  public ColumnParseNode(TableName tableName, String name, String alias) {
+    // Upper case here so our Maps can depend on this (and we don't have to upper case and create a string on every
+    // lookup
+    super(name);
+    this.alias = alias;
+    this.tableName = tableName;
+    fullName = tableName == null ? getName() : tableName.toString() + QueryConstants.NAME_SEPARATOR + getName();
+  }
 
-    public String getTableName() {
-        return tableName == null ? null : tableName.getTableName();
-    }
+  public ColumnParseNode(TableName tableName, String name) {
+    this(tableName, name, null);
+  }
 
-    public String getSchemaName() {
-        return tableName == null ? null : tableName.getSchemaName();
-    }
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    return visitor.visit(this);
+  }
 
-    public String getFullName() {
-        return fullName;
-    }
+  public String getTableName() {
+    return tableName == null ? null : tableName.getTableName();
+  }
 
-    @Override
-    public String getAlias() {
-        return alias;
-    }
+  public String getSchemaName() {
+    return tableName == null ? null : tableName.getSchemaName();
+  }
 
-    @Override
-    public int hashCode() {
-        return fullName.hashCode();
-    }
+  public String getFullName() {
+    return fullName;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        ColumnParseNode other = (ColumnParseNode)obj;
-        return fullName.equals(other.fullName);
-    }
-    
-    public boolean isTableNameCaseSensitive() {
-        return tableName == null ? false : tableName.isTableNameCaseSensitive();
-    }
+  @Override
+  public String getAlias() {
+    return alias;
+  }
 
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        // If resolver is not null, then resolve to get fully qualified name
-        String tableName = null;
-        if (resolver == null) {
-            if (this.tableName != null) {
-                tableName = this.tableName.getTableName();
-            }
-        } else {
-            try {
-                ColumnRef ref = resolver.resolveColumn(this.getSchemaName(), this.getTableName(), this.getName());
-                PColumn column = ref.getColumn();
-                if (!SchemaUtil.isPKColumn(column)) {
-                    PTable table = ref.getTable();
-                    String defaultFamilyName = table.getDefaultFamilyName() == null ? QueryConstants.DEFAULT_COLUMN_FAMILY : table.getDefaultFamilyName().getString();
-                    // Translate to the data table column name
-                    String dataFamilyName = column.getFamilyName().getString() ;
-                    tableName = defaultFamilyName.equals(dataFamilyName) ? null : dataFamilyName;
-                }
-                
-            } catch (SQLException e) {
-                throw new RuntimeException(e); // Already resolved, so not possible
-            }
+  @Override
+  public int hashCode() {
+    return fullName.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    ColumnParseNode other = (ColumnParseNode) obj;
+    return fullName.equals(other.fullName);
+  }
+
+  public boolean isTableNameCaseSensitive() {
+    return tableName == null ? false : tableName.isTableNameCaseSensitive();
+  }
+
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    // If resolver is not null, then resolve to get fully qualified name
+    String tableName = null;
+    if (resolver == null) {
+      if (this.tableName != null) {
+        tableName = this.tableName.getTableName();
+      }
+    } else {
+      try {
+        ColumnRef ref = resolver.resolveColumn(this.getSchemaName(), this.getTableName(), this.getName());
+        PColumn column = ref.getColumn();
+        if (!SchemaUtil.isPKColumn(column)) {
+          PTable table = ref.getTable();
+          String defaultFamilyName = table.getDefaultFamilyName() == null ? QueryConstants.DEFAULT_COLUMN_FAMILY : table.getDefaultFamilyName().getString();
+          // Translate to the data table column name
+          String dataFamilyName = column.getFamilyName().getString();
+          tableName = defaultFamilyName.equals(dataFamilyName) ? null : dataFamilyName;
         }
-        if (tableName != null) {
-            if (isTableNameCaseSensitive()) {
-                buf.append('"');
-                buf.append(tableName);
-                buf.append('"');
-            } else {
-                buf.append(tableName);
-            }
-            buf.append('.');
-        }
-        toSQL(buf);
+
+      } catch (SQLException e) {
+        throw new RuntimeException(e); // Already resolved, so not possible
+      }
     }
+    if (tableName != null) {
+      if (isTableNameCaseSensitive()) {
+        buf.append('"');
+        buf.append(tableName);
+        buf.append('"');
+      } else {
+        buf.append(tableName);
+      }
+      buf.append('.');
+    }
+    toSQL(buf);
+  }
 }

@@ -36,8 +36,6 @@ import org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec;
 import org.apache.hadoop.hbase.regionserver.wal.WALCellCodec;
 import org.apache.hadoop.hbase.util.Bytes;
 
-
-
 /**
  * Utility class for testing indexing
  */
@@ -46,28 +44,30 @@ public class IndexTestingUtils {
   private static final Log LOG = LogFactory.getLog(IndexTestingUtils.class);
   private static final String MASTER_INFO_PORT_KEY = "hbase.master.info.port";
   private static final String RS_INFO_PORT_KEY = "hbase.regionserver.info.port";
-  
+
   private IndexTestingUtils() {
     // private ctor for util class
   }
 
   public static void setupConfig(Configuration conf) {
-      conf.setInt(MASTER_INFO_PORT_KEY, -1);
-      conf.setInt(RS_INFO_PORT_KEY, -1);
+    conf.setInt(MASTER_INFO_PORT_KEY, -1);
+    conf.setInt(RS_INFO_PORT_KEY, -1);
     // setup our codec, so we get proper replay/write
-      conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY, IndexedWALEditCodec.class.getName());
+    conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY, IndexedWALEditCodec.class.getName());
   }
+
   /**
-   * Verify the state of the index table between the given key and time ranges against the list of
-   * expected keyvalues.
+   * Verify the state of the index table between the given key and time ranges
+   * against the list of expected keyvalues.
+   *
    * @throws IOException
    */
   @SuppressWarnings("javadoc")
   public static void verifyIndexTableAtTimestamp(HTable index1, List<KeyValue> expected,
-      long start, long end, byte[] startKey, byte[] endKey) throws IOException {
+          long start, long end, byte[] startKey, byte[] endKey) throws IOException {
     LOG.debug("Scanning " + Bytes.toString(index1.getTableName()) + " between times (" + start
-        + ", " + end + "] and keys: [" + Bytes.toString(startKey) + ", " + Bytes.toString(endKey)
-        + "].");
+            + ", " + end + "] and keys: [" + Bytes.toString(startKey) + ", " + Bytes.toString(endKey)
+            + "].");
     Scan s = new Scan(startKey, endKey);
     // s.setRaw(true);
     s.setMaxVersions();
@@ -83,12 +83,12 @@ public class IndexTestingUtils {
   }
 
   public static void verifyIndexTableAtTimestamp(HTable index1, List<KeyValue> expected, long ts,
-      byte[] startKey) throws IOException {
+          byte[] startKey) throws IOException {
     IndexTestingUtils.verifyIndexTableAtTimestamp(index1, expected, ts, startKey, HConstants.EMPTY_END_ROW);
   }
 
   public static void verifyIndexTableAtTimestamp(HTable index1, List<KeyValue> expected, long start,
-      byte[] startKey, byte[] endKey) throws IOException {
+          byte[] startKey, byte[] endKey) throws IOException {
     verifyIndexTableAtTimestamp(index1, expected, start, start + 1, startKey, endKey);
   }
 }

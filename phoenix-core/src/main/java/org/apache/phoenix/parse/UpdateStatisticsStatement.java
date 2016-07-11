@@ -27,30 +27,31 @@ import org.apache.phoenix.schema.stats.StatisticsCollectionScope;
 
 import com.sun.istack.NotNull;
 
-
 public class UpdateStatisticsStatement extends SingleTableStatement {
-    private final StatisticsCollectionScope scope;
-    private final Map<String,Object> props;
-    
-    public UpdateStatisticsStatement(NamedTableNode table, @NotNull StatisticsCollectionScope scope, Map<String,Object> props) {
-        super(table, 0);
-        this.scope = scope;
-        this.props = props;
-    }
 
-    public boolean updateColumns() {
-        return scope == COLUMNS || scope == ALL;
-    }
+  private final StatisticsCollectionScope scope;
+  private final Map<String, Object> props;
 
-    public boolean updateIndex() {
-        return scope == INDEX || scope == ALL;
-    }
+  public UpdateStatisticsStatement(NamedTableNode table, @NotNull StatisticsCollectionScope scope, Map<String, Object> props) {
+    super(table, 0);
+    this.scope = scope;
+    this.props = props;
+  }
 
-    public boolean updateAll() {
-        return scope == ALL;
-    }
+  public boolean updateColumns() {
+    return scope == COLUMNS || scope == ALL;
+  }
 
-    public Map<String,Object> getProps() {
-        return props;
-    };
+  public boolean updateIndex() {
+    return scope == INDEX || scope == ALL;
+  }
+
+  public boolean updateAll() {
+    return scope == ALL;
+  }
+
+  public Map<String, Object> getProps() {
+    return props;
+  }
+;
 }

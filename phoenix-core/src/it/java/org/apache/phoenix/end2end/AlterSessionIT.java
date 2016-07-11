@@ -42,51 +42,51 @@ import static org.junit.Assert.assertTrue;
  */
 public class AlterSessionIT extends BaseHBaseManagedTimeIT {
 
-    Connection testConn;
+  Connection testConn;
 
-    @Before
-    public void initTable() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        testConn = DriverManager.getConnection(getUrl(), props);
-        assertEquals(Consistency.STRONG, ((PhoenixConnection)testConn).getConsistency());
-        testConn.createStatement().execute("create table AlterSessionIT (col1 varchar primary key)");
-        testConn.commit();
+  @Before
+  public void initTable() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    testConn = DriverManager.getConnection(getUrl(), props);
+    assertEquals(Consistency.STRONG, ((PhoenixConnection) testConn).getConsistency());
+    testConn.createStatement().execute("create table AlterSessionIT (col1 varchar primary key)");
+    testConn.commit();
+  }
+
+  @Test
+  public void testUpdateConsistency() throws Exception {
+    try {
+      Statement st = testConn.createStatement();
+      st.execute("alter session set Consistency = 'timeline'");
+      ResultSet rs = st.executeQuery("explain select * from AlterSessionIT");
+      assertEquals(Consistency.TIMELINE, ((PhoenixConnection) testConn).getConsistency());
+      String queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") > 0);
+
+      // turn off timeline read consistency
+      st.execute("alter session set Consistency = 'strong'");
+      rs = st.executeQuery("explain select * from AlterSessionIT");
+      queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") < 0);
+    } finally {
+      this.testConn.close();
     }
+  }
 
-    @Test
-    public void testUpdateConsistency() throws Exception {
-        try {
-            Statement st = testConn.createStatement();
-            st.execute("alter session set Consistency = 'timeline'");
-            ResultSet rs = st.executeQuery("explain select * from AlterSessionIT");
-            assertEquals(Consistency.TIMELINE, ((PhoenixConnection)testConn).getConsistency());
-            String queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") > 0);
-
-            // turn off timeline read consistency
-            st.execute("alter session set Consistency = 'strong'");
-            rs = st.executeQuery("explain select * from AlterSessionIT");
-            queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") < 0);
-        } finally {
-            this.testConn.close();
-        }
+  @Test
+  public void testSetConsistencyInURL() throws Exception {
+    try {
+      Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+      Connection conn = DriverManager.getConnection(getUrl() + PhoenixRuntime.JDBC_PROTOCOL_TERMINATOR
+              + "Consistency=TIMELINE", props);
+      assertEquals(Consistency.TIMELINE, ((PhoenixConnection) conn).getConsistency());
+      Statement st = conn.createStatement();
+      ResultSet rs = st.executeQuery("explain select * from AlterSessionIT");
+      String queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") > 0);
+      conn.close();
+    } finally {
+      this.testConn.close();
     }
-
-    @Test
-    public void testSetConsistencyInURL() throws Exception {
-        try {
-            Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-            Connection conn = DriverManager.getConnection(getUrl() + PhoenixRuntime.JDBC_PROTOCOL_TERMINATOR +
-                    "Consistency=TIMELINE", props);
-            assertEquals(Consistency.TIMELINE, ((PhoenixConnection)conn).getConsistency());
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("explain select * from AlterSessionIT");
-            String queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") > 0);
-            conn.close();
-        } finally {
-            this.testConn.close();
-        }
-    }
+  }
 }

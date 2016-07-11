@@ -15,22 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hbase.regionserver.wal;
 
 import java.io.IOException;
 
-
-
 /**
- * A WALReader that can also deserialize custom {@link WALEdit}s that contain index information.
+ * A WALReader that can also deserialize custom {@link WALEdit}s that contain
+ * index information.
  * <p>
- * This is basically a wrapper around a {@link SequenceFileLogReader} that has a custom
- * {@link SequenceFileLogReader.WALReader#next(Object)} method that only replaces the creation of the WALEdit with our own custom
- * type
+ * This is basically a wrapper around a {@link SequenceFileLogReader} that has a
+ * custom {@link SequenceFileLogReader.WALReader#next(Object)} method that only
+ * replaces the creation of the WALEdit with our own custom type
  * <p>
- * This is a little bit of a painful way of going about this, but saves the effort of hacking the
- * HBase source (and deal with getting it reviewed and backported, etc.) and still works.
+ * This is a little bit of a painful way of going about this, but saves the
+ * effort of hacking the HBase source (and deal with getting it reviewed and
+ * backported, etc.) and still works.
  */
 /*
  * TODO: Support splitting index updates into their own WAL entries on recovery (basically, just
@@ -43,7 +42,7 @@ public class IndexedHLogReader extends ProtobufLogReader {
 
   @Override
   protected void initAfterCompression() throws IOException {
-      conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY, IndexedWALEditCodec.class.getName());
-      super.initAfterCompression();
+    conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY, IndexedWALEditCodec.class.getName());
+    super.initAfterCompression();
   }
 }

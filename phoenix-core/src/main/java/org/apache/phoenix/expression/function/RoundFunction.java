@@ -30,28 +30,28 @@ import org.apache.phoenix.schema.types.PVarchar;
 
 /**
  * Base class for RoundFunction.
- * 
- * 
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name = RoundFunction.NAME, 
-                 nodeClass = RoundParseNode.class,
-                 args = {
-                        @Argument(allowedTypes={PTimestamp.class, PDecimal.class}),
-                        @Argument(allowedTypes={PVarchar.class, PInteger.class}, defaultValue = "null", isConstant=true),
-                        @Argument(allowedTypes={PInteger.class}, defaultValue="1", isConstant=true)
-                        } 
-                )
+@BuiltInFunction(name = RoundFunction.NAME,
+        nodeClass = RoundParseNode.class,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class, PDecimal.class}),
+          @Argument(allowedTypes = {PVarchar.class, PInteger.class}, defaultValue = "null", isConstant = true),
+          @Argument(allowedTypes = {PInteger.class}, defaultValue = "1", isConstant = true)
+        }
+)
 public abstract class RoundFunction extends ScalarFunction {
-    
-    public static final String NAME = "ROUND";
-    
-    public RoundFunction(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
+
+  public static final String NAME = "ROUND";
+
+  public RoundFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

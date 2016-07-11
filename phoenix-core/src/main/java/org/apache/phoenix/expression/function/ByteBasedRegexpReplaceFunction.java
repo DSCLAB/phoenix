@@ -25,16 +25,16 @@ import org.apache.phoenix.expression.util.regex.JONIPattern;
 
 public class ByteBasedRegexpReplaceFunction extends RegexpReplaceFunction {
 
-    public ByteBasedRegexpReplaceFunction() {
-    }
+  public ByteBasedRegexpReplaceFunction() {
+  }
 
-    public ByteBasedRegexpReplaceFunction(List<Expression> children) {
-        super(children);
-    }
+  public ByteBasedRegexpReplaceFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JONIPattern(value);
-    }
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JONIPattern(value);
+  }
 
 }

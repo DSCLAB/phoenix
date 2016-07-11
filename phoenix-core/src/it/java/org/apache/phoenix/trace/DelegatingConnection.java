@@ -39,8 +39,11 @@ import java.util.concurrent.Executor;
 import org.apache.phoenix.jdbc.Jdbc7Shim;
 
 /**
- * Simple {@link Connection} that just delegates to an underlying {@link Connection}.
- * @param <D> delegate type that is both a {@link Connection} and a {@link Jdbc7Shim#Connection}
+ * Simple {@link Connection} that just delegates to an underlying
+ * {@link Connection}.
+ *
+ * @param <D> delegate type that is both a {@link Connection} and a
+ * {@link Jdbc7Shim#Connection}
  */
 public class DelegatingConnection<D extends Connection & Jdbc7Shim.Connection> implements
         Connection, Jdbc7Shim.Connection {
@@ -157,13 +160,13 @@ public class DelegatingConnection<D extends Connection & Jdbc7Shim.Connection> i
 
   @Override
   public PreparedStatement
-      prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+          prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
     return conn.prepareStatement(sql, resultSetType, resultSetConcurrency);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
-      throws SQLException {
+          throws SQLException {
     return conn.prepareCall(sql, resultSetType, resultSetConcurrency);
   }
 
@@ -209,19 +212,19 @@ public class DelegatingConnection<D extends Connection & Jdbc7Shim.Connection> i
 
   @Override
   public Statement createStatement(int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+          int resultSetHoldability) throws SQLException {
     return conn.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql, int resultSetType,
-      int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+          int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     return conn.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+          int resultSetHoldability) throws SQLException {
     return conn.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
@@ -295,34 +298,34 @@ public class DelegatingConnection<D extends Connection & Jdbc7Shim.Connection> i
     return conn.createStruct(typeName, attributes);
   }
 
-    private D conn;
+  private D conn;
 
-    public DelegatingConnection(D conn) {
+  public DelegatingConnection(D conn) {
     this.conn = conn;
   }
 
-    @Override
-    public void setSchema(String schema) throws SQLException {
-        conn.setSchema(schema);
-    }
+  @Override
+  public void setSchema(String schema) throws SQLException {
+    conn.setSchema(schema);
+  }
 
-    @Override
-    public String getSchema() throws SQLException {
-        return conn.getSchema();
-    }
+  @Override
+  public String getSchema() throws SQLException {
+    return conn.getSchema();
+  }
 
-    @Override
-    public void abort(Executor executor) throws SQLException {
-        conn.abort(executor);
-    }
+  @Override
+  public void abort(Executor executor) throws SQLException {
+    conn.abort(executor);
+  }
 
-    @Override
-    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        conn.setNetworkTimeout(executor, milliseconds);
-    }
+  @Override
+  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+    conn.setNetworkTimeout(executor, milliseconds);
+  }
 
-    @Override
-    public int getNetworkTimeout() throws SQLException {
-        return conn.getNetworkTimeout();
-    }
+  @Override
+  public int getNetworkTimeout() throws SQLException {
+    return conn.getNetworkTimeout();
+  }
 }

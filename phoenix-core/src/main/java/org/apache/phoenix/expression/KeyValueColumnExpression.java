@@ -30,97 +30,107 @@ import org.apache.phoenix.schema.PDatum;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.SchemaUtil;
 
-
 /**
- * 
+ *
  * Class to access a column value stored in a KeyValue
  *
- * 
+ *
  * @since 0.1
  */
 public class KeyValueColumnExpression extends ColumnExpression {
-    private byte[] cf;
-    private byte[] cq;
-    private String displayName; // client-side only
 
-    public KeyValueColumnExpression() {
-    }
+  private byte[] cf;
+  private byte[] cq;
+  private String displayName; // client-side only
 
-    public KeyValueColumnExpression(PColumn column) {
-        this(column, null);
-    }
+  public KeyValueColumnExpression() {
+  }
 
-    public KeyValueColumnExpression(PDatum column, byte[] cf, byte[] cq) {
-        super(column);
-        this.cf = cf;
-        this.cq = cq;
-    }
+  public KeyValueColumnExpression(PColumn column) {
+    this(column, null);
+  }
 
-    public KeyValueColumnExpression(PColumn column, String displayName) {
-        super(column);
-        this.cf = column.getFamilyName().getBytes();
-        this.cq = column.getName().getBytes();
-        this.displayName = displayName;
-    }
+  public KeyValueColumnExpression(PDatum column, byte[] cf, byte[] cq) {
+    super(column);
+    this.cf = cf;
+    this.cq = cq;
+  }
 
-    public byte[] getColumnFamily() {
-        return cf;
-    }
+  public KeyValueColumnExpression(PColumn column, String displayName) {
+    super(column);
+    this.cf = column.getFamilyName().getBytes();
+    this.cq = column.getName().getBytes();
+    this.displayName = displayName;
+  }
 
-    public byte[] getColumnName() {
-        return cq;
-    }
+  public byte[] getColumnFamily() {
+    return cf;
+  }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Arrays.hashCode(cf);
-        result = prime * result + Arrays.hashCode(cq);
-        return result;
-    }
+  public byte[] getColumnName() {
+    return cq;
+  }
 
-    // TODO: assumes single table
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        KeyValueColumnExpression other = (KeyValueColumnExpression)obj;
-        if (!Arrays.equals(cf, other.cf)) return false;
-        if (!Arrays.equals(cq, other.cq)) return false;
-        return true;
-    }
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + Arrays.hashCode(cf);
+    result = prime * result + Arrays.hashCode(cq);
+    return result;
+  }
 
-    @Override
-    public String toString() {
-        if (displayName == null) {
-            displayName = SchemaUtil.getColumnDisplayName(cf, cq);
-        }
-        return displayName;
+  // TODO: assumes single table
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    KeyValueColumnExpression other = (KeyValueColumnExpression) obj;
+    if (!Arrays.equals(cf, other.cf)) {
+      return false;
+    }
+    if (!Arrays.equals(cq, other.cq)) {
+      return false;
+    }
+    return true;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        return tuple.getValue(cf, cq, ptr);
+  @Override
+  public String toString() {
+    if (displayName == null) {
+      displayName = SchemaUtil.getColumnDisplayName(cf, cq);
     }
+    return displayName;
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        super.readFields(input);
-        cf = Bytes.readByteArray(input);
-        cq = Bytes.readByteArray(input);
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    return tuple.getValue(cf, cq, ptr);
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        super.write(output);
-        Bytes.writeByteArray(output, cf);
-        Bytes.writeByteArray(output, cq);
-    }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    cf = Bytes.readByteArray(input);
+    cq = Bytes.readByteArray(input);
+  }
 
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+  @Override
+  public void write(DataOutput output) throws IOException {
+    super.write(output);
+    Bytes.writeByteArray(output, cf);
+    Bytes.writeByteArray(output, cq);
+  }
+
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    return visitor.visit(this);
+  }
 }

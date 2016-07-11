@@ -17,40 +17,39 @@
  */
 package org.apache.phoenix.schema;
 
-
 /**
  * Definition of a Phoenix column
  *
- * 
+ *
  * @since 0.1
  */
 public interface PColumn extends PDatum {
 
-    /**
-     * @return the name of the column qualifier
-     */
-    PName getName();
+  /**
+   * @return the name of the column qualifier
+   */
+  PName getName();
 
-    /**
-     * @return the name of the column family
-     */
-    PName getFamilyName();
+  /**
+   * @return the name of the column family
+   */
+  PName getFamilyName();
 
-    /**
-     * @return the zero-based ordinal position of the column
-     */
-    int getPosition();
-    
-    /**
-     * @return the declared array size or zero if this is not an array
-     */
-    Integer getArraySize();
-    
-    byte[] getViewConstant();
-    
-    boolean isViewReferenced();
-    
-    int getEstimatedSize();
-    
-    String getExpressionStr();
+  /**
+   * @return the zero-based ordinal position of the column
+   */
+  int getPosition();
+
+  /**
+   * @return the declared array size or zero if this is not an array
+   */
+  Integer getArraySize();
+
+  byte[] getViewConstant();
+
+  boolean isViewReferenced();
+
+  int getEstimatedSize();
+
+  String getExpressionStr();
 }

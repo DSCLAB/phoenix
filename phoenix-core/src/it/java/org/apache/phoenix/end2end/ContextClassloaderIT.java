@@ -47,148 +47,147 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(NeedsOwnMiniClusterTest.class)
-public class ContextClassloaderIT  extends BaseTest {
+public class ContextClassloaderIT extends BaseTest {
 
-    private static HBaseTestingUtility hbaseTestUtil;
-    private static PhoenixTestDriver driver;
-    private static ClassLoader badContextClassloader;
+  private static HBaseTestingUtility hbaseTestUtil;
+  private static PhoenixTestDriver driver;
+  private static ClassLoader badContextClassloader;
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        Configuration conf = HBaseConfiguration.create();
-        setUpConfigForMiniCluster(conf);
-        hbaseTestUtil = new HBaseTestingUtility(conf);
-        hbaseTestUtil.startMiniCluster();
-        String clientPort = hbaseTestUtil.getConfiguration().get(QueryServices.ZOOKEEPER_PORT_ATTRIB);
-        String url = JDBC_PROTOCOL + JDBC_PROTOCOL_SEPARATOR + LOCALHOST + JDBC_PROTOCOL_SEPARATOR + clientPort
-                + JDBC_PROTOCOL_TERMINATOR + PHOENIX_TEST_DRIVER_URL_PARAM;
-        driver = initAndRegisterDriver(url, ReadOnlyProps.EMPTY_PROPS);
-        
-        Connection conn = DriverManager.getConnection(url);
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE test (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
-        stmt.execute("UPSERT INTO test VALUES (1, 'name1')");
-        stmt.execute("UPSERT INTO test VALUES (2, 'name2')");
-        stmt.close();
-        conn.commit();
-        conn.close();
-        badContextClassloader = new URLClassLoader(new URL[] {
-                File.createTempFile("invalid", ".jar").toURI().toURL() }, null);
+  @BeforeClass
+  public static void setUpBeforeClass() throws Exception {
+    Configuration conf = HBaseConfiguration.create();
+    setUpConfigForMiniCluster(conf);
+    hbaseTestUtil = new HBaseTestingUtility(conf);
+    hbaseTestUtil.startMiniCluster();
+    String clientPort = hbaseTestUtil.getConfiguration().get(QueryServices.ZOOKEEPER_PORT_ATTRIB);
+    String url = JDBC_PROTOCOL + JDBC_PROTOCOL_SEPARATOR + LOCALHOST + JDBC_PROTOCOL_SEPARATOR + clientPort
+            + JDBC_PROTOCOL_TERMINATOR + PHOENIX_TEST_DRIVER_URL_PARAM;
+    driver = initAndRegisterDriver(url, ReadOnlyProps.EMPTY_PROPS);
+
+    Connection conn = DriverManager.getConnection(url);
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE test (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
+    stmt.execute("UPSERT INTO test VALUES (1, 'name1')");
+    stmt.execute("UPSERT INTO test VALUES (2, 'name2')");
+    stmt.close();
+    conn.commit();
+    conn.close();
+    badContextClassloader = new URLClassLoader(new URL[]{
+      File.createTempFile("invalid", ".jar").toURI().toURL()}, null);
+  }
+
+  protected static String getUrl() {
+    return "jdbc:phoenix:localhost:" + hbaseTestUtil.getZkCluster().getClientPort() + ";test=true";
+  }
+
+  @AfterClass
+  public static void tearDown() throws Exception {
+    try {
+      destroyDriver(driver);
+    } finally {
+      hbaseTestUtil.shutdownMiniCluster();
     }
+  }
 
-    protected static String getUrl() {
-        return "jdbc:phoenix:localhost:" + hbaseTestUtil.getZkCluster().getClientPort() + ";test=true";
-    }
+  @Test
+  public void testQueryWithDifferentContextClassloader() throws SQLException, InterruptedException {
+    Runnable target = new Runnable() {
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+      @Override
+      public void run() {
         try {
-            destroyDriver(driver);
-        } finally {
-            hbaseTestUtil.shutdownMiniCluster();
+          Connection conn = DriverManager.getConnection(getUrl());
+          Statement stmt = conn.createStatement();
+          ResultSet rs = stmt.executeQuery("select * from test where name = 'name2'");
+          while (rs.next()) {
+            // Just make sure we run over all records
+          }
+          rs.close();
+          stmt.close();
+          conn.close();
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
         }
-    }
+      }
+    };
+    BadContextClassloaderThread t = new BadContextClassloaderThread(target);
+    t.start();
+    t.join();
+    assertFalse(t.failed);
+  }
 
-    @Test
-    public void testQueryWithDifferentContextClassloader() throws SQLException, InterruptedException {
-        Runnable target = new Runnable() {
-
-
-            @Override
-            public void run() {
-                try {
-                    Connection conn = DriverManager.getConnection(getUrl());
-                    Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery("select * from test where name = 'name2'");
-                    while (rs.next()) {
-                        // Just make sure we run over all records
-                    }
-                    rs.close();
-                    stmt.close();
-                    conn.close();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        BadContextClassloaderThread t = new BadContextClassloaderThread(target);
-        t.start();
-        t.join();
-        assertFalse(t.failed);
-    }
-
-    @Test
-    public void testGetDatabaseMetadataWithDifferentContextClassloader() throws InterruptedException {
-        Runnable target = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Connection conn = DriverManager.getConnection(getUrl());
-                    ResultSet tablesRs = conn.getMetaData().getTables(null, null, null, null);
-                    while (tablesRs.next()) {
-                        // Just make sure we run over all records
-                    }
-                    tablesRs.close();
-                    conn.close();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        BadContextClassloaderThread t = new BadContextClassloaderThread(target);
-        t.start();
-        t.join();
-        assertFalse(t.failed);
-    }
-
-    @Test
-    public void testExecuteDdlWithDifferentContextClassloader() throws InterruptedException {
-        Runnable target = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Connection conn = DriverManager.getConnection(getUrl());
-                    Statement stmt = conn.createStatement();
-                    stmt.execute("CREATE TABLE T2 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
-                    stmt.execute("UPSERT INTO T2 VALUES (1, 'name1')");
-                    conn.commit();
-                    ResultSet rs = stmt.executeQuery("SELECT * FROM T2");
-                    assertTrue(rs.next());
-                    assertFalse(rs.next());
-                    rs.close();
-                    stmt.close();
-                    conn.close();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        BadContextClassloaderThread t = new BadContextClassloaderThread(target);
-        t.start();
-        t.join();
-        assertFalse(t.failed);
-    }
-
-    static class BadContextClassloaderThread extends Thread {
-
-        private final Runnable target;
-        boolean failed = false;
-
-        public BadContextClassloaderThread(Runnable target) {
-            super("BadContextClassloaderThread");
-            this.target = target;
-            setContextClassLoader(badContextClassloader);
+  @Test
+  public void testGetDatabaseMetadataWithDifferentContextClassloader() throws InterruptedException {
+    Runnable target = new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Connection conn = DriverManager.getConnection(getUrl());
+          ResultSet tablesRs = conn.getMetaData().getTables(null, null, null, null);
+          while (tablesRs.next()) {
+            // Just make sure we run over all records
+          }
+          tablesRs.close();
+          conn.close();
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
         }
+      }
+    };
+    BadContextClassloaderThread t = new BadContextClassloaderThread(target);
+    t.start();
+    t.join();
+    assertFalse(t.failed);
+  }
 
-        @Override
-        public void run() {
-            try {
-                target.run();
-            } catch (Throwable t) {
-                failed = true;
-                throw new RuntimeException(t);
-            }
+  @Test
+  public void testExecuteDdlWithDifferentContextClassloader() throws InterruptedException {
+    Runnable target = new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Connection conn = DriverManager.getConnection(getUrl());
+          Statement stmt = conn.createStatement();
+          stmt.execute("CREATE TABLE T2 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
+          stmt.execute("UPSERT INTO T2 VALUES (1, 'name1')");
+          conn.commit();
+          ResultSet rs = stmt.executeQuery("SELECT * FROM T2");
+          assertTrue(rs.next());
+          assertFalse(rs.next());
+          rs.close();
+          stmt.close();
+          conn.close();
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
         }
+      }
+    };
+    BadContextClassloaderThread t = new BadContextClassloaderThread(target);
+    t.start();
+    t.join();
+    assertFalse(t.failed);
+  }
 
+  static class BadContextClassloaderThread extends Thread {
+
+    private final Runnable target;
+    boolean failed = false;
+
+    public BadContextClassloaderThread(Runnable target) {
+      super("BadContextClassloaderThread");
+      this.target = target;
+      setContextClassLoader(badContextClassloader);
     }
+
+    @Override
+    public void run() {
+      try {
+        target.run();
+      } catch (Throwable t) {
+        failed = true;
+        throw new RuntimeException(t);
+      }
+    }
+
+  }
 }

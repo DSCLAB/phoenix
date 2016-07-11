@@ -54,11 +54,13 @@ import org.apache.phoenix.hbase.index.covered.update.IndexedColumnGroup;
 /**
  * Build covered indexes for phoenix updates.
  * <p>
- * Before any call to prePut/preDelete, the row has already been locked. This ensures that we don't
- * need to do any extra synchronization in the IndexBuilder.
+ * Before any call to prePut/preDelete, the row has already been locked. This
+ * ensures that we don't need to do any extra synchronization in the
+ * IndexBuilder.
  * <p>
- * NOTE: This implementation doesn't cleanup the index when we remove a key-value on compaction or
- * flush, leading to a bloated index that needs to be cleaned up by a background process.
+ * NOTE: This implementation doesn't cleanup the index when we remove a
+ * key-value on compaction or flush, leading to a bloated index that needs to be
+ * cleaned up by a background process.
  */
 public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
 
@@ -75,8 +77,8 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
     // setup the phoenix codec. Generally, this will just be in standard one, but abstracting here
     // so we can use it later when generalizing covered indexes
     Configuration conf = env.getConfiguration();
-    Class<? extends IndexCodec> codecClass =
-        conf.getClass(CODEC_CLASS_NAME_KEY, null, IndexCodec.class);
+    Class<? extends IndexCodec> codecClass
+            = conf.getClass(CODEC_CLASS_NAME_KEY, null, IndexCodec.class);
     try {
       Constructor<? extends IndexCodec> meth = codecClass.getDeclaredConstructor(new Class[0]);
       meth.setAccessible(true);
@@ -87,7 +89,7 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
     } catch (Exception e) {
       throw new IOException(e);
     }
-    
+
     this.localTable = new LocalTable(env);
   }
 
@@ -106,16 +108,20 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   }
 
   /**
-   * Split the mutation into batches based on the timestamps of each keyvalue. We need to check each
-   * key-value in the update to see if it matches the others. Generally, this will be the case, but
-   * you can add kvs to a mutation that don't all have the timestamp, so we need to manage
-   * everything in batches based on timestamp.
+   * Split the mutation into batches based on the timestamps of each keyvalue.
+   * We need to check each key-value in the update to see if it matches the
+   * others. Generally, this will be the case, but you can add kvs to a mutation
+   * that don't all have the timestamp, so we need to manage everything in
+   * batches based on timestamp.
    * <p>
-   * Adds all the updates in the {@link Mutation} to the state, as a side-effect.
-   * @param updateMap index updates into which to add new updates. Modified as a side-effect.
+   * Adds all the updates in the {@link Mutation} to the state, as a
+   * side-effect.
+   *
+   * @param updateMap index updates into which to add new updates. Modified as a
+   * side-effect.
    * @param state current state of the row for the mutation.
    * @param m mutation to batch
- * @throws IOException 
+   * @throws IOException
    */
   private void batchMutationAndAddUpdates(IndexUpdateManager manager, Mutation m) throws IOException {
     // split the mutation into timestamp-based batches
@@ -140,11 +146,14 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   }
 
   /**
-   * Batch all the {@link KeyValue}s in a {@link Mutation} by timestamp. Updates any
-   * {@link KeyValue} with a timestamp == {@link HConstants#LATEST_TIMESTAMP} to the timestamp at
-   * the time the method is called.
+   * Batch all the {@link KeyValue}s in a {@link Mutation} by timestamp. Updates
+   * any {@link KeyValue} with a timestamp ==
+   * {@link HConstants#LATEST_TIMESTAMP} to the timestamp at the time the method
+   * is called.
+   *
    * @param m {@link Mutation} from which to extract the {@link KeyValue}s
-   * @return the mutation, broken into batches and sorted in ascending order (smallest first)
+   * @return the mutation, broken into batches and sorted in ascending order
+   * (smallest first)
    */
   protected Collection<Batch> createTimestampBatchesFromMutation(Mutation m) {
     Map<Long, Batch> batches = new HashMap<Long, Batch>();
@@ -164,14 +173,16 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   }
 
   /**
-   * Batch all the {@link KeyValue}s in a collection of kvs by timestamp. Updates any
-   * {@link KeyValue} with a timestamp == {@link HConstants#LATEST_TIMESTAMP} to the timestamp at
-   * the time the method is called.
+   * Batch all the {@link KeyValue}s in a collection of kvs by timestamp.
+   * Updates any {@link KeyValue} with a timestamp ==
+   * {@link HConstants#LATEST_TIMESTAMP} to the timestamp at the time the method
+   * is called.
+   *
    * @param kvs {@link KeyValue}s to break into batches
    * @param batches to update with the given kvs
    */
   protected void createTimestampBatchesFromKeyValues(Collection<KeyValue> kvs,
-      Map<Long, Batch> batches) {
+          Map<Long, Batch> batches) {
     long now = EnvironmentEdgeManager.currentTimeMillis();
     byte[] nowBytes = Bytes.toBytes(now);
 
@@ -195,36 +206,43 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   /**
    * For a single batch, get all the index updates and add them to the updateMap
    * <p>
-   * This method manages cleaning up the entire history of the row from the given timestamp forward
-   * for out-of-order (e.g. 'back in time') updates.
+   * This method manages cleaning up the entire history of the row from the
+   * given timestamp forward for out-of-order (e.g. 'back in time') updates.
    * <p>
-   * If things arrive out of order (client is using custom timestamps) we should still see the index
-   * in the correct order (assuming we scan after the out-of-order update in finished). Therefore,
-   * we when we aren't the most recent update to the index, we need to delete the state at the
-   * current timestamp (similar to above), but also issue a delete for the added index updates at
-   * the next newest timestamp of any of the columns in the update; we need to cleanup the insert so
-   * it looks like it was also deleted at that next newest timestamp. However, its not enough to
-   * just update the one in front of us - that column will likely be applied to index entries up the
+   * If things arrive out of order (client is using custom timestamps) we should
+   * still see the index in the correct order (assuming we scan after the
+   * out-of-order update in finished). Therefore, we when we aren't the most
+   * recent update to the index, we need to delete the state at the current
+   * timestamp (similar to above), but also issue a delete for the added index
+   * updates at the next newest timestamp of any of the columns in the update;
+   * we need to cleanup the insert so it looks like it was also deleted at that
+   * next newest timestamp. However, its not enough to just update the one in
+   * front of us - that column will likely be applied to index entries up the
    * entire history in front of us, which also needs to be fixed up.
    * <p>
-   * However, the current update usually will be the most recent thing to be added. In that case,
-   * all we need to is issue a delete for the previous index row (the state of the row, without the
-   * update applied) at the current timestamp. This gets rid of anything currently in the index for
-   * the current state of the row (at the timestamp). Then we can just follow that by applying the
-   * pending update and building the index update based on the new row state.
+   * However, the current update usually will be the most recent thing to be
+   * added. In that case, all we need to is issue a delete for the previous
+   * index row (the state of the row, without the update applied) at the current
+   * timestamp. This gets rid of anything currently in the index for the current
+   * state of the row (at the timestamp). Then we can just follow that by
+   * applying the pending update and building the index update based on the new
+   * row state.
+   *
    * @param updateMap map to update with new index elements
    * @param batch timestamp-based batch of edits
    * @param state local state to update and pass to the codec
-   * @param requireCurrentStateCleanup <tt>true</tt> if we should should attempt to cleanup the
-   *          current state of the table, in the event of a 'back in time' batch. <tt>false</tt>
-   *          indicates we should not attempt the cleanup, e.g. an earlier batch already did the
-   *          cleanup.
-   * @return <tt>true</tt> if we cleaned up the current state forward (had a back-in-time put),
-   *         <tt>false</tt> otherwise
- * @throws IOException 
+   * @param requireCurrentStateCleanup <tt>true</tt> if we should should attempt
+   * to cleanup the current state of the table, in the event of a 'back in time'
+   * batch. <tt>false</tt>
+   * indicates we should not attempt the cleanup, e.g. an earlier batch already
+   * did the cleanup.
+   * @return <tt>true</tt> if we cleaned up the current state forward (had a
+   * back-in-time put),
+   * <tt>false</tt> otherwise
+   * @throws IOException
    */
   private boolean addMutationsForBatch(IndexUpdateManager updateMap, Batch batch,
-      LocalTableState state, boolean requireCurrentStateCleanup) throws IOException {
+          LocalTableState state, boolean requireCurrentStateCleanup) throws IOException {
 
     // need a temporary manager for the current batch. It should resolve any conflicts for the
     // current batch. Essentially, we can get the case where a batch doesn't change the current
@@ -248,12 +266,12 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
 
     // A.3 otherwise, we need to roll up through the current state and get the 'correct' view of the
     // index. after this, we have the correct view of the index, from the batch up to the index
-    while(!ColumnTracker.isNewestTime(minTs) ){
+    while (!ColumnTracker.isNewestTime(minTs)) {
       minTs = addUpdateForGivenTimestamp(minTs, state, updateMap);
     }
 
     // B. only cleanup the current state if we need to - its a huge waste of effort otherwise.
-   if (requireCurrentStateCleanup) {
+    if (requireCurrentStateCleanup) {
       // roll back the pending update. This is needed so we can remove all the 'old' index entries.
       // We don't need to do the puts here, but just the deletes at the given timestamps since we
       // just want to completely hide the incorrect entries.
@@ -274,35 +292,36 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   }
 
   private long addUpdateForGivenTimestamp(long ts, LocalTableState state,
-      IndexUpdateManager updateMap) throws IOException {
+          IndexUpdateManager updateMap) throws IOException {
     state.setCurrentTimestamp(ts);
     ts = addCurrentStateMutationsForBatch(updateMap, state);
     return ts;
   }
 
   private void addCleanupForCurrentBatch(IndexUpdateManager updateMap, long batchTs,
-      LocalTableState state) throws IOException {
+          LocalTableState state) throws IOException {
     // get the cleanup for the current state
     state.setCurrentTimestamp(batchTs);
     addDeleteUpdatesToMap(updateMap, state, batchTs);
     // ignore any index tracking from the delete
     state.resetTrackedColumns();
   }
-  
+
   /**
-   * Add the necessary mutations for the pending batch on the local state. Handles rolling up
-   * through history to determine the index changes after applying the batch (for the case where the
-   * batch is back in time).
+   * Add the necessary mutations for the pending batch on the local state.
+   * Handles rolling up through history to determine the index changes after
+   * applying the batch (for the case where the batch is back in time).
+   *
    * @param updateMap to update with index mutations
    * @param batch to apply to the current state
    * @param state current state of the table
    * @return the minimum timestamp across all index columns requested. If
-   *         {@link ColumnTracker#isNewestTime(long)} returns <tt>true</tt> on the returned
-   *         timestamp, we know that this <i>was not a back-in-time update</i>.
- * @throws IOException 
+   * {@link ColumnTracker#isNewestTime(long)} returns <tt>true</tt> on the
+   * returned timestamp, we know that this <i>was not a back-in-time update</i>.
+   * @throws IOException
    */
   private long
-      addCurrentStateMutationsForBatch(IndexUpdateManager updateMap, LocalTableState state) throws IOException {
+          addCurrentStateMutationsForBatch(IndexUpdateManager updateMap, LocalTableState state) throws IOException {
 
     // get the index updates for this current batch
     Iterable<IndexUpdate> upserts = codec.getIndexUpserts(state);
@@ -337,7 +356,6 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
         needsCleanup = true;
       }
 
-
       // only make the put if the index update has been setup
       if (update.isValid()) {
         byte[] table = update.getTableName();
@@ -358,19 +376,20 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
   }
 
   /**
-   * Cleanup the index based on the current state from the given batch. Iterates over each timestamp
-   * (for the indexed rows) for the current state of the table and cleans up all the existing
-   * entries generated by the codec.
+   * Cleanup the index based on the current state from the given batch. Iterates
+   * over each timestamp (for the indexed rows) for the current state of the
+   * table and cleans up all the existing entries generated by the codec.
    * <p>
    * Adds all pending updates to the updateMap
+   *
    * @param updateMap updated with the pending index updates from the codec
    * @param batchTs timestamp from which we should cleanup
-   * @param state current state of the primary table. Should already by setup to the correct state
-   *          from which we want to cleanup.
- * @throws IOException 
+   * @param state current state of the primary table. Should already by setup to
+   * the correct state from which we want to cleanup.
+   * @throws IOException
    */
   private void cleanupIndexStateFromBatchOnward(IndexUpdateManager updateMap,
-      long batchTs, LocalTableState state) throws IOException {
+          long batchTs, LocalTableState state) throws IOException {
     // get the cleanup for the current state
     state.setCurrentTimestamp(batchTs);
     addDeleteUpdatesToMap(updateMap, state, batchTs);
@@ -388,18 +407,19 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
     }
   }
 
-
   /**
-   * Get the index deletes from the codec {@link IndexCodec#getIndexDeletes(TableState)} and then
-   * add them to the update map.
+   * Get the index deletes from the codec
+   * {@link IndexCodec#getIndexDeletes(TableState)} and then add them to the
+   * update map.
    * <p>
-   * Expects the {@link LocalTableState} to already be correctly setup (correct timestamp, updates
-   * applied, etc).
- * @throws IOException 
+   * Expects the {@link LocalTableState} to already be correctly setup (correct
+   * timestamp, updates applied, etc).
+   *
+   * @throws IOException
    */
   protected void
-      addDeleteUpdatesToMap(IndexUpdateManager updateMap,
-      LocalTableState state, long ts) throws IOException {
+          addDeleteUpdatesToMap(IndexUpdateManager updateMap,
+                  LocalTableState state, long ts) throws IOException {
     Iterable<IndexUpdate> cleanup = codec.getIndexDeletes(state);
     if (cleanup != null) {
       for (IndexUpdate d : cleanup) {
@@ -407,7 +427,7 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
           continue;
         }
         // override the timestamps in the delete to match the current batch.
-        Delete remove = (Delete)d.getUpdate();
+        Delete remove = (Delete) d.getUpdate();
         remove.setTimestamp(ts);
         updateMap.addIndexUpdate(d.getTableName(), remove);
       }
@@ -453,7 +473,7 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
       byte[] deleteRow = d.getRow();
       for (byte[] family : this.env.getRegion().getTableDesc().getFamiliesKeys()) {
         state.addPendingUpdates(new KeyValue(deleteRow, family, null, now,
-            KeyValue.Type.DeleteFamily));
+                KeyValue.Type.DeleteFamily));
       }
     } else {
       // Option 2: Its actually a bunch single updates, which can have different timestamps.
@@ -470,13 +490,14 @@ public class CoveredColumnsIndexBuilder extends BaseIndexBuilder {
 
   @Override
   public Collection<Pair<Mutation, byte[]>> getIndexUpdateForFilteredRows(
-      Collection<KeyValue> filtered) throws IOException {
+          Collection<KeyValue> filtered) throws IOException {
     // TODO Implement IndexBuilder.getIndexUpdateForFilteredRows
     return null;
   }
 
   /**
    * Exposed for testing!
+   *
    * @param codec codec to use for this instance of the builder
    */
   public void setIndexCodecForTesting(IndexCodec codec) {

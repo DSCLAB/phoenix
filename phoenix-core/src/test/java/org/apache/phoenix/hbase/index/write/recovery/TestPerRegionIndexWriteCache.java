@@ -51,8 +51,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 public class TestPerRegionIndexWriteCache {
-  private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility(); 
-  private static TableName tableName = TableName.valueOf("t1");;
+
+  private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
+  private static TableName tableName = TableName.valueOf("t1");
+  ;
   private static final byte[] row = Bytes.toBytes("row");
   private static final byte[] family = Bytes.toBytes("family");
   private static final byte[] qual = Bytes.toBytes("qual");
@@ -60,6 +62,7 @@ public class TestPerRegionIndexWriteCache {
 
   Put p = new Put(row);
   Put p2 = new Put(Bytes.toBytes("other row"));
+
   {
     p.add(family, qual, val);
     p2.add(family, qual, val);
@@ -70,59 +73,59 @@ public class TestPerRegionIndexWriteCache {
   WAL wal;
 
   @SuppressWarnings("deprecation")
-@Before
+  @Before
   public void setUp() throws Exception {
-      Path hbaseRootDir = TEST_UTIL.getDataTestDir();
-      TEST_UTIL.getConfiguration().set("hbase.rootdir", hbaseRootDir.toString());
+    Path hbaseRootDir = TEST_UTIL.getDataTestDir();
+    TEST_UTIL.getConfiguration().set("hbase.rootdir", hbaseRootDir.toString());
 
-      FileSystem newFS = FileSystem.newInstance(TEST_UTIL.getConfiguration());
-      HRegionInfo hri = new HRegionInfo(tableName, null, null, false);
-      Path basedir = FSUtils.getTableDir(hbaseRootDir, tableName);
-      Random rn = new Random();
-      tableName = TableName.valueOf("TestPerRegion" + rn.nextInt());
-      WALFactory walFactory = new WALFactory(TEST_UTIL.getConfiguration(), null, "TestPerRegionIndexWriteCache");
-      wal = walFactory.getWAL(Bytes.toBytes("logs"));
-      HTableDescriptor htd = new HTableDescriptor(tableName);
-      HColumnDescriptor a = new HColumnDescriptor(Bytes.toBytes("a"));
-      htd.addFamily(a);
-      
-      r1 = new HRegion(basedir, wal, newFS, TEST_UTIL.getConfiguration(), hri, htd, null) {
-          @Override
-          public int hashCode() {
-            return 1;
-          }
+    FileSystem newFS = FileSystem.newInstance(TEST_UTIL.getConfiguration());
+    HRegionInfo hri = new HRegionInfo(tableName, null, null, false);
+    Path basedir = FSUtils.getTableDir(hbaseRootDir, tableName);
+    Random rn = new Random();
+    tableName = TableName.valueOf("TestPerRegion" + rn.nextInt());
+    WALFactory walFactory = new WALFactory(TEST_UTIL.getConfiguration(), null, "TestPerRegionIndexWriteCache");
+    wal = walFactory.getWAL(Bytes.toBytes("logs"));
+    HTableDescriptor htd = new HTableDescriptor(tableName);
+    HColumnDescriptor a = new HColumnDescriptor(Bytes.toBytes("a"));
+    htd.addFamily(a);
 
-          @Override
-          public String toString() {
-            return "testRegion1";
-          }
-        };
-        
-      r2 = new HRegion(basedir, wal, newFS, TEST_UTIL.getConfiguration(), hri, htd, null) {
-          @Override
-          public int hashCode() {
-            return 2;
-          }
+    r1 = new HRegion(basedir, wal, newFS, TEST_UTIL.getConfiguration(), hri, htd, null) {
+      @Override
+      public int hashCode() {
+        return 1;
+      }
 
-          @Override
-          public String toString() {
-            return "testRegion1";
-          }
-        };
+      @Override
+      public String toString() {
+        return "testRegion1";
+      }
+    };
+
+    r2 = new HRegion(basedir, wal, newFS, TEST_UTIL.getConfiguration(), hri, htd, null) {
+      @Override
+      public int hashCode() {
+        return 2;
+      }
+
+      @Override
+      public String toString() {
+        return "testRegion1";
+      }
+    };
   }
-  
+
   @After
   public void cleanUp() throws Exception {
-      try{
-          r1.close();
-          r2.close();
-          wal.close();
-      } catch (Exception ignored) {}
-      FileSystem newFS = FileSystem.get(TEST_UTIL.getConfiguration());
-      newFS.delete(TEST_UTIL.getDataTestDir(), true);
+    try {
+      r1.close();
+      r2.close();
+      wal.close();
+    } catch (Exception ignored) {
+    }
+    FileSystem newFS = FileSystem.get(TEST_UTIL.getConfiguration());
+    newFS.delete(TEST_UTIL.getDataTestDir(), true);
   }
 
-  
   @Test
   public void testAddRemoveSingleRegion() {
     PerRegionIndexWriteCache cache = new PerRegionIndexWriteCache();
@@ -134,7 +137,7 @@ public class TestPerRegionIndexWriteCache {
     Set<Entry<HTableInterfaceReference, Collection<Mutation>>> entries = edits.asMap().entrySet();
     assertEquals("Got more than one table in the the edit map!", 1, entries.size());
     for (Entry<HTableInterfaceReference, Collection<Mutation>> entry : entries) {
-     //ensure that we are still storing a list here - otherwise it breaks the parallel writer implementation
+      //ensure that we are still storing a list here - otherwise it breaks the parallel writer implementation
       final List<Mutation> stored = (List<Mutation>) entry.getValue();
       assertEquals("Got an unexpected amount of mutations in the entry", 1, stored.size());
       assertEquals("Got an unexpected mutation in the entry", p, stored.get(0));
@@ -148,13 +151,13 @@ public class TestPerRegionIndexWriteCache {
   @Test
   public void testMultipleAddsForSingleRegion() {
     PerRegionIndexWriteCache cache = new PerRegionIndexWriteCache();
-    HTableInterfaceReference t1 =
-        new HTableInterfaceReference(new ImmutableBytesPtr(Bytes.toBytes("t1")));
-    List<Mutation> mutations = Lists.<Mutation> newArrayList(p);
+    HTableInterfaceReference t1
+            = new HTableInterfaceReference(new ImmutableBytesPtr(Bytes.toBytes("t1")));
+    List<Mutation> mutations = Lists.<Mutation>newArrayList(p);
     cache.addEdits(r1, t1, mutations);
 
     // add a second set
-    mutations = Lists.<Mutation> newArrayList(p2);
+    mutations = Lists.<Mutation>newArrayList(p2);
     cache.addEdits(r1, t1, mutations);
 
     Multimap<HTableInterfaceReference, Mutation> edits = cache.getEdits(r1);
@@ -173,10 +176,10 @@ public class TestPerRegionIndexWriteCache {
   @Test
   public void testMultipleRegions() {
     PerRegionIndexWriteCache cache = new PerRegionIndexWriteCache();
-    HTableInterfaceReference t1 =
-        new HTableInterfaceReference(new ImmutableBytesPtr(Bytes.toBytes("t1")));
-    List<Mutation> mutations = Lists.<Mutation> newArrayList(p);
-    List<Mutation> m2 = Lists.<Mutation> newArrayList(p2);
+    HTableInterfaceReference t1
+            = new HTableInterfaceReference(new ImmutableBytesPtr(Bytes.toBytes("t1")));
+    List<Mutation> mutations = Lists.<Mutation>newArrayList(p);
+    List<Mutation> m2 = Lists.<Mutation>newArrayList(p2);
     // add each region
     cache.addEdits(r1, t1, mutations);
     cache.addEdits(r2, t1, m2);
@@ -190,7 +193,7 @@ public class TestPerRegionIndexWriteCache {
       // implementation
       final List<Mutation> stored = (List<Mutation>) entry.getValue();
       assertEquals("Got an unexpected amount of mutations in the entry for region1", 1,
-        stored.size());
+              stored.size());
       assertEquals("Got an unexpected mutation in the entry for region2", p, stored.get(0));
     }
 
@@ -203,10 +206,9 @@ public class TestPerRegionIndexWriteCache {
       // implementation
       final List<Mutation> stored = (List<Mutation>) entry.getValue();
       assertEquals("Got an unexpected amount of mutations in the entry for region2", 1,
-        stored.size());
+              stored.size());
       assertEquals("Got an unexpected mutation in the entry for region2", p2, stored.get(0));
     }
-
 
     // ensure that a second get doesn't have any more edits. This ensures that we don't keep
     // references around to these edits and have a memory leak

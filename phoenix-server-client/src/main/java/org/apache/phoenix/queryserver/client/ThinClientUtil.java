@@ -22,7 +22,8 @@ package org.apache.phoenix.queryserver.client;
  */
 public final class ThinClientUtil {
 
-  private ThinClientUtil() {}
+  private ThinClientUtil() {
+  }
 
   public static String getConnectionUrl(String hostname, int port) {
     return getConnectionUrl("http", hostname, port);

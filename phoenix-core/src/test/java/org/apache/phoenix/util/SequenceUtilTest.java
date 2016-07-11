@@ -19,47 +19,47 @@ import org.junit.Test;
 
 public class SequenceUtilTest {
 
-    private static long MIN_VALUE = 1;
-    private static long MAX_VALUE = 10;
-    private static long CACHE_SIZE = 2;
+  private static long MIN_VALUE = 1;
+  private static long MAX_VALUE = 10;
+  private static long CACHE_SIZE = 2;
 
-    @Test
-    public void testAscendingNextValueWithinLimit() throws SQLException {
-        assertFalse(SequenceUtil.checkIfLimitReached(5, MIN_VALUE, MAX_VALUE, 2/* incrementBy */, CACHE_SIZE));
-    }
-    
-    @Test
-    public void testAscendingNextValueReachLimit() throws SQLException {
-    	assertFalse(SequenceUtil.checkIfLimitReached(6, MIN_VALUE, MAX_VALUE, 2/* incrementBy */,  CACHE_SIZE));
-    }
+  @Test
+  public void testAscendingNextValueWithinLimit() throws SQLException {
+    assertFalse(SequenceUtil.checkIfLimitReached(5, MIN_VALUE, MAX_VALUE, 2/* incrementBy */, CACHE_SIZE));
+  }
 
-    @Test
-    public void testAscendingNextValueGreaterThanMaxValue() throws SQLException {
-        assertTrue(SequenceUtil.checkIfLimitReached(MAX_VALUE, MIN_VALUE, MAX_VALUE, 2/* incrementBy */, CACHE_SIZE));
-    }
-    
-    @Test
-    public void testAscendingOverflow() throws SQLException {
-        assertTrue(SequenceUtil.checkIfLimitReached(Long.MAX_VALUE, 0, Long.MAX_VALUE, 1/* incrementBy */, CACHE_SIZE));
-    }
+  @Test
+  public void testAscendingNextValueReachLimit() throws SQLException {
+    assertFalse(SequenceUtil.checkIfLimitReached(6, MIN_VALUE, MAX_VALUE, 2/* incrementBy */, CACHE_SIZE));
+  }
 
-    @Test
-    public void testDescendingNextValueWithinLimit() throws SQLException {
-    	assertFalse(SequenceUtil.checkIfLimitReached(6, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
-    }
-    
-    @Test
-    public void testDescendingNextValueReachLimit() throws SQLException {
-    	assertFalse(SequenceUtil.checkIfLimitReached(5, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
-    }
+  @Test
+  public void testAscendingNextValueGreaterThanMaxValue() throws SQLException {
+    assertTrue(SequenceUtil.checkIfLimitReached(MAX_VALUE, MIN_VALUE, MAX_VALUE, 2/* incrementBy */, CACHE_SIZE));
+  }
 
-    @Test
-    public void testDescendingNextValueLessThanMinValue() throws SQLException {
-    	assertTrue(SequenceUtil.checkIfLimitReached(2, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
-    }
-    
-    @Test
-    public void testDescendingOverflowCycle() throws SQLException {
-    	assertTrue(SequenceUtil.checkIfLimitReached(Long.MIN_VALUE, Long.MIN_VALUE, 0, -1/* incrementBy */, CACHE_SIZE));
-    }
+  @Test
+  public void testAscendingOverflow() throws SQLException {
+    assertTrue(SequenceUtil.checkIfLimitReached(Long.MAX_VALUE, 0, Long.MAX_VALUE, 1/* incrementBy */, CACHE_SIZE));
+  }
+
+  @Test
+  public void testDescendingNextValueWithinLimit() throws SQLException {
+    assertFalse(SequenceUtil.checkIfLimitReached(6, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
+  }
+
+  @Test
+  public void testDescendingNextValueReachLimit() throws SQLException {
+    assertFalse(SequenceUtil.checkIfLimitReached(5, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
+  }
+
+  @Test
+  public void testDescendingNextValueLessThanMinValue() throws SQLException {
+    assertTrue(SequenceUtil.checkIfLimitReached(2, MIN_VALUE, MAX_VALUE, -2/* incrementBy */, CACHE_SIZE));
+  }
+
+  @Test
+  public void testDescendingOverflowCycle() throws SQLException {
+    assertTrue(SequenceUtil.checkIfLimitReached(Long.MIN_VALUE, Long.MIN_VALUE, 0, -1/* incrementBy */, CACHE_SIZE));
+  }
 }

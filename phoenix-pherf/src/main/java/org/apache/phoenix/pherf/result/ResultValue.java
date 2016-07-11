@@ -15,26 +15,28 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 /**
- * Generic box container for a result value. This class allows for writing results of any type easily
+ * Generic box container for a result value. This class allows for writing
+ * results of any type easily
+ *
  * @param <T>
  */
 public class ResultValue<T> {
-    T resultValue;
 
-    public ResultValue(T resultValue) {
-        this.resultValue = resultValue;
-    }
+  T resultValue;
 
-    public T getResultValue() {
-        return resultValue;
-    }
+  public ResultValue(T resultValue) {
+    this.resultValue = resultValue;
+  }
 
-    @Override
-    public String toString() {
-        return resultValue.toString();
-    }
+  public T getResultValue() {
+    return resultValue;
+  }
+
+  @Override
+  public String toString() {
+    return resultValue.toString();
+  }
 }

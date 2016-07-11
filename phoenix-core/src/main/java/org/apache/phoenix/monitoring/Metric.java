@@ -19,46 +19,46 @@ package org.apache.phoenix.monitoring;
 
 /**
  * Interface that exposes the various internal phoenix metrics collected.
- * Because metrics are dynamic in nature, it is not guaranteed that the
- * state exposed will always be in sync with each other. One should use
- * these metrics primarily for monitoring and debugging purposes. 
+ * Because metrics are dynamic in nature, it is not guaranteed that the state
+ * exposed will always be in sync with each other. One should use these metrics
+ * primarily for monitoring and debugging purposes.
  */
 public interface Metric {
-    
-    /**
-     * 
-     * @return Name of the metric
-     */
-    public String getName();
-    
-    /**
-     * 
-     * @return Description of the metric
-     */
-    public String getDescription();
-    
-    /**
-     * Reset the internal state. Typically called after
-     * metric information has been collected and a new
-     * phase of collection is being requested for the next
-     * interval.
-     */
-    public void reset();
-    
-    /**
-     * 
-     * @return String that represents the current state of the metric.
-     * Typically used to log the current state.
-     */
-    public String getCurrentMetricState();
-    
-    /**
-     * @return Number of samples collected since the last {@link #reset()} call.
-     */
-    public long getNumberOfSamples();
-    
-    /**
-     * @return Sum of the values of the metric sampled since the last {@link #reset()} call.
-     */
-    public long getTotalSum();
+
+  /**
+   *
+   * @return Name of the metric
+   */
+  public String getName();
+
+  /**
+   *
+   * @return Description of the metric
+   */
+  public String getDescription();
+
+  /**
+   * Reset the internal state. Typically called after metric information has
+   * been collected and a new phase of collection is being requested for the
+   * next interval.
+   */
+  public void reset();
+
+  /**
+   *
+   * @return String that represents the current state of the metric. Typically
+   * used to log the current state.
+   */
+  public String getCurrentMetricState();
+
+  /**
+   * @return Number of samples collected since the last {@link #reset()} call.
+   */
+  public long getNumberOfSamples();
+
+  /**
+   * @return Sum of the values of the metric sampled since the last
+   * {@link #reset()} call.
+   */
+  public long getTotalSum();
 }

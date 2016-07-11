@@ -12,25 +12,25 @@ package org.apache.phoenix.schema.types;
 
 public class PrimitiveFloatPhoenixArrayToStringTest extends BasePrimitiveDoublePhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PFloat.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PFloat.INSTANCE;
+  }
 
-    @Override
-    protected Object getElement1() {
-        return 1.1f;
-    }
+  @Override
+  protected Object getElement1() {
+    return 1.1f;
+  }
 
-    @Override
-    protected Object getElement2() {
-        return 2.2f;
-        
-    }
+  @Override
+  protected Object getElement2() {
+    return 2.2f;
 
-    @Override
-    protected Object getElement3() {
-        return 3.3f;
-    }
+  }
+
+  @Override
+  protected Object getElement3() {
+    return 3.3f;
+  }
 
 }

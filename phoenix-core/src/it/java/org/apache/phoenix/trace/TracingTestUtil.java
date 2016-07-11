@@ -25,7 +25,7 @@ import org.apache.phoenix.metrics.Metrics;
  */
 public class TracingTestUtil {
 
-    public static void registerSink(MetricsSink sink){
-        Metrics.initialize().register("phoenix", "test sink gets logged", sink);
-    }
+  public static void registerSink(MetricsSink sink) {
+    Metrics.initialize().register("phoenix", "test sink gets logged", sink);
+  }
 }

@@ -21,18 +21,18 @@ import java.util.Map;
 
 public class AlterSessionStatement extends MutableStatement {
 
-    private final Map<String,Object> props;
+  private final Map<String, Object> props;
 
-    public AlterSessionStatement(Map<String,Object> props) {
-        this.props = props;
-    }
+  public AlterSessionStatement(Map<String, Object> props) {
+    this.props = props;
+  }
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    public Map<String, Object> getProps(){
-        return props;
-    }
+  public Map<String, Object> getProps() {
+    return props;
+  }
 }

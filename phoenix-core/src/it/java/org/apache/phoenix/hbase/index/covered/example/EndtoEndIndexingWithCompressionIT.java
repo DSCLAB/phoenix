@@ -28,10 +28,9 @@ import org.apache.phoenix.hbase.index.Indexer;
 import org.junit.BeforeClass;
 
 /**
- * Test secondary indexing from an end-to-end perspective (client to server to index table).
+ * Test secondary indexing from an end-to-end perspective (client to server to
+ * index table).
  */
-
-
 public class EndtoEndIndexingWithCompressionIT extends EndToEndCoveredIndexingIT {
 
   @BeforeClass
@@ -44,7 +43,7 @@ public class EndtoEndIndexingWithCompressionIT extends EndToEndCoveredIndexingIT
     // installed (right now, its generally going to be SNAPSHOT versions).
     conf.setBoolean(Indexer.CHECK_VERSION_CONF_KEY, false);
     conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY,
-    IndexedWALEditCodec.class.getName());
+            IndexedWALEditCodec.class.getName());
     conf.setBoolean(HConstants.ENABLE_WAL_COMPRESSION, true);
     //start the mini-cluster
     UTIL.startMiniCluster();

@@ -31,30 +31,30 @@ import org.apache.phoenix.trace.TracingUtils;
  */
 public class LoggingSink implements MetricsSink {
 
-    private static final Log LOG = LogFactory.getLog(LoggingSink.class);
+  private static final Log LOG = LogFactory.getLog(LoggingSink.class);
 
-    @Override
-    public void init(SubsetConfiguration config) {
-    }
+  @Override
+  public void init(SubsetConfiguration config) {
+  }
 
-    @Override
-    public void putMetrics(MetricsRecord record) {
-        // we could wait until flush, but this is a really lightweight process, so we just write
-        // them
-        // as soon as we get them
-        if (!LOG.isDebugEnabled()) {
-            return;
-        }
-        LOG.debug("Found record:" + record.name());
-        for (AbstractMetric metric : record.metrics()) {
-            // just print the metric we care about
-            if (metric.name().startsWith(TracingUtils.METRIC_SOURCE_KEY)) {
-                LOG.debug("\t metric:" + metric);
-            }
-        }
+  @Override
+  public void putMetrics(MetricsRecord record) {
+    // we could wait until flush, but this is a really lightweight process, so we just write
+    // them
+    // as soon as we get them
+    if (!LOG.isDebugEnabled()) {
+      return;
     }
+    LOG.debug("Found record:" + record.name());
+    for (AbstractMetric metric : record.metrics()) {
+      // just print the metric we care about
+      if (metric.name().startsWith(TracingUtils.METRIC_SOURCE_KEY)) {
+        LOG.debug("\t metric:" + metric);
+      }
+    }
+  }
 
-    @Override
-    public void flush() {
-    }
+  @Override
+  public void flush() {
+  }
 }

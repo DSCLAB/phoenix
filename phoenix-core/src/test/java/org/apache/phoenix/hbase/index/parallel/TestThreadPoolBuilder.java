@@ -34,7 +34,7 @@ public class TestThreadPoolBuilder {
   @Test
   public void testCoreThreadTimeoutNonZero() {
     Configuration conf = new Configuration(false);
-    String key = name.getTableNameString()+"-key";
+    String key = name.getTableNameString() + "-key";
     ThreadPoolBuilder builder = new ThreadPoolBuilder(name.getTableNameString(), conf);
     assertTrue("core threads not set, but failed return", builder.getKeepAliveTime() > 0);
     // set an negative value
@@ -47,11 +47,11 @@ public class TestThreadPoolBuilder {
     builder.setCoreTimeout(key);
     assertTrue("core threads not set, but failed return", builder.getKeepAliveTime() > 0);
   }
-  
+
   @Test
   public void testMaxThreadsNonZero() {
     Configuration conf = new Configuration(false);
-    String key = name.getTableNameString()+"-key";
+    String key = name.getTableNameString() + "-key";
     ThreadPoolBuilder builder = new ThreadPoolBuilder(name.getTableNameString(), conf);
     assertTrue("core threads not set, but failed return", builder.getMaxThreads() > 0);
     // set an negative value

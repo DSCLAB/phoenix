@@ -44,8 +44,9 @@ import org.apache.phoenix.hbase.index.parallel.ThreadPoolManager;
 /**
  * Manage the building of index updates from primary table updates.
  * <p>
- * Internally, parallelizes updates through a thread-pool to a delegate index builder. Underlying
- * {@link IndexBuilder} <b>must be thread safe</b> for each index update.
+ * Internally, parallelizes updates through a thread-pool to a delegate index
+ * builder. Underlying {@link IndexBuilder} <b>must be thread safe</b> for each
+ * index update.
  */
 public class IndexBuildManager implements Stoppable {
 
@@ -55,55 +56,60 @@ public class IndexBuildManager implements Stoppable {
   private boolean stopped;
 
   /**
-   * Set the number of threads with which we can concurrently build index updates. Unused threads
-   * will be released, but setting the number of threads too high could cause frequent swapping and
-   * resource contention on the server - <i>tune with care</i>. However, if you are spending a lot
-   * of time building index updates, it could be worthwhile to spend the time to tune this parameter
-   * as it could lead to dramatic increases in speed.
+   * Set the number of threads with which we can concurrently build index
+   * updates. Unused threads will be released, but setting the number of threads
+   * too high could cause frequent swapping and resource contention on the
+   * server - <i>tune with care</i>. However, if you are spending a lot of time
+   * building index updates, it could be worthwhile to spend the time to tune
+   * this parameter as it could lead to dramatic increases in speed.
    */
   public static final String NUM_CONCURRENT_INDEX_BUILDER_THREADS_CONF_KEY = "index.builder.threads.max";
-  /** Default to a single thread. This is the safest course of action, but the slowest as well */
+  /**
+   * Default to a single thread. This is the safest course of action, but the
+   * slowest as well
+   */
   private static final int DEFAULT_CONCURRENT_INDEX_BUILDER_THREADS = 10;
   /**
-   * Amount of time to keep idle threads in the pool. After this time (seconds) we expire the
-   * threads and will re-create them as needed, up to the configured max
+   * Amount of time to keep idle threads in the pool. After this time (seconds)
+   * we expire the threads and will re-create them as needed, up to the
+   * configured max
    */
-  private static final String INDEX_BUILDER_KEEP_ALIVE_TIME_CONF_KEY =
-      "index.builder.threads.keepalivetime";
+  private static final String INDEX_BUILDER_KEEP_ALIVE_TIME_CONF_KEY
+          = "index.builder.threads.keepalivetime";
 
   /**
    * @param env environment in which <tt>this</tt> is running. Used to setup the
-   *          {@link IndexBuilder} and executor
+   * {@link IndexBuilder} and executor
    * @throws IOException if an {@link IndexBuilder} cannot be correctly steup
    */
   public IndexBuildManager(RegionCoprocessorEnvironment env) throws IOException {
     this(getIndexBuilder(env), new QuickFailingTaskRunner(ThreadPoolManager.getExecutor(
-      getPoolBuilder(env), env)));
+            getPoolBuilder(env), env)));
   }
 
   private static IndexBuilder getIndexBuilder(RegionCoprocessorEnvironment e) throws IOException {
     Configuration conf = e.getConfiguration();
-    Class<? extends IndexBuilder> builderClass =
-        conf.getClass(Indexer.INDEX_BUILDER_CONF_KEY, null, IndexBuilder.class);
+    Class<? extends IndexBuilder> builderClass
+            = conf.getClass(Indexer.INDEX_BUILDER_CONF_KEY, null, IndexBuilder.class);
     try {
       IndexBuilder builder = builderClass.newInstance();
       builder.setup(e);
       return builder;
     } catch (InstantiationException e1) {
       throw new IOException("Couldn't instantiate index builder:" + builderClass
-          + ", disabling indexing on table " + e.getRegion().getTableDesc().getNameAsString());
+              + ", disabling indexing on table " + e.getRegion().getTableDesc().getNameAsString());
     } catch (IllegalAccessException e1) {
       throw new IOException("Couldn't instantiate index builder:" + builderClass
-          + ", disabling indexing on table " + e.getRegion().getTableDesc().getNameAsString());
+              + ", disabling indexing on table " + e.getRegion().getTableDesc().getNameAsString());
     }
   }
 
   private static ThreadPoolBuilder getPoolBuilder(RegionCoprocessorEnvironment env) {
     String serverName = env.getRegionServerServices().getServerName().getServerName();
     return new ThreadPoolBuilder(serverName + "-index-builder", env.getConfiguration()).
-        setCoreTimeout(INDEX_BUILDER_KEEP_ALIVE_TIME_CONF_KEY).
-        setMaxThread(NUM_CONCURRENT_INDEX_BUILDER_THREADS_CONF_KEY,
-          DEFAULT_CONCURRENT_INDEX_BUILDER_THREADS);
+            setCoreTimeout(INDEX_BUILDER_KEEP_ALIVE_TIME_CONF_KEY).
+            setMaxThread(NUM_CONCURRENT_INDEX_BUILDER_THREADS_CONF_KEY,
+                    DEFAULT_CONCURRENT_INDEX_BUILDER_THREADS);
   }
 
   public IndexBuildManager(IndexBuilder builder, QuickFailingTaskRunner pool) {
@@ -111,10 +117,9 @@ public class IndexBuildManager implements Stoppable {
     this.pool = pool;
   }
 
-
   public Collection<Pair<Mutation, byte[]>> getIndexUpdate(
-      MiniBatchOperationInProgress<Mutation> miniBatchOp,
-      Collection<? extends Mutation> mutations) throws Throwable {
+          MiniBatchOperationInProgress<Mutation> miniBatchOp,
+          Collection<? extends Mutation> mutations) throws Throwable {
     // notify the delegate that we have started processing a batch
     this.delegate.batchStarted(miniBatchOp);
 
@@ -123,8 +128,8 @@ public class IndexBuildManager implements Stoppable {
     // fail lookups/scanning) and (2) by stopping this via the #stop method. Interrupts will only be
     // acknowledged on each thread before doing the actual lookup, but after that depends on the
     // underlying builder to look for the closed flag.
-    TaskBatch<Collection<Pair<Mutation, byte[]>>> tasks =
-        new TaskBatch<Collection<Pair<Mutation, byte[]>>>(mutations.size());
+    TaskBatch<Collection<Pair<Mutation, byte[]>>> tasks
+            = new TaskBatch<Collection<Pair<Mutation, byte[]>>>(mutations.size());
     for (final Mutation m : mutations) {
       tasks.add(new Task<Collection<Pair<Mutation, byte[]>>>() {
 
@@ -170,7 +175,7 @@ public class IndexBuildManager implements Stoppable {
   }
 
   public Collection<Pair<Mutation, byte[]>> getIndexUpdateForFilteredRows(
-      Collection<KeyValue> filtered) throws IOException {
+          Collection<KeyValue> filtered) throws IOException {
     // this is run async, so we can take our time here
     return delegate.getIndexUpdateForFilteredRows(filtered);
   }
@@ -180,7 +185,7 @@ public class IndexBuildManager implements Stoppable {
   }
 
   public void batchStarted(MiniBatchOperationInProgress<Mutation> miniBatchOp)
-      throws IOException {
+          throws IOException {
     delegate.batchStarted(miniBatchOp);
   }
 

@@ -18,25 +18,26 @@
 package org.apache.phoenix.parse;
 
 public class CreateFunctionStatement extends MutableStatement {
-    private final PFunction functionInfo;
-    private final boolean temporary;
 
-    public CreateFunctionStatement(PFunction functionInfo, boolean temporary) {
-        this.functionInfo = functionInfo;
-        this.temporary = temporary;
-    }
+  private final PFunction functionInfo;
+  private final boolean temporary;
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  public CreateFunctionStatement(PFunction functionInfo, boolean temporary) {
+    this.functionInfo = functionInfo;
+    this.temporary = temporary;
+  }
 
-    public PFunction getFunctionInfo() {
-        return functionInfo;
-    }
-    
-    public boolean isTemporary() {
-        return temporary;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
+
+  public PFunction getFunctionInfo() {
+    return functionInfo;
+  }
+
+  public boolean isTemporary() {
+    return temporary;
+  }
 
 }

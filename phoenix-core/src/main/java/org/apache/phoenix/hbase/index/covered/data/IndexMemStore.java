@@ -39,40 +39,46 @@ import org.apache.phoenix.hbase.index.covered.KeyValueStore;
 import org.apache.phoenix.hbase.index.covered.LocalTableState;
 
 /**
- * Like the HBase {@link MemStore}, but without all that extra work around maintaining snapshots and
- * sizing (for right now). We still support the concurrent access (in case indexes are built in
- * parallel).
+ * Like the HBase {@link MemStore}, but without all that extra work around
+ * maintaining snapshots and sizing (for right now). We still support the
+ * concurrent access (in case indexes are built in parallel).
  * <p>
- * 
- We basically wrap a KeyValueSkipListSet, just like a regular MemStore, except we are:
+ *
+ * We basically wrap a KeyValueSkipListSet, just like a regular MemStore, except
+ * we are:
  * <ol>
- *  <li>not dealing with
- *    <ul>
- *      <li>space considerations</li>
- *      <li>a snapshot set</li>
- *    </ul>
- *  </li>
- *  <li>ignoring memstore timestamps in favor of deciding when we want to overwrite keys based on how
- *    we obtain them</li>
- *   <li>ignoring time range updates (so 
- *    {@link KeyValueScanner#shouldUseScanner(Scan, SortedSet, long)} isn't supported from 
- *    {@link #getScanner()}).</li>
+ * <li>not dealing with
+ * <ul>
+ * <li>space considerations</li>
+ * <li>a snapshot set</li>
+ * </ul>
+ * </li>
+ * <li>ignoring memstore timestamps in favor of deciding when we want to
+ * overwrite keys based on how we obtain them</li>
+ * <li>ignoring time range updates (so
+ * {@link KeyValueScanner#shouldUseScanner(Scan, SortedSet, long)} isn't
+ * supported from {@link #getScanner()}).</li>
  * </ol>
  * <p>
- * We can ignore the memstore timestamps because we know that anything we get from the local region
- * is going to be MVCC visible - so it should just go in. However, we also want overwrite any
- * existing state with our pending write that we are indexing, so that needs to clobber the KVs we
- * get from the HRegion. This got really messy with a regular memstore as each KV from the MemStore
- * frequently has a higher MemStoreTS, but we can't just up the pending KVs' MemStoreTs because a
- * memstore relies on the MVCC readpoint, which generally is less than {@link Long#MAX_VALUE}.
+ * We can ignore the memstore timestamps because we know that anything we get
+ * from the local region is going to be MVCC visible - so it should just go in.
+ * However, we also want overwrite any existing state with our pending write
+ * that we are indexing, so that needs to clobber the KVs we get from the
+ * HRegion. This got really messy with a regular memstore as each KV from the
+ * MemStore frequently has a higher MemStoreTS, but we can't just up the pending
+ * KVs' MemStoreTs because a memstore relies on the MVCC readpoint, which
+ * generally is less than {@link Long#MAX_VALUE}.
  * <p>
- * By realizing that we don't need the snapshot or space requirements, we can go much faster than
- * the previous implementation. Further, by being smart about how we manage the KVs, we can drop the
- * extra object creation we were doing to wrap the pending KVs (which we did previously to ensure
- * they sorted before the ones we got from the HRegion). We overwrite {@link KeyValue}s when we add
- * them from external sources {@link #add(KeyValue, boolean)}, but then don't overwrite existing
- * keyvalues when read them from the underlying table (because pending keyvalues should always
- * overwrite current ones) - this logic is all contained in LocalTableState.
+ * By realizing that we don't need the snapshot or space requirements, we can go
+ * much faster than the previous implementation. Further, by being smart about
+ * how we manage the KVs, we can drop the extra object creation we were doing to
+ * wrap the pending KVs (which we did previously to ensure they sorted before
+ * the ones we got from the HRegion). We overwrite {@link KeyValue}s when we add
+ * them from external sources {@link #add(KeyValue, boolean)}, but then don't
+ * overwrite existing keyvalues when read them from the underlying table
+ * (because pending keyvalues should always overwrite current ones) - this logic
+ * is all contained in LocalTableState.
+ *
  * @see LocalTableState
  */
 public class IndexMemStore implements KeyValueStore {
@@ -82,9 +88,10 @@ public class IndexMemStore implements KeyValueStore {
   private Comparator<KeyValue> comparator;
 
   /**
-   * Compare two {@link KeyValue}s based only on their row keys. Similar to the standard
-   * {@link KeyValue#COMPARATOR}, but doesn't take into consideration the memstore timestamps. We
-   * instead manage which KeyValue to retain based on how its loaded here
+   * Compare two {@link KeyValue}s based only on their row keys. Similar to the
+   * standard {@link KeyValue#COMPARATOR}, but doesn't take into consideration
+   * the memstore timestamps. We instead manage which KeyValue to retain based
+   * on how its loaded here
    */
   public static final Comparator<KeyValue> COMPARATOR = new Comparator<KeyValue>() {
 
@@ -93,8 +100,8 @@ public class IndexMemStore implements KeyValueStore {
     @Override
     public int compare(final KeyValue left, final KeyValue right) {
       return rawcomparator.compareFlatKey(left.getRowArray(), left.getOffset() + KeyValue.ROW_OFFSET,
-        left.getKeyLength(), right.getRowArray(), right.getOffset() + KeyValue.ROW_OFFSET,
-        right.getKeyLength());
+              left.getKeyLength(), right.getRowArray(), right.getOffset() + KeyValue.ROW_OFFSET,
+              right.getKeyLength());
     }
   };
 
@@ -103,10 +110,12 @@ public class IndexMemStore implements KeyValueStore {
   }
 
   /**
-   * Create a store with the given comparator. This comparator is used to determine both sort order
+   * Create a store with the given comparator. This comparator is used to
+   * determine both sort order
    * <b>as well as equality of {@link KeyValue}s</b>.
    * <p>
    * Exposed for subclassing/testing.
+   *
    * @param comparator to use
    */
   IndexMemStore(Comparator<KeyValue> comparator) {
@@ -141,8 +150,8 @@ public class IndexMemStore implements KeyValueStore {
   }
 
   private String toString(KeyValue kv) {
-    return kv.toString() + "/value=" + 
-        Bytes.toString(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
+    return kv.toString() + "/value="
+            + Bytes.toString(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
   }
 
   @Override
@@ -161,7 +170,7 @@ public class IndexMemStore implements KeyValueStore {
   public KeyValueScanner getScanner() {
     return new MemStoreScanner();
   }
-  
+
   /*
    * MemStoreScanner implements the KeyValueScanner. It lets the caller scan the contents of a
    * memstore -- both current map and snapshot. This behaves as if it were a real scanner but does
@@ -171,6 +180,7 @@ public class IndexMemStore implements KeyValueStore {
   // It does basically the same thing as the MemStoreScanner, but it only keeps track of a single
   // set, rather than a primary and a secondary set of KeyValues.
   protected class MemStoreScanner extends NonLazyKeyValueScanner {
+
     // Next row information for the set
     private KeyValue nextRow = null;
 
@@ -209,8 +219,9 @@ public class IndexMemStore implements KeyValueStore {
     }
 
     /**
-     * Set the scanner at the seek key. Must be called only once: there is no thread safety between
-     * the scanner and the memStore.
+     * Set the scanner at the seek key. Must be called only once: there is no
+     * thread safety between the scanner and the memStore.
+     *
      * @param key seek value
      * @return false if the key is null or if there is no data
      */
@@ -239,6 +250,7 @@ public class IndexMemStore implements KeyValueStore {
 
     /**
      * Move forward on the sub-lists set previously by seek.
+     *
      * @param key seek value (should be non-null)
      * @return true if there is at least one KV to read, false otherwise
      */
@@ -302,33 +314,33 @@ public class IndexMemStore implements KeyValueStore {
     }
 
     /**
-     * MemStoreScanner returns max value as sequence id because it will always have the latest data
-     * among all files.
+     * MemStoreScanner returns max value as sequence id because it will always
+     * have the latest data among all files.
      */
     @Override
     public long getSequenceID() {
       return Long.MAX_VALUE;
     }
-    
+
     @Override
     public boolean shouldUseScanner(Scan scan, SortedSet<byte[]> columns, long oldestUnexpiredTS) {
       throw new UnsupportedOperationException(this.getClass().getName()
-          + " doesn't support checking to see if it should use a scanner!");
+              + " doesn't support checking to see if it should use a scanner!");
     }
 
     @Override
     public boolean backwardSeek(Cell arg0) throws IOException {
-        throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean seekToLastRow() throws IOException {
-        throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean seekToPreviousRow(Cell arg0) throws IOException {
-        throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException();
     }
   }
 }

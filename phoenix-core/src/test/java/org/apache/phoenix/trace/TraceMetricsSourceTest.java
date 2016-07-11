@@ -17,6 +17,7 @@
  */
 package org.apache.phoenix.trace;
 
+import java.util.Arrays;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -31,26 +32,28 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 /**
- * Test that the @{link TraceMetricSource} correctly handles different kinds of traces
+ * Test that the @{link TraceMetricSource} correctly handles different kinds of
+ * traces
  */
 public class TraceMetricsSourceTest {
 
   @BeforeClass
-  public static void setup() throws Exception{
+  public static void setup() throws Exception {
     DefaultMetricsSystem.setMiniClusterMode(true);
   }
 
   /**
-   * For PHOENIX-1126, Phoenix originally assumed all the annotation values were integers,
-   * but HBase writes some strings as well, so we need to be able to handle that too
+   * For PHOENIX-1126, Phoenix originally assumed all the annotation values were
+   * integers, but HBase writes some strings as well, so we need to be able to
+   * handle that too
    */
   @Test
-  public void testNonIntegerAnnotations(){
+  public void testNonIntegerAnnotations() {
     Span span = getSpan();
     // make sure its less than the length of an integer
     byte[] value = Bytes.toBytes("a");
     byte[] someInt = Bytes.toBytes(1);
-    assertTrue(someInt.length >value.length);
+    assertTrue(someInt.length > value.length);
 
     // an annotation that is not an integer
     span.addKVAnnotation(Bytes.toBytes("key"), value);
@@ -61,7 +64,7 @@ public class TraceMetricsSourceTest {
   }
 
   @Test
-  public void testIntegerAnnotations(){
+  public void testIntegerAnnotations() {
     Span span = getSpan();
 
     // add annotation through the phoenix interfaces
@@ -72,11 +75,12 @@ public class TraceMetricsSourceTest {
   }
 
   /**
-   * If the source does not write any metrics when there are no spans, i.e. when initialized,
-   * then the metrics system will discard the source, so it needs to always emit some metrics.
+   * If the source does not write any metrics when there are no spans, i.e. when
+   * initialized, then the metrics system will discard the source, so it needs
+   * to always emit some metrics.
    */
   @Test
-  public void testWritesInfoWhenNoSpans(){
+  public void testWritesInfoWhenNoSpans() {
     TraceMetricSource source = new TraceMetricSource();
     MetricsCollector collector = Mockito.mock(MetricsCollector.class);
     MetricsRecordBuilder builder = Mockito.mock(MetricsRecordBuilder.class);
@@ -89,7 +93,12 @@ public class TraceMetricsSourceTest {
     Mockito.verify(builder).add(Mockito.any(MetricsTag.class));
   }
 
-  private Span getSpan(){
-    return new MilliSpan("test span", 0, 1 , 2, "pid");
+  private Span getSpan() {
+    return new MilliSpan.Builder().description("test span")
+            .traceId(0)
+            .parents(Arrays.asList(1L))
+            .spanId(2)
+            .processId("pid")
+            .build();
   }
 }

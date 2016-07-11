@@ -15,16 +15,15 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
 
 public class MaxMemoryMonitor implements Monitor {
 
-    @Override
-    public Stat getStat() {
-        Stat<Long> stat = new Stat(new Long(Runtime.getRuntime().maxMemory()));
-        return stat;
-    }
+  @Override
+  public Stat getStat() {
+    Stat<Long> stat = new Stat(new Long(Runtime.getRuntime().maxMemory()));
+    return stat;
+  }
 }

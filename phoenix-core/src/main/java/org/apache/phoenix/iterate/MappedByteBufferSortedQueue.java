@@ -35,138 +35,142 @@ import org.apache.phoenix.util.ResultUtil;
 import com.google.common.collect.MinMaxPriorityQueue;
 
 public class MappedByteBufferSortedQueue extends MappedByteBufferQueue<ResultEntry> {
-    private Comparator<ResultEntry> comparator;
-    private final int limit;
 
-    public MappedByteBufferSortedQueue(Comparator<ResultEntry> comparator,
-            Integer limit, int thresholdBytes) throws IOException {
-        super(thresholdBytes);
-        this.comparator = comparator;
-        this.limit = limit == null ? -1 : limit;
+  private Comparator<ResultEntry> comparator;
+  private final int limit;
+
+  public MappedByteBufferSortedQueue(Comparator<ResultEntry> comparator,
+          Integer limit, int thresholdBytes) throws IOException {
+    super(thresholdBytes);
+    this.comparator = comparator;
+    this.limit = limit == null ? -1 : limit;
+  }
+
+  @Override
+  protected org.apache.phoenix.iterate.MappedByteBufferQueue.MappedByteBufferSegmentQueue<ResultEntry> createSegmentQueue(
+          int index, int thresholdBytes) {
+    return new MappedByteBufferResultEntryPriorityQueue(index, thresholdBytes, limit, comparator);
+  }
+
+  @Override
+  protected Comparator<org.apache.phoenix.iterate.MappedByteBufferQueue.MappedByteBufferSegmentQueue<ResultEntry>> getSegmentQueueComparator() {
+    return new Comparator<MappedByteBufferSegmentQueue<ResultEntry>>() {
+      @Override
+      public int compare(MappedByteBufferSegmentQueue<ResultEntry> q1,
+              MappedByteBufferSegmentQueue<ResultEntry> q2) {
+        return comparator.compare(q1.peek(), q2.peek());
+      }
+    };
+  }
+
+  private static class MappedByteBufferResultEntryPriorityQueue extends MappedByteBufferSegmentQueue<ResultEntry> {
+
+    private MinMaxPriorityQueue<ResultEntry> results = null;
+
+    public MappedByteBufferResultEntryPriorityQueue(int index,
+            int thresholdBytes, int limit, Comparator<ResultEntry> comparator) {
+      super(index, thresholdBytes, limit >= 0);
+      this.results = limit < 0
+              ? MinMaxPriorityQueue.<ResultEntry>orderedBy(comparator).create()
+              : MinMaxPriorityQueue.<ResultEntry>orderedBy(comparator).maximumSize(limit).create();
     }
 
     @Override
-    protected org.apache.phoenix.iterate.MappedByteBufferQueue.MappedByteBufferSegmentQueue<ResultEntry> createSegmentQueue(
-            int index, int thresholdBytes) {
-        return new MappedByteBufferResultEntryPriorityQueue(index, thresholdBytes, limit, comparator);
+    protected Queue<ResultEntry> getInMemoryQueue() {
+      return results;
     }
 
     @Override
-    protected Comparator<org.apache.phoenix.iterate.MappedByteBufferQueue.MappedByteBufferSegmentQueue<ResultEntry>> getSegmentQueueComparator() {
-        return new Comparator<MappedByteBufferSegmentQueue<ResultEntry>>() {
-            @Override
-            public int compare(MappedByteBufferSegmentQueue<ResultEntry> q1,
-                    MappedByteBufferSegmentQueue<ResultEntry> q2) {
-                return comparator.compare(q1.peek(), q2.peek());
-            }};
+    protected int sizeOf(ResultEntry e) {
+      return sizeof(e.sortKeys) + sizeof(toKeyValues(e));
     }
 
-    private static class MappedByteBufferResultEntryPriorityQueue extends MappedByteBufferSegmentQueue<ResultEntry> {    	
-        private MinMaxPriorityQueue<ResultEntry> results = null;
-        
-    	public MappedByteBufferResultEntryPriorityQueue(int index,
-                int thresholdBytes, int limit, Comparator<ResultEntry> comparator) {
-            super(index, thresholdBytes, limit >= 0);
-            this.results = limit < 0 ? 
-                    MinMaxPriorityQueue.<ResultEntry> orderedBy(comparator).create()
-                  : MinMaxPriorityQueue.<ResultEntry> orderedBy(comparator).maximumSize(limit).create();
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void writeToBuffer(MappedByteBuffer buffer, ResultEntry e) {
+      int totalLen = 0;
+      List<KeyValue> keyValues = toKeyValues(e);
+      for (KeyValue kv : keyValues) {
+        totalLen += (kv.getLength() + Bytes.SIZEOF_INT);
+      }
+      buffer.putInt(totalLen);
+      for (KeyValue kv : keyValues) {
+        buffer.putInt(kv.getLength());
+        buffer.put(kv.getBuffer(), kv.getOffset(), kv
+                .getLength());
+      }
+      ImmutableBytesWritable[] sortKeys = e.sortKeys;
+      buffer.putInt(sortKeys.length);
+      for (ImmutableBytesWritable sortKey : sortKeys) {
+        if (sortKey != null) {
+          buffer.putInt(sortKey.getLength());
+          buffer.put(sortKey.get(), sortKey.getOffset(),
+                  sortKey.getLength());
+        } else {
+          buffer.putInt(0);
         }
-
-        @Override
-        protected Queue<ResultEntry> getInMemoryQueue() {
-            return results;
-        }
-
-        @Override
-        protected int sizeOf(ResultEntry e) {
-            return sizeof(e.sortKeys) + sizeof(toKeyValues(e));
-        }
-
-        @SuppressWarnings("deprecation")
-        @Override
-        protected void writeToBuffer(MappedByteBuffer buffer, ResultEntry e) {
-            int totalLen = 0;
-            List<KeyValue> keyValues = toKeyValues(e);
-            for (KeyValue kv : keyValues) {
-                totalLen += (kv.getLength() + Bytes.SIZEOF_INT);
-            }
-            buffer.putInt(totalLen);
-            for (KeyValue kv : keyValues) {
-                buffer.putInt(kv.getLength());
-                buffer.put(kv.getBuffer(), kv.getOffset(), kv
-                        .getLength());
-            }
-            ImmutableBytesWritable[] sortKeys = e.sortKeys;
-            buffer.putInt(sortKeys.length);
-            for (ImmutableBytesWritable sortKey : sortKeys) {
-                if (sortKey != null) {
-                    buffer.putInt(sortKey.getLength());
-                    buffer.put(sortKey.get(), sortKey.getOffset(),
-                            sortKey.getLength());
-                } else {
-                    buffer.putInt(0);
-                }
-            }
-        }
-
-        @Override
-        protected ResultEntry readFromBuffer(MappedByteBuffer buffer) {            
-            int length = buffer.getInt();
-            if (length < 0)
-                return null;
-            
-            byte[] rb = new byte[length];
-            buffer.get(rb);
-            Result result = ResultUtil.toResult(new ImmutableBytesWritable(rb));
-            ResultTuple rt = new ResultTuple(result);
-            int sortKeySize = buffer.getInt();
-            ImmutableBytesWritable[] sortKeys = new ImmutableBytesWritable[sortKeySize];
-            for (int i = 0; i < sortKeySize; i++) {
-                int contentLength = buffer.getInt();
-                if (contentLength > 0) {
-                    byte[] sortKeyContent = new byte[contentLength];
-                    buffer.get(sortKeyContent);
-                    sortKeys[i] = new ImmutableBytesWritable(sortKeyContent);
-                } else {
-                    sortKeys[i] = null;
-                }
-            }
-            
-            return new ResultEntry(sortKeys, rt);
-        }
-
-        private List<KeyValue> toKeyValues(ResultEntry entry) {
-            Tuple result = entry.getResult();
-            int size = result.size();
-            List<KeyValue> kvs = new ArrayList<KeyValue>(size);
-            for (int i = 0; i < size; i++) {
-                kvs.add(org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(result.getValue(i)));
-            }
-            return kvs;
-        }
-
-        private int sizeof(List<KeyValue> kvs) {
-            int size = Bytes.SIZEOF_INT; // totalLen
-
-            for (KeyValue kv : kvs) {
-                size += kv.getLength();
-                size += Bytes.SIZEOF_INT; // kv.getLength
-            }
-
-            return size;
-        }
-
-        private int sizeof(ImmutableBytesWritable[] sortKeys) {
-            int size = Bytes.SIZEOF_INT;
-            if (sortKeys != null) {
-                for (ImmutableBytesWritable sortKey : sortKeys) {
-                    if (sortKey != null) {
-                        size += sortKey.getLength();
-                    }
-                    size += Bytes.SIZEOF_INT;
-                }
-            }
-            return size;
-        }
+      }
     }
+
+    @Override
+    protected ResultEntry readFromBuffer(MappedByteBuffer buffer) {
+      int length = buffer.getInt();
+      if (length < 0) {
+        return null;
+      }
+
+      byte[] rb = new byte[length];
+      buffer.get(rb);
+      Result result = ResultUtil.toResult(new ImmutableBytesWritable(rb));
+      ResultTuple rt = new ResultTuple(result);
+      int sortKeySize = buffer.getInt();
+      ImmutableBytesWritable[] sortKeys = new ImmutableBytesWritable[sortKeySize];
+      for (int i = 0; i < sortKeySize; i++) {
+        int contentLength = buffer.getInt();
+        if (contentLength > 0) {
+          byte[] sortKeyContent = new byte[contentLength];
+          buffer.get(sortKeyContent);
+          sortKeys[i] = new ImmutableBytesWritable(sortKeyContent);
+        } else {
+          sortKeys[i] = null;
+        }
+      }
+
+      return new ResultEntry(sortKeys, rt);
+    }
+
+    private List<KeyValue> toKeyValues(ResultEntry entry) {
+      Tuple result = entry.getResult();
+      int size = result.size();
+      List<KeyValue> kvs = new ArrayList<KeyValue>(size);
+      for (int i = 0; i < size; i++) {
+        kvs.add(org.apache.hadoop.hbase.KeyValueUtil.ensureKeyValue(result.getValue(i)));
+      }
+      return kvs;
+    }
+
+    private int sizeof(List<KeyValue> kvs) {
+      int size = Bytes.SIZEOF_INT; // totalLen
+
+      for (KeyValue kv : kvs) {
+        size += kv.getLength();
+        size += Bytes.SIZEOF_INT; // kv.getLength
+      }
+
+      return size;
+    }
+
+    private int sizeof(ImmutableBytesWritable[] sortKeys) {
+      int size = Bytes.SIZEOF_INT;
+      if (sortKeys != null) {
+        for (ImmutableBytesWritable sortKey : sortKeys) {
+          if (sortKey != null) {
+            size += sortKey.getLength();
+          }
+          size += Bytes.SIZEOF_INT;
+        }
+      }
+      return size;
+    }
+  }
 }

@@ -47,235 +47,235 @@ import org.junit.experimental.categories.Category;
 @Category(NeedsOwnMiniClusterTest.class)
 public class CsvBulkLoadToolIT {
 
-    // We use HBaseTestUtil because we need to start up a MapReduce cluster as well
-    private static HBaseTestingUtility hbaseTestUtil;
-    private static String zkQuorum;
-    private static Connection conn;
+  // We use HBaseTestUtil because we need to start up a MapReduce cluster as well
+  private static HBaseTestingUtility hbaseTestUtil;
+  private static String zkQuorum;
+  private static Connection conn;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        hbaseTestUtil = new HBaseTestingUtility();
-        Configuration conf = hbaseTestUtil.getConfiguration();
-        setUpConfigForMiniCluster(conf);
-        hbaseTestUtil.startMiniCluster();
-        hbaseTestUtil.startMiniMapReduceCluster();
+  @BeforeClass
+  public static void setUp() throws Exception {
+    hbaseTestUtil = new HBaseTestingUtility();
+    Configuration conf = hbaseTestUtil.getConfiguration();
+    setUpConfigForMiniCluster(conf);
+    hbaseTestUtil.startMiniCluster();
+    hbaseTestUtil.startMiniMapReduceCluster();
 
-        Class.forName(PhoenixDriver.class.getName());
-        zkQuorum = "localhost:" + hbaseTestUtil.getZkCluster().getClientPort();
-        conn = DriverManager.getConnection(PhoenixRuntime.JDBC_PROTOCOL
-                + PhoenixRuntime.JDBC_PROTOCOL_SEPARATOR + zkQuorum);
-    }
+    Class.forName(PhoenixDriver.class.getName());
+    zkQuorum = "localhost:" + hbaseTestUtil.getZkCluster().getClientPort();
+    conn = DriverManager.getConnection(PhoenixRuntime.JDBC_PROTOCOL
+            + PhoenixRuntime.JDBC_PROTOCOL_SEPARATOR + zkQuorum);
+  }
 
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
+  @AfterClass
+  public static void tearDownAfterClass() throws Exception {
+    try {
+      conn.close();
+    } finally {
+      try {
+        PhoenixDriver.INSTANCE.close();
+      } finally {
         try {
-            conn.close();
+          DriverManager.deregisterDriver(PhoenixDriver.INSTANCE);
         } finally {
-            try {
-                PhoenixDriver.INSTANCE.close();
-            } finally {
-                try {
-                    DriverManager.deregisterDriver(PhoenixDriver.INSTANCE);
-                } finally {                    
-                    try {
-                        hbaseTestUtil.shutdownMiniMapReduceCluster();
-                    } finally {
-                        hbaseTestUtil.shutdownMiniCluster();
-                    }
-                }
-            }
+          try {
+            hbaseTestUtil.shutdownMiniMapReduceCluster();
+          } finally {
+            hbaseTestUtil.shutdownMiniCluster();
+          }
         }
+      }
     }
+  }
 
-    @Test
-    public void testBasicImport() throws Exception {
+  @Test
+  public void testBasicImport() throws Exception {
 
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE TABLE1 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR, T DATE)");
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE TABLE1 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR, T DATE)");
 
-        FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
-        FSDataOutputStream outputStream = fs.create(new Path("/tmp/input1.csv"));
-        PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("1,Name 1,1970/01/01");
-        printWriter.println("2,Name 2,1970/01/02");
-        printWriter.close();
+    FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
+    FSDataOutputStream outputStream = fs.create(new Path("/tmp/input1.csv"));
+    PrintWriter printWriter = new PrintWriter(outputStream);
+    printWriter.println("1,Name 1,1970/01/01");
+    printWriter.println("2,Name 2,1970/01/02");
+    printWriter.close();
 
-        CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
-        csvBulkLoadTool.setConf(new Configuration(hbaseTestUtil.getConfiguration()));
-        csvBulkLoadTool.getConf().set(DATE_FORMAT_ATTRIB,"yyyy/MM/dd");
-        int exitCode = csvBulkLoadTool.run(new String[] {
-                "--input", "/tmp/input1.csv",
-                "--table", "table1",
-                "--zookeeper", zkQuorum});
-        assertEquals(0, exitCode);
+    CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
+    csvBulkLoadTool.setConf(new Configuration(hbaseTestUtil.getConfiguration()));
+    csvBulkLoadTool.getConf().set(DATE_FORMAT_ATTRIB, "yyyy/MM/dd");
+    int exitCode = csvBulkLoadTool.run(new String[]{
+      "--input", "/tmp/input1.csv",
+      "--table", "table1",
+      "--zookeeper", zkQuorum});
+    assertEquals(0, exitCode);
 
-        ResultSet rs = stmt.executeQuery("SELECT id, name, t FROM table1 ORDER BY id");
-        assertTrue(rs.next());
-        assertEquals(1, rs.getInt(1));
-        assertEquals("Name 1", rs.getString(2));
-        assertEquals(DateUtil.parseDate("1970-01-01"), rs.getDate(3));
-        assertTrue(rs.next());
-        assertEquals(2, rs.getInt(1));
-        assertEquals("Name 2", rs.getString(2));
-        assertEquals(DateUtil.parseDate("1970-01-02"), rs.getDate(3));
-        assertFalse(rs.next());
+    ResultSet rs = stmt.executeQuery("SELECT id, name, t FROM table1 ORDER BY id");
+    assertTrue(rs.next());
+    assertEquals(1, rs.getInt(1));
+    assertEquals("Name 1", rs.getString(2));
+    assertEquals(DateUtil.parseDate("1970-01-01"), rs.getDate(3));
+    assertTrue(rs.next());
+    assertEquals(2, rs.getInt(1));
+    assertEquals("Name 2", rs.getString(2));
+    assertEquals(DateUtil.parseDate("1970-01-02"), rs.getDate(3));
+    assertFalse(rs.next());
 
-        rs.close();
-        stmt.close();
-    }
+    rs.close();
+    stmt.close();
+  }
 
-    @Test
-    public void testFullOptionImport() throws Exception {
+  @Test
+  public void testFullOptionImport() throws Exception {
 
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE TABLE2 (ID INTEGER NOT NULL PRIMARY KEY, " +
-                "NAME VARCHAR, NAMES VARCHAR ARRAY)");
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE TABLE2 (ID INTEGER NOT NULL PRIMARY KEY, "
+            + "NAME VARCHAR, NAMES VARCHAR ARRAY)");
 
-        FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
-        FSDataOutputStream outputStream = fs.create(new Path("/tmp/input2.csv"));
-        PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("1|Name 1a;Name 1b");
-        printWriter.println("2|Name 2a;Name 2b");
-        printWriter.close();
+    FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
+    FSDataOutputStream outputStream = fs.create(new Path("/tmp/input2.csv"));
+    PrintWriter printWriter = new PrintWriter(outputStream);
+    printWriter.println("1|Name 1a;Name 1b");
+    printWriter.println("2|Name 2a;Name 2b");
+    printWriter.close();
 
-        CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
-        csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
-        int exitCode = csvBulkLoadTool.run(new String[] {
-                "--input", "/tmp/input2.csv",
-                "--table", "table2",
-                "--zookeeper", zkQuorum,
-                "--delimiter", "|",
-                "--array-delimiter", ";",
-                "--import-columns", "ID,NAMES"});
-        assertEquals(0, exitCode);
+    CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
+    csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
+    int exitCode = csvBulkLoadTool.run(new String[]{
+      "--input", "/tmp/input2.csv",
+      "--table", "table2",
+      "--zookeeper", zkQuorum,
+      "--delimiter", "|",
+      "--array-delimiter", ";",
+      "--import-columns", "ID,NAMES"});
+    assertEquals(0, exitCode);
 
-        ResultSet rs = stmt.executeQuery("SELECT id, names FROM table2 ORDER BY id");
-        assertTrue(rs.next());
-        assertEquals(1, rs.getInt(1));
-        assertArrayEquals(new Object[] { "Name 1a", "Name 1b" }, (Object[]) rs.getArray(2).getArray());
-        assertTrue(rs.next());
-        assertEquals(2, rs.getInt(1));
-        assertArrayEquals(new Object[] { "Name 2a", "Name 2b" }, (Object[]) rs.getArray(2).getArray());
-        assertFalse(rs.next());
+    ResultSet rs = stmt.executeQuery("SELECT id, names FROM table2 ORDER BY id");
+    assertTrue(rs.next());
+    assertEquals(1, rs.getInt(1));
+    assertArrayEquals(new Object[]{"Name 1a", "Name 1b"}, (Object[]) rs.getArray(2).getArray());
+    assertTrue(rs.next());
+    assertEquals(2, rs.getInt(1));
+    assertArrayEquals(new Object[]{"Name 2a", "Name 2b"}, (Object[]) rs.getArray(2).getArray());
+    assertFalse(rs.next());
 
-        rs.close();
-        stmt.close();
-    }
+    rs.close();
+    stmt.close();
+  }
 
-    @Test
-    public void testImportWithIndex() throws Exception {
+  @Test
+  public void testImportWithIndex() throws Exception {
 
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE TABLE3 (ID INTEGER NOT NULL PRIMARY KEY, " +
-            "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
-        String ddl = "CREATE INDEX TABLE3_IDX ON TABLE3 "
-                + " (FIRST_NAME ASC)"
-                + " INCLUDE (LAST_NAME)";
-        stmt.execute(ddl);
-        
-        FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
-        FSDataOutputStream outputStream = fs.create(new Path("/tmp/input3.csv"));
-        PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("1,FirstName 1,LastName 1");
-        printWriter.println("2,FirstName 2,LastName 2");
-        printWriter.close();
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE TABLE3 (ID INTEGER NOT NULL PRIMARY KEY, "
+            + "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
+    String ddl = "CREATE INDEX TABLE3_IDX ON TABLE3 "
+            + " (FIRST_NAME ASC)"
+            + " INCLUDE (LAST_NAME)";
+    stmt.execute(ddl);
 
-        CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
-        csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
-        int exitCode = csvBulkLoadTool.run(new String[] {
-                "--input", "/tmp/input3.csv",
-                "--table", "table3",
-                "--zookeeper", zkQuorum});
-        assertEquals(0, exitCode);
+    FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
+    FSDataOutputStream outputStream = fs.create(new Path("/tmp/input3.csv"));
+    PrintWriter printWriter = new PrintWriter(outputStream);
+    printWriter.println("1,FirstName 1,LastName 1");
+    printWriter.println("2,FirstName 2,LastName 2");
+    printWriter.close();
 
-        ResultSet rs = stmt.executeQuery("SELECT id, FIRST_NAME FROM TABLE3 where first_name='FirstName 2'");
-        assertTrue(rs.next());
-        assertEquals(2, rs.getInt(1));
-        assertEquals("FirstName 2", rs.getString(2));
+    CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
+    csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
+    int exitCode = csvBulkLoadTool.run(new String[]{
+      "--input", "/tmp/input3.csv",
+      "--table", "table3",
+      "--zookeeper", zkQuorum});
+    assertEquals(0, exitCode);
 
-        rs.close();
-        stmt.close();
-    }
+    ResultSet rs = stmt.executeQuery("SELECT id, FIRST_NAME FROM TABLE3 where first_name='FirstName 2'");
+    assertTrue(rs.next());
+    assertEquals(2, rs.getInt(1));
+    assertEquals("FirstName 2", rs.getString(2));
 
-    @Test
-    public void testImportWithLocalIndex() throws Exception {
+    rs.close();
+    stmt.close();
+  }
 
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE TABLE6 (ID INTEGER NOT NULL PRIMARY KEY, " +
-                "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
-        String ddl = "CREATE LOCAL INDEX TABLE6_IDX ON TABLE6 "
-                + " (FIRST_NAME ASC)";
-        stmt.execute(ddl);
+  @Test
+  public void testImportWithLocalIndex() throws Exception {
 
-        FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
-        FSDataOutputStream outputStream = fs.create(new Path("/tmp/input3.csv"));
-        PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("1,FirstName 1,LastName 1");
-        printWriter.println("2,FirstName 2,LastName 2");
-        printWriter.close();
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE TABLE6 (ID INTEGER NOT NULL PRIMARY KEY, "
+            + "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
+    String ddl = "CREATE LOCAL INDEX TABLE6_IDX ON TABLE6 "
+            + " (FIRST_NAME ASC)";
+    stmt.execute(ddl);
 
-        CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
-        csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
-        int exitCode = csvBulkLoadTool.run(new String[] {
-                "--input", "/tmp/input3.csv",
-                "--table", "table6",
-                "--zookeeper", zkQuorum});
-        assertEquals(0, exitCode);
+    FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
+    FSDataOutputStream outputStream = fs.create(new Path("/tmp/input3.csv"));
+    PrintWriter printWriter = new PrintWriter(outputStream);
+    printWriter.println("1,FirstName 1,LastName 1");
+    printWriter.println("2,FirstName 2,LastName 2");
+    printWriter.close();
 
-        ResultSet rs = stmt.executeQuery("SELECT id, FIRST_NAME FROM TABLE6 where first_name='FirstName 2'");
-        assertTrue(rs.next());
-        assertEquals(2, rs.getInt(1));
-        assertEquals("FirstName 2", rs.getString(2));
+    CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
+    csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
+    int exitCode = csvBulkLoadTool.run(new String[]{
+      "--input", "/tmp/input3.csv",
+      "--table", "table6",
+      "--zookeeper", zkQuorum});
+    assertEquals(0, exitCode);
 
-        rs.close();
-        stmt.close();
-    }
+    ResultSet rs = stmt.executeQuery("SELECT id, FIRST_NAME FROM TABLE6 where first_name='FirstName 2'");
+    assertTrue(rs.next());
+    assertEquals(2, rs.getInt(1));
+    assertEquals("FirstName 2", rs.getString(2));
 
-    @Test
-    public void testImportOneIndexTable() throws Exception {
-        testImportOneIndexTable("TABLE4", false);
-    }
+    rs.close();
+    stmt.close();
+  }
 
-    @Test
-    public void testImportOneLocalIndexTable() throws Exception {
-        testImportOneIndexTable("TABLE5", true);
-    }
+  @Test
+  public void testImportOneIndexTable() throws Exception {
+    testImportOneIndexTable("TABLE4", false);
+  }
 
-    public void testImportOneIndexTable(String tableName, boolean localIndex) throws Exception {
+  @Test
+  public void testImportOneLocalIndexTable() throws Exception {
+    testImportOneIndexTable("TABLE5", true);
+  }
 
-        String indexTableName = String.format("%s_IDX", tableName);
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE " + tableName + "(ID INTEGER NOT NULL PRIMARY KEY, "
-                + "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
-        String ddl =
-                "CREATE " + (localIndex ? "LOCAL" : "") + " INDEX " + indexTableName + " ON "
-                        + tableName + "(FIRST_NAME ASC)";
-        stmt.execute(ddl);
+  public void testImportOneIndexTable(String tableName, boolean localIndex) throws Exception {
 
-        FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
-        FSDataOutputStream outputStream = fs.create(new Path("/tmp/input4.csv"));
-        PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("1,FirstName 1,LastName 1");
-        printWriter.println("2,FirstName 2,LastName 2");
-        printWriter.close();
+    String indexTableName = String.format("%s_IDX", tableName);
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE " + tableName + "(ID INTEGER NOT NULL PRIMARY KEY, "
+            + "FIRST_NAME VARCHAR, LAST_NAME VARCHAR)");
+    String ddl
+            = "CREATE " + (localIndex ? "LOCAL" : "") + " INDEX " + indexTableName + " ON "
+            + tableName + "(FIRST_NAME ASC)";
+    stmt.execute(ddl);
 
-        CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
-        csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
-        int exitCode = csvBulkLoadTool.run(new String[] {
-                "--input", "/tmp/input4.csv",
-                "--table", tableName,
-                "--index-table", indexTableName,
-                "--zookeeper", zkQuorum });
-        assertEquals(0, exitCode);
+    FileSystem fs = FileSystem.get(hbaseTestUtil.getConfiguration());
+    FSDataOutputStream outputStream = fs.create(new Path("/tmp/input4.csv"));
+    PrintWriter printWriter = new PrintWriter(outputStream);
+    printWriter.println("1,FirstName 1,LastName 1");
+    printWriter.println("2,FirstName 2,LastName 2");
+    printWriter.close();
 
-        ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName);
-        assertFalse(rs.next());
-        rs = stmt.executeQuery("SELECT FIRST_NAME FROM " + tableName + " where FIRST_NAME='FirstName 1'");
-        assertTrue(rs.next());
-        assertEquals("FirstName 1", rs.getString(1));
+    CsvBulkLoadTool csvBulkLoadTool = new CsvBulkLoadTool();
+    csvBulkLoadTool.setConf(hbaseTestUtil.getConfiguration());
+    int exitCode = csvBulkLoadTool.run(new String[]{
+      "--input", "/tmp/input4.csv",
+      "--table", tableName,
+      "--index-table", indexTableName,
+      "--zookeeper", zkQuorum});
+    assertEquals(0, exitCode);
 
-        rs.close();
-        stmt.close();
-    }
-    
+    ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName);
+    assertFalse(rs.next());
+    rs = stmt.executeQuery("SELECT FIRST_NAME FROM " + tableName + " where FIRST_NAME='FirstName 1'");
+    assertTrue(rs.next());
+    assertEquals("FirstName 1", rs.getString(1));
+
+    rs.close();
+    stmt.close();
+  }
+
 }

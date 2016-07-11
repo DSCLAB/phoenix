@@ -28,12 +28,13 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Longs;
 
 /**
- * Unsigned long type that restricts values to be from 0 to {@link Long#MAX_VALUE}
- * inclusive. May be used to map to existing HTable values created through
- * {@link org.apache.hadoop.hbase.util.Bytes#toBytes(long)}
- * as long as all values are non negative (the leading sign bit of negative numbers would cause
- * them to sort ahead of positive numbers when they're used as part of the row key when using the
- * HBase utility methods).
+ * Unsigned long type that restricts values to be from 0 to
+ * {@link Long#MAX_VALUE} inclusive. May be used to map to existing HTable
+ * values created through
+ * {@link org.apache.hadoop.hbase.util.Bytes#toBytes(long)} as long as all
+ * values are non negative (the leading sign bit of negative numbers would cause
+ * them to sort ahead of positive numbers when they're used as part of the row
+ * key when using the HBase utility methods).
  */
 public class PUnsignedLong extends PWholeNumber<Long> {
 
@@ -41,7 +42,7 @@ public class PUnsignedLong extends PWholeNumber<Long> {
 
   private PUnsignedLong() {
     super("UNSIGNED_LONG", 10 /* no constant available in Types */, Long.class,
-        new UnsignedLongCodec(), 15);
+            new UnsignedLongCodec(), 15);
   }
 
   @Override
@@ -88,21 +89,21 @@ public class PUnsignedLong extends PWholeNumber<Long> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Long v = (Long) PLong.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeNumber(v);
     return v;
   }
 
   @Override
-    public boolean isCastableTo(PDataType targetType) {
-      return super.isCastableTo(targetType) || targetType.isCoercibleTo(PTimestamp.INSTANCE);
-    }
+  public boolean isCastableTo(PDataType targetType) {
+    return super.isCastableTo(targetType) || targetType.isCoercibleTo(PTimestamp.INSTANCE);
+  }
 
   @Override
   public boolean isCoercibleTo(PDataType targetType) {
     return targetType == this || targetType == PUnsignedDouble.INSTANCE || PLong.INSTANCE
-        .isCoercibleTo(targetType);
+            .isCoercibleTo(targetType);
   }
 
   @Override
@@ -125,7 +126,7 @@ public class PUnsignedLong extends PWholeNumber<Long> {
     if (rhsType == PDecimal.INSTANCE) {
       return -((BigDecimal) rhs).compareTo(BigDecimal.valueOf(((Number) lhs).longValue()));
     } else if (equalsAny(rhsType, PDouble.INSTANCE, PFloat.INSTANCE, PUnsignedDouble.INSTANCE,
-        PUnsignedFloat.INSTANCE)) {
+            PUnsignedFloat.INSTANCE)) {
       return Doubles.compare(((Number) lhs).doubleValue(), ((Number) rhs).doubleValue());
     }
     return Longs.compare(((Number) lhs).longValue(), ((Number) rhs).longValue());

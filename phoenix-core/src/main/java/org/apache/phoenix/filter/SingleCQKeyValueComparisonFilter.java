@@ -25,34 +25,34 @@ import org.apache.hadoop.hbase.util.Writables;
 
 import org.apache.phoenix.expression.Expression;
 
-
 /**
- * 
- * SingleKeyValueComparisonFilter that needs to only compare the column qualifier
- * part of the key value since the column qualifier is unique across all column
- * families.
  *
- * 
+ * SingleKeyValueComparisonFilter that needs to only compare the column
+ * qualifier part of the key value since the column qualifier is unique across
+ * all column families.
+ *
+ *
  * @since 0.1
  */
 public class SingleCQKeyValueComparisonFilter extends SingleKeyValueComparisonFilter {
-    public SingleCQKeyValueComparisonFilter() {
-    }
 
-    public SingleCQKeyValueComparisonFilter(Expression expression) {
-        super(expression);
-    }
+  public SingleCQKeyValueComparisonFilter() {
+  }
 
-    @Override
-    protected final int compare(byte[] cfBuf, int cfOffset, int cfLength, byte[] cqBuf, int cqOffset, int cqLength) {
-        return Bytes.compareTo(cq, 0, cq.length, cqBuf, cqOffset, cqLength);
-    }
+  public SingleCQKeyValueComparisonFilter(Expression expression) {
+    super(expression);
+  }
 
-    public static SingleCQKeyValueComparisonFilter parseFrom(final byte [] pbBytes) throws DeserializationException {
-        try {
-            return (SingleCQKeyValueComparisonFilter)Writables.getWritable(pbBytes, new SingleCQKeyValueComparisonFilter());
-        } catch (IOException e) {
-            throw new DeserializationException(e);
-        }
+  @Override
+  protected final int compare(byte[] cfBuf, int cfOffset, int cfLength, byte[] cqBuf, int cqOffset, int cqLength) {
+    return Bytes.compareTo(cq, 0, cq.length, cqBuf, cqOffset, cqLength);
+  }
+
+  public static SingleCQKeyValueComparisonFilter parseFrom(final byte[] pbBytes) throws DeserializationException {
+    try {
+      return (SingleCQKeyValueComparisonFilter) Writables.getWritable(pbBytes, new SingleCQKeyValueComparisonFilter());
+    } catch (IOException e) {
+      throw new DeserializationException(e);
     }
+  }
 }

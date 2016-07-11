@@ -21,7 +21,7 @@
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.phoenix</groupId>
@@ -67,7 +67,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-            <finalName>phoenix-${project.version}</finalName>
+              <finalName>phoenix-${project.version}</finalName>
               <attach>false</attach>
               <tarLongFileMode>gnu</tarLongFileMode>
               <appendAssemblyId>false</appendAssemblyId>
@@ -84,7 +84,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-            <finalName>phoenix-${project.version}-source</finalName>
+              <finalName>phoenix-${project.version}-source</finalName>
               <attach>false</attach>
               <tarLongFileMode>gnu</tarLongFileMode>
               <appendAssemblyId>false</appendAssemblyId>
@@ -101,17 +101,17 @@
               <goal>single</goal>
             </goals>
             <configuration>
-            <finalName>phoenix-${project.version}</finalName>
+              <finalName>phoenix-${project.version}</finalName>
               <attach>false</attach>
               <appendAssemblyId>true</appendAssemblyId>
               <descriptors>
-               <!--build the phoenix client jar, but without HBase code. -->
+                <!--build the phoenix client jar, but without HBase code. -->
                 <descriptor>src/build/client-without-hbase.xml</descriptor>
-               <!-- build the phoenix client jar, but without HBase (or its depenencies). -->
+                <!-- build the phoenix client jar, but without HBase (or its depenencies). -->
                 <descriptor>src/build/client-minimal.xml</descriptor>
-               <!-- build the phoenix server side jar, that includes phoenix-hadoopX-compat, phoenix-hadoop-compat and antlr -->
+                <!-- build the phoenix server side jar, that includes phoenix-hadoopX-compat, phoenix-hadoop-compat and antlr -->
                 <descriptor>src/build/server.xml</descriptor>
-               <!-- build the phoenix server side jar, that includes phoenix-hadoopX-compat and phoenix-hadoop-compat. -->
+                <!-- build the phoenix server side jar, that includes phoenix-hadoopX-compat and phoenix-hadoop-compat. -->
                 <descriptor>src/build/server-without-antlr.xml</descriptor>
               </descriptors>
             </configuration>

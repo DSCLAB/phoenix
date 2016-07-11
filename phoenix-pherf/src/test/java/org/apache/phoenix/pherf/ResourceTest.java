@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.pherf.util.ResourceList;
@@ -34,35 +33,36 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertTrue;
 
 public class ResourceTest {
-    @Test
-    public void testSchemaResourceList() throws Exception{
-        String extension = ".sql";
-        assertResources(PherfConstants.SCHEMA_ROOT_PATTERN + extension, PherfConstants.RESOURCE_DATAMODEL, extension);
-    }
 
-    @Test
-    public void testScenarioResourceList() throws Exception {
-        String extension = ".xml";
-        assertResources(PherfConstants.SCENARIO_ROOT_PATTERN + extension, PherfConstants.RESOURCE_SCENARIO, extension);
-    }
+  @Test
+  public void testSchemaResourceList() throws Exception {
+    String extension = ".sql";
+    assertResources(PherfConstants.SCHEMA_ROOT_PATTERN + extension, PherfConstants.RESOURCE_DATAMODEL, extension);
+  }
 
-    @Test
-    public void testResourceListPropertyDirectory() throws Exception {
+  @Test
+  public void testScenarioResourceList() throws Exception {
+    String extension = ".xml";
+    assertResources(PherfConstants.SCENARIO_ROOT_PATTERN + extension, PherfConstants.RESOURCE_SCENARIO, extension);
+  }
 
-        ResourceList list = new ResourceList();
-        Properties properties = list.getProperties();
-        assertTrue("Property file list was empty", properties.size() > 0);
-        assertNotNull(properties.getProperty("pherf.default.dataloader.threadpool"));
-    }
+  @Test
+  public void testResourceListPropertyDirectory() throws Exception {
 
-    private Collection<Path> assertResources(String pattern, String rootDir, String assertStr) throws Exception {
-        ResourceList list = new ResourceList(rootDir);
-        Collection<Path> paths =
-                list.getResourceList(pattern);
-        assertTrue("Resource file list was empty", paths.size() > 0);
-        for (Path path : paths) {
-            assertThat(path.toString(), containsString(assertStr));
-        }
-        return paths;
+    ResourceList list = new ResourceList();
+    Properties properties = list.getProperties();
+    assertTrue("Property file list was empty", properties.size() > 0);
+    assertNotNull(properties.getProperty("pherf.default.dataloader.threadpool"));
+  }
+
+  private Collection<Path> assertResources(String pattern, String rootDir, String assertStr) throws Exception {
+    ResourceList list = new ResourceList(rootDir);
+    Collection<Path> paths
+            = list.getResourceList(pattern);
+    assertTrue("Resource file list was empty", paths.size() > 0);
+    for (Path path : paths) {
+      assertThat(path.toString(), containsString(assertStr));
     }
+    return paths;
+  }
 }

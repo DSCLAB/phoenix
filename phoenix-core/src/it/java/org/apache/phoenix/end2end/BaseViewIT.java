@@ -137,7 +137,10 @@ public abstract class BaseViewIT extends BaseOwnClusterHBaseManagedTimeIT {
     } else {
       assertEquals(saltBuckets == null
               ? "CLIENT PARALLEL 1-WAY RANGE SCAN OVER _IDX_T [" + Short.MIN_VALUE + ",51]"
-              : "CLIENT PARALLEL " + saltBuckets + "-WAY RANGE SCAN OVER _IDX_T [0," + Short.MIN_VALUE + ",51]\nCLIENT MERGE SORT",
+              : "CLIENT PARALLEL " + saltBuckets + "-WAY RANGE SCAN OVER _IDX_T"
+                + " [0," + Short.MIN_VALUE + ",51] - ["
+                + (saltBuckets-1)+","
+                + Short.MIN_VALUE + ",51]\nCLIENT MERGE SORT",
               queryPlan);
     }
 

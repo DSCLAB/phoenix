@@ -147,11 +147,7 @@ public class ScanRanges {
     this.scanRange = scanRange;
     this.minMaxRange = minMaxRange;
 
-    // Only blow out the bucket values if we're using the skip scan. We need all the
-    // bucket values in this case because we use intersect against a key that may have
-    // any of the possible bucket values. Otherwise, we can pretty easily ignore the
-    // bucket values.
-    if (useSkipScanFilter && isSalted && !isPointLookup) {
+    if (isSalted && !isPointLookup) {
       ranges.set(0, SaltingUtil.generateAllSaltingRanges(bucketNum));
     }
     this.ranges = ImmutableList.copyOf(ranges);
@@ -215,7 +211,6 @@ public class ScanRanges {
     if (stopKey.length > 0 && Bytes.compareTo(startKey, stopKey) >= 0) {
       return null;
     }
-    boolean mayHaveRows = false;
     // Keep the keys as they are if we have a point lookup, as we've already resolved the
     // salt bytes in that case.
     final int scanKeyOffset = this.isSalted && !this.isPointLookup ? SaltingUtil.NUM_SALTING_BYTES : 0;
@@ -240,49 +235,49 @@ public class ScanRanges {
       }
     }
     int scanStartKeyOffset = scanKeyOffset;
-    byte[] scanStartKey = scan == null ? ByteUtil.EMPTY_BYTE_ARRAY : scan.getStartRow();
+    byte[] scanStartKey = scan == null ? this.scanRange.getLowerRange() : scan.getStartRow();
     // Compare ignoring key prefix and salt byte
-    if (scanStartKey.length > 0) {
-      if (startKey.length > 0 && Bytes.compareTo(scanStartKey, scanKeyOffset, scanStartKey.length - scanKeyOffset, startKey, totalKeyOffset, startKey.length - totalKeyOffset) < 0) {
-        scanStartKey = startKey;
-        scanStartKeyOffset = totalKeyOffset;
+    if (scanStartKey.length - scanKeyOffset > 0) {
+      if (startKey.length - totalKeyOffset > 0) {
+        if (Bytes.compareTo(scanStartKey, scanKeyOffset, scanStartKey.length - scanKeyOffset, startKey, totalKeyOffset, startKey.length - totalKeyOffset) < 0) {
+          scanStartKey = startKey;
+          scanStartKeyOffset = totalKeyOffset;
+        }
       }
     } else {
       scanStartKey = startKey;
       scanStartKeyOffset = totalKeyOffset;
-      mayHaveRows = true;
     }
     int scanStopKeyOffset = scanKeyOffset;
-    byte[] scanStopKey = scan == null ? ByteUtil.EMPTY_BYTE_ARRAY : scan.getStopRow();
-    if (scanStopKey.length > 0) {
-      if (stopKey.length > 0 && Bytes.compareTo(scanStopKey, scanKeyOffset, scanStopKey.length - scanKeyOffset, stopKey, totalKeyOffset, stopKey.length - totalKeyOffset) > 0) {
-        scanStopKey = stopKey;
-        scanStopKeyOffset = totalKeyOffset;
+    byte[] scanStopKey = scan == null ? this.scanRange.getUpperRange() : scan.getStopRow();
+    if (scanStopKey.length - scanKeyOffset > 0) {
+      if (stopKey.length - totalKeyOffset > 0) {
+        if (Bytes.compareTo(scanStopKey, scanKeyOffset, scanStopKey.length - scanKeyOffset, stopKey, totalKeyOffset, stopKey.length - totalKeyOffset) > 0) {
+          scanStopKey = stopKey;
+          scanStopKeyOffset = totalKeyOffset;
+        }
       }
     } else {
       scanStopKey = stopKey;
       scanStopKeyOffset = totalKeyOffset;
-      mayHaveRows = true;
     }
-    mayHaveRows = mayHaveRows || Bytes.compareTo(scanStartKey, scanStartKeyOffset, scanStartKey.length - scanStartKeyOffset, scanStopKey, scanStopKeyOffset, scanStopKey.length - scanStopKeyOffset) < 0;
 
-    if (!mayHaveRows) {
+    // If not scanning anything, return null
+    if (scanStopKey.length - scanStopKeyOffset > 0
+      && Bytes.compareTo(scanStartKey, scanStartKeyOffset, scanStartKey.length - scanStartKeyOffset,
+        scanStopKey, scanStopKeyOffset, scanStopKey.length - scanStopKeyOffset) >= 0) {
       return null;
     }
     if (originalStopKey.length != 0 && scanStopKey.length == 0) {
       scanStopKey = originalStopKey;
     }
     Filter newFilter = null;
-    // If the scan is using skip scan filter, intersect and replace the filter.
-    if (scan == null || this.useSkipScanFilter()) {
+    if (this.useSkipScanFilter()) {
       byte[] skipScanStartKey = scanStartKey;
       byte[] skipScanStopKey = scanStopKey;
       // If we have a keyOffset and we've used the startKey/stopKey that
       // were passed in (which have the prefix) for the above range check,
       // we need to remove the prefix before running our intersect method.
-      // TODO: we could use skipScanFilter.setOffset(keyOffset) if both
-      // the startKey and stopKey were used above *and* our intersect
-      // method honored the skipScanFilter.offset variable.
       if (scanKeyOffset > 0) {
         if (skipScanStartKey != originalStartKey) { // original already has correct salt byte
           skipScanStartKey = replaceSaltByte(skipScanStartKey, prefixBytes);
@@ -332,6 +327,9 @@ public class ScanRanges {
         scanStopKey = ScanUtil.getMaxKey(schema, newSkipScanFilter.getSlots(), slotSpan);
       }
     }
+    if (scan == null) {
+      return HAS_INTERSECTION;
+    }
     if (newFilter == null) {
       newFilter = scan.getFilter();
     }
@@ -380,16 +378,20 @@ public class ScanRanges {
    * @return true if the scan range intersects with the specified lower/upper
    * key range
    */
-  public boolean intersects(byte[] lowerInclusiveKey, byte[] upperExclusiveKey, int keyOffset, boolean crossesRegionBoundary) {
+  public boolean intersectRegion(byte[] regionStartKey, byte[] regionEndKey, boolean isLocalIndex) {
     if (isEverything()) {
       return true;
     }
     if (isDegenerate()) {
       return false;
     }
-
-    //return filter.hasIntersect(lowerInclusiveKey, upperExclusiveKey);
-    return intersectScan(null, lowerInclusiveKey, upperExclusiveKey, keyOffset, crossesRegionBoundary) == HAS_INTERSECTION;
+    if (isLocalIndex) {
+      return true;
+    }
+    boolean crossesSaltBoundary = isSalted && ScanUtil.crossesPrefixBoundary(regionEndKey,
+      ScanUtil.getPrefix(regionStartKey, SaltingUtil.NUM_SALTING_BYTES), 
+      SaltingUtil.NUM_SALTING_BYTES);        
+    return intersectScan(null, regionStartKey, regionEndKey, 0, crossesSaltBoundary) == HAS_INTERSECTION;
   }
 
   public SkipScanFilter getSkipScanFilter() {

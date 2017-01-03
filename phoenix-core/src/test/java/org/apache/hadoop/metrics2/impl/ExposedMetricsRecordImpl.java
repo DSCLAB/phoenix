@@ -36,7 +36,7 @@ public class ExposedMetricsRecordImpl extends MetricsRecordImpl {
    * @param metrics
    */
   public ExposedMetricsRecordImpl(MetricsInfo info, long timestamp, List<MetricsTag> tags,
-      Iterable<AbstractMetric> metrics) {
+          Iterable<AbstractMetric> metrics) {
     super(info, timestamp, tags, metrics);
   }
 }

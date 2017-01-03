@@ -32,38 +32,39 @@ import com.google.common.collect.Lists;
  */
 class ObjectToArrayConverter {
 
-    private final Connection conn;
-    private final PDataType elementDataType;
-    private final JsonUpsertExecutor.SimpleDatatypeConversionFunction elementConvertFunction;
+  private final Connection conn;
+  private final PDataType elementDataType;
+  private final JsonUpsertExecutor.SimpleDatatypeConversionFunction elementConvertFunction;
 
-    /**
-     * Instantiate with the array value separator and data type.
-     *
-     * @param conn Phoenix connection to target database
-     * @param elementDataType datatype of the elements of arrays to be created
-     */
-    public ObjectToArrayConverter(Connection conn, PDataType elementDataType) {
-        this.conn = conn;
-        this.elementDataType = elementDataType;
-        this.elementConvertFunction =
-            new JsonUpsertExecutor.SimpleDatatypeConversionFunction(elementDataType, this.conn);
+  /**
+   * Instantiate with the array value separator and data type.
+   *
+   * @param conn Phoenix connection to target database
+   * @param elementDataType datatype of the elements of arrays to be created
+   */
+  public ObjectToArrayConverter(Connection conn, PDataType elementDataType) {
+    this.conn = conn;
+    this.elementDataType = elementDataType;
+    this.elementConvertFunction
+            = new JsonUpsertExecutor.SimpleDatatypeConversionFunction(elementDataType, this.conn);
+  }
+
+  /**
+   * Convert an input delimited string into a phoenix array of the configured
+   * type.
+   *
+   * @param input string containing delimited array values
+   * @return the array containing the values represented in the input string
+   */
+  public Array toArray(Object input) throws SQLException {
+    if (input == null) {
+      return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
     }
-
-    /**
-     * Convert an input delimited string into a phoenix array of the configured type.
-     *
-     * @param input string containing delimited array values
-     * @return the array containing the values represented in the input string
-     */
-    public Array toArray(Object input) throws SQLException {
-        if (input == null) {
-            return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
-        }
-        List<?> list = (List<?>) input;
-        if (list.isEmpty()) {
-            return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
-        }
-        return conn.createArrayOf(elementDataType.getSqlTypeName(),
+    List<?> list = (List<?>) input;
+    if (list.isEmpty()) {
+      return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
+    }
+    return conn.createArrayOf(elementDataType.getSqlTypeName(),
             Lists.newArrayList(Iterables.transform(list, elementConvertFunction)).toArray());
-    }
+  }
 }

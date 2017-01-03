@@ -23,20 +23,21 @@ import org.apache.phoenix.expression.Expression;
 import org.joda.time.DateTime;
 
 /**
- * 
+ *
  * Rounds off the given {@link DateTime} to month.
  */
 public class RoundMonthExpression extends RoundJodaDateExpression {
-    
-    public RoundMonthExpression(){}
-    
-    public RoundMonthExpression(List<Expression> children) {
-       super(children);
-    }
 
-    @Override
-    public long roundDateTime(DateTime dateTime) {
-       return dateTime.monthOfYear().roundHalfEvenCopy().getMillis();
-    }
+  public RoundMonthExpression() {
+  }
+
+  public RoundMonthExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public long roundDateTime(DateTime dateTime) {
+    return dateTime.monthOfYear().roundHalfEvenCopy().getMillis();
+  }
 
 }

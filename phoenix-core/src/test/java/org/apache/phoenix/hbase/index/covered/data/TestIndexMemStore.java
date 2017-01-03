@@ -60,8 +60,10 @@ public class TestIndexMemStore {
   }
 
   /**
-   * We don't expect custom KeyValue creation, so we can't get into weird situations, where a
-   * {@link Type#DeleteFamily} has a column qualifier specified.
+   * We don't expect custom KeyValue creation, so we can't get into weird
+   * situations, where a {@link Type#DeleteFamily} has a column qualifier
+   * specified.
+   *
    * @throws Exception
    */
   @Test
@@ -86,7 +88,7 @@ public class TestIndexMemStore {
     assertTrue("Didn't get point delete before corresponding put", d == scanner.next());
     assertTrue("Didn't get larger ts Put", kv == scanner.next());
     assertTrue("Didn't get delete column before corresponding put(delete sorts first)",
-      dc == scanner.next());
+            dc == scanner.next());
     assertTrue("Didn't get smaller ts Put", kv2 == scanner.next());
     assertNull("Have more data in the scanner", scanner.next());
   }

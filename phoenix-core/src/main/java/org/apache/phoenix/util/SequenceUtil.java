@@ -24,77 +24,79 @@ import com.google.common.math.LongMath;
  */
 public class SequenceUtil {
 
-    public static final long DEFAULT_NUM_SLOTS_TO_ALLOCATE = 1L; 
-    
-    /**
-     * @return true if we limit of a sequence has been reached.
-     */
-    public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
-            long incrementBy, long cacheSize, long numToAllocate) {
-        long nextValue = 0;
-        boolean increasingSeq = incrementBy > 0 ? true : false;
-        // advance currentValue while checking for overflow    
-        try {
-            long incrementValue;
-            if (isBulkAllocation(numToAllocate)) {
-                // For bulk allocation we increment independent of cache size
-                incrementValue = LongMath.checkedMultiply(incrementBy, numToAllocate);
-            } else {
-                incrementValue = LongMath.checkedMultiply(incrementBy, cacheSize);
-            }
-            nextValue = LongMath.checkedAdd(currentValue, incrementValue);
-        } catch (ArithmeticException e) {
-            return true;
-        }
+  public static final long DEFAULT_NUM_SLOTS_TO_ALLOCATE = 1L;
 
-        // check if limit was reached
-		if ((increasingSeq && nextValue > maxValue)
-				|| (!increasingSeq && nextValue < minValue)) {
-            return true;
-        }
-        return false;
+  /**
+   * @return true if we limit of a sequence has been reached.
+   */
+  public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
+          long incrementBy, long cacheSize, long numToAllocate) {
+    long nextValue = 0;
+    boolean increasingSeq = incrementBy > 0 ? true : false;
+    // advance currentValue while checking for overflow    
+    try {
+      long incrementValue;
+      if (isBulkAllocation(numToAllocate)) {
+        // For bulk allocation we increment independent of cache size
+        incrementValue = LongMath.checkedMultiply(incrementBy, numToAllocate);
+      } else {
+        incrementValue = LongMath.checkedMultiply(incrementBy, cacheSize);
+      }
+      nextValue = LongMath.checkedAdd(currentValue, incrementValue);
+    } catch (ArithmeticException e) {
+      return true;
     }
 
-    public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
-            long incrementBy, long cacheSize) throws SQLException {
-        return checkIfLimitReached(currentValue, minValue, maxValue, incrementBy, cacheSize, DEFAULT_NUM_SLOTS_TO_ALLOCATE);
+    // check if limit was reached
+    if ((increasingSeq && nextValue > maxValue)
+            || (!increasingSeq && nextValue < minValue)) {
+      return true;
     }
-    
-    public static boolean checkIfLimitReached(SequenceInfo info) throws SQLException {
-        return checkIfLimitReached(info.sequenceValue, info.minValue, info.maxValue, info.incrementBy, info.cacheSize, DEFAULT_NUM_SLOTS_TO_ALLOCATE);
-    }
-    
-    /**
-     * Returns true if the value of numToAllocate signals that a bulk allocation of sequence slots
-     * was requested. Prevents proliferation of same comparison in many places throughout the code.
-     */
-    public static boolean isBulkAllocation(long numToAllocate) {
-        Preconditions.checkArgument(numToAllocate > 0);
-        return numToAllocate > DEFAULT_NUM_SLOTS_TO_ALLOCATE;
-    }
-    
-    public static boolean isCycleAllowed(long numToAllocate) {
-        return !isBulkAllocation(numToAllocate);  
-        
-    }
-    
-    /**
-     * Helper function that returns a {@link SQLException}
-     */
-    public static SQLException getException(String schemaName, String tableName,
-            SQLExceptionCode code) {
-        return new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
-                .build().buildException();
-    }
-    
-    /**
-     * Returns the correct instance of SQLExceptionCode when we detect a limit has been reached,
-     * depending upon whether a min or max value caused the limit to be exceeded.
-     */
-    public static SQLExceptionCode getLimitReachedErrorCode(boolean increasingSeq) {
-        SQLExceptionCode code = increasingSeq ? SQLExceptionCode.SEQUENCE_VAL_REACHED_MAX_VALUE
-                : SQLExceptionCode.SEQUENCE_VAL_REACHED_MIN_VALUE;
-        return code;
-    }
+    return false;
+  }
+
+  public static boolean checkIfLimitReached(long currentValue, long minValue, long maxValue,
+          long incrementBy, long cacheSize) throws SQLException {
+    return checkIfLimitReached(currentValue, minValue, maxValue, incrementBy, cacheSize, DEFAULT_NUM_SLOTS_TO_ALLOCATE);
+  }
+
+  public static boolean checkIfLimitReached(SequenceInfo info) throws SQLException {
+    return checkIfLimitReached(info.sequenceValue, info.minValue, info.maxValue, info.incrementBy, info.cacheSize, DEFAULT_NUM_SLOTS_TO_ALLOCATE);
+  }
+
+  /**
+   * Returns true if the value of numToAllocate signals that a bulk allocation
+   * of sequence slots was requested. Prevents proliferation of same comparison
+   * in many places throughout the code.
+   */
+  public static boolean isBulkAllocation(long numToAllocate) {
+    Preconditions.checkArgument(numToAllocate > 0);
+    return numToAllocate > DEFAULT_NUM_SLOTS_TO_ALLOCATE;
+  }
+
+  public static boolean isCycleAllowed(long numToAllocate) {
+    return !isBulkAllocation(numToAllocate);
+
+  }
+
+  /**
+   * Helper function that returns a {@link SQLException}
+   */
+  public static SQLException getException(String schemaName, String tableName,
+          SQLExceptionCode code) {
+    return new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName)
+            .build().buildException();
+  }
+
+  /**
+   * Returns the correct instance of SQLExceptionCode when we detect a limit has
+   * been reached, depending upon whether a min or max value caused the limit to
+   * be exceeded.
+   */
+  public static SQLExceptionCode getLimitReachedErrorCode(boolean increasingSeq) {
+    SQLExceptionCode code = increasingSeq ? SQLExceptionCode.SEQUENCE_VAL_REACHED_MAX_VALUE
+            : SQLExceptionCode.SEQUENCE_VAL_REACHED_MIN_VALUE;
+    return code;
+  }
 
 }

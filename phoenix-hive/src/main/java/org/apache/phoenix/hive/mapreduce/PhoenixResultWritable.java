@@ -47,165 +47,164 @@ import java.util.Map;
  */
 public class PhoenixResultWritable implements Writable, DBWritable, Configurable {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixResultWritable.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixResultWritable.class);
 
-    private List<ColumnInfo> columnMetadataList;
-    private List<Object> valueList;    // for output
-    private Map<String, Object> rowMap = Maps.newHashMap();  // for input
+  private List<ColumnInfo> columnMetadataList;
+  private List<Object> valueList;    // for output
+  private Map<String, Object> rowMap = Maps.newHashMap();  // for input
 
-    private int columnCount = -1;
+  private int columnCount = -1;
 
-    private Configuration config;
-    private boolean isTransactional;
-    private Map<String, Object> rowKeyMap = Maps.newLinkedHashMap();
-    private List<String> primaryKeyColumnList;
+  private Configuration config;
+  private boolean isTransactional;
+  private Map<String, Object> rowKeyMap = Maps.newLinkedHashMap();
+  private List<String> primaryKeyColumnList;
 
-    public PhoenixResultWritable() {
-    }
+  public PhoenixResultWritable() {
+  }
 
-    public PhoenixResultWritable(Configuration config) throws IOException {
-        setConf(config);
-    }
+  public PhoenixResultWritable(Configuration config) throws IOException {
+    setConf(config);
+  }
 
-    public PhoenixResultWritable(Configuration config, List<ColumnInfo> columnMetadataList)
-            throws IOException {
-        this(config);
-        this.columnMetadataList = columnMetadataList;
+  public PhoenixResultWritable(Configuration config, List<ColumnInfo> columnMetadataList)
+          throws IOException {
+    this(config);
+    this.columnMetadataList = columnMetadataList;
 
-        valueList = Lists.newArrayListWithExpectedSize(columnMetadataList.size());
-    }
+    valueList = Lists.newArrayListWithExpectedSize(columnMetadataList.size());
+  }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public void write(DataOutput out) throws IOException {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    throw new UnsupportedOperationException();
+  }
 
-    // for write
-    public void clear() {
-        valueList.clear();
-    }
+  // for write
+  public void clear() {
+    valueList.clear();
+  }
 
-    // for write
-    public void add(Object value) {
-        valueList.add(value);
-    }
+  // for write
+  public void add(Object value) {
+    valueList.add(value);
+  }
 
-    @Override
-    public void write(PreparedStatement statement) throws SQLException {
-        ColumnInfo columnInfo = null;
-        Object value = null;
+  @Override
+  public void write(PreparedStatement statement) throws SQLException {
+    ColumnInfo columnInfo = null;
+    Object value = null;
 
-        try {
-            for (int i = 0, limit = columnMetadataList.size(); i < limit; i++) {
-                columnInfo = columnMetadataList.get(i);
+    try {
+      for (int i = 0, limit = columnMetadataList.size(); i < limit; i++) {
+        columnInfo = columnMetadataList.get(i);
 
-                if (valueList.size() > i) {
-                    value = valueList.get(i);
-                } else {
-                    value = null;
-                }
-
-                if (value == null) {
-                    statement.setNull(i + 1, columnInfo.getSqlType());
-                } else {
-                    statement.setObject(i + 1, value, columnInfo.getSqlType());
-                }
-            }
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("[column-info, value] : " + columnInfo + ", " + value);
-            throw e;
-        }
-    }
-
-    public void delete(PreparedStatement statement) throws SQLException {
-        ColumnInfo columnInfo = null;
-        Object value = null;
-
-        try {
-            for (int i = 0, limit = primaryKeyColumnList.size(); i < limit; i++) {
-                columnInfo = columnMetadataList.get(i);
-
-                if (valueList.size() > i) {
-                    value = valueList.get(i);
-                } else {
-                    value = null;
-                }
-
-                if (value == null) {
-                    statement.setNull(i + 1, columnInfo.getSqlType());
-                } else {
-                    statement.setObject(i + 1, value, columnInfo.getSqlType());
-                }
-            }
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("[column-info, value] : " + columnInfo + ", " + value);
-            throw e;
-        }
-    }
-
-    @Override
-    public void readFields(ResultSet resultSet) throws SQLException {
-        ResultSetMetaData rsmd = resultSet.getMetaData();
-        if (columnCount == -1) {
-            this.columnCount = rsmd.getColumnCount();
-        }
-        rowMap.clear();
-
-        for (int i = 0; i < columnCount; i++) {
-            Object value = resultSet.getObject(i + 1);
-
-            rowMap.put(rsmd.getColumnName(i + 1), value);
+        if (valueList.size() > i) {
+          value = valueList.get(i);
+        } else {
+          value = null;
         }
 
-        // Adding row__id column.
-        if (isTransactional) {
-            rowKeyMap.clear();
-
-            for (String pkColumn : primaryKeyColumnList) {
-                rowKeyMap.put(pkColumn, rowMap.get(pkColumn));
-            }
+        if (value == null) {
+          statement.setNull(i + 1, columnInfo.getSqlType());
+        } else {
+          statement.setObject(i + 1, value, columnInfo.getSqlType());
         }
+      }
+    } catch (SQLException | RuntimeException e) {
+      LOG.error("[column-info, value] : " + columnInfo + ", " + value);
+      throw e;
     }
+  }
 
-    public void readPrimaryKey(PhoenixRowKey rowKey) {
-        rowKey.setRowKeyMap(rowKeyMap);
-    }
+  public void delete(PreparedStatement statement) throws SQLException {
+    ColumnInfo columnInfo = null;
+    Object value = null;
 
-    public List<ColumnInfo> getColumnMetadataList() {
-        return columnMetadataList;
-    }
+    try {
+      for (int i = 0, limit = primaryKeyColumnList.size(); i < limit; i++) {
+        columnInfo = columnMetadataList.get(i);
 
-    public void setColumnMetadataList(List<ColumnInfo> columnMetadataList) {
-        this.columnMetadataList = columnMetadataList;
-    }
-
-    public Map<String, Object> getResultMap() {
-        return rowMap;
-    }
-
-    public List<Object> getValueList() {
-        return valueList;
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        config = conf;
-
-        isTransactional = PhoenixStorageHandlerUtil.isTransactionalTable(config);
-
-        if (isTransactional) {
-            primaryKeyColumnList = PhoenixUtil.getPrimaryKeyColumnList(config, config.get
-                    (PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME));
+        if (valueList.size() > i) {
+          value = valueList.get(i);
+        } else {
+          value = null;
         }
+
+        if (value == null) {
+          statement.setNull(i + 1, columnInfo.getSqlType());
+        } else {
+          statement.setObject(i + 1, value, columnInfo.getSqlType());
+        }
+      }
+    } catch (SQLException | RuntimeException e) {
+      LOG.error("[column-info, value] : " + columnInfo + ", " + value);
+      throw e;
+    }
+  }
+
+  @Override
+  public void readFields(ResultSet resultSet) throws SQLException {
+    ResultSetMetaData rsmd = resultSet.getMetaData();
+    if (columnCount == -1) {
+      this.columnCount = rsmd.getColumnCount();
+    }
+    rowMap.clear();
+
+    for (int i = 0; i < columnCount; i++) {
+      Object value = resultSet.getObject(i + 1);
+
+      rowMap.put(rsmd.getColumnName(i + 1), value);
     }
 
-    @Override
-    public Configuration getConf() {
-        return config;
+    // Adding row__id column.
+    if (isTransactional) {
+      rowKeyMap.clear();
+
+      for (String pkColumn : primaryKeyColumnList) {
+        rowKeyMap.put(pkColumn, rowMap.get(pkColumn));
+      }
     }
+  }
+
+  public void readPrimaryKey(PhoenixRowKey rowKey) {
+    rowKey.setRowKeyMap(rowKeyMap);
+  }
+
+  public List<ColumnInfo> getColumnMetadataList() {
+    return columnMetadataList;
+  }
+
+  public void setColumnMetadataList(List<ColumnInfo> columnMetadataList) {
+    this.columnMetadataList = columnMetadataList;
+  }
+
+  public Map<String, Object> getResultMap() {
+    return rowMap;
+  }
+
+  public List<Object> getValueList() {
+    return valueList;
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    config = conf;
+
+    isTransactional = PhoenixStorageHandlerUtil.isTransactionalTable(config);
+
+    if (isTransactional) {
+      primaryKeyColumnList = PhoenixUtil.getPrimaryKeyColumnList(config, config.get(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME));
+    }
+  }
+
+  @Override
+  public Configuration getConf() {
+    return config;
+  }
 }

@@ -25,46 +25,47 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import com.google.common.collect.Maps;
 
 /**
- * Represents the logical and physical name of a single table to which data is to be loaded.
+ * Represents the logical and physical name of a single table to which data is
+ * to be loaded.
  *
- * This class exists to allow for the difference between HBase physical table names and
- * Phoenix logical table names.
+ * This class exists to allow for the difference between HBase physical table
+ * names and Phoenix logical table names.
  */
 public class TargetTableRef {
 
-    @JsonProperty
-    private final String logicalName;
+  @JsonProperty
+  private final String logicalName;
 
-    @JsonProperty
-    private final String physicalName;
+  @JsonProperty
+  private final String physicalName;
 
-    @JsonProperty
-    private Map<String,String> configuration = Maps.newHashMap();
+  @JsonProperty
+  private Map<String, String> configuration = Maps.newHashMap();
 
-    public TargetTableRef(String name) {
-        this(name, name);
-    }
+  public TargetTableRef(String name) {
+    this(name, name);
+  }
 
-    @JsonCreator
-    public TargetTableRef(@JsonProperty("logicalName") String logicalName,
-        @JsonProperty("physicalName") String physicalName) {
-        this.logicalName = logicalName;
-        this.physicalName = physicalName;
-    }
+  @JsonCreator
+  public TargetTableRef(@JsonProperty("logicalName") String logicalName,
+          @JsonProperty("physicalName") String physicalName) {
+    this.logicalName = logicalName;
+    this.physicalName = physicalName;
+  }
 
-    public String getLogicalName() {
-        return logicalName;
-    }
+  public String getLogicalName() {
+    return logicalName;
+  }
 
-    public String getPhysicalName() {
-        return physicalName;
-    }
+  public String getPhysicalName() {
+    return physicalName;
+  }
 
-    public Map<String, String> getConfiguration() {
-        return configuration;
-    }
+  public Map<String, String> getConfiguration() {
+    return configuration;
+  }
 
-    public void setConfiguration(Map<String, String> configuration) {
-        this.configuration = configuration;
-    }
+  public void setConfiguration(Map<String, String> configuration) {
+    this.configuration = configuration;
+  }
 }

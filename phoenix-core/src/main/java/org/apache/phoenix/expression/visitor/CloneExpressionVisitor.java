@@ -51,157 +51,157 @@ import org.apache.phoenix.expression.function.UDFExpression;
 
 public abstract class CloneExpressionVisitor extends TraverseAllExpressionVisitor<Expression> {
 
-    public CloneExpressionVisitor() {
-    }
+  public CloneExpressionVisitor() {
+  }
 
-    @Override
-    public Expression defaultReturn(Expression node, List<Expression> l) {
-        // Needed for Expressions derived from BaseTerminalExpression which don't
-        // have accept methods. TODO: get rid of those
-        return node;
-    }
+  @Override
+  public Expression defaultReturn(Expression node, List<Expression> l) {
+    // Needed for Expressions derived from BaseTerminalExpression which don't
+    // have accept methods. TODO: get rid of those
+    return node;
+  }
 
-    @Override
-    public Expression visit(CorrelateVariableFieldAccessExpression node) {
-        return node;
-    }
+  @Override
+  public Expression visit(CorrelateVariableFieldAccessExpression node) {
+    return node;
+  }
 
-    @Override
-    public Expression visit(LiteralExpression node) {
-        return node;
-    }
+  @Override
+  public Expression visit(LiteralExpression node) {
+    return node;
+  }
 
-    @Override
-    public Expression visit(RowKeyColumnExpression node) {
-        return node;
-    }
+  @Override
+  public Expression visit(RowKeyColumnExpression node) {
+    return node;
+  }
 
-    @Override
-    public Expression visit(KeyValueColumnExpression node) {
-        return node;
-    }
+  @Override
+  public Expression visit(KeyValueColumnExpression node) {
+    return node;
+  }
 
-    @Override
-    public Expression visit(ProjectedColumnExpression node) {
-        return node.clone();
-    }
+  @Override
+  public Expression visit(ProjectedColumnExpression node) {
+    return node.clone();
+  }
 
-    @Override
-    public Expression visit(SequenceValueExpression node) {
-        return node;
-    }
+  @Override
+  public Expression visit(SequenceValueExpression node) {
+    return node;
+  }
 
-    @Override
-    public Expression visitLeave(AndExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new AndExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(AndExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new AndExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(OrExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new OrExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(OrExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new OrExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(ScalarFunction node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ScalarFunction node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    public Expression visitLeave(UDFExpression node, List<Expression> l) {
-        return new UDFExpression(l, node.getTenantId(), node.getFunctionClassName(),
-                node.getJarPath(), node.getUdfFunction());
-    }
+  public Expression visitLeave(UDFExpression node, List<Expression> l) {
+    return new UDFExpression(l, node.getTenantId(), node.getFunctionClassName(),
+            node.getJarPath(), node.getUdfFunction());
+  }
 
-    @Override
-    public Expression visitLeave(ComparisonExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ComparisonExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(LikeExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l): node;
-    }
+  @Override
+  public Expression visitLeave(LikeExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(SingleAggregateFunction node, List<Expression> l) {
-        // Do not clone aggregate functions, as they're executed on the server side,
-        // so any state for evaluation will live there.
-        return isCloneNode(node, l) ? node :  node;
-    }
+  @Override
+  public Expression visitLeave(SingleAggregateFunction node, List<Expression> l) {
+    // Do not clone aggregate functions, as they're executed on the server side,
+    // so any state for evaluation will live there.
+    return isCloneNode(node, l) ? node : node;
+  }
 
-    @Override
-    public Expression visitLeave(CaseExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new CaseExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(CaseExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new CaseExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(NotExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new NotExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(NotExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new NotExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(InListExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(InListExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(IsNullExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(IsNullExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(SubtractExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(SubtractExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(MultiplyExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(MultiplyExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(AddExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(AddExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(DivideExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(DivideExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(ModulusExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ModulusExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(CoerceExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(CoerceExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(ArrayConstructorExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ArrayConstructorExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(StringConcatExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new StringConcatExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(StringConcatExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new StringConcatExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(RowValueConstructorExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? node.clone(l) : node;
-    }
+  @Override
+  public Expression visitLeave(RowValueConstructorExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? node.clone(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(ArrayAnyComparisonExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new ArrayAnyComparisonExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ArrayAnyComparisonExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new ArrayAnyComparisonExpression(l) : node;
+  }
 
-    @Override
-    public Expression visitLeave(ArrayElemRefExpression node, List<Expression> l) {
-        return isCloneNode(node, l) ? new ArrayElemRefExpression(l) : node;
-    }
+  @Override
+  public Expression visitLeave(ArrayElemRefExpression node, List<Expression> l) {
+    return isCloneNode(node, l) ? new ArrayElemRefExpression(l) : node;
+  }
 
-    public abstract boolean isCloneNode(Expression node, List<Expression> children);
+  public abstract boolean isCloneNode(Expression node, List<Expression> children);
 }

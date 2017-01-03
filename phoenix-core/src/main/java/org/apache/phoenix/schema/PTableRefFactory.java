@@ -22,31 +22,32 @@ import org.apache.phoenix.query.QueryServicesOptions;
 import org.apache.phoenix.util.ReadOnlyProps;
 
 public class PTableRefFactory {
-    public PTableRef makePTableRef(PTable table, long lastAccessTime, long resolvedTime) {
-        return new PTableRefImpl(table, lastAccessTime, resolvedTime, table.getEstimatedSize());
-    }
 
-    public PTableRef makePTableRef(PTableRef tableRef) {
-        return new PTableRefImpl(tableRef);
-    }
+  public PTableRef makePTableRef(PTable table, long lastAccessTime, long resolvedTime) {
+    return new PTableRefImpl(table, lastAccessTime, resolvedTime, table.getEstimatedSize());
+  }
 
-    private static final PTableRefFactory INSTANCE = new PTableRefFactory();
+  public PTableRef makePTableRef(PTableRef tableRef) {
+    return new PTableRefImpl(tableRef);
+  }
 
-    public static enum Encoding {
-        OBJECT, PROTOBUF
-    };
+  private static final PTableRefFactory INSTANCE = new PTableRefFactory();
 
-    public static PTableRefFactory getFactory(ReadOnlyProps props) {
-        String encodingEnumString =
-                props.get(QueryServices.CLIENT_CACHE_ENCODING,
+  public static enum Encoding {
+    OBJECT, PROTOBUF
+  };
+
+  public static PTableRefFactory getFactory(ReadOnlyProps props) {
+    String encodingEnumString
+            = props.get(QueryServices.CLIENT_CACHE_ENCODING,
                     QueryServicesOptions.DEFAULT_CLIENT_CACHE_ENCODING);
-        Encoding encoding = Encoding.valueOf(encodingEnumString.toUpperCase());
-        switch (encoding) {
-        case PROTOBUF:
-            return SerializedPTableRefFactory.getFactory();
-        case OBJECT:
-        default:
-            return INSTANCE;
-        }
+    Encoding encoding = Encoding.valueOf(encodingEnumString.toUpperCase());
+    switch (encoding) {
+      case PROTOBUF:
+        return SerializedPTableRefFactory.getFactory();
+      case OBJECT:
+      default:
+        return INSTANCE;
     }
+  }
 }

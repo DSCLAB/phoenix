@@ -26,43 +26,43 @@ import org.apache.phoenix.schema.types.PDate;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
- * Function that returns the current date accurate to the millisecond. Note that this
- * function is never evaluated on the server-side, instead the server side date is
- * retrieved (piggy-backed on the call to check that the metadata is up-to-date) and
- * passed into this function at create time.
  *
- * 
+ * Function that returns the current date accurate to the millisecond. Note that
+ * this function is never evaluated on the server-side, instead the server side
+ * date is retrieved (piggy-backed on the call to check that the metadata is
+ * up-to-date) and passed into this function at create time.
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=CurrentDateFunction.NAME, nodeClass=CurrentDateParseNode.class, args= {} )
+@BuiltInFunction(name = CurrentDateFunction.NAME, nodeClass = CurrentDateParseNode.class, args = {})
 public class CurrentDateFunction extends CurrentDateTimeFunction {
-    public static final String NAME = "CURRENT_DATE";
-    private final ImmutableBytesWritable currentDate = new ImmutableBytesWritable(new byte[PDate.INSTANCE.getByteSize()]);
-    
-    public CurrentDateFunction() {
-        this(System.currentTimeMillis());
-    }
 
-    public CurrentDateFunction(long timeStamp) {
-        getDataType().getCodec().encodeLong(timeStamp, currentDate);
-    }
+  public static final String NAME = "CURRENT_DATE";
+  private final ImmutableBytesWritable currentDate = new ImmutableBytesWritable(new byte[PDate.INSTANCE.getByteSize()]);
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        ptr.set(currentDate.get(), 0, PDate.INSTANCE.getByteSize());
-        return true;
-    }
+  public CurrentDateFunction() {
+    this(System.currentTimeMillis());
+  }
 
-    @Override
-    public final PDataType getDataType() {
-        return PDate.INSTANCE;
-    }
+  public CurrentDateFunction(long timeStamp) {
+    getDataType().getCodec().encodeLong(timeStamp, currentDate);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    ptr.set(currentDate.get(), 0, PDate.INSTANCE.getByteSize());
+    return true;
+  }
+
+  @Override
+  public final PDataType getDataType() {
+    return PDate.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

@@ -21,55 +21,56 @@ import org.apache.phoenix.mapreduce.index.IndexTool;
 import org.apache.phoenix.schema.PTable.IndexType;
 
 public class PhoenixAsyncIndex {
-    private String tableName;
-    private IndexType indexType;
-    private String tableSchem;
-    private String dataTableName;
 
-    public String getTableName() {
-        return tableName;
-    }
+  private String tableName;
+  private IndexType indexType;
+  private String tableSchem;
+  private String dataTableName;
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
+  public String getTableName() {
+    return tableName;
+  }
 
-    public IndexType getIndexType() {
-        return indexType;
-    }
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
 
-    public void setIndexType(IndexType indexType) {
-        this.indexType = indexType;
-    }
+  public IndexType getIndexType() {
+    return indexType;
+  }
 
-    public String getTableSchem() {
-        return tableSchem;
-    }
+  public void setIndexType(IndexType indexType) {
+    this.indexType = indexType;
+  }
 
-    public void setTableSchem(String tableSchem) {
-        this.tableSchem = tableSchem;
-    }
+  public String getTableSchem() {
+    return tableSchem;
+  }
 
-    public String getDataTableName() {
-        return dataTableName;
-    }
+  public void setTableSchem(String tableSchem) {
+    this.tableSchem = tableSchem;
+  }
 
-    public void setDataTableName(String dataTableName) {
-        this.dataTableName = dataTableName;
-    }
+  public String getDataTableName() {
+    return dataTableName;
+  }
 
-    public String getJobName() {
-        return String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE, dataTableName, tableName);
-    }
+  public void setDataTableName(String dataTableName) {
+    this.dataTableName = dataTableName;
+  }
 
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("TableName = " + tableName)
-                .append(" ; IndexType = " + (indexType == null ? "" : indexType.toString()))
-                .append(" ; TableSchem = " + tableSchem)
-                .append(" ; DataTableName = " + dataTableName);
-        return builder.toString();
-    }
+  public String getJobName() {
+    return String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE, dataTableName, tableName);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("TableName = " + tableName)
+            .append(" ; IndexType = " + (indexType == null ? "" : indexType.toString()))
+            .append(" ; TableSchem = " + tableSchem)
+            .append(" ; DataTableName = " + dataTableName);
+    return builder.toString();
+  }
 
 }

@@ -20,36 +20,37 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class DropSchemaStatement extends MutableStatement {
-    private final String schemaName;
-    private final boolean ifExists;
-    private final boolean cascade;
 
-    public DropSchemaStatement(String schemaName, boolean ifExists, boolean cascade) {
-        this.schemaName = schemaName;
-        this.ifExists = ifExists;
-        this.cascade = cascade;
-    }
+  private final String schemaName;
+  private final boolean ifExists;
+  private final boolean cascade;
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  public DropSchemaStatement(String schemaName, boolean ifExists, boolean cascade) {
+    this.schemaName = schemaName;
+    this.ifExists = ifExists;
+    this.cascade = cascade;
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    public boolean ifExists() {
-        return ifExists;
-    }
+  public String getSchemaName() {
+    return schemaName;
+  }
 
-    public boolean cascade() {
-        return cascade;
-    }
+  public boolean ifExists() {
+    return ifExists;
+  }
 
-    @Override
-    public Operation getOperation() {
-        return Operation.DELETE;
-    }
+  public boolean cascade() {
+    return cascade;
+  }
+
+  @Override
+  public Operation getOperation() {
+    return Operation.DELETE;
+  }
 
 }

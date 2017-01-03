@@ -37,10 +37,10 @@ public class TestCoveredColumns {
     ColumnReference ref = new ColumnReference(fam, qual);
     CoveredColumns columns = new CoveredColumns();
     assertEquals("Should have only found a single column to cover", 1, columns
-        .findNonCoveredColumns(Arrays.asList(ref)).size());
+            .findNonCoveredColumns(Arrays.asList(ref)).size());
 
     columns.addColumn(ref);
     assertEquals("Shouldn't have any columns to cover", 0,
-      columns.findNonCoveredColumns(Arrays.asList(ref)).size());
+            columns.findNonCoveredColumns(Arrays.asList(ref)).size());
   }
 }

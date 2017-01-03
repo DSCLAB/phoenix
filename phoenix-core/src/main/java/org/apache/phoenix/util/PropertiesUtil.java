@@ -24,38 +24,42 @@ import org.apache.hadoop.conf.Configuration;
 
 public class PropertiesUtil {
 
-    private PropertiesUtil() {
+  private PropertiesUtil() {
+  }
+
+  /**
+   * Use this to deep copy properties. The copy constructor in
+   * {@link java.util.Properties} does not do a deep copy.
+   *
+   * @param properties
+   * @return new mutable instance of Properties populated with values from the
+   * passed in Properties.
+   */
+  public static Properties deepCopy(Properties properties) {
+    Properties newProperties = new Properties();
+    for (String pName : properties.stringPropertyNames()) {
+      newProperties.setProperty(pName, properties.getProperty(pName));
     }
-    
-    /**
-     * Use this to deep copy properties. The copy constructor in {@link java.util.Properties} does not do a deep copy.
-     * @param properties
-     * @return new mutable instance of Properties populated with values from the passed in Properties.
-     */
-    public static Properties deepCopy(Properties properties) {
-        Properties newProperties = new Properties();
-        for (String pName : properties.stringPropertyNames()) {
-            newProperties.setProperty(pName, properties.getProperty(pName));
-        }
-        return newProperties;
+    return newProperties;
+  }
+
+  /**
+   * Add properties from the given Configuration to the provided Properties.
+   *
+   * @param props properties to which connection information from the
+   * Configuration will be added
+   * @param conf configuration containing connection information
+   * @return the input Properties value, with additional connection information
+   * from the given Configuration
+   */
+  public static Properties extractProperties(Properties props, final Configuration conf) {
+    Iterator<Map.Entry<String, String>> iterator = conf.iterator();
+    if (iterator != null) {
+      while (iterator.hasNext()) {
+        Map.Entry<String, String> entry = iterator.next();
+        props.setProperty(entry.getKey(), entry.getValue());
+      }
     }
-    
-     /**
-     * Add properties from the given Configuration to the provided Properties.
-     *
-     * @param props properties to which connection information from the Configuration will be added
-     * @param conf configuration containing connection information
-     * @return the input Properties value, with additional connection information from the
-     * given Configuration
-     */
-    public static Properties extractProperties(Properties props, final Configuration conf) {
-        Iterator<Map.Entry<String, String>> iterator = conf.iterator();
-        if(iterator != null) {
-            while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = iterator.next();
-                props.setProperty(entry.getKey(), entry.getValue());
-            }
-        }
-        return props;
-    }
+    return props;
+  }
 }

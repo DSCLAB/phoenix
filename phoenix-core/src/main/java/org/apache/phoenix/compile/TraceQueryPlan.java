@@ -66,197 +66,202 @@ import org.apache.phoenix.util.SizedUtil;
 
 public class TraceQueryPlan implements QueryPlan {
 
-    private TraceStatement traceStatement = null;
-    private PhoenixStatement stmt = null;
-    private StatementContext context = null;
-    private boolean first = true;
+  private TraceStatement traceStatement = null;
+  private PhoenixStatement stmt = null;
+  private StatementContext context = null;
+  private boolean first = true;
 
-    private static final RowProjector TRACE_PROJECTOR;
-    static {
-        List<ExpressionProjector> projectedColumns = new ArrayList<ExpressionProjector>();
-        PColumn column =
-                new PColumnImpl(PNameFactory.newName(MetricInfo.TRACE.columnName), null,
-                        PLong.INSTANCE, null, null, false, 0, SortOrder.getDefault(), 0, null,
-                        false, null, false, false);
-        List<PColumn> columns = new ArrayList<PColumn>();
-        columns.add(column);
-        Expression expression =
-                new RowKeyColumnExpression(column, new RowKeyValueAccessor(columns, 0));
-        projectedColumns.add(new ExpressionProjector(MetricInfo.TRACE.columnName, "", expression,
-                true));
-        int estimatedByteSize = SizedUtil.KEY_VALUE_SIZE + PLong.INSTANCE.getByteSize();
-        TRACE_PROJECTOR = new RowProjector(projectedColumns, estimatedByteSize, false);
-    }
+  private static final RowProjector TRACE_PROJECTOR;
 
-    public TraceQueryPlan(TraceStatement traceStatement, PhoenixStatement stmt ) {
-        this.traceStatement = traceStatement;
-        this.stmt = stmt;
-        this.context = new StatementContext(stmt);
-    }
+  static {
+    List<ExpressionProjector> projectedColumns = new ArrayList<ExpressionProjector>();
+    PColumn column
+            = new PColumnImpl(PNameFactory.newName(MetricInfo.TRACE.columnName), null,
+                    PLong.INSTANCE, null, null, false, 0, SortOrder.getDefault(), 0, null,
+                    false, null, false, false);
+    List<PColumn> columns = new ArrayList<PColumn>();
+    columns.add(column);
+    Expression expression
+            = new RowKeyColumnExpression(column, new RowKeyValueAccessor(columns, 0));
+    projectedColumns.add(new ExpressionProjector(MetricInfo.TRACE.columnName, "", expression,
+            true));
+    int estimatedByteSize = SizedUtil.KEY_VALUE_SIZE + PLong.INSTANCE.getByteSize();
+    TRACE_PROJECTOR = new RowProjector(projectedColumns, estimatedByteSize, false);
+  }
 
-	@Override
-	public Operation getOperation() {
-		return traceStatement.getOperation();
-	}
-	
-    @Override
-    public StatementContext getContext() {
-        return this.context;
-    }
+  public TraceQueryPlan(TraceStatement traceStatement, PhoenixStatement stmt) {
+    this.traceStatement = traceStatement;
+    this.stmt = stmt;
+    this.context = new StatementContext(stmt);
+  }
 
-    @Override
-    public ParameterMetaData getParameterMetaData() {
-        return context.getBindManager().getParameterMetaData();
-    }
-    
-    @Override
-    public ResultIterator iterator() throws SQLException {
-    	return iterator(DefaultParallelScanGrouper.getInstance());
-    }
+  @Override
+  public Operation getOperation() {
+    return traceStatement.getOperation();
+  }
 
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
-        return iterator(scanGrouper);
+  @Override
+  public StatementContext getContext() {
+    return this.context;
+  }
+
+  @Override
+  public ParameterMetaData getParameterMetaData() {
+    return context.getBindManager().getParameterMetaData();
+  }
+
+  @Override
+  public ResultIterator iterator() throws SQLException {
+    return iterator(DefaultParallelScanGrouper.getInstance());
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
+    return iterator(scanGrouper);
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
+    final PhoenixConnection conn = stmt.getConnection();
+    if (conn.getTraceScope() == null && !traceStatement.isTraceOn()) {
+      return ResultIterator.EMPTY_ITERATOR;
     }
-        
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
-        final PhoenixConnection conn = stmt.getConnection();
-        if (conn.getTraceScope() == null && !traceStatement.isTraceOn()) {
-            return ResultIterator.EMPTY_ITERATOR;
+    return new ResultIterator() {
+
+      @Override
+      public void close() throws SQLException {
+      }
+
+      @Override
+      public Tuple next() throws SQLException {
+        if (!first) {
+          return null;
         }
-        return new ResultIterator() {
-
-            @Override
-            public void close() throws SQLException {
+        TraceScope traceScope = conn.getTraceScope();
+        if (traceStatement.isTraceOn()) {
+          conn.setSampler(Tracing.getConfiguredSampler(traceStatement));
+          if (conn.getSampler() == Sampler.NEVER) {
+            closeTraceScope(conn);
+          }
+          if (traceScope == null && !conn.getSampler().equals(Sampler.NEVER)) {
+            traceScope = Tracing.startNewSpan(conn, "Enabling trace");
+            if (traceScope.getSpan() != null) {
+              conn.setTraceScope(traceScope);
+            } else {
+              closeTraceScope(conn);
             }
+          }
+        } else {
+          closeTraceScope(conn);
+          conn.setSampler(Sampler.NEVER);
+        }
+        if (traceScope == null || traceScope.getSpan() == null) {
+          return null;
+        }
+        first = false;
+        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+        ParseNodeFactory factory = new ParseNodeFactory();
+        LiteralParseNode literal
+                = factory.literal(traceScope.getSpan().getTraceId());
+        LiteralExpression expression
+                = LiteralExpression.newConstant(literal.getValue(), PLong.INSTANCE,
+                        Determinism.ALWAYS);
+        expression.evaluate(null, ptr);
+        byte[] rowKey = ByteUtil.copyKeyBytesIfNecessary(ptr);
+        Cell cell
+                = CellUtil.createCell(rowKey, HConstants.EMPTY_BYTE_ARRAY,
+                        HConstants.EMPTY_BYTE_ARRAY, System.currentTimeMillis(),
+                        Type.Put.getCode(), HConstants.EMPTY_BYTE_ARRAY);
+        List<Cell> cells = new ArrayList<Cell>(1);
+        cells.add(cell);
+        return new ResultTuple(Result.create(cells));
+      }
 
-            @Override
-            public Tuple next() throws SQLException {
-                if(!first) return null;
-                TraceScope traceScope = conn.getTraceScope();
-                if (traceStatement.isTraceOn()) {
-                    conn.setSampler(Tracing.getConfiguredSampler(traceStatement));
-                    if (conn.getSampler() == Sampler.NEVER) {
-                        closeTraceScope(conn);
-                    }
-                    if (traceScope == null && !conn.getSampler().equals(Sampler.NEVER)) {
-                        traceScope = Tracing.startNewSpan(conn, "Enabling trace");
-                        if (traceScope.getSpan() != null) {
-                            conn.setTraceScope(traceScope);
-                        } else {
-                            closeTraceScope(conn);
-                        }
-                    }
-                } else {
-                    closeTraceScope(conn);
-                    conn.setSampler(Sampler.NEVER);
-                }
-                if (traceScope == null || traceScope.getSpan() == null) return null;
-                first = false;
-                ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-                ParseNodeFactory factory = new ParseNodeFactory();
-                LiteralParseNode literal =
-                        factory.literal(traceScope.getSpan().getTraceId());
-                LiteralExpression expression =
-                        LiteralExpression.newConstant(literal.getValue(), PLong.INSTANCE,
-                            Determinism.ALWAYS);
-                expression.evaluate(null, ptr);
-                byte[] rowKey = ByteUtil.copyKeyBytesIfNecessary(ptr);
-                Cell cell =
-                        CellUtil.createCell(rowKey, HConstants.EMPTY_BYTE_ARRAY,
-                            HConstants.EMPTY_BYTE_ARRAY, System.currentTimeMillis(),
-                            Type.Put.getCode(), HConstants.EMPTY_BYTE_ARRAY);
-                List<Cell> cells = new ArrayList<Cell>(1);
-                cells.add(cell);
-                return new ResultTuple(Result.create(cells));
-            }
+      private void closeTraceScope(final PhoenixConnection conn) {
+        if (conn.getTraceScope() != null) {
+          conn.getTraceScope().close();
+          conn.setTraceScope(null);
+        }
+      }
 
-            private void closeTraceScope(final PhoenixConnection conn) {
-                if(conn.getTraceScope()!=null) {
-                    conn.getTraceScope().close();
-                    conn.setTraceScope(null);
-                }
-            }
+      @Override
+      public void explain(List<String> planSteps) {
+      }
+    };
+  }
 
-            @Override
-            public void explain(List<String> planSteps) {
-            }
-        };
-    }
+  @Override
+  public long getEstimatedSize() {
+    return PLong.INSTANCE.getByteSize();
+  }
 
-    @Override
-    public long getEstimatedSize() {
-        return PLong.INSTANCE.getByteSize();
-    }
+  @Override
+  public Set<TableRef> getSourceRefs() {
+    return Collections.emptySet();
+  }
 
-    @Override
-    public Set<TableRef> getSourceRefs() {
-        return Collections.emptySet();
-    }
+  @Override
+  public TableRef getTableRef() {
+    return null;
+  }
 
-    @Override
-    public TableRef getTableRef() {
-        return null;
-    }
+  @Override
+  public RowProjector getProjector() {
+    return TRACE_PROJECTOR;
+  }
 
-    @Override
-    public RowProjector getProjector() {
-        return TRACE_PROJECTOR;
-    }
+  @Override
+  public Integer getLimit() {
+    return null;
+  }
 
-    @Override
-    public Integer getLimit() {
-        return null;
-    }
+  @Override
+  public Integer getOffset() {
+    return null;
+  }
 
-    @Override
-    public Integer getOffset() {
-        return null;
-    }
+  @Override
+  public OrderBy getOrderBy() {
+    return OrderBy.EMPTY_ORDER_BY;
+  }
 
-    @Override
-    public OrderBy getOrderBy() {
-        return OrderBy.EMPTY_ORDER_BY;
-    }
+  @Override
+  public GroupBy getGroupBy() {
+    return GroupBy.EMPTY_GROUP_BY;
+  }
 
-    @Override
-    public GroupBy getGroupBy() {
-        return GroupBy.EMPTY_GROUP_BY;
-    }
+  @Override
+  public List<KeyRange> getSplits() {
+    return Collections.emptyList();
+  }
 
-    @Override
-    public List<KeyRange> getSplits() {
-        return Collections.emptyList();
-    }
+  @Override
+  public List<List<Scan>> getScans() {
+    return Collections.emptyList();
+  }
 
-    @Override
-    public List<List<Scan>> getScans() {
-        return Collections.emptyList();
-    }
+  @Override
+  public FilterableStatement getStatement() {
+    return null;
+  }
 
-    @Override
-    public FilterableStatement getStatement() {
-        return null;
-    }
+  @Override
+  public boolean isDegenerate() {
+    return false;
+  }
 
-    @Override
-    public boolean isDegenerate() {
-        return false;
-    }
+  @Override
+  public boolean isRowKeyOrdered() {
+    return false;
+  }
 
-    @Override
-    public boolean isRowKeyOrdered() {
-        return false;
-    }
+  @Override
+  public ExplainPlan getExplainPlan() throws SQLException {
+    return ExplainPlan.EMPTY_PLAN;
+  }
 
-    @Override
-    public ExplainPlan getExplainPlan() throws SQLException {
-        return ExplainPlan.EMPTY_PLAN;
-    }
-    
-    @Override
-    public boolean useRoundRobinIterator() {
-        return false;
-    }
+  @Override
+  public boolean useRoundRobinIterator() {
+    return false;
+  }
 }

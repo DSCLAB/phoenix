@@ -27,35 +27,35 @@ import org.apache.hadoop.hbase.regionserver.ScannerContext;
 
 public abstract class BaseRegionScanner extends DelegateRegionScanner {
 
-	public BaseRegionScanner(RegionScanner delegate) {
-		super(delegate);
-	}
-	
-    @Override
-    public boolean isFilterDone() {
-        return false;
-    }
+  public BaseRegionScanner(RegionScanner delegate) {
+    super(delegate);
+  }
 
-    @Override
-    public abstract boolean next(List<Cell> results) throws IOException;
+  @Override
+  public boolean isFilterDone() {
+    return false;
+  }
 
-    @Override
-    public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return next(result);
-    }
+  @Override
+  public abstract boolean next(List<Cell> results) throws IOException;
 
-    @Override
-    public boolean reseek(byte[] row) throws IOException {
-        throw new DoNotRetryIOException("Unsupported");
-    }
+  @Override
+  public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
+    return next(result);
+  }
 
-    @Override
-    public boolean nextRaw(List<Cell> result) throws IOException {
-        return next(result);
-    }
+  @Override
+  public boolean reseek(byte[] row) throws IOException {
+    throw new DoNotRetryIOException("Unsupported");
+  }
 
-    @Override
-    public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return next(result, scannerContext);
-    }
+  @Override
+  public boolean nextRaw(List<Cell> result) throws IOException {
+    return next(result);
+  }
+
+  @Override
+  public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
+    return next(result, scannerContext);
+  }
 }

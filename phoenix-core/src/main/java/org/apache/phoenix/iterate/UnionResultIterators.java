@@ -31,112 +31,115 @@ import org.apache.phoenix.util.ServerUtil;
 
 import com.google.common.collect.Lists;
 
-
 /**
  *
  * Create a union ResultIterators
  *
- * 
+ *
  */
 public class UnionResultIterators implements ResultIterators {
-    private final List<KeyRange> splits;
-    private final List<List<Scan>> scans;
-    private final List<PeekingResultIterator> iterators;
-    private final List<QueryPlan> plans;
-    private final List<ReadMetricQueue> readMetricsList;
-    private final List<OverAllQueryMetrics> overAllQueryMetricsList;
-    private boolean closed;
-    private final StatementContext parentStmtCtx;
-    public UnionResultIterators(List<QueryPlan> plans, StatementContext parentStmtCtx) throws SQLException {
-        this.parentStmtCtx = parentStmtCtx;
-        this.plans = plans;
-        int nPlans = plans.size();
-        iterators = Lists.newArrayListWithExpectedSize(nPlans);
-        splits = Lists.newArrayListWithExpectedSize(nPlans * 30); 
-        scans = Lists.newArrayListWithExpectedSize(nPlans * 10); 
-        readMetricsList = Lists.newArrayListWithCapacity(nPlans);
-        overAllQueryMetricsList = Lists.newArrayListWithCapacity(nPlans);
-        for (QueryPlan plan : this.plans) {
-            readMetricsList.add(plan.getContext().getReadMetricsQueue());
-            overAllQueryMetricsList.add(plan.getContext().getOverallQueryMetrics());
-            iterators.add(LookAheadResultIterator.wrap(plan.iterator()));
-            splits.addAll(plan.getSplits()); 
-            scans.addAll(plan.getScans());
-        }
-    }
 
-    @Override
-    public List<KeyRange> getSplits() {
-        if (splits == null)
-            return Collections.emptyList();
-        else
-            return splits;
-    }
+  private final List<KeyRange> splits;
+  private final List<List<Scan>> scans;
+  private final List<PeekingResultIterator> iterators;
+  private final List<QueryPlan> plans;
+  private final List<ReadMetricQueue> readMetricsList;
+  private final List<OverAllQueryMetrics> overAllQueryMetricsList;
+  private boolean closed;
+  private final StatementContext parentStmtCtx;
 
-    @Override
-    public void close() throws SQLException {
-        if (!closed) {
-            closed = true;
-            SQLException toThrow = null;
+  public UnionResultIterators(List<QueryPlan> plans, StatementContext parentStmtCtx) throws SQLException {
+    this.parentStmtCtx = parentStmtCtx;
+    this.plans = plans;
+    int nPlans = plans.size();
+    iterators = Lists.newArrayListWithExpectedSize(nPlans);
+    splits = Lists.newArrayListWithExpectedSize(nPlans * 30);
+    scans = Lists.newArrayListWithExpectedSize(nPlans * 10);
+    readMetricsList = Lists.newArrayListWithCapacity(nPlans);
+    overAllQueryMetricsList = Lists.newArrayListWithCapacity(nPlans);
+    for (QueryPlan plan : this.plans) {
+      readMetricsList.add(plan.getContext().getReadMetricsQueue());
+      overAllQueryMetricsList.add(plan.getContext().getOverallQueryMetrics());
+      iterators.add(LookAheadResultIterator.wrap(plan.iterator()));
+      splits.addAll(plan.getSplits());
+      scans.addAll(plan.getScans());
+    }
+  }
+
+  @Override
+  public List<KeyRange> getSplits() {
+    if (splits == null) {
+      return Collections.emptyList();
+    } else {
+      return splits;
+    }
+  }
+
+  @Override
+  public void close() throws SQLException {
+    if (!closed) {
+      closed = true;
+      SQLException toThrow = null;
+      try {
+        if (iterators != null) {
+          for (int index = 0; index < iterators.size(); index++) {
+            PeekingResultIterator iterator = iterators.get(index);
             try {
-                if (iterators != null) {
-                    for (int index=0; index < iterators.size(); index++) {
-                        PeekingResultIterator iterator = iterators.get(index);
-                        try {
-                            iterator.close();
-                        } catch (Exception e) {
-                            if (toThrow == null) {
-                                toThrow = ServerUtil.parseServerException(e);
-                            } else {
-                                toThrow.setNextException(ServerUtil.parseServerException(e));
-                            }
-                        }
-                    }
-                }
+              iterator.close();
             } catch (Exception e) {
+              if (toThrow == null) {
                 toThrow = ServerUtil.parseServerException(e);
-            } finally {
-                setMetricsInParentContext();
-                if (toThrow != null) {
-                    throw toThrow;
-                }
+              } else {
+                toThrow.setNextException(ServerUtil.parseServerException(e));
+              }
             }
+          }
         }
-    }
-    
-    private void setMetricsInParentContext() {
-        ReadMetricQueue parentCtxReadMetrics = parentStmtCtx.getReadMetricsQueue();
-        for (ReadMetricQueue readMetrics : readMetricsList) {
-            parentCtxReadMetrics.combineReadMetrics(readMetrics);
+      } catch (Exception e) {
+        toThrow = ServerUtil.parseServerException(e);
+      } finally {
+        setMetricsInParentContext();
+        if (toThrow != null) {
+          throw toThrow;
         }
-        OverAllQueryMetrics parentCtxQueryMetrics = parentStmtCtx.getOverallQueryMetrics();
-        for (OverAllQueryMetrics metric : overAllQueryMetricsList) {
-            parentCtxQueryMetrics.combine(metric);
-        }
+      }
     }
-    
-    @Override
-    public List<List<Scan>> getScans() {
-        if (scans == null)
-            return Collections.emptyList();
-        else
-            return scans;
-    }
+  }
 
-    @Override
-    public int size() {
-        return scans.size();
+  private void setMetricsInParentContext() {
+    ReadMetricQueue parentCtxReadMetrics = parentStmtCtx.getReadMetricsQueue();
+    for (ReadMetricQueue readMetrics : readMetricsList) {
+      parentCtxReadMetrics.combineReadMetrics(readMetrics);
     }
+    OverAllQueryMetrics parentCtxQueryMetrics = parentStmtCtx.getOverallQueryMetrics();
+    for (OverAllQueryMetrics metric : overAllQueryMetricsList) {
+      parentCtxQueryMetrics.combine(metric);
+    }
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {
-        for (int index=0; index < iterators.size(); index++) {
-            iterators.get(index).explain(planSteps);
-        }
+  @Override
+  public List<List<Scan>> getScans() {
+    if (scans == null) {
+      return Collections.emptyList();
+    } else {
+      return scans;
     }
+  }
 
-    @Override 
-    public List<PeekingResultIterator> getIterators() throws SQLException {    
-        return iterators;
+  @Override
+  public int size() {
+    return scans.size();
+  }
+
+  @Override
+  public void explain(List<String> planSteps) {
+    for (int index = 0; index < iterators.size(); index++) {
+      iterators.get(index).explain(planSteps);
     }
+  }
+
+  @Override
+  public List<PeekingResultIterator> getIterators() throws SQLException {
+    return iterators;
+  }
 }

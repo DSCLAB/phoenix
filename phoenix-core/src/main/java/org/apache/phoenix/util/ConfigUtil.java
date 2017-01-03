@@ -23,9 +23,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 
 public class ConfigUtil {
+
   /**
-   * This function set missed replication configuration settings. It should only be used in testing
-   * env.
+   * This function set missed replication configuration settings. It should only
+   * be used in testing env.
+   *
    * @param conf
    */
   public static void setReplicationConfigIfAbsent(Configuration conf) {

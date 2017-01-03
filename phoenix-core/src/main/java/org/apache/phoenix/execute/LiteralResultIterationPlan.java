@@ -39,75 +39,76 @@ import org.apache.phoenix.schema.tuple.SingleKeyValueTuple;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 public class LiteralResultIterationPlan extends BaseQueryPlan {
-    protected final Iterable<Tuple> tuples;
 
-    public LiteralResultIterationPlan(StatementContext context, 
-            FilterableStatement statement, TableRef tableRef, RowProjector projection, 
-            Integer limit, Integer offset, OrderBy orderBy, ParallelIteratorFactory parallelIteratorFactory) {
-        this(Collections.<Tuple> singletonList(new SingleKeyValueTuple(KeyValue.LOWESTKEY)), 
-                context, statement, tableRef, projection, limit, offset, orderBy, parallelIteratorFactory);
-    }
+  protected final Iterable<Tuple> tuples;
 
-    public LiteralResultIterationPlan(Iterable<Tuple> tuples, StatementContext context, 
-            FilterableStatement statement, TableRef tableRef, RowProjector projection, 
-            Integer limit, Integer offset, OrderBy orderBy, ParallelIteratorFactory parallelIteratorFactory) {
-        super(context, statement, tableRef, projection, context.getBindManager().getParameterMetaData(), limit, offset, orderBy, GroupBy.EMPTY_GROUP_BY, parallelIteratorFactory, null);
-        this.tuples = tuples;
-    }
+  public LiteralResultIterationPlan(StatementContext context,
+          FilterableStatement statement, TableRef tableRef, RowProjector projection,
+          Integer limit, Integer offset, OrderBy orderBy, ParallelIteratorFactory parallelIteratorFactory) {
+    this(Collections.<Tuple>singletonList(new SingleKeyValueTuple(KeyValue.LOWESTKEY)),
+            context, statement, tableRef, projection, limit, offset, orderBy, parallelIteratorFactory);
+  }
 
-    @Override
-    public List<KeyRange> getSplits() {
-        return Collections.emptyList();
-    }
+  public LiteralResultIterationPlan(Iterable<Tuple> tuples, StatementContext context,
+          FilterableStatement statement, TableRef tableRef, RowProjector projection,
+          Integer limit, Integer offset, OrderBy orderBy, ParallelIteratorFactory parallelIteratorFactory) {
+    super(context, statement, tableRef, projection, context.getBindManager().getParameterMetaData(), limit, offset, orderBy, GroupBy.EMPTY_GROUP_BY, parallelIteratorFactory, null);
+    this.tuples = tuples;
+  }
 
-    @Override
-    public List<List<Scan>> getScans() {
-        return Collections.emptyList();
-    }
+  @Override
+  public List<KeyRange> getSplits() {
+    return Collections.emptyList();
+  }
 
-    @Override
-    public boolean useRoundRobinIterator() throws SQLException {
-        return false;
-    }
+  @Override
+  public List<List<Scan>> getScans() {
+    return Collections.emptyList();
+  }
 
-    @Override
-    protected ResultIterator newIterator(ParallelScanGrouper scanGrouper, Scan scan)
-            throws SQLException {
-        ResultIterator scanner = new ResultIterator() {
-            private final Iterator<Tuple> tupleIterator = tuples.iterator();
-            private boolean closed = false;
-            private int count = 0;
-            private int offsetCount = 0;
+  @Override
+  public boolean useRoundRobinIterator() throws SQLException {
+    return false;
+  }
 
-            @Override
-            public void close() throws SQLException {
-                this.closed = true;;
-            }
+  @Override
+  protected ResultIterator newIterator(ParallelScanGrouper scanGrouper, Scan scan)
+          throws SQLException {
+    ResultIterator scanner = new ResultIterator() {
+      private final Iterator<Tuple> tupleIterator = tuples.iterator();
+      private boolean closed = false;
+      private int count = 0;
+      private int offsetCount = 0;
 
-            @Override
-            public Tuple next() throws SQLException {
-                while (!this.closed && (offset != null && offsetCount < offset) && tupleIterator.hasNext()) {
-                    offsetCount++;
-                    tupleIterator.next();
-                }
-                if (!this.closed 
-                        && (limit == null || count++ < limit)
-                        && tupleIterator.hasNext()) {
-                    return tupleIterator.next();
-                }
-                return null;
-            }
+      @Override
+      public void close() throws SQLException {
+        this.closed = true;;
+      }
 
-            @Override
-            public void explain(List<String> planSteps) {
-            }
-            
-        };
-        
-        if (context.getSequenceManager().getSequenceCount() > 0) {
-            scanner = new SequenceResultIterator(scanner, context.getSequenceManager());
+      @Override
+      public Tuple next() throws SQLException {
+        while (!this.closed && (offset != null && offsetCount < offset) && tupleIterator.hasNext()) {
+          offsetCount++;
+          tupleIterator.next();
         }
-        
-        return scanner;
+        if (!this.closed
+                && (limit == null || count++ < limit)
+                && tupleIterator.hasNext()) {
+          return tupleIterator.next();
+        }
+        return null;
+      }
+
+      @Override
+      public void explain(List<String> planSteps) {
+      }
+
+    };
+
+    if (context.getSequenceManager().getSequenceCount() > 0) {
+      scanner = new SequenceResultIterator(scanner, context.getSequenceManager());
     }
+
+    return scanner;
+  }
 }

@@ -23,18 +23,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 
- * Annotation to denote that the in the test client manages timestamps 
- * itself and not HBase.
- * 
- * Tests using a mini cluster need to be classified either 
- * as {@link HBaseManagedTimeTest} or {@link ClientManagedTimeTest} 
- * or {@link NeedsOwnMiniClusterTest} otherwise they won't be run 
- * when one runs mvn verify or mvn install.
+ *
+ * Annotation to denote that the in the test client manages timestamps itself
+ * and not HBase.
+ *
+ * Tests using a mini cluster need to be classified either as
+ * {@link HBaseManagedTimeTest} or {@link ClientManagedTimeTest} or
+ * {@link NeedsOwnMiniClusterTest} otherwise they won't be run when one runs mvn
+ * verify or mvn install.
  *
  * @since 4.1
  */
-
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ClientManagedTimeTest {

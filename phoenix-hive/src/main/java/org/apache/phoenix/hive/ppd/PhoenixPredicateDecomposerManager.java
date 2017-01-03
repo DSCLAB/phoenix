@@ -28,56 +28,50 @@ import java.util.Map;
 /**
  * Support class that produces PredicateDecomposer for PhoenixStorageHandler
  */
-
 public class PhoenixPredicateDecomposerManager {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixPredicateDecomposerManager.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixPredicateDecomposerManager.class);
 
-    // In case of absence of WHERE clause, PhoenixPredicateDecomposer is not created because
-    // it's not called method of StorageHandler.decomposePredicate.
+  // In case of absence of WHERE clause, PhoenixPredicateDecomposer is not created because
+  // it's not called method of StorageHandler.decomposePredicate.
+  private static final Map<String, List<PhoenixPredicateDecomposer>> PREDICATE_DECOMPOSER_MAP
+          = Maps.newConcurrentMap();
 
-    private static final Map<String, List<PhoenixPredicateDecomposer>> PREDICATE_DECOMPOSER_MAP =
-            Maps.newConcurrentMap();
-
-    public static PhoenixPredicateDecomposer createPredicateDecomposer(String predicateKey,
-                                                                       List<String>
-                                                                               columnNameList) {
-        List<PhoenixPredicateDecomposer> predicateDecomposerList = PREDICATE_DECOMPOSER_MAP.get
-                (predicateKey);
-        if (predicateDecomposerList == null) {
-            predicateDecomposerList = Lists.newArrayList();
-            PREDICATE_DECOMPOSER_MAP.put(predicateKey, predicateDecomposerList);
-        }
-
-        PhoenixPredicateDecomposer predicateDecomposer = new PhoenixPredicateDecomposer
-                (columnNameList);
-        predicateDecomposerList.add(predicateDecomposer);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Predicate-decomposer : " + PREDICATE_DECOMPOSER_MAP + " [" +
-                    predicateKey + "] : " + predicateDecomposer);
-        }
-
-        return predicateDecomposer;
+  public static PhoenixPredicateDecomposer createPredicateDecomposer(String predicateKey,
+          List<String> columnNameList) {
+    List<PhoenixPredicateDecomposer> predicateDecomposerList = PREDICATE_DECOMPOSER_MAP.get(predicateKey);
+    if (predicateDecomposerList == null) {
+      predicateDecomposerList = Lists.newArrayList();
+      PREDICATE_DECOMPOSER_MAP.put(predicateKey, predicateDecomposerList);
     }
 
-    public static PhoenixPredicateDecomposer getPredicateDecomposer(String predicateKey) {
-        List<PhoenixPredicateDecomposer> predicateDecomposerList = PREDICATE_DECOMPOSER_MAP.get
-                (predicateKey);
+    PhoenixPredicateDecomposer predicateDecomposer = new PhoenixPredicateDecomposer(columnNameList);
+    predicateDecomposerList.add(predicateDecomposer);
 
-        PhoenixPredicateDecomposer predicateDecomposer = null;
-        if (predicateDecomposerList != null && predicateDecomposerList.size() > 0) {
-            predicateDecomposer = predicateDecomposerList.remove(0);
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Predicate-decomposer : " + PREDICATE_DECOMPOSER_MAP + " [" + predicateKey
-                    + "] : " + predicateDecomposer);
-        }
-
-        return predicateDecomposer;
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Predicate-decomposer : " + PREDICATE_DECOMPOSER_MAP + " ["
+              + predicateKey + "] : " + predicateDecomposer);
     }
 
-    private PhoenixPredicateDecomposerManager() {
+    return predicateDecomposer;
+  }
+
+  public static PhoenixPredicateDecomposer getPredicateDecomposer(String predicateKey) {
+    List<PhoenixPredicateDecomposer> predicateDecomposerList = PREDICATE_DECOMPOSER_MAP.get(predicateKey);
+
+    PhoenixPredicateDecomposer predicateDecomposer = null;
+    if (predicateDecomposerList != null && predicateDecomposerList.size() > 0) {
+      predicateDecomposer = predicateDecomposerList.remove(0);
     }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Predicate-decomposer : " + PREDICATE_DECOMPOSER_MAP + " [" + predicateKey
+              + "] : " + predicateDecomposer);
+    }
+
+    return predicateDecomposer;
+  }
+
+  private PhoenixPredicateDecomposerManager() {
+  }
 }

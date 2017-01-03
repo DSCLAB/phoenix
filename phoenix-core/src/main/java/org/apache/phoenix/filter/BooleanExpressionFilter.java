@@ -32,101 +32,108 @@ import org.apache.phoenix.schema.IllegalDataException;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ServerUtil;
 
-
 /**
- * 
+ *
  * Base class for filter that evaluates a WHERE clause expression.
  *
  * Subclass is expected to implement filterRow() method
- * 
+ *
  * @since 0.1
  */
 abstract public class BooleanExpressionFilter extends FilterBase implements Writable {
 
-    protected Expression expression;
-    private ImmutableBytesWritable tempPtr = new ImmutableBytesWritable();
-    
-    public BooleanExpressionFilter() {
-    }
+  protected Expression expression;
+  private ImmutableBytesWritable tempPtr = new ImmutableBytesWritable();
 
-    public BooleanExpressionFilter(Expression expression) {
-        this.expression = expression;
-    }
+  public BooleanExpressionFilter() {
+  }
 
-    public Expression getExpression() {
-        return expression;
-    }
-    
-    @Override
-    public boolean hasFilterRow() {
+  public BooleanExpressionFilter(Expression expression) {
+    this.expression = expression;
+  }
+
+  public Expression getExpression() {
+    return expression;
+  }
+
+  @Override
+  public boolean hasFilterRow() {
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + expression.hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + expression.hashCode();
-        return result;
+    if (obj == null) {
+      return false;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        BooleanExpressionFilter other = (BooleanExpressionFilter)obj;
-        if (!expression.equals(other.expression)) return false;
-        return true;
+    if (getClass() != obj.getClass()) {
+      return false;
     }
-
-    @Override
-    public String toString() {
-        return expression.toString();
+    BooleanExpressionFilter other = (BooleanExpressionFilter) obj;
+    if (!expression.equals(other.expression)) {
+      return false;
     }
+    return true;
+  }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value="NP_BOOLEAN_RETURN_NULL",
-            justification="Returns null by design.")
-    protected Boolean evaluate(Tuple input) {
-        try {
-            if (!expression.evaluate(input, tempPtr)) {
-                return null;
-            }
-        } catch (IllegalDataException e) {
-            return Boolean.FALSE;
-        }
-        return (Boolean)expression.getDataType().toObject(tempPtr);
-    }
+  @Override
+  public String toString() {
+    return expression.toString();
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        try {
-            expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
-            expression.readFields(input);
-            expression.reset(); // Initializes expression tree for partial evaluation
-        } catch (Throwable t) { // Catches incompatibilities during reading/writing and doesn't retry
-            ServerUtil.throwIOException("BooleanExpressionFilter failed during reading", t);
-        }
+  @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+          value = "NP_BOOLEAN_RETURN_NULL",
+          justification = "Returns null by design.")
+  protected Boolean evaluate(Tuple input) {
+    try {
+      if (!expression.evaluate(input, tempPtr)) {
+        return null;
+      }
+    } catch (IllegalDataException e) {
+      return Boolean.FALSE;
     }
+    return (Boolean) expression.getDataType().toObject(tempPtr);
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        try {
-            WritableUtils.writeVInt(output, ExpressionType.valueOf(expression).ordinal());
-            expression.write(output);
-        } catch (Throwable t) { // Catches incompatibilities during reading/writing and doesn't retry
-            ServerUtil.throwIOException("BooleanExpressionFilter failed during writing", t);
-        }
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    try {
+      expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
+      expression.readFields(input);
+      expression.reset(); // Initializes expression tree for partial evaluation
+    } catch (Throwable t) { // Catches incompatibilities during reading/writing and doesn't retry
+      ServerUtil.throwIOException("BooleanExpressionFilter failed during reading", t);
     }
+  }
 
-    @Override
-    public byte[] toByteArray() throws IOException {
-        return Writables.getBytes(this);
+  @Override
+  public void write(DataOutput output) throws IOException {
+    try {
+      WritableUtils.writeVInt(output, ExpressionType.valueOf(expression).ordinal());
+      expression.write(output);
+    } catch (Throwable t) { // Catches incompatibilities during reading/writing and doesn't retry
+      ServerUtil.throwIOException("BooleanExpressionFilter failed during writing", t);
     }
+  }
 
-    @Override
-    public void reset() {
-        expression.reset();
-    }
+  @Override
+  public byte[] toByteArray() throws IOException {
+    return Writables.getBytes(this);
+  }
+
+  @Override
+  public void reset() {
+    expression.reset();
+  }
 }

@@ -43,92 +43,92 @@ import com.google.common.collect.Multimap;
 /**
  * Used to recover failed index edits during WAL replay
  * <p>
- * We attempt to do the index updates in parallel using a backing threadpool. All threads are daemon threads, so it will
- * not block the region from shutting down.
+ * We attempt to do the index updates in parallel using a backing threadpool.
+ * All threads are daemon threads, so it will not block the region from shutting
+ * down.
  */
 public class RecoveryIndexWriter extends IndexWriter {
 
-    private static final Log LOG = LogFactory.getLog(RecoveryIndexWriter.class);
-    private Set<HTableInterfaceReference> nonExistingTablesList = new HashSet<HTableInterfaceReference>();
-    private HBaseAdmin admin;
+  private static final Log LOG = LogFactory.getLog(RecoveryIndexWriter.class);
+  private Set<HTableInterfaceReference> nonExistingTablesList = new HashSet<HTableInterfaceReference>();
+  private HBaseAdmin admin;
 
-    /**
-     * Directly specify the {@link IndexCommitter} and {@link IndexFailurePolicy}. Both are expected to be fully setup
-     * before calling.
-     * 
-     * @param committer
-     * @param policy
-     * @param env
-     * @throws IOException
-     * @throws ZooKeeperConnectionException
-     * @throws MasterNotRunningException
-     */
-    public RecoveryIndexWriter(IndexFailurePolicy policy, RegionCoprocessorEnvironment env, String name)
-            throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
-        super(new TrackingParallelWriterIndexCommitter(), policy, env, name);
-        this.admin = new HBaseAdmin(env.getConfiguration());
-    }
+  /**
+   * Directly specify the {@link IndexCommitter} and {@link IndexFailurePolicy}.
+   * Both are expected to be fully setup before calling.
+   *
+   * @param committer
+   * @param policy
+   * @param env
+   * @throws IOException
+   * @throws ZooKeeperConnectionException
+   * @throws MasterNotRunningException
+   */
+  public RecoveryIndexWriter(IndexFailurePolicy policy, RegionCoprocessorEnvironment env, String name)
+          throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
+    super(new TrackingParallelWriterIndexCommitter(), policy, env, name);
+    this.admin = new HBaseAdmin(env.getConfiguration());
+  }
 
-    @Override
-    public void write(Collection<Pair<Mutation, byte[]>> toWrite, boolean allowLocalUpdates) throws IOException {
-        try {
-            write(resolveTableReferences(toWrite), allowLocalUpdates);
-        } catch (MultiIndexWriteFailureException e) {
-            for (HTableInterfaceReference table : e.getFailedTables()) {
-                if (!admin.tableExists(table.getTableName())) {
-                    LOG.warn("Failure due to non existing table: " + table.getTableName());
-                    nonExistingTablesList.add(table);
-                } else {
-                    throw e;
-                }
-            }
+  @Override
+  public void write(Collection<Pair<Mutation, byte[]>> toWrite, boolean allowLocalUpdates) throws IOException {
+    try {
+      write(resolveTableReferences(toWrite), allowLocalUpdates);
+    } catch (MultiIndexWriteFailureException e) {
+      for (HTableInterfaceReference table : e.getFailedTables()) {
+        if (!admin.tableExists(table.getTableName())) {
+          LOG.warn("Failure due to non existing table: " + table.getTableName());
+          nonExistingTablesList.add(table);
+        } else {
+          throw e;
         }
+      }
     }
+  }
 
-    /**
-     * Convert the passed index updates to {@link HTableInterfaceReference}s.
-     * 
-     * @param indexUpdates
-     *            from the index builder
-     * @return pairs that can then be written by an {@link RecoveryIndexWriter}.
-     */
-    @Override
-    protected Multimap<HTableInterfaceReference, Mutation> resolveTableReferences(
-            Collection<Pair<Mutation, byte[]>> indexUpdates) {
-        Multimap<HTableInterfaceReference, Mutation> updates = ArrayListMultimap
-                .<HTableInterfaceReference, Mutation> create();
+  /**
+   * Convert the passed index updates to {@link HTableInterfaceReference}s.
+   *
+   * @param indexUpdates from the index builder
+   * @return pairs that can then be written by an {@link RecoveryIndexWriter}.
+   */
+  @Override
+  protected Multimap<HTableInterfaceReference, Mutation> resolveTableReferences(
+          Collection<Pair<Mutation, byte[]>> indexUpdates) {
+    Multimap<HTableInterfaceReference, Mutation> updates = ArrayListMultimap
+            .<HTableInterfaceReference, Mutation>create();
 
-        // simple map to make lookups easy while we build the map of tables to create
-        Map<ImmutableBytesPtr, HTableInterfaceReference> tables = new HashMap<ImmutableBytesPtr, HTableInterfaceReference>(
-                updates.size());
-        for (Pair<Mutation, byte[]> entry : indexUpdates) {
-            byte[] tableName = entry.getSecond();
-            ImmutableBytesPtr ptr = new ImmutableBytesPtr(tableName);
-            HTableInterfaceReference table = tables.get(ptr);
-            if (nonExistingTablesList.contains(table)) {
-                LOG.debug("Edits found for non existing table: " + table.getTableName() + " so skipping it!!");
-                continue;
-            }
-            if (table == null) {
-                table = new HTableInterfaceReference(ptr);
-                tables.put(ptr, table);
-            }
-            updates.put(table, entry.getFirst());
+    // simple map to make lookups easy while we build the map of tables to create
+    Map<ImmutableBytesPtr, HTableInterfaceReference> tables = new HashMap<ImmutableBytesPtr, HTableInterfaceReference>(
+            updates.size());
+    for (Pair<Mutation, byte[]> entry : indexUpdates) {
+      byte[] tableName = entry.getSecond();
+      ImmutableBytesPtr ptr = new ImmutableBytesPtr(tableName);
+      HTableInterfaceReference table = tables.get(ptr);
+      if (nonExistingTablesList.contains(table)) {
+        LOG.debug("Edits found for non existing table: " + table.getTableName() + " so skipping it!!");
+        continue;
+      }
+      if (table == null) {
+        table = new HTableInterfaceReference(ptr);
+        tables.put(ptr, table);
+      }
+      updates.put(table, entry.getFirst());
 
-        }
-        return updates;
     }
+    return updates;
+  }
 
-    @Override
-    public void stop(String why) {
-        super.stop(why);
-        if (admin != null) {
-            try {
-                admin.close();
-            } catch (IOException e) {
-                // closing silently
-            }
-        }
+  @Override
+  public void stop(String why) {
+    super.stop(why);
+    if (admin != null) {
+      try {
+        admin.close();
+      } catch (IOException e) {
+        // closing silently
+      }
     }
-  
+  }
+
 }

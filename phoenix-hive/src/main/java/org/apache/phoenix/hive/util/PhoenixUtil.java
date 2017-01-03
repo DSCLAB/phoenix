@@ -51,160 +51,157 @@ import java.util.Properties;
  */
 public class PhoenixUtil {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixUtil.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixUtil.class);
 
-    public static String getPhoenixType(String hiveTypeName) {
-        if (hiveTypeName.startsWith("array")) {
-            List<String> tokenList = Lists.newArrayList(Splitter.on(CharMatcher.is('<').or
-                    (CharMatcher.is('>'))).split(hiveTypeName));
-            return getPhoenixType(tokenList.get(1)) + "[]";
-        } else if (hiveTypeName.startsWith("int")) {
-            return "integer";
-        } else if (hiveTypeName.equals("string")) {
-            return "varchar";
+  public static String getPhoenixType(String hiveTypeName) {
+    if (hiveTypeName.startsWith("array")) {
+      List<String> tokenList = Lists.newArrayList(Splitter.on(CharMatcher.is('<').or(CharMatcher.is('>'))).split(hiveTypeName));
+      return getPhoenixType(tokenList.get(1)) + "[]";
+    } else if (hiveTypeName.startsWith("int")) {
+      return "integer";
+    } else if (hiveTypeName.equals("string")) {
+      return "varchar";
+    } else {
+      return hiveTypeName;
+    }
+  }
+
+  public static boolean existTable(Connection conn, String tableName) throws SQLException {
+    boolean exist = false;
+    DatabaseMetaData dbMeta = conn.getMetaData();
+
+    String[] schemaInfo = getTableSchema(tableName.toUpperCase());
+    try (ResultSet rs = dbMeta.getTables(null, schemaInfo[0], schemaInfo[1], null)) {
+      exist = rs.next();
+
+      if (LOG.isDebugEnabled()) {
+        if (exist) {
+          LOG.debug(rs.getString("TABLE_NAME") + " table exist. ");
         } else {
-            return hiveTypeName;
+          LOG.debug("table " + tableName + " doesn't exist.");
         }
+      }
     }
 
-    public static boolean existTable(Connection conn, String tableName) throws SQLException {
-        boolean exist = false;
-        DatabaseMetaData dbMeta = conn.getMetaData();
+    return exist;
+  }
 
-        String[] schemaInfo = getTableSchema(tableName.toUpperCase());
-        try (ResultSet rs = dbMeta.getTables(null, schemaInfo[0], schemaInfo[1], null)) {
-            exist = rs.next();
+  public static List<String> getPrimaryKeyColumnList(Connection conn, String tableName) throws
+          SQLException {
+    Map<Short, String> primaryKeyColumnInfoMap = Maps.newHashMap();
+    DatabaseMetaData dbMeta = conn.getMetaData();
 
-            if (LOG.isDebugEnabled()) {
-                if (exist) {
-                    LOG.debug(rs.getString("TABLE_NAME") + " table exist. ");
-                } else {
-                    LOG.debug("table " + tableName + " doesn't exist.");
-                }
-            }
-        }
+    String[] schemaInfo = getTableSchema(tableName.toUpperCase());
+    try (ResultSet rs = dbMeta.getPrimaryKeys(null, schemaInfo[0], schemaInfo[1])) {
+      while (rs.next()) {
+        primaryKeyColumnInfoMap.put(rs.getShort("KEY_SEQ"), rs.getString("COLUMN_NAME"));
+      }
 
-        return exist;
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("PK-columns : " + primaryKeyColumnInfoMap);
+      }
     }
 
-    public static List<String> getPrimaryKeyColumnList(Connection conn, String tableName) throws
-            SQLException {
-        Map<Short, String> primaryKeyColumnInfoMap = Maps.newHashMap();
-        DatabaseMetaData dbMeta = conn.getMetaData();
+    return Lists.newArrayList(primaryKeyColumnInfoMap.values());
+  }
 
-        String[] schemaInfo = getTableSchema(tableName.toUpperCase());
-        try (ResultSet rs = dbMeta.getPrimaryKeys(null, schemaInfo[0], schemaInfo[1])) {
-            while (rs.next()) {
-                primaryKeyColumnInfoMap.put(rs.getShort("KEY_SEQ"), rs.getString("COLUMN_NAME"));
-            }
+  public static List<String> getPrimaryKeyColumnList(Configuration config, String tableName) {
+    List<String> pkColumnNameList = null;
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("PK-columns : " + primaryKeyColumnInfoMap);
-            }
-        }
-
-        return Lists.newArrayList(primaryKeyColumnInfoMap.values());
+    try (Connection conn = PhoenixConnectionUtil.getInputConnection(config, new Properties())) {
+      pkColumnNameList = getPrimaryKeyColumnList(conn, tableName);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
 
-    public static List<String> getPrimaryKeyColumnList(Configuration config, String tableName) {
-        List<String> pkColumnNameList = null;
+    return pkColumnNameList;
+  }
 
-        try (Connection conn = PhoenixConnectionUtil.getInputConnection(config, new Properties())) {
-            pkColumnNameList = getPrimaryKeyColumnList(conn, tableName);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+  public static void createTable(Connection conn, String createTableStatement) throws
+          SQLException {
+    conn.createStatement().execute(createTableStatement);
+  }
 
-        return pkColumnNameList;
+  public static void dropTable(Connection conn, String tableName) throws SQLException {
+    conn.createStatement().execute("drop table " + tableName);
+  }
+
+  public static List<ColumnInfo> getColumnInfoList(Connection conn, String tableName) throws
+          SQLException {
+    List<ColumnInfo> columnInfoList = null;
+
+    try {
+      columnInfoList = PhoenixRuntime.generateColumnInfo(conn, tableName, null);
+    } catch (TableNotFoundException e) {
+      // Exception can be occurred when table create.
+      columnInfoList = Collections.emptyList();
     }
 
-    public static void createTable(Connection conn, String createTableStatement) throws
-            SQLException {
-        conn.createStatement().execute(createTableStatement);
+    return columnInfoList;
+  }
+
+  public static String[] getTableSchema(String tableName) {
+    String[] schemaInfo = new String[2];
+    String[] tokens = tableName.split("\\.");
+
+    if (tokens.length == 2) {
+      schemaInfo = tokens;
+    } else {
+      schemaInfo[1] = tokens[0];
     }
 
-    public static void dropTable(Connection conn, String tableName) throws SQLException {
-        conn.createStatement().execute("drop table " + tableName);
+    return schemaInfo;
+  }
+
+  public static boolean isDisabledWal(MetaDataClient metaDataClient, String tableName) throws
+          SQLException {
+    String[] schemaInfo = getTableSchema(tableName.toUpperCase());
+    MetaDataMutationResult result = metaDataClient.updateCache(schemaInfo[0], schemaInfo[1]);
+    PTable dataTable = result.getTable();
+
+    return dataTable.isWALDisabled();
+  }
+
+  public static void alterTableForWalDisable(Connection conn, String tableName, boolean disableMode) throws SQLException {
+    conn.createStatement().execute("alter table " + tableName + " set disable_wal="
+            + disableMode);
+  }
+
+  public static void flush(Connection conn, String tableName) throws SQLException {
+    try (HBaseAdmin admin = ((PhoenixConnection) conn).getQueryServices().getAdmin()) {
+      admin.flush(TableName.valueOf(tableName));
+    } catch (IOException e) {
+      throw new SQLException(e);
+    }
+  }
+
+  public static String constructDeleteStatement(Connection conn, String tableName) throws
+          SQLException {
+    StringBuilder deleteQuery = new StringBuilder("delete from ").append(tableName).append(" "
+            + "where ");
+
+    List<String> primaryKeyColumnList = getPrimaryKeyColumnList(conn, tableName);
+    for (int i = 0, limit = primaryKeyColumnList.size(); i < limit; i++) {
+      String pkColumn = primaryKeyColumnList.get(i);
+      deleteQuery.append(pkColumn).append(PhoenixStorageHandlerConstants.EQUAL).append(PhoenixStorageHandlerConstants.QUESTION);
+
+      if ((i + 1) != primaryKeyColumnList.size()) {
+        deleteQuery.append(" and ");
+      }
     }
 
-    public static List<ColumnInfo> getColumnInfoList(Connection conn, String tableName) throws
-            SQLException {
-        List<ColumnInfo> columnInfoList = null;
+    return deleteQuery.toString();
+  }
 
-        try {
-            columnInfoList = PhoenixRuntime.generateColumnInfo(conn, tableName, null);
-        } catch (TableNotFoundException e) {
-            // Exception can be occurred when table create.
-            columnInfoList = Collections.emptyList();
-        }
-
-        return columnInfoList;
+  public static void closeResource(Statement stmt) throws SQLException {
+    if (stmt != null && !stmt.isClosed()) {
+      stmt.close();
     }
+  }
 
-    public static String[] getTableSchema(String tableName) {
-        String[] schemaInfo = new String[2];
-        String[] tokens = tableName.split("\\.");
-
-        if (tokens.length == 2) {
-            schemaInfo = tokens;
-        } else {
-            schemaInfo[1] = tokens[0];
-        }
-
-        return schemaInfo;
+  public static void closeResource(Connection conn) throws SQLException {
+    if (conn != null && !conn.isClosed()) {
+      conn.close();
     }
-
-    public static boolean isDisabledWal(MetaDataClient metaDataClient, String tableName) throws
-            SQLException {
-        String[] schemaInfo = getTableSchema(tableName.toUpperCase());
-        MetaDataMutationResult result = metaDataClient.updateCache(schemaInfo[0], schemaInfo[1]);
-        PTable dataTable = result.getTable();
-
-        return dataTable.isWALDisabled();
-    }
-
-    public static void alterTableForWalDisable(Connection conn, String tableName, boolean
-            disableMode) throws SQLException {
-        conn.createStatement().execute("alter table " + tableName + " set disable_wal=" +
-                disableMode);
-    }
-
-    public static void flush(Connection conn, String tableName) throws SQLException {
-        try (HBaseAdmin admin = ((PhoenixConnection) conn).getQueryServices().getAdmin()) {
-            admin.flush(TableName.valueOf(tableName));
-        } catch (IOException e) {
-            throw new SQLException(e);
-        }
-    }
-
-    public static String constructDeleteStatement(Connection conn, String tableName) throws
-            SQLException {
-        StringBuilder deleteQuery = new StringBuilder("delete from ").append(tableName).append(" " +
-                "where ");
-
-        List<String> primaryKeyColumnList = getPrimaryKeyColumnList(conn, tableName);
-        for (int i = 0, limit = primaryKeyColumnList.size(); i < limit; i++) {
-            String pkColumn = primaryKeyColumnList.get(i);
-            deleteQuery.append(pkColumn).append(PhoenixStorageHandlerConstants.EQUAL).append
-                    (PhoenixStorageHandlerConstants.QUESTION);
-
-            if ((i + 1) != primaryKeyColumnList.size()) {
-                deleteQuery.append(" and ");
-            }
-        }
-
-        return deleteQuery.toString();
-    }
-
-    public static void closeResource(Statement stmt) throws SQLException {
-        if (stmt != null && !stmt.isClosed()) {
-            stmt.close();
-        }
-    }
-
-    public static void closeResource(Connection conn) throws SQLException {
-        if (conn != null && !conn.isClosed()) {
-            conn.close();
-        }
-    }
+  }
 }

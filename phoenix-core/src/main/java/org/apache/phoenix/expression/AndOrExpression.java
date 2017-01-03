@@ -25,67 +25,67 @@ import org.apache.phoenix.schema.types.PBoolean;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
+ *
  * Abstract expression implementation for compound AND and OR expressions
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class AndOrExpression extends BaseCompoundExpression {
-    // Remember evaluation of child expression for partial evaluation
-    private BitSet partialEvalState;
-   
-    public AndOrExpression() {
-    }
-    
-    public AndOrExpression(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public PDataType getDataType() {
-        return PBoolean.INSTANCE;
-    }
+  // Remember evaluation of child expression for partial evaluation
 
-    @Override
-    public void reset() {
-        if (partialEvalState == null) {
-            partialEvalState = new BitSet(children.size());
+  private BitSet partialEvalState;
+
+  public AndOrExpression() {
+  }
+
+  public AndOrExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PBoolean.INSTANCE;
+  }
+
+  @Override
+  public void reset() {
+    if (partialEvalState == null) {
+      partialEvalState = new BitSet(children.size());
+    } else {
+      partialEvalState.clear();
+    }
+    super.reset();
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    boolean isNull = false;
+    for (int i = 0; i < children.size(); i++) {
+      Expression child = children.get(i);
+      // If partial state is available, then use that to know we've already evaluated this
+      // child expression and do not need to do so again.
+      if (partialEvalState == null || !partialEvalState.get(i)) {
+        // Call through to child evaluate method matching parent call to allow child to optimize
+        // evaluate versus getValue code path.
+        if (child.evaluate(tuple, ptr)) {
+          // Short circuit if we see our stop value
+          if (isStopValue((Boolean) PBoolean.INSTANCE.toObject(ptr, child.getDataType()))) {
+            return true;
+          } else if (partialEvalState != null) {
+            partialEvalState.set(i);
+          }
         } else {
-            partialEvalState.clear();
+          isNull = true;
         }
-        super.reset();
+      }
     }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        boolean isNull = false;
-        for (int i = 0; i < children.size(); i++) {
-            Expression child = children.get(i);
-            // If partial state is available, then use that to know we've already evaluated this
-            // child expression and do not need to do so again.
-            if (partialEvalState == null || !partialEvalState.get(i)) {
-                // Call through to child evaluate method matching parent call to allow child to optimize
-                // evaluate versus getValue code path.
-                if (child.evaluate(tuple, ptr)) {
-                    // Short circuit if we see our stop value
-                    if (isStopValue((Boolean) PBoolean.INSTANCE.toObject(ptr, child.getDataType()))) {
-                        return true;
-                    } else if (partialEvalState != null) {
-                        partialEvalState.set(i);
-                    }
-                } else {
-                    isNull = true;
-                }
-            }
-        }
-        if (isNull) {
-            return false;
-        }
-        return true;
+    if (isNull) {
+      return false;
     }
+    return true;
+  }
 
-    protected abstract boolean isStopValue(Boolean value);
+  protected abstract boolean isStopValue(Boolean value);
 }

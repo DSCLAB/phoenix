@@ -25,15 +25,14 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.CurrentTimeFunction;
 import org.apache.phoenix.expression.function.FunctionExpression;
 
-
 public class CurrentTimeParseNode extends FunctionParseNode {
 
-    public CurrentTimeParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  public CurrentTimeParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        return new CurrentTimeFunction(context.getCurrentTime());
-    }
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    return new CurrentTimeFunction(context.getCurrentTime());
+  }
 }

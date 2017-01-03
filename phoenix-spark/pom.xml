@@ -476,16 +476,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.apache.tephra</groupId>
-        <artifactId>tephra-core</artifactId>
-        <type>test-jar</type>
-        <scope>test</scope>
+      <groupId>org.apache.tephra</groupId>
+      <artifactId>tephra-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <testSourceDirectory>src/it/scala</testSourceDirectory>
-    <testResources><testResource><directory>src/it/resources</directory></testResource></testResources>
+    <testResources>
+      <testResource>
+        <directory>src/it/resources</directory>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

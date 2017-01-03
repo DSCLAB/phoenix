@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.end2end.BaseHBaseManagedTimeIT;
@@ -31,29 +30,32 @@ import java.util.List;
 import java.util.Properties;
 
 public class ResultBaseTestIT extends BaseHBaseManagedTimeIT {
-    protected static final String matcherScenario = ".*scenario/.*test.*xml";
-    protected static final String matcherSchema = ".*datamodel/.*test.*sql";
 
-    protected static PhoenixUtil util = PhoenixUtil.create(true);
-    protected static Properties properties;
-    protected static SchemaReader reader;
-    protected static XMLConfigParser parser;
-    protected static List<Path> resources;
-    protected static ResultUtil resultUtil = new ResultUtil();
+  protected static final String matcherScenario = ".*scenario/.*test.*xml";
+  protected static final String matcherSchema = ".*datamodel/.*test.*sql";
 
-    @BeforeClass public static void setUp() throws Exception {
+  protected static PhoenixUtil util = PhoenixUtil.create(true);
+  protected static Properties properties;
+  protected static SchemaReader reader;
+  protected static XMLConfigParser parser;
+  protected static List<Path> resources;
+  protected static ResultUtil resultUtil = new ResultUtil();
 
-        PherfConstants constants = PherfConstants.create();
-        properties = constants.getProperties(PherfConstants.PHERF_PROPERTIES, false);
-        String dir = properties.getProperty("pherf.default.results.dir");
-        resultUtil.ensureBaseDirExists(dir);
+  @BeforeClass
+  public static void setUp() throws Exception {
 
-        util.setZookeeper("localhost");
-        reader = new SchemaReader(util, matcherSchema);
-        parser = new XMLConfigParser(matcherScenario);
-    }
-    
-    @AfterClass public static void tearDown() throws Exception {
-    	resultUtil.deleteDir(properties.getProperty("pherf.default.results.dir"));
-    }
+    PherfConstants constants = PherfConstants.create();
+    properties = constants.getProperties(PherfConstants.PHERF_PROPERTIES, false);
+    String dir = properties.getProperty("pherf.default.results.dir");
+    resultUtil.ensureBaseDirExists(dir);
+
+    util.setZookeeper("localhost");
+    reader = new SchemaReader(util, matcherSchema);
+    parser = new XMLConfigParser(matcherScenario);
+  }
+
+  @AfterClass
+  public static void tearDown() throws Exception {
+    resultUtil.deleteDir(properties.getProperty("pherf.default.results.dir"));
+  }
 }

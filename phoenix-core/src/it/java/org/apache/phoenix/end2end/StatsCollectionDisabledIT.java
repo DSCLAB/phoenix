@@ -43,37 +43,37 @@ import com.google.common.collect.Maps;
  */
 public class StatsCollectionDisabledIT extends StatsCollectorAbstractIT {
 
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(5);
-        // Must update config before starting server
-        props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(20));
-        props.put(QueryServices.STATS_ENABLED_ATTRIB, Boolean.toString(false));
-        props.put(QueryServices.EXPLAIN_CHUNK_COUNT_ATTRIB, Boolean.TRUE.toString());
-        props.put(QueryServices.EXPLAIN_ROW_COUNT_ATTRIB, Boolean.TRUE.toString());
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(5);
+    // Must update config before starting server
+    props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(20));
+    props.put(QueryServices.STATS_ENABLED_ATTRIB, Boolean.toString(false));
+    props.put(QueryServices.EXPLAIN_CHUNK_COUNT_ATTRIB, Boolean.TRUE.toString());
+    props.put(QueryServices.EXPLAIN_ROW_COUNT_ATTRIB, Boolean.TRUE.toString());
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 
-    @Test
-    public void testStatisticsAreNotWritten() throws SQLException {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE T1 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
-        stmt.execute("UPSERT INTO T1 VALUES (1, 'NAME1')");
-        stmt.execute("UPSERT INTO T1 VALUES (2, 'NAME2')");
-        stmt.execute("UPSERT INTO T1 VALUES (3, 'NAME3')");
-        conn.commit();
-        stmt.execute("UPDATE STATISTICS T1");
-        ResultSet rs = stmt.executeQuery("SELECT * FROM SYSTEM.STATS");
-        assertFalse(rs.next());
-        rs.close();
-        stmt.close();
-        rs = conn.createStatement().executeQuery("EXPLAIN SELECT * FROM T1");
-        String explainPlan = QueryUtil.getExplainPlan(rs);
-        assertEquals(
-                "CLIENT 1-CHUNK PARALLEL 1-WAY FULL SCAN OVER T1",
-                explainPlan);
-       conn.close();
-    }
+  @Test
+  public void testStatisticsAreNotWritten() throws SQLException {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE T1 (ID INTEGER NOT NULL PRIMARY KEY, NAME VARCHAR)");
+    stmt.execute("UPSERT INTO T1 VALUES (1, 'NAME1')");
+    stmt.execute("UPSERT INTO T1 VALUES (2, 'NAME2')");
+    stmt.execute("UPSERT INTO T1 VALUES (3, 'NAME3')");
+    conn.commit();
+    stmt.execute("UPDATE STATISTICS T1");
+    ResultSet rs = stmt.executeQuery("SELECT * FROM SYSTEM.STATS");
+    assertFalse(rs.next());
+    rs.close();
+    stmt.close();
+    rs = conn.createStatement().executeQuery("EXPLAIN SELECT * FROM T1");
+    String explainPlan = QueryUtil.getExplainPlan(rs);
+    assertEquals(
+            "CLIENT 1-CHUNK PARALLEL 1-WAY FULL SCAN OVER T1",
+            explainPlan);
+    conn.close();
+  }
 }

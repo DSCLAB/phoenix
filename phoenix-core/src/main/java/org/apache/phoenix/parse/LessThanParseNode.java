@@ -20,27 +20,26 @@ package org.apache.phoenix.parse;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 
-
 /**
- * 
+ *
  * Node representing the less than operator (<) in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public class LessThanParseNode extends ComparisonParseNode {
 
-    LessThanParseNode(ParseNode lhs, ParseNode rhs) {
-        super(lhs, rhs);
-    }
+  LessThanParseNode(ParseNode lhs, ParseNode rhs) {
+    super(lhs, rhs);
+  }
 
-    @Override
-    public CompareOp getFilterOp() {
-        return CompareFilter.CompareOp.LESS;
-    }
+  @Override
+  public CompareOp getFilterOp() {
+    return CompareFilter.CompareOp.LESS;
+  }
 
-    @Override
-    public CompareOp getInvertFilterOp() {
-        return CompareOp.GREATER;
-    }
+  @Override
+  public CompareOp getInvertFilterOp() {
+    return CompareOp.GREATER;
+  }
 }

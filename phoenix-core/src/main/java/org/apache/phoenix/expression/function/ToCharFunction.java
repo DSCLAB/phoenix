@@ -36,113 +36,126 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
- * Implementation of the TO_CHAR(&lt;date&gt;/&lt;number&gt;,[&lt;format-string&gt;] built-in function.
- * The first argument must be of type DATE or TIME or TIMESTAMP or DECIMAL or INTEGER, and the second argument must be a constant string. 
  *
- * 
+ * Implementation of the
+ * TO_CHAR(&lt;date&gt;/&lt;number&gt;,[&lt;format-string&gt;] built-in
+ * function. The first argument must be of type DATE or TIME or TIMESTAMP or
+ * DECIMAL or INTEGER, and the second argument must be a constant string.
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=ToCharFunction.NAME, nodeClass=ToCharParseNode.class, args={
-    @Argument(allowedTypes={PTimestamp.class, PDecimal.class}),
-    @Argument(allowedTypes={PVarchar.class},isConstant=true,defaultValue="null") } )
+@BuiltInFunction(name = ToCharFunction.NAME, nodeClass = ToCharParseNode.class, args = {
+  @Argument(allowedTypes = {PTimestamp.class, PDecimal.class})
+  ,
+    @Argument(allowedTypes = {PVarchar.class}, isConstant = true, defaultValue = "null")})
 public class ToCharFunction extends ScalarFunction {
-    public static final String NAME = "TO_CHAR";
-    private String formatString;
-    private Format formatter;
-    private FunctionArgumentType type;
-    
-    public ToCharFunction() {
-    }
 
-    public ToCharFunction(List<Expression> children, FunctionArgumentType type, String formatString, Format formatter) throws SQLException {
-        super(children.subList(0, 1));
-        Preconditions.checkNotNull(formatString);
-        Preconditions.checkNotNull(formatter);
-        Preconditions.checkNotNull(type);
-        this.type = type;
-        this.formatString = formatString;
-        this.formatter = formatter;
-    }
-    
-    @Override
-    public ToCharFunction clone(List<Expression> children) {
-    	try {
-            return new ToCharFunction(children, type, formatString, formatter);
-        } catch (Exception e) {
-            throw new RuntimeException(e); // Impossible, since it was originally constructed this way
-        }
-    }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + formatString.hashCode();
-        result = prime * result + getExpression().hashCode();
-        return result;
-    }
+  public static final String NAME = "TO_CHAR";
+  private String formatString;
+  private Format formatter;
+  private FunctionArgumentType type;
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        ToCharFunction other = (ToCharFunction)obj;
-        if (!getExpression().equals(other.getExpression())) return false;
-        if (!formatString.equals(other.formatString)) return false;
-        return true;
-    }
+  public ToCharFunction() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression expression = getExpression();
-        if (!expression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if (ptr.getLength() == 0) {
-            return true;
-        }
-        PDataType type = expression.getDataType();
-        Object value = formatter.format(type.toObject(ptr, expression.getSortOrder()));
-        byte[] b = getDataType().toBytes(value);
-        ptr.set(b);
-        return true;
-     }
+  public ToCharFunction(List<Expression> children, FunctionArgumentType type, String formatString, Format formatter) throws SQLException {
+    super(children.subList(0, 1));
+    Preconditions.checkNotNull(formatString);
+    Preconditions.checkNotNull(formatter);
+    Preconditions.checkNotNull(type);
+    this.type = type;
+    this.formatString = formatString;
+    this.formatter = formatter;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
+  @Override
+  public ToCharFunction clone(List<Expression> children) {
+    try {
+      return new ToCharFunction(children, type, formatString, formatter);
+    } catch (Exception e) {
+      throw new RuntimeException(e); // Impossible, since it was originally constructed this way
     }
+  }
 
-    @Override
-    public boolean isNullable() {
-        return getExpression().isNullable();
-    }
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + formatString.hashCode();
+    result = prime * result + getExpression().hashCode();
+    return result;
+  }
 
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        super.readFields(input);
-        formatString = WritableUtils.readString(input);
-        type = WritableUtils.readEnum(input, FunctionArgumentType.class);
-        formatter = type.getFormatter(formatString);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    ToCharFunction other = (ToCharFunction) obj;
+    if (!getExpression().equals(other.getExpression())) {
+      return false;
+    }
+    if (!formatString.equals(other.formatString)) {
+      return false;
+    }
+    return true;
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        super.write(output);
-        WritableUtils.writeString(output, formatString);
-        WritableUtils.writeEnum(output, type);
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression expression = getExpression();
+    if (!expression.evaluate(tuple, ptr)) {
+      return false;
     }
+    if (ptr.getLength() == 0) {
+      return true;
+    }
+    PDataType type = expression.getDataType();
+    Object value = formatter.format(type.toObject(ptr, expression.getSortOrder()));
+    byte[] b = getDataType().toBytes(value);
+    ptr.set(b);
+    return true;
+  }
 
-    private Expression getExpression() {
-        return children.get(0);
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public boolean isNullable() {
+    return getExpression().isNullable();
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    formatString = WritableUtils.readString(input);
+    type = WritableUtils.readEnum(input, FunctionArgumentType.class);
+    formatter = type.getFormatter(formatString);
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    super.write(output);
+    WritableUtils.writeString(output, formatString);
+    WritableUtils.writeEnum(output, type);
+  }
+
+  private Expression getExpression() {
+    return children.get(0);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

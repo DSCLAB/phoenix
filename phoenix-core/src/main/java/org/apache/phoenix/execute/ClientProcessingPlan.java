@@ -30,68 +30,70 @@ import org.apache.phoenix.parse.FilterableStatement;
 import org.apache.phoenix.schema.TableRef;
 
 /**
- * Query plan that does where, order-by limit at client side, which is
- * for derived-table queries that cannot be flattened by SubselectRewriter.
+ * Query plan that does where, order-by limit at client side, which is for
+ * derived-table queries that cannot be flattened by SubselectRewriter.
  */
 public abstract class ClientProcessingPlan extends DelegateQueryPlan {
-    protected final StatementContext context;
-    protected final FilterableStatement statement;
-    protected final TableRef table;
-    protected final RowProjector projector;
-    protected final Integer limit;
-    protected final Integer offset;
-    protected final Expression where;
-    protected final OrderBy orderBy;
-    public ClientProcessingPlan(StatementContext context, FilterableStatement statement, TableRef table, 
-            RowProjector projector, Integer limit, Integer offset, Expression where, OrderBy orderBy, QueryPlan delegate) {
-        super(delegate);
-        this.context = context;
-        this.statement = statement;
-        this.table = table;
-        this.projector = projector;
-        this.limit = limit;
-        this.where = where;
-        this.orderBy = orderBy;
-        this.offset = offset;
-    }
-    
-    @Override
-    public StatementContext getContext() {
-        return context;
-    }
 
-    @Override
-    public TableRef getTableRef() {
-        return table;
-    }
+  protected final StatementContext context;
+  protected final FilterableStatement statement;
+  protected final TableRef table;
+  protected final RowProjector projector;
+  protected final Integer limit;
+  protected final Integer offset;
+  protected final Expression where;
+  protected final OrderBy orderBy;
 
-    @Override
-    public RowProjector getProjector() {
-        return projector;
-    }
+  public ClientProcessingPlan(StatementContext context, FilterableStatement statement, TableRef table,
+          RowProjector projector, Integer limit, Integer offset, Expression where, OrderBy orderBy, QueryPlan delegate) {
+    super(delegate);
+    this.context = context;
+    this.statement = statement;
+    this.table = table;
+    this.projector = projector;
+    this.limit = limit;
+    this.where = where;
+    this.orderBy = orderBy;
+    this.offset = offset;
+  }
 
-    @Override
-    public Integer getLimit() {
-        return limit;
-    }
-    
-    @Override
-    public Integer getOffset() {
-        return offset;
-    }
+  @Override
+  public StatementContext getContext() {
+    return context;
+  }
 
-    @Override
-    public OrderBy getOrderBy() {
-        return orderBy;
-    }
+  @Override
+  public TableRef getTableRef() {
+    return table;
+  }
 
-    @Override
-    public FilterableStatement getStatement() {
-        return statement;
-    }
-    
-    @Override
-    public ResultIterator iterator() throws SQLException {
-        return iterator(DefaultParallelScanGrouper.getInstance());
-    }
+  @Override
+  public RowProjector getProjector() {
+    return projector;
+  }
+
+  @Override
+  public Integer getLimit() {
+    return limit;
+  }
+
+  @Override
+  public Integer getOffset() {
+    return offset;
+  }
+
+  @Override
+  public OrderBy getOrderBy() {
+    return orderBy;
+  }
+
+  @Override
+  public FilterableStatement getStatement() {
+    return statement;
+  }
+
+  @Override
+  public ResultIterator iterator() throws SQLException {
+    return iterator(DefaultParallelScanGrouper.getInstance());
+  }
 }

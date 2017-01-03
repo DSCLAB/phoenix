@@ -20,17 +20,18 @@ package org.apache.phoenix.exception;
 import java.sql.SQLException;
 
 public class BatchUpdateExecution extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.BATCH_EXCEPTION;
-    private final int batchIndex;
 
-    public BatchUpdateExecution(Throwable cause, int batchIndex) {
-        super(new SQLExceptionInfo.Builder(code).build().toString(),
-                code.getSQLState(), code.getErrorCode(), cause);
-        this.batchIndex = batchIndex;
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.BATCH_EXCEPTION;
+  private final int batchIndex;
 
-    public int getBatchIndex() {
-        return batchIndex;
-    }
+  public BatchUpdateExecution(Throwable cause, int batchIndex) {
+    super(new SQLExceptionInfo.Builder(code).build().toString(),
+            code.getSQLState(), code.getErrorCode(), cause);
+    this.batchIndex = batchIndex;
+  }
+
+  public int getBatchIndex() {
+    return batchIndex;
+  }
 }

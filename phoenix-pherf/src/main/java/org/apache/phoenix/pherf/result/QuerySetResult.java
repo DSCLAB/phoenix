@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.configuration.QuerySet;
@@ -25,24 +24,24 @@ import java.util.List;
 
 public class QuerySetResult extends QuerySet {
 
-    private List<QueryResult> queryResults = new ArrayList<>();
+  private List<QueryResult> queryResults = new ArrayList<>();
 
-    public QuerySetResult(QuerySet querySet) {
-        this.setConcurrency(querySet.getConcurrency());
-        this.setNumberOfExecutions(querySet.getNumberOfExecutions());
-        this.setExecutionDurationInMs(querySet.getExecutionDurationInMs());
-        this.setExecutionType(querySet.getExecutionType());
-    }
+  public QuerySetResult(QuerySet querySet) {
+    this.setConcurrency(querySet.getConcurrency());
+    this.setNumberOfExecutions(querySet.getNumberOfExecutions());
+    this.setExecutionDurationInMs(querySet.getExecutionDurationInMs());
+    this.setExecutionType(querySet.getExecutionType());
+  }
 
-    public QuerySetResult() {
-    }
+  public QuerySetResult() {
+  }
 
-    public List<QueryResult> getQueryResults() {
-        return queryResults;
-    }
+  public List<QueryResult> getQueryResults() {
+    return queryResults;
+  }
 
-    @SuppressWarnings("unused")
-    public void setQueryResults(List<QueryResult> queryResults) {
-        this.queryResults = queryResults;
-    }
+  @SuppressWarnings("unused")
+  public void setQueryResults(List<QueryResult> queryResults) {
+    this.queryResults = queryResults;
+  }
 }

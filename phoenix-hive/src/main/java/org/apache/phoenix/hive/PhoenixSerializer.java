@@ -49,121 +49,116 @@ import java.util.Properties;
  */
 public class PhoenixSerializer {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixSerializer.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixSerializer.class);
 
-    public static enum DmlType {
-        NONE,
-        SELECT,
-        INSERT,
-        UPDATE,
-        DELETE
+  public static enum DmlType {
+    NONE,
+    SELECT,
+    INSERT,
+    UPDATE,
+    DELETE
+  }
+
+  private int columnCount = 0;
+  private PhoenixResultWritable pResultWritable;
+
+  public PhoenixSerializer(Configuration config, Properties tbl) throws SerDeException {
+    try (Connection conn = PhoenixConnectionUtil.getInputConnection(config, tbl)) {
+      List<ColumnInfo> columnMetadata = PhoenixUtil.getColumnInfoList(conn, tbl.getProperty(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME));
+
+      columnCount = columnMetadata.size();
+
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Column-meta : " + columnMetadata);
+      }
+
+      pResultWritable = new PhoenixResultWritable(config, columnMetadata);
+    } catch (SQLException | IOException e) {
+      throw new SerDeException(e);
+    }
+  }
+
+  public Writable serialize(Object values, ObjectInspector objInspector, DmlType dmlType) {
+    pResultWritable.clear();
+
+    final StructObjectInspector structInspector = (StructObjectInspector) objInspector;
+    final List<? extends StructField> fieldList = structInspector.getAllStructFieldRefs();
+
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("FieldList : " + fieldList + " values(" + values.getClass() + ") : "
+              + values);
     }
 
-    private int columnCount = 0;
-    private PhoenixResultWritable pResultWritable;
-
-    public PhoenixSerializer(Configuration config, Properties tbl) throws SerDeException {
-        try (Connection conn = PhoenixConnectionUtil.getInputConnection(config, tbl)) {
-            List<ColumnInfo> columnMetadata = PhoenixUtil.getColumnInfoList(conn, tbl.getProperty
-                    (PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME));
-
-            columnCount = columnMetadata.size();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Column-meta : " + columnMetadata);
-            }
-
-            pResultWritable = new PhoenixResultWritable(config, columnMetadata);
-        } catch (SQLException | IOException e) {
-            throw new SerDeException(e);
-        }
+    int fieldCount = columnCount;
+    if (dmlType == DmlType.UPDATE || dmlType == DmlType.DELETE) {
+      fieldCount++;
     }
 
-    public Writable serialize(Object values, ObjectInspector objInspector, DmlType dmlType) {
-        pResultWritable.clear();
+    for (int i = 0; i < fieldCount; i++) {
+      if (fieldList.size() <= i) {
+        break;
+      }
 
-        final StructObjectInspector structInspector = (StructObjectInspector) objInspector;
-        final List<? extends StructField> fieldList = structInspector.getAllStructFieldRefs();
+      StructField structField = fieldList.get(i);
+
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("structField[" + i + "] : " + structField);
+      }
+
+      if (structField != null) {
+        Object fieldValue = structInspector.getStructFieldData(values, structField);
+        ObjectInspector fieldOI = structField.getFieldObjectInspector();
+
+        String fieldName = structField.getFieldName();
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("FieldList : " + fieldList + " values(" + values.getClass() + ") : " +
-                    values);
+          LOG.trace("Field " + fieldName + "[" + i + "] : " + fieldValue + ", "
+                  + fieldOI);
         }
 
-        int fieldCount = columnCount;
-        if (dmlType == DmlType.UPDATE || dmlType == DmlType.DELETE) {
-            fieldCount++;
-        }
-
-        for (int i = 0; i < fieldCount; i++) {
-            if (fieldList.size() <= i) {
-                break;
-            }
-
-            StructField structField = fieldList.get(i);
+        Object value = null;
+        switch (fieldOI.getCategory()) {
+          case PRIMITIVE:
+            value = ((PrimitiveObjectInspector) fieldOI).getPrimitiveJavaObject(fieldValue);
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("structField[" + i + "] : " + structField);
+              LOG.trace("Field " + fieldName + "[" + i + "] : " + value + "(" + value
+                      .getClass() + ")");
             }
 
-            if (structField != null) {
-                Object fieldValue = structInspector.getStructFieldData(values, structField);
-                ObjectInspector fieldOI = structField.getFieldObjectInspector();
-
-                String fieldName = structField.getFieldName();
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Field " + fieldName + "[" + i + "] : " + fieldValue + ", " +
-                            fieldOI);
-                }
-
-                Object value = null;
-                switch (fieldOI.getCategory()) {
-                    case PRIMITIVE:
-                        value = ((PrimitiveObjectInspector) fieldOI).getPrimitiveJavaObject
-                                (fieldValue);
-
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("Field " + fieldName + "[" + i + "] : " + value + "(" + value
-                                    .getClass() + ")");
-                        }
-
-                        if (value instanceof HiveDecimal) {
-                            value = ((HiveDecimal) value).bigDecimalValue();
-                        } else if (value instanceof HiveChar) {
-                            value = ((HiveChar) value).getValue().trim();
-                        }
-
-                        pResultWritable.add(value);
-                        break;
-                    case LIST:
-                    // Not support for arrays in insert statement yet
-                        break;
-                    case STRUCT:
-                        if (dmlType == DmlType.DELETE) {
-                            // When update/delete, First value is struct<transactionid:bigint,
-                            // bucketid:int,rowid:bigint,primaryKey:binary>>
-                            List<Object> fieldValueList = ((StandardStructObjectInspector)
-                                    fieldOI).getStructFieldsDataAsList(fieldValue);
-
-                            // convert to map from binary of primary key.
-                            @SuppressWarnings("unchecked")
-                            Map<String, Object> primaryKeyMap = (Map<String, Object>)
-                                    PhoenixStorageHandlerUtil.toMap(((BytesWritable)
-                                            fieldValueList.get(3)).getBytes());
-                            for (Object pkValue : primaryKeyMap.values()) {
-                                pResultWritable.add(pkValue);
-                            }
-                        }
-
-                        break;
-                    default:
-                        new SerDeException("Phoenix Unsupported column type: " + fieldOI
-                                .getCategory());
-                }
+            if (value instanceof HiveDecimal) {
+              value = ((HiveDecimal) value).bigDecimalValue();
+            } else if (value instanceof HiveChar) {
+              value = ((HiveChar) value).getValue().trim();
             }
+
+            pResultWritable.add(value);
+            break;
+          case LIST:
+            // Not support for arrays in insert statement yet
+            break;
+          case STRUCT:
+            if (dmlType == DmlType.DELETE) {
+              // When update/delete, First value is struct<transactionid:bigint,
+              // bucketid:int,rowid:bigint,primaryKey:binary>>
+              List<Object> fieldValueList = ((StandardStructObjectInspector) fieldOI).getStructFieldsDataAsList(fieldValue);
+
+              // convert to map from binary of primary key.
+              @SuppressWarnings("unchecked")
+              Map<String, Object> primaryKeyMap = (Map<String, Object>) PhoenixStorageHandlerUtil.toMap(((BytesWritable) fieldValueList.get(3)).getBytes());
+              for (Object pkValue : primaryKeyMap.values()) {
+                pResultWritable.add(pkValue);
+              }
+            }
+
+            break;
+          default:
+            new SerDeException("Phoenix Unsupported column type: " + fieldOI
+                    .getCategory());
         }
-
-        return pResultWritable;
+      }
     }
+
+    return pResultWritable;
+  }
 }

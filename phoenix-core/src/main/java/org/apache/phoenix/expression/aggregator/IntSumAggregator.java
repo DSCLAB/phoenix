@@ -22,21 +22,21 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * 
+ *
  * Aggregator that sums integer values
  *
- * 
+ *
  * @since 0.1
  */
 public class IntSumAggregator extends NumberSumAggregator {
-    
-    public IntSumAggregator(SortOrder sortOrder) {
-        super(sortOrder);
-    }
-    
-    @Override
-    protected PDataType getInputDataType() {
-        return PInteger.INSTANCE;
-    }
+
+  public IntSumAggregator(SortOrder sortOrder) {
+    super(sortOrder);
+  }
+
+  @Override
+  protected PDataType getInputDataType() {
+    return PInteger.INSTANCE;
+  }
 
 }

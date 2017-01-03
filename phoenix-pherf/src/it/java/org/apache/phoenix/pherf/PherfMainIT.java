@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.junit.Rule;
@@ -23,14 +22,15 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 public class PherfMainIT extends ResultBaseTestIT {
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
-    @Test
-    public void testPherfMain() {
-        String[] args = { "-q",
-                "--scenarioFile", ".*prod_test_unsalted_scenario.*",
-                "-m", "--monitorFrequency", "10" };
-        Pherf.main(args);
-    }
+  @Rule
+  public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
+  @Test
+  public void testPherfMain() {
+    String[] args = {"-q",
+      "--scenarioFile", ".*prod_test_unsalted_scenario.*",
+      "-m", "--monitorFrequency", "10"};
+    Pherf.main(args);
+  }
 }

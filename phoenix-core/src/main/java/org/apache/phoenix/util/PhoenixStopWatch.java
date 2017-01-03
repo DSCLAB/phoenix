@@ -18,64 +18,72 @@
 package org.apache.phoenix.util;
 
 /**
- * Bare-bones implementation of a stop watch that only measures time in milliseconds. If you want to be fancy then
- * please use the guava Stopwatch. However, be warned that the Guava's Stopwatch is a beta class and is subject to
- * incompatible changes and removal. So save the future upgrade pain and use this class instead.
+ * Bare-bones implementation of a stop watch that only measures time in
+ * milliseconds. If you want to be fancy then please use the guava Stopwatch.
+ * However, be warned that the Guava's Stopwatch is a beta class and is subject
+ * to incompatible changes and removal. So save the future upgrade pain and use
+ * this class instead.
  */
 public class PhoenixStopWatch {
-    private boolean isRunning;
-    private long startTime;
-    private long elapsedTimeMs;
 
-    /**
-     * Creates a new stop watch without starting it.
-     */
-    public PhoenixStopWatch() {}
+  private boolean isRunning;
+  private long startTime;
+  private long elapsedTimeMs;
 
-    /**
-     * Starts the stopwatch.
-     * 
-     * @return this {@code PhoenixStopWatch} instance
-     * @throws IllegalStateException
-     *             if the stopwatch is already running.
-     */
-    public PhoenixStopWatch start() {
-        long currentTime = System.currentTimeMillis();
-        if (isRunning) { throw new IllegalStateException("Watch is already running"); }
-        startTime = currentTime;
-        isRunning = true;
-        return this;
+  /**
+   * Creates a new stop watch without starting it.
+   */
+  public PhoenixStopWatch() {
+  }
+
+  /**
+   * Starts the stopwatch.
+   *
+   * @return this {@code PhoenixStopWatch} instance
+   * @throws IllegalStateException if the stopwatch is already running.
+   */
+  public PhoenixStopWatch start() {
+    long currentTime = System.currentTimeMillis();
+    if (isRunning) {
+      throw new IllegalStateException("Watch is already running");
     }
+    startTime = currentTime;
+    isRunning = true;
+    return this;
+  }
 
-    /**
-     * Stops the stopwatch. Future calls to {@link #elapsedMillis()} will return the fixed duration that had elapsed up
-     * to this point.
-     * 
-     * @return this {@code PhoenixStopWatch} instance
-     * @throws IllegalStateException
-     *             if the stopwatch is already stopped.
-     */
-    public PhoenixStopWatch stop() {
-        long currentTime = System.currentTimeMillis();
-        if (!isRunning) { throw new IllegalStateException("Watch wasn't started"); }
-        elapsedTimeMs = currentTime - startTime;
-        startTime = 0;
-        isRunning = false;
-        return this;
+  /**
+   * Stops the stopwatch. Future calls to {@link #elapsedMillis()} will return
+   * the fixed duration that had elapsed up to this point.
+   *
+   * @return this {@code PhoenixStopWatch} instance
+   * @throws IllegalStateException if the stopwatch is already stopped.
+   */
+  public PhoenixStopWatch stop() {
+    long currentTime = System.currentTimeMillis();
+    if (!isRunning) {
+      throw new IllegalStateException("Watch wasn't started");
     }
+    elapsedTimeMs = currentTime - startTime;
+    startTime = 0;
+    isRunning = false;
+    return this;
+  }
 
-    /**
-     * Returns the current elapsed time shown on this stopwatch, expressed in milliseconds.
-     */
-    public long elapsedMillis() {
-        return elapsedTimeMs;
-    }
+  /**
+   * Returns the current elapsed time shown on this stopwatch, expressed in
+   * milliseconds.
+   */
+  public long elapsedMillis() {
+    return elapsedTimeMs;
+  }
 
-    /**
-     * Returns {@code true} if {@link #start()} has been called on this stopwatch, and {@link #stop()} has not been
-     * called since the last call to {@code start()}.
-     */
-    public boolean isRunning() {
-        return isRunning;
-    }
+  /**
+   * Returns {@code true} if {@link #start()} has been called on this stopwatch,
+   * and {@link #stop()} has not been called since the last call to
+   * {@code start()}.
+   */
+  public boolean isRunning() {
+    return isRunning;
+  }
 }

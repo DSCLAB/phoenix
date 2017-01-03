@@ -24,28 +24,28 @@ import org.apache.hadoop.io.IntWritable;
 public class PhoenixIntObjectInspector extends AbstractPhoenixObjectInspector<IntWritable>
         implements IntObjectInspector {
 
-    public PhoenixIntObjectInspector() {
-        super(TypeInfoFactory.intTypeInfo);
+  public PhoenixIntObjectInspector() {
+    super(TypeInfoFactory.intTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new Integer((Integer) o);
+  }
+
+  @Override
+  public int get(Object o) {
+    Integer value = null;
+
+    if (o != null) {
+      try {
+        value = ((Integer) o).intValue();
+      } catch (Exception e) {
+        logExceptionMessage(o, "INT");
+      }
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new Integer((Integer) o);
-    }
-
-    @Override
-    public int get(Object o) {
-        Integer value = null;
-
-        if (o != null) {
-            try {
-                value = ((Integer) o).intValue();
-            } catch (Exception e) {
-                logExceptionMessage(o, "INT");
-            }
-        }
-
-        return value;
-    }
+    return value;
+  }
 
 }

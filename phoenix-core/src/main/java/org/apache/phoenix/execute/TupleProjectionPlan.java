@@ -34,59 +34,63 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import com.google.common.collect.Lists;
 
 public class TupleProjectionPlan extends DelegateQueryPlan {
-    private final TupleProjector tupleProjector;
-    private final Expression postFilter;
 
-    public TupleProjectionPlan(QueryPlan plan, TupleProjector tupleProjector, Expression postFilter) {
-        super(plan);
-        if (tupleProjector == null) throw new IllegalArgumentException("tupleProjector is null");
-        this.tupleProjector = tupleProjector;
-        this.postFilter = postFilter;
+  private final TupleProjector tupleProjector;
+  private final Expression postFilter;
+
+  public TupleProjectionPlan(QueryPlan plan, TupleProjector tupleProjector, Expression postFilter) {
+    super(plan);
+    if (tupleProjector == null) {
+      throw new IllegalArgumentException("tupleProjector is null");
+    }
+    this.tupleProjector = tupleProjector;
+    this.postFilter = postFilter;
+  }
+
+  @Override
+  public ExplainPlan getExplainPlan() throws SQLException {
+    List<String> planSteps = Lists.newArrayList(delegate.getExplainPlan().getPlanSteps());
+    if (postFilter != null) {
+      planSteps.add("CLIENT FILTER BY " + postFilter.toString());
     }
 
-    @Override
-    public ExplainPlan getExplainPlan() throws SQLException {
-        List<String> planSteps = Lists.newArrayList(delegate.getExplainPlan().getPlanSteps());
-        if (postFilter != null) {
-            planSteps.add("CLIENT FILTER BY " + postFilter.toString());
+    return new ExplainPlan(planSteps);
+  }
+
+  @Override
+  public ResultIterator iterator() throws SQLException {
+    return iterator(DefaultParallelScanGrouper.getInstance());
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
+    return iterator(scanGrouper, delegate.getContext().getScan());
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
+    ResultIterator iterator = new DelegateResultIterator(delegate.iterator(scanGrouper, scan)) {
+
+      @Override
+      public Tuple next() throws SQLException {
+        Tuple tuple = super.next();
+        if (tuple == null) {
+          return null;
         }
 
-        return new ExplainPlan(planSteps);
-    }
-    
-    @Override
-    public ResultIterator iterator() throws SQLException {
-    	return iterator(DefaultParallelScanGrouper.getInstance());
+        return tupleProjector.projectResults(tuple);
+      }
+
+      @Override
+      public String toString() {
+        return "TupleProjectionResultIterator [projector=" + tupleProjector + "]";
+      }
+    };
+
+    if (postFilter != null) {
+      iterator = new FilterResultIterator(iterator, postFilter);
     }
 
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
-        return iterator(scanGrouper, delegate.getContext().getScan());
-    }
-
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
-        ResultIterator iterator = new DelegateResultIterator(delegate.iterator(scanGrouper, scan)) {
-            
-            @Override
-            public Tuple next() throws SQLException {
-                Tuple tuple = super.next();
-                if (tuple == null)
-                    return null;
-                
-                return tupleProjector.projectResults(tuple);
-            }
-
-            @Override
-            public String toString() {
-                return "TupleProjectionResultIterator [projector=" + tupleProjector + "]";
-            }            
-        };
-        
-        if (postFilter != null) {
-            iterator = new FilterResultIterator(iterator, postFilter);
-        }
-        
-        return iterator;
-    }
+    return iterator;
+  }
 }

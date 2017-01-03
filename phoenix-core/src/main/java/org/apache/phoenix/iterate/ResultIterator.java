@@ -23,30 +23,31 @@ import java.util.List;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.SQLCloseable;
 
-
 public interface ResultIterator extends SQLCloseable {
-    public static final ResultIterator EMPTY_ITERATOR = new ResultIterator() {
-        @Override
-        public void close() throws SQLException {
-        }
 
-        @Override
-        public Tuple next() throws SQLException {
-            return null;
-        }
+  public static final ResultIterator EMPTY_ITERATOR = new ResultIterator() {
+    @Override
+    public void close() throws SQLException {
+    }
 
-        @Override
-        public void explain(List<String> planSteps) {
-        }
-    };
+    @Override
+    public Tuple next() throws SQLException {
+      return null;
+    }
 
-    /**
-     * Grab the next row's worth of values. The iterator will return a Tuple.
-     * @return Tuple object if there is another row, null if the scanner is
-     * exhausted.
-     * @throws SQLException e
-     */
-    public Tuple next() throws SQLException;
-    
-    public void explain(List<String> planSteps);
+    @Override
+    public void explain(List<String> planSteps) {
+    }
+  };
+
+  /**
+   * Grab the next row's worth of values. The iterator will return a Tuple.
+   *
+   * @return Tuple object if there is another row, null if the scanner is
+   * exhausted.
+   * @throws SQLException e
+   */
+  public Tuple next() throws SQLException;
+
+  public void explain(List<String> planSteps);
 }

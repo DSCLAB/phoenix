@@ -34,33 +34,36 @@ import org.apache.phoenix.schema.tuple.ResultTuple;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * Mock result iterator that returns its id as a string in a {@code Tuple} when {@link #next()} and {@link #peek()} are called. 
+ * Mock result iterator that returns its id as a string in a {@code Tuple} when
+ * {@link #next()} and {@link #peek()} are called.
  */
 public class MockResultIterator implements PeekingResultIterator {
 
-    private final Tuple tuple;
+  private final Tuple tuple;
 
-    public MockResultIterator(String id, PTable table) {
-        TupleProjector projector = new TupleProjector(table);
-        List<Cell> result = new ArrayList<>();
-        result.add(new KeyValue(Bytes.toBytes(id), SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(id)));
-        this.tuple = projector.projectResults(new ResultTuple(Result.create(result)));
-    }
+  public MockResultIterator(String id, PTable table) {
+    TupleProjector projector = new TupleProjector(table);
+    List<Cell> result = new ArrayList<>();
+    result.add(new KeyValue(Bytes.toBytes(id), SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(id)));
+    this.tuple = projector.projectResults(new ResultTuple(Result.create(result)));
+  }
 
-    @Override
-    public Tuple next() throws SQLException {
-        return tuple;
-    }
+  @Override
+  public Tuple next() throws SQLException {
+    return tuple;
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {}
+  @Override
+  public void explain(List<String> planSteps) {
+  }
 
-    @Override
-    public void close() throws SQLException {}
+  @Override
+  public void close() throws SQLException {
+  }
 
-    @Override
-    public Tuple peek() throws SQLException {
-        return tuple;
-    }
+  @Override
+  public Tuple peek() throws SQLException {
+    return tuple;
+  }
 
 }

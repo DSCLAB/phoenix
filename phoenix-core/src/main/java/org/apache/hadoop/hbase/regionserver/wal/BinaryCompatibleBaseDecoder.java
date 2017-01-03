@@ -30,18 +30,21 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.codec.Codec;
 
 /**
- * This class is a copy paste version of org.apache.hadoop.hbase.codec.BaseDecoder class. 
- * This class is meant to be used in {@link IndexedWALEditCodec} when runtime version of
- * HBase is older than 1.1.3. This is needed to handle binary incompatibility introduced by
+ * This class is a copy paste version of
+ * org.apache.hadoop.hbase.codec.BaseDecoder class. This class is meant to be
+ * used in {@link IndexedWALEditCodec} when runtime version of HBase is older
+ * than 1.1.3. This is needed to handle binary incompatibility introduced by
  * HBASE-14501. See PHOENIX-2629 and PHOENIX-2636 for details.
  */
 public abstract class BinaryCompatibleBaseDecoder implements Codec.Decoder {
+
   protected static final Log LOG = LogFactory.getLog(BinaryCompatibleBaseDecoder.class);
 
   protected final InputStream in;
   private Cell current = null;
 
   protected static class PBIS extends PushbackInputStream {
+
     public PBIS(InputStream in, int size) {
       super(in, size);
     }
@@ -62,13 +65,13 @@ public abstract class BinaryCompatibleBaseDecoder implements Codec.Decoder {
     if (firstByte == -1) {
       return false;
     } else {
-      ((PBIS)in).unread(firstByte);
+      ((PBIS) in).unread(firstByte);
     }
 
     try {
       this.current = parseCell();
     } catch (IOException ioEx) {
-      ((PBIS)in).resetBuf(1); // reset the buffer in case the underlying stream is read from upper layers
+      ((PBIS) in).resetBuf(1); // reset the buffer in case the underlying stream is read from upper layers
       rethrowEofException(ioEx);
     }
     return true;
@@ -81,7 +84,9 @@ public abstract class BinaryCompatibleBaseDecoder implements Codec.Decoder {
     } catch (Throwable t) {
       LOG.trace("Error getting available for error message - ignoring", t);
     }
-    if (!isEof) throw ioEx;
+    if (!isEof) {
+      throw ioEx;
+    }
     if (LOG.isTraceEnabled()) {
       LOG.trace("Partial cell read caused by EOF", ioEx);
     }
@@ -96,8 +101,10 @@ public abstract class BinaryCompatibleBaseDecoder implements Codec.Decoder {
 
   /**
    * Extract a Cell.
-   * @return a parsed Cell or throws an Exception. EOFException or a generic IOException maybe
-   * thrown if EOF is reached prematurely. Does not return null.
+   *
+   * @return a parsed Cell or throws an Exception. EOFException or a generic
+   * IOException maybe thrown if EOF is reached prematurely. Does not return
+   * null.
    * @throws IOException
    */
   @Nonnull

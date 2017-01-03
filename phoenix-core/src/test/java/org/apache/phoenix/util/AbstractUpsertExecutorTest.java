@@ -44,101 +44,102 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public abstract class AbstractUpsertExecutorTest<R, F> extends BaseConnectionlessQueryTest {
 
-    protected Connection conn;
-    protected List<ColumnInfo> columnInfoList;
-    protected PreparedStatement preparedStatement;
-    protected UpsertExecutor.UpsertListener<R> upsertListener;
+  protected Connection conn;
+  protected List<ColumnInfo> columnInfoList;
+  protected PreparedStatement preparedStatement;
+  protected UpsertExecutor.UpsertListener<R> upsertListener;
 
-    protected abstract UpsertExecutor<R, F> getUpsertExecutor();
-    protected abstract R createRecord(Object... columnValues) throws IOException;
+  protected abstract UpsertExecutor<R, F> getUpsertExecutor();
 
-    @Before
-    public void setUp() throws SQLException {
-        columnInfoList = ImmutableList.of(
-                new ColumnInfo("ID", Types.BIGINT),
-                new ColumnInfo("NAME", Types.VARCHAR),
-                new ColumnInfo("AGE", Types.INTEGER),
-                new ColumnInfo("VALUES", PIntegerArray.INSTANCE.getSqlType()),
-                new ColumnInfo("BEARD", Types.BOOLEAN));
+  protected abstract R createRecord(Object... columnValues) throws IOException;
 
-        preparedStatement = mock(PreparedStatement.class);
-        upsertListener = mock(UpsertExecutor.UpsertListener.class);
-        conn = DriverManager.getConnection(getUrl());
-    }
+  @Before
+  public void setUp() throws SQLException {
+    columnInfoList = ImmutableList.of(
+            new ColumnInfo("ID", Types.BIGINT),
+            new ColumnInfo("NAME", Types.VARCHAR),
+            new ColumnInfo("AGE", Types.INTEGER),
+            new ColumnInfo("VALUES", PIntegerArray.INSTANCE.getSqlType()),
+            new ColumnInfo("BEARD", Types.BOOLEAN));
 
-    @After
-    public void tearDown() throws SQLException {
-        conn.close();
-    }
+    preparedStatement = mock(PreparedStatement.class);
+    upsertListener = mock(UpsertExecutor.UpsertListener.class);
+    conn = DriverManager.getConnection(getUrl());
+  }
 
-    @Test
-    public void testExecute() throws Exception {
-        getUpsertExecutor().execute(createRecord(123L, "NameValue", 42,
-                Arrays.asList(1, 2, 3), true));
+  @After
+  public void tearDown() throws SQLException {
+    conn.close();
+  }
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+  @Test
+  public void testExecute() throws Exception {
+    getUpsertExecutor().execute(createRecord(123L, "NameValue", 42,
+            Arrays.asList(1, 2, 3), true));
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setObject(3, Integer.valueOf(42));
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).setObject(5, Boolean.TRUE);
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-    @Test
-    public void testExecute_TooFewFields() throws Exception {
-        R recordWithTooFewFields = createRecord(123L, "NameValue");
-        getUpsertExecutor().execute(recordWithTooFewFields);
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setObject(3, Integer.valueOf(42));
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).setObject(5, Boolean.TRUE);
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-        verify(upsertListener).errorOnRecord(eq(recordWithTooFewFields), any(Throwable.class));
-        verifyNoMoreInteractions(upsertListener);
-    }
+  @Test
+  public void testExecute_TooFewFields() throws Exception {
+    R recordWithTooFewFields = createRecord(123L, "NameValue");
+    getUpsertExecutor().execute(recordWithTooFewFields);
 
-    @Test
-    public void testExecute_TooManyFields() throws Exception {
-        R recordWithTooManyFields = createRecord(123L, "NameValue", 42, Arrays.asList(1, 2, 3),
-                true, "Garbage");
-        getUpsertExecutor().execute(recordWithTooManyFields);
+    verify(upsertListener).errorOnRecord(eq(recordWithTooFewFields), any(Throwable.class));
+    verifyNoMoreInteractions(upsertListener);
+  }
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+  @Test
+  public void testExecute_TooManyFields() throws Exception {
+    R recordWithTooManyFields = createRecord(123L, "NameValue", 42, Arrays.asList(1, 2, 3),
+            true, "Garbage");
+    getUpsertExecutor().execute(recordWithTooManyFields);
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setObject(3, Integer.valueOf(42));
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).setObject(5, Boolean.TRUE);
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-    @Test
-    public void testExecute_NullField() throws Exception {
-        getUpsertExecutor().execute(createRecord(123L, "NameValue", null,
-                Arrays.asList(1, 2, 3), false));
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setObject(3, Integer.valueOf(42));
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).setObject(5, Boolean.TRUE);
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-        verify(upsertListener).upsertDone(1L);
-        verifyNoMoreInteractions(upsertListener);
+  @Test
+  public void testExecute_NullField() throws Exception {
+    getUpsertExecutor().execute(createRecord(123L, "NameValue", null,
+            Arrays.asList(1, 2, 3), false));
 
-        verify(preparedStatement).setObject(1, Long.valueOf(123L));
-        verify(preparedStatement).setObject(2, "NameValue");
-        verify(preparedStatement).setNull(3, columnInfoList.get(2).getSqlType());
-        verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1,2,3}));
-        verify(preparedStatement).setObject(5, Boolean.FALSE);
-        verify(preparedStatement).execute();
-        verifyNoMoreInteractions(preparedStatement);
-    }
+    verify(upsertListener).upsertDone(1L);
+    verifyNoMoreInteractions(upsertListener);
 
-    @Test
-    public void testExecute_InvalidType() throws Exception {
-        R recordWithInvalidType = createRecord(123L, "NameValue", "ThisIsNotANumber",
-                Arrays.asList(1, 2, 3), true);
-        getUpsertExecutor().execute(recordWithInvalidType);
+    verify(preparedStatement).setObject(1, Long.valueOf(123L));
+    verify(preparedStatement).setObject(2, "NameValue");
+    verify(preparedStatement).setNull(3, columnInfoList.get(2).getSqlType());
+    verify(preparedStatement).setObject(4, PArrayDataType.instantiatePhoenixArray(PInteger.INSTANCE, new Object[]{1, 2, 3}));
+    verify(preparedStatement).setObject(5, Boolean.FALSE);
+    verify(preparedStatement).execute();
+    verifyNoMoreInteractions(preparedStatement);
+  }
 
-        verify(upsertListener).errorOnRecord(eq(recordWithInvalidType), any(Throwable.class));
-        verifyNoMoreInteractions(upsertListener);
-    }
+  @Test
+  public void testExecute_InvalidType() throws Exception {
+    R recordWithInvalidType = createRecord(123L, "NameValue", "ThisIsNotANumber",
+            Arrays.asList(1, 2, 3), true);
+    getUpsertExecutor().execute(recordWithInvalidType);
+
+    verify(upsertListener).errorOnRecord(eq(recordWithInvalidType), any(Throwable.class));
+    verifyNoMoreInteractions(upsertListener);
+  }
 }

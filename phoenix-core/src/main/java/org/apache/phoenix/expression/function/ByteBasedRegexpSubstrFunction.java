@@ -25,15 +25,16 @@ import org.apache.phoenix.expression.util.regex.JONIPattern;
 import org.joni.Option;
 
 public class ByteBasedRegexpSubstrFunction extends RegexpSubstrFunction {
-    public ByteBasedRegexpSubstrFunction() {
-    }
 
-    public ByteBasedRegexpSubstrFunction(List<Expression> children) {
-        super(children);
-    }
+  public ByteBasedRegexpSubstrFunction() {
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JONIPattern(value, Option.MULTILINE);
-    }
+  public ByteBasedRegexpSubstrFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JONIPattern(value, Option.MULTILINE);
+  }
 }

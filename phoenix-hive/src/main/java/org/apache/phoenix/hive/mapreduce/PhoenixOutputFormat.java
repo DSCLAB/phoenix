@@ -38,75 +38,73 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Custom OutputFormat to feed into Hive. Describes the output-specification for a Map-Reduce job.
+ * Custom OutputFormat to feed into Hive. Describes the output-specification for
+ * a Map-Reduce job.
  */
 public class PhoenixOutputFormat<T extends DBWritable> implements OutputFormat<NullWritable, T>,
         AcidOutputFormat<NullWritable, T> {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixOutputFormat.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixOutputFormat.class);
 
-    public PhoenixOutputFormat() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("PhoenixOutputFormat created");
-        }
+  public PhoenixOutputFormat() {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("PhoenixOutputFormat created");
+    }
+  }
+
+  @Override
+  public RecordWriter<NullWritable, T> getRecordWriter(FileSystem ignored, JobConf jobConf,
+          String name, Progressable progress)
+          throws IOException {
+    return createRecordWriter(jobConf, new Properties());
+  }
+
+  @Override
+  public void checkOutputSpecs(FileSystem ignored, JobConf job) throws IOException {
+
+  }
+
+  @Override
+  public org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter getHiveRecordWriter(JobConf jobConf, Path finalOutPath, Class<? extends Writable> valueClass, boolean isCompressed, Properties tableProperties, Progressable progress) throws
+          IOException {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Get RecordWriter for finalOutPath : " + finalOutPath + ", valueClass"
+              + " : "
+              + valueClass
+                      .getName() + ", isCompressed : " + isCompressed + ", tableProperties "
+              + ": " + tableProperties + ", progress : " + progress);
     }
 
-    @Override
-    public RecordWriter<NullWritable, T> getRecordWriter(FileSystem ignored, JobConf jobConf,
-                                                         String name, Progressable progress)
-            throws IOException {
-        return createRecordWriter(jobConf, new Properties());
+    return createRecordWriter(jobConf, new Properties());
+  }
+
+  @Override
+  public RecordUpdater getRecordUpdater(Path path, org.apache.hadoop.hive.ql.io.AcidOutputFormat.Options options) throws IOException {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Get RecordWriter for  path : " + path + ", options : "
+              + PhoenixStorageHandlerUtil
+                      .getOptionsValue(options));
+    }
+    return new PhoenixRecordWriter<T>(path, options);
+  }
+
+  @Override
+  public org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter getRawRecordWriter(Path path,
+          org.apache.hadoop.hive.ql.io.AcidOutputFormat.Options options) throws IOException {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Get RawRecordWriter for path : " + path + ", options : "
+              + PhoenixStorageHandlerUtil.getOptionsValue(options));
     }
 
-    @Override
-    public void checkOutputSpecs(FileSystem ignored, JobConf job) throws IOException {
+    return new PhoenixRecordWriter<T>(path, options);
+  }
 
+  private PhoenixRecordWriter<T> createRecordWriter(Configuration config, Properties properties) {
+    try {
+      return new PhoenixRecordWriter<T>(config, properties);
+    } catch (SQLException e) {
+      LOG.error("Error during PhoenixRecordWriter instantiation :" + e.getMessage());
+      throw new RuntimeException(e);
     }
-
-    @Override
-    public org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter getHiveRecordWriter
-            (JobConf jobConf, Path finalOutPath, Class<? extends Writable> valueClass, boolean
-                    isCompressed, Properties tableProperties, Progressable progress) throws
-            IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Get RecordWriter for finalOutPath : " + finalOutPath + ", valueClass" +
-                    " : " +
-                    valueClass
-                            .getName() + ", isCompressed : " + isCompressed + ", tableProperties " +
-                    ": " + tableProperties + ", progress : " + progress);
-        }
-
-        return createRecordWriter(jobConf, new Properties());
-    }
-
-    @Override
-    public RecordUpdater getRecordUpdater(Path path, org.apache.hadoop.hive.ql.io
-            .AcidOutputFormat.Options options) throws IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Get RecordWriter for  path : " + path + ", options : " +
-                    PhoenixStorageHandlerUtil
-                            .getOptionsValue(options));
-        }
-        return new PhoenixRecordWriter<T>(path, options);
-    }
-
-    @Override
-    public org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter getRawRecordWriter(Path path,
-            org.apache.hadoop.hive.ql.io.AcidOutputFormat.Options options) throws IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Get RawRecordWriter for path : " + path + ", options : " +
-                    PhoenixStorageHandlerUtil.getOptionsValue(options));
-        }
-
-        return new PhoenixRecordWriter<T>(path, options);
-    }
-
-    private PhoenixRecordWriter<T> createRecordWriter(Configuration config, Properties properties) {
-        try {
-            return new PhoenixRecordWriter<T>(config, properties);
-        } catch (SQLException e) {
-            LOG.error("Error during PhoenixRecordWriter instantiation :" + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
+  }
 }

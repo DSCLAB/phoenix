@@ -29,27 +29,27 @@ import org.apache.phoenix.query.QueryServices;
 import org.apache.phoenix.query.QueryServicesOptions;
 
 /**
- * Parse node corresponding to {@link RegexpSplitFunction}. It also acts as a factory for creating
- * the right kind of RegexpSplitFunction according to setting in
- * QueryServices.USE_BYTE_BASED_REGEX_ATTRIB
+ * Parse node corresponding to {@link RegexpSplitFunction}. It also acts as a
+ * factory for creating the right kind of RegexpSplitFunction according to
+ * setting in QueryServices.USE_BYTE_BASED_REGEX_ATTRIB
  */
 public class RegexpSplitParseNode extends FunctionParseNode {
 
-    RegexpSplitParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  RegexpSplitParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public Expression create(List<Expression> children, StatementContext context)
-            throws SQLException {
-        QueryServices services = context.getConnection().getQueryServices();
-        boolean useByteBasedRegex =
-                services.getProps().getBoolean(QueryServices.USE_BYTE_BASED_REGEX_ATTRIB,
+  @Override
+  public Expression create(List<Expression> children, StatementContext context)
+          throws SQLException {
+    QueryServices services = context.getConnection().getQueryServices();
+    boolean useByteBasedRegex
+            = services.getProps().getBoolean(QueryServices.USE_BYTE_BASED_REGEX_ATTRIB,
                     QueryServicesOptions.DEFAULT_USE_BYTE_BASED_REGEX);
-        if (useByteBasedRegex) {
-            return new ByteBasedRegexpSplitFunction(children);
-        } else {
-            return new StringBasedRegexpSplitFunction(children);
-        }
+    if (useByteBasedRegex) {
+      return new ByteBasedRegexpSplitFunction(children);
+    } else {
+      return new StringBasedRegexpSplitFunction(children);
     }
+  }
 }

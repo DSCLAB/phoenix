@@ -19,37 +19,37 @@ package org.apache.phoenix.parse;
 
 import java.util.*;
 
-
 import com.google.common.collect.ImmutableList;
 import org.apache.phoenix.util.SchemaUtil;
 
 /**
- * 
+ *
  * Definition of a Column Family at DDL time
  *
- * 
+ *
  * @since 0.1
  */
 public class ColumnFamilyDef {
-    private final String name;
-    private final List<ColumnDef> columnDefs;
-    private final Map<String,Object> props;
-    
-    ColumnFamilyDef(String name, List<ColumnDef> columnDefs, Map<String,Object> props) {
-        this.name = SchemaUtil.normalizeIdentifier(name);
-        this.columnDefs = ImmutableList.copyOf(columnDefs);
-        this.props = props == null ? Collections.<String,Object>emptyMap() : props;
-    }
 
-    public String getName() {
-        return name;
-    }
+  private final String name;
+  private final List<ColumnDef> columnDefs;
+  private final Map<String, Object> props;
 
-    public List<ColumnDef> getColumnDefs() {
-        return columnDefs;
-    }
+  ColumnFamilyDef(String name, List<ColumnDef> columnDefs, Map<String, Object> props) {
+    this.name = SchemaUtil.normalizeIdentifier(name);
+    this.columnDefs = ImmutableList.copyOf(columnDefs);
+    this.props = props == null ? Collections.<String, Object>emptyMap() : props;
+  }
 
-    public Map<String,Object> getProps() {
-        return props;
-    }
+  public String getName() {
+    return name;
+  }
+
+  public List<ColumnDef> getColumnDefs() {
+    return columnDefs;
+  }
+
+  public Map<String, Object> getProps() {
+    return props;
+  }
 }

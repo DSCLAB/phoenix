@@ -31,61 +31,62 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
-
 /**
  * Built-in function for finding MIN.
- * 
- * 
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=MinAggregateFunction.NAME, nodeClass=MinAggregateParseNode.class, args= {@Argument()} )
+@BuiltInFunction(name = MinAggregateFunction.NAME, nodeClass = MinAggregateParseNode.class, args = {
+  @Argument()})
 public class MinAggregateFunction extends DelegateConstantToCountAggregateFunction {
-    public static final String NAME = "MIN";
 
-    public MinAggregateFunction() {
-    }
-    
-    public MinAggregateFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
+  public static final String NAME = "MIN";
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        boolean wasEvaluated = super.evaluate(tuple, ptr);
-        if (!wasEvaluated) {
-            return false;
-        }
-        if (isConstantExpression()) {
-            getAggregatorExpression().evaluate(tuple, ptr);
-        }
-        return true;
-    }
+  public MinAggregateFunction() {
+  }
 
-    @Override 
-    public Aggregator newServerAggregator(Configuration conf) {
-        Expression child = getAggregatorExpression();
-        final PDataType type = child.getDataType();
-        final Integer maxLength = child.getMaxLength();
-        return new MinAggregator(child.getSortOrder()) {
-            @Override
-            public PDataType getDataType() {
-                return type;
-            }
-            @Override
-            public Integer getMaxLength() {
-            	return maxLength;
-            }
-        };
+  public MinAggregateFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    boolean wasEvaluated = super.evaluate(tuple, ptr);
+    if (!wasEvaluated) {
+      return false;
     }
-    
-    @Override
-    public SortOrder getSortOrder() {
-       return getAggregatorExpression().getSortOrder(); 
+    if (isConstantExpression()) {
+      getAggregatorExpression().evaluate(tuple, ptr);
     }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
+    return true;
+  }
+
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    Expression child = getAggregatorExpression();
+    final PDataType type = child.getDataType();
+    final Integer maxLength = child.getMaxLength();
+    return new MinAggregator(child.getSortOrder()) {
+      @Override
+      public PDataType getDataType() {
+        return type;
+      }
+
+      @Override
+      public Integer getMaxLength() {
+        return maxLength;
+      }
+    };
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return getAggregatorExpression().getSortOrder();
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

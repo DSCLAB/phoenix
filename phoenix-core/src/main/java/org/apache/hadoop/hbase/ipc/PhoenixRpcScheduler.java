@@ -26,104 +26,103 @@ import org.apache.phoenix.query.QueryServicesOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
- * {@link RpcScheduler} that first checks to see if this is an index or metedata update before passing off the
- * call to the delegate {@link RpcScheduler}.
+ * {@link RpcScheduler} that first checks to see if this is an index or metedata
+ * update before passing off the call to the delegate {@link RpcScheduler}.
  */
 public class PhoenixRpcScheduler extends RpcScheduler {
 
+  // copied from org.apache.hadoop.hbase.ipc.SimpleRpcScheduler in HBase 0.98.4
+  private static final String CALL_QUEUE_HANDLER_FACTOR_CONF_KEY = "ipc.server.callqueue.handler.factor";
+  private static final String CALLQUEUE_LENGTH_CONF_KEY = "ipc.server.max.callqueue.length";
+  private static final int DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER = 10;
+
+  private RpcScheduler delegate;
+  private int indexPriority;
+  private int metadataPriority;
+  private RpcExecutor indexCallExecutor;
+  private RpcExecutor metadataCallExecutor;
+  private int port;
+
+  public PhoenixRpcScheduler(Configuration conf, RpcScheduler delegate, int indexPriority, int metadataPriority) {
     // copied from org.apache.hadoop.hbase.ipc.SimpleRpcScheduler in HBase 0.98.4
-    private static final String CALL_QUEUE_HANDLER_FACTOR_CONF_KEY = "ipc.server.callqueue.handler.factor";
-    private static final String CALLQUEUE_LENGTH_CONF_KEY = "ipc.server.max.callqueue.length";
-    private static final int DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER = 10;
+    int indexHandlerCount = conf.getInt(QueryServices.INDEX_HANDLER_COUNT_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_HANDLER_COUNT);
+    int metadataHandlerCount = conf.getInt(QueryServices.METADATA_HANDLER_COUNT_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_HANDLER_COUNT);
+    int maxIndexQueueLength = conf.getInt(CALLQUEUE_LENGTH_CONF_KEY, indexHandlerCount * DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER);
+    int maxMetadataQueueLength = conf.getInt(CALLQUEUE_LENGTH_CONF_KEY, metadataHandlerCount * DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER);
+    float callQueuesHandlersFactor = conf.getFloat(CALL_QUEUE_HANDLER_FACTOR_CONF_KEY, 0);
+    int numIndexQueues = Math.max(1, Math.round(indexHandlerCount * callQueuesHandlersFactor));
+    int numMetadataQueues = Math.max(1, Math.round(metadataHandlerCount * callQueuesHandlersFactor));
 
-    private RpcScheduler delegate;
-    private int indexPriority;
-    private int metadataPriority;
-    private RpcExecutor indexCallExecutor;
-    private RpcExecutor metadataCallExecutor;
-    private int port;
+    this.indexPriority = indexPriority;
+    this.metadataPriority = metadataPriority;
+    this.delegate = delegate;
+    this.indexCallExecutor = new BalancedQueueRpcExecutor("Index", indexHandlerCount, numIndexQueues, maxIndexQueueLength);
+    this.metadataCallExecutor = new BalancedQueueRpcExecutor("Metadata", metadataHandlerCount, numMetadataQueues, maxMetadataQueueLength);
+  }
 
-    public PhoenixRpcScheduler(Configuration conf, RpcScheduler delegate, int indexPriority, int metadataPriority) {
-        // copied from org.apache.hadoop.hbase.ipc.SimpleRpcScheduler in HBase 0.98.4
-    	int indexHandlerCount = conf.getInt(QueryServices.INDEX_HANDLER_COUNT_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_HANDLER_COUNT);
-    	int metadataHandlerCount = conf.getInt(QueryServices.METADATA_HANDLER_COUNT_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_HANDLER_COUNT);
-        int maxIndexQueueLength =  conf.getInt(CALLQUEUE_LENGTH_CONF_KEY, indexHandlerCount*DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER);
-        int maxMetadataQueueLength =  conf.getInt(CALLQUEUE_LENGTH_CONF_KEY, metadataHandlerCount*DEFAULT_MAX_CALLQUEUE_LENGTH_PER_HANDLER);
-        float callQueuesHandlersFactor = conf.getFloat(CALL_QUEUE_HANDLER_FACTOR_CONF_KEY, 0);
-        int numIndexQueues = Math.max(1, Math.round(indexHandlerCount * callQueuesHandlersFactor));
-        int numMetadataQueues = Math.max(1, Math.round(metadataHandlerCount * callQueuesHandlersFactor));
+  @Override
+  public void init(Context context) {
+    delegate.init(context);
+    this.port = context.getListenerAddress().getPort();
+  }
 
-        this.indexPriority = indexPriority;
-        this.metadataPriority = metadataPriority;
-        this.delegate = delegate;
-        this.indexCallExecutor = new BalancedQueueRpcExecutor("Index", indexHandlerCount, numIndexQueues, maxIndexQueueLength);
-        this.metadataCallExecutor = new BalancedQueueRpcExecutor("Metadata", metadataHandlerCount, numMetadataQueues, maxMetadataQueueLength);
+  @Override
+  public void start() {
+    delegate.start();
+    indexCallExecutor.start(port);
+    metadataCallExecutor.start(port);
+  }
+
+  @Override
+  public void stop() {
+    delegate.stop();
+    indexCallExecutor.stop();
+    metadataCallExecutor.stop();
+  }
+
+  @Override
+  public boolean dispatch(CallRunner callTask) throws InterruptedException, IOException {
+    RpcServer.Call call = callTask.getCall();
+    int priority = call.header.getPriority();
+    if (indexPriority == priority) {
+      return indexCallExecutor.dispatch(callTask);
+    } else if (metadataPriority == priority) {
+      return metadataCallExecutor.dispatch(callTask);
+    } else {
+      return delegate.dispatch(callTask);
     }
+  }
 
-    @Override
-    public void init(Context context) {
-        delegate.init(context);
-        this.port = context.getListenerAddress().getPort();
-    }
+  @Override
+  public int getGeneralQueueLength() {
+    // not the best way to calculate, but don't have a better way to hook
+    // into metrics at the moment
+    return this.delegate.getGeneralQueueLength() + this.indexCallExecutor.getQueueLength() + this.metadataCallExecutor.getQueueLength();
+  }
 
-    @Override
-    public void start() {
-        delegate.start();
-        indexCallExecutor.start(port);
-        metadataCallExecutor.start(port);
-    }
+  @Override
+  public int getPriorityQueueLength() {
+    return this.delegate.getPriorityQueueLength();
+  }
 
-    @Override
-    public void stop() {
-        delegate.stop();
-        indexCallExecutor.stop();
-        metadataCallExecutor.stop();
-    }
+  @Override
+  public int getReplicationQueueLength() {
+    return this.delegate.getReplicationQueueLength();
+  }
 
-    @Override
-    public boolean dispatch(CallRunner callTask) throws InterruptedException, IOException {
-        RpcServer.Call call = callTask.getCall();
-        int priority = call.header.getPriority();
-        if (indexPriority == priority) {
-            return indexCallExecutor.dispatch(callTask);
-        } else if (metadataPriority == priority) {
-            return metadataCallExecutor.dispatch(callTask);
-        } else {
-            return delegate.dispatch(callTask);
-        }
-    }
+  @Override
+  public int getActiveRpcHandlerCount() {
+    return this.delegate.getActiveRpcHandlerCount() + this.indexCallExecutor.getActiveHandlerCount() + this.metadataCallExecutor.getActiveHandlerCount();
+  }
 
-    @Override
-    public int getGeneralQueueLength() {
-        // not the best way to calculate, but don't have a better way to hook
-        // into metrics at the moment
-        return this.delegate.getGeneralQueueLength() + this.indexCallExecutor.getQueueLength() + this.metadataCallExecutor.getQueueLength();
-    }
+  @VisibleForTesting
+  public void setIndexExecutorForTesting(RpcExecutor executor) {
+    this.indexCallExecutor = executor;
+  }
 
-    @Override
-    public int getPriorityQueueLength() {
-        return this.delegate.getPriorityQueueLength();
-    }
+  @VisibleForTesting
+  public void setMetadataExecutorForTesting(RpcExecutor executor) {
+    this.metadataCallExecutor = executor;
+  }
 
-    @Override
-    public int getReplicationQueueLength() {
-        return this.delegate.getReplicationQueueLength();
-    }
-
-    @Override
-    public int getActiveRpcHandlerCount() {
-        return this.delegate.getActiveRpcHandlerCount() + this.indexCallExecutor.getActiveHandlerCount() + this.metadataCallExecutor.getActiveHandlerCount();
-    }
-
-    @VisibleForTesting
-    public void setIndexExecutorForTesting(RpcExecutor executor) {
-        this.indexCallExecutor = executor;
-    }
-    
-    @VisibleForTesting
-    public void setMetadataExecutorForTesting(RpcExecutor executor) {
-        this.metadataCallExecutor = executor;
-    }
-    
-    
 }

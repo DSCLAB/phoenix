@@ -25,26 +25,27 @@ import org.apache.phoenix.parse.CurrentDateParseNode;
 import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 
 /**
- * 
- * Function used to represent NOW()
- * The function returns a {@link org.apache.phoenix.schema.types.PTimestamp}
+ *
+ * Function used to represent NOW() The function returns a
+ * {@link org.apache.phoenix.schema.types.PTimestamp}
  *
  */
 @BuiltInFunction(name = NowFunction.NAME,
-nodeClass=CurrentDateParseNode.class, args= {})
+        nodeClass = CurrentDateParseNode.class, args = {})
 public abstract class NowFunction extends ScalarFunction {
-    
-    public static final String NAME = "NOW";
 
-    public NowFunction() {}
-    
-    public NowFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public static final String NAME = "NOW";
 
-    @Override
-    public String getName() {
-        return NAME;
-    }   
-    
+  public NowFunction() {
+  }
+
+  public NowFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
 }

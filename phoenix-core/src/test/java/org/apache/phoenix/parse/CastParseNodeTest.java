@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.parse;
 
 import org.apache.phoenix.schema.types.PDataType;
@@ -28,30 +27,30 @@ import static org.junit.Assert.*;
 
 public class CastParseNodeTest {
 
-    @Test
-    public void testToSQL() {
-        ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
-        CastParseNode castParseNode = new CastParseNode(columnParseNode, PLong.INSTANCE, null, null, false);
-        StringBuilder stringBuilder = new StringBuilder();
-        castParseNode.toSQL(null, stringBuilder);
-        assertEquals(" CAST(TABLE1.V AS BIGINT)", stringBuilder.toString());
-    }
+  @Test
+  public void testToSQL() {
+    ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
+    CastParseNode castParseNode = new CastParseNode(columnParseNode, PLong.INSTANCE, null, null, false);
+    StringBuilder stringBuilder = new StringBuilder();
+    castParseNode.toSQL(null, stringBuilder);
+    assertEquals(" CAST(TABLE1.V AS BIGINT)", stringBuilder.toString());
+  }
 
-    @Test
-    public void testToSQL_WithLengthAndScale() {
-        ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
-        CastParseNode castParseNode = new CastParseNode(columnParseNode, PDecimal.INSTANCE, 5, 3, false);
-        StringBuilder stringBuilder = new StringBuilder();
-        castParseNode.toSQL(null, stringBuilder);
-        assertEquals(" CAST(TABLE1.V AS DECIMAL(5,3))", stringBuilder.toString());
-    }
+  @Test
+  public void testToSQL_WithLengthAndScale() {
+    ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
+    CastParseNode castParseNode = new CastParseNode(columnParseNode, PDecimal.INSTANCE, 5, 3, false);
+    StringBuilder stringBuilder = new StringBuilder();
+    castParseNode.toSQL(null, stringBuilder);
+    assertEquals(" CAST(TABLE1.V AS DECIMAL(5,3))", stringBuilder.toString());
+  }
 
-    @Test
-    public void testToSQL_ArrayType() {
-        ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
-        CastParseNode castParseNode = new CastParseNode(columnParseNode, PLong.INSTANCE, null, null, true);
-        StringBuilder stringBuilder = new StringBuilder();
-        castParseNode.toSQL(null, stringBuilder);
-        assertEquals(" CAST(TABLE1.V AS BIGINT ARRAY)", stringBuilder.toString());
-    }
+  @Test
+  public void testToSQL_ArrayType() {
+    ColumnParseNode columnParseNode = new ColumnParseNode(TableName.create("SCHEMA1", "TABLE1"), "V");
+    CastParseNode castParseNode = new CastParseNode(columnParseNode, PLong.INSTANCE, null, null, true);
+    StringBuilder stringBuilder = new StringBuilder();
+    castParseNode.toSQL(null, stringBuilder);
+    assertEquals(" CAST(TABLE1.V AS BIGINT ARRAY)", stringBuilder.toString());
+  }
 }

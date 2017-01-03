@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hbase.regionserver.wal;
 
 import static org.junit.Assert.assertEquals;
@@ -45,8 +44,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Simple test to read/write simple files via our custom {@link WALCellCodec} to ensure properly
- * encoding/decoding without going through a cluster.
+ * Simple test to read/write simple files via our custom {@link WALCellCodec} to
+ * ensure properly encoding/decoding without going through a cluster.
  */
 public class ReadWriteKeyValuesWithCodecIT {
 
@@ -85,7 +84,8 @@ public class ReadWriteKeyValuesWithCodecIT {
   }
 
   /**
-   * @return a bunch of {@link WALEdit}s that test a range of serialization possibilities.
+   * @return a bunch of {@link WALEdit}s that test a range of serialization
+   * possibilities.
    */
   private List<WALEdit> getEdits() {
     // Build up a couple of edits
@@ -102,12 +102,12 @@ public class ReadWriteKeyValuesWithCodecIT {
     WALEdit withDelete = new WALEdit();
     addMutation(withDelete, d, FAMILY);
     edits.add(withDelete);
-    
+
     WALEdit withPutsAndDeletes = new WALEdit();
     addMutation(withPutsAndDeletes, d, FAMILY);
     addMutation(withPutsAndDeletes, p, FAMILY);
     edits.add(withPutsAndDeletes);
-    
+
     WALEdit justIndexUpdates = new WALEdit();
     byte[] table = Bytes.toBytes("targetTable");
     IndexedKeyValue ikv = new IndexedKeyValue(table, p);
@@ -124,8 +124,8 @@ public class ReadWriteKeyValuesWithCodecIT {
   }
 
   /**
-   * Add all the {@link KeyValue}s in the {@link Mutation}, for the pass family, to the given
-   * {@link WALEdit}.
+   * Add all the {@link KeyValue}s in the {@link Mutation}, for the pass family,
+   * to the given {@link WALEdit}.
    */
   private void addMutation(WALEdit edit, Mutation m, byte[] family) {
     List<Cell> kvs = m.getFamilyCellMap().get(FAMILY);
@@ -134,24 +134,24 @@ public class ReadWriteKeyValuesWithCodecIT {
     }
   }
 
-  
   private void writeWALEdit(WALCellCodec codec, List<Cell> kvs, FSDataOutputStream out) throws IOException {
     out.writeInt(kvs.size());
     Codec.Encoder cellEncoder = codec.getEncoder(out);
     // We interleave the two lists for code simplicity
     for (Cell kv : kvs) {
-        cellEncoder.write(kv);
+      cellEncoder.write(kv);
     }
   }
-  
+
   /**
-   * Write the edits to the specified path on the {@link FileSystem} using the given codec and then
-   * read them back in and ensure that we read the same thing we wrote.
+   * Write the edits to the specified path on the {@link FileSystem} using the
+   * given codec and then read them back in and ensure that we read the same
+   * thing we wrote.
    */
   private void writeReadAndVerify(final CompressionContext compressionContext, FileSystem fs, List<WALEdit> edits,
-      Path testFile) throws IOException {
-	  
-	WALCellCodec codec = WALCellCodec.create(UTIL.getConfiguration(), compressionContext);  
+          Path testFile) throws IOException {
+
+    WALCellCodec codec = WALCellCodec.create(UTIL.getConfiguration(), compressionContext);
     // write the edits out
     FSDataOutputStream out = fs.create(testFile);
     for (WALEdit edit : edits) {
@@ -171,13 +171,13 @@ public class ReadWriteKeyValuesWithCodecIT {
     in.close();
 
     // make sure the read edits match the written
-    for(int i=0; i< edits.size(); i++){
+    for (int i = 0; i < edits.size(); i++) {
       WALEdit expected = edits.get(i);
       WALEdit found = read.get(i);
-      for(int j=0; j< expected.getCells().size(); j++){
+      for (int j = 0; j < expected.getCells().size(); j++) {
         Cell fkv = found.getCells().get(j);
         Cell ekv = expected.getCells().get(j);
-        assertEquals("KV mismatch for edit! Expected: "+expected+", but found: "+found, ekv, fkv);
+        assertEquals("KV mismatch for edit! Expected: " + expected + ", but found: " + found, ekv, fkv);
       }
     }
   }

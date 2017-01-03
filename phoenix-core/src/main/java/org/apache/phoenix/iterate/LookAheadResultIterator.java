@@ -23,54 +23,54 @@ import java.util.List;
 import org.apache.phoenix.schema.tuple.ResultTuple;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 abstract public class LookAheadResultIterator implements PeekingResultIterator {
-    public static PeekingResultIterator wrap(final ResultIterator iterator) {
-        if (iterator instanceof PeekingResultIterator) {
-            return (PeekingResultIterator) iterator;
-        }
-        
-        return new LookAheadResultIterator() {
 
-            @Override
-            public void explain(List<String> planSteps) {
-                iterator.explain(planSteps);
-            }
+  public static PeekingResultIterator wrap(final ResultIterator iterator) {
+    if (iterator instanceof PeekingResultIterator) {
+      return (PeekingResultIterator) iterator;
+    }
 
-            @Override
-            public void close() throws SQLException {
-                iterator.close();
-            }
+    return new LookAheadResultIterator() {
 
-            @Override
-            protected Tuple advance() throws SQLException {
-                return iterator.next();
-            }
-        };
+      @Override
+      public void explain(List<String> planSteps) {
+        iterator.explain(planSteps);
+      }
+
+      @Override
+      public void close() throws SQLException {
+        iterator.close();
+      }
+
+      @Override
+      protected Tuple advance() throws SQLException {
+        return iterator.next();
+      }
+    };
+  }
+
+  private final static Tuple UNINITIALIZED = new ResultTuple();
+  private Tuple next = UNINITIALIZED;
+
+  abstract protected Tuple advance() throws SQLException;
+
+  private void init() throws SQLException {
+    if (next == UNINITIALIZED) {
+      next = advance();
     }
-    
-    private final static Tuple UNINITIALIZED = new ResultTuple();
-    private Tuple next = UNINITIALIZED;
-    
-    abstract protected Tuple advance() throws SQLException;
-    
-    private void init() throws SQLException {
-        if (next == UNINITIALIZED) {
-            next = advance();
-        }
-    }
-    
-    @Override
-    public Tuple next() throws SQLException {
-        init();
-        Tuple next = this.next;
-        this.next = advance();
-        return next;
-    }
-    
-    @Override
-    public Tuple peek() throws SQLException {
-        init();
-        return next;
-    }
+  }
+
+  @Override
+  public Tuple next() throws SQLException {
+    init();
+    Tuple next = this.next;
+    this.next = advance();
+    return next;
+  }
+
+  @Override
+  public Tuple peek() throws SQLException {
+    init();
+    return next;
+  }
 }

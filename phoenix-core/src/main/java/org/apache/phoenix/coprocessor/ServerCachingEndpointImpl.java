@@ -42,37 +42,37 @@ import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 
 /**
- * 
+ *
  * Server-side implementation of {@link ServerCachingProtocol}
  *
- * 
+ *
  * @since 0.1
  */
 public class ServerCachingEndpointImpl extends ServerCachingService implements CoprocessorService,
-    Coprocessor {
+        Coprocessor {
 
   private RegionCoprocessorEnvironment env;
 
   @Override
   public void addServerCache(RpcController controller, AddServerCacheRequest request,
-      RpcCallback<AddServerCacheResponse> done) {
+          RpcCallback<AddServerCacheResponse> done) {
     ImmutableBytesPtr tenantId = null;
     if (request.hasTenantId()) {
       tenantId = new ImmutableBytesPtr(request.getTenantId().toByteArray());
     }
     TenantCache tenantCache = GlobalCache.getTenantCache(this.env, tenantId);
-    ImmutableBytesWritable cachePtr =
-        org.apache.phoenix.protobuf.ProtobufUtil
-            .toImmutableBytesWritable(request.getCachePtr());
+    ImmutableBytesWritable cachePtr
+            = org.apache.phoenix.protobuf.ProtobufUtil
+                    .toImmutableBytesWritable(request.getCachePtr());
     byte[] txState = request.hasTxState() ? request.getTxState().toByteArray() : ByteUtil.EMPTY_BYTE_ARRAY;
 
     try {
       @SuppressWarnings("unchecked")
-      Class<ServerCacheFactory> serverCacheFactoryClass =
-          (Class<ServerCacheFactory>) Class.forName(request.getCacheFactory().getClassName());
+      Class<ServerCacheFactory> serverCacheFactoryClass
+              = (Class<ServerCacheFactory>) Class.forName(request.getCacheFactory().getClassName());
       ServerCacheFactory cacheFactory = serverCacheFactoryClass.newInstance();
       tenantCache.addServerCache(new ImmutableBytesPtr(request.getCacheId().toByteArray()),
-        cachePtr, txState, cacheFactory);
+              cachePtr, txState, cacheFactory);
     } catch (Throwable e) {
       ProtobufUtil.setControllerException(controller, new IOException(e));
     }
@@ -84,7 +84,7 @@ public class ServerCachingEndpointImpl extends ServerCachingService implements C
 
   @Override
   public void removeServerCache(RpcController controller, RemoveServerCacheRequest request,
-      RpcCallback<RemoveServerCacheResponse> done) {
+          RpcCallback<RemoveServerCacheResponse> done) {
     ImmutableBytesPtr tenantId = null;
     if (request.hasTenantId()) {
       tenantId = new ImmutableBytesPtr(request.getTenantId().toByteArray());

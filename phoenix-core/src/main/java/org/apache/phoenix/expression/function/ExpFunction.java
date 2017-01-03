@@ -26,30 +26,31 @@ import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDouble;
 
-@BuiltInFunction(name = ExpFunction.NAME, args = { @Argument(allowedTypes = { PDouble.class, PDecimal.class }) })
+@BuiltInFunction(name = ExpFunction.NAME, args = {
+  @Argument(allowedTypes = {PDouble.class, PDecimal.class})})
 public class ExpFunction extends JavaMathOneArgumentFunction {
 
-    public static final String NAME = "EXP";
+  public static final String NAME = "EXP";
 
-    public ExpFunction() {
-    }
+  public ExpFunction() {
+  }
 
-    public ExpFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public ExpFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    protected double compute(double firstArg) {
-        return Math.exp(firstArg);
-    }
+  @Override
+  protected double compute(double firstArg) {
+    return Math.exp(firstArg);
+  }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES;
+  }
 }

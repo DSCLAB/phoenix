@@ -33,45 +33,47 @@ import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * 
+ *
  * Built-in function for STDDEV_SAMP(<expression>) aggregate function
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
-@BuiltInFunction(name = StddevSampFunction.NAME, args = { @Argument(allowedTypes={PDecimal.class})})
+@BuiltInFunction(name = StddevSampFunction.NAME, args = {
+  @Argument(allowedTypes = {PDecimal.class})})
 public class StddevSampFunction extends DistinctValueWithCountAggregateFunction {
-    public static final String NAME = "STDDEV_SAMP";
 
-    public StddevSampFunction() {
+  public static final String NAME = "STDDEV_SAMP";
 
-    }
+  public StddevSampFunction() {
 
-    public StddevSampFunction(List<Expression> childern) {
-        super(childern);
-    }
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        return new DistinctValueWithCountServerAggregator(conf);
-    }
+  public StddevSampFunction(List<Expression> childern) {
+    super(childern);
+  }
 
-    @Override
-    public DistinctValueWithCountClientAggregator newClientAggregator() {
-        if (children.get(0).getDataType() == PDecimal.INSTANCE) {
-            // Special Aggregators for DECIMAL datatype for more precision than double
-            return new DecimalStddevSampAggregator(children, getAggregatorExpression().getSortOrder());
-        }
-        return new StddevSampAggregator(children, getAggregatorExpression().getSortOrder());
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    return new DistinctValueWithCountServerAggregator(conf);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PDecimal.INSTANCE;
+  @Override
+  public DistinctValueWithCountClientAggregator newClientAggregator() {
+    if (children.get(0).getDataType() == PDecimal.INSTANCE) {
+      // Special Aggregators for DECIMAL datatype for more precision than double
+      return new DecimalStddevSampAggregator(children, getAggregatorExpression().getSortOrder());
     }
+    return new StddevSampAggregator(children, getAggregatorExpression().getSortOrder());
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PDecimal.INSTANCE;
+  }
 }

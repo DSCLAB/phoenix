@@ -21,23 +21,25 @@ import static org.apache.phoenix.monitoring.MetricType.MEMORY_CHUNK_BYTES;
 import static org.apache.phoenix.monitoring.MetricType.MEMORY_WAIT_TIME;
 
 /**
- * Class that encapsulates the metrics regarding memory resources needed for servicing a request.
+ * Class that encapsulates the metrics regarding memory resources needed for
+ * servicing a request.
  */
 public class MemoryMetricsHolder {
-    private final CombinableMetric memoryChunkSizeMetric;
-    private final CombinableMetric memoryWaitTimeMetric;
-    public static final MemoryMetricsHolder NO_OP_INSTANCE = new MemoryMetricsHolder(new ReadMetricQueue(false), null);
-    
-    public MemoryMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
-        this.memoryChunkSizeMetric = readMetrics.allotMetric(MEMORY_CHUNK_BYTES, tableName);
-        this.memoryWaitTimeMetric = readMetrics.allotMetric(MEMORY_WAIT_TIME, tableName);
-    }
 
-    public CombinableMetric getMemoryChunkSizeMetric() {
-        return memoryChunkSizeMetric;
-    }
+  private final CombinableMetric memoryChunkSizeMetric;
+  private final CombinableMetric memoryWaitTimeMetric;
+  public static final MemoryMetricsHolder NO_OP_INSTANCE = new MemoryMetricsHolder(new ReadMetricQueue(false), null);
 
-    public CombinableMetric getMemoryWaitTimeMetric() {
-        return memoryWaitTimeMetric;
-    }
+  public MemoryMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
+    this.memoryChunkSizeMetric = readMetrics.allotMetric(MEMORY_CHUNK_BYTES, tableName);
+    this.memoryWaitTimeMetric = readMetrics.allotMetric(MEMORY_WAIT_TIME, tableName);
+  }
+
+  public CombinableMetric getMemoryChunkSizeMetric() {
+    return memoryChunkSizeMetric;
+  }
+
+  public CombinableMetric getMemoryWaitTimeMetric() {
+    return memoryWaitTimeMetric;
+  }
 }

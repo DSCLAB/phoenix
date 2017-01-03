@@ -29,46 +29,47 @@ import org.junit.Test;
 
 public class PropertiesUtilTest {
 
-    private static final String SOME_TENANT_ID = "00Dxx0000001234";
-    private static final String SOME_OTHER_PROPERTY_KEY = "some_other_property";
-    private static final String SOME_OTHER_PROPERTY_VALUE = "some_other_value";
-    
-    @Test
-    public void testCopy() throws Exception{
-        final Properties propsWithTenant = new Properties();
-        propsWithTenant.put(PhoenixRuntime.TENANT_ID_ATTRIB, SOME_TENANT_ID);
+  private static final String SOME_TENANT_ID = "00Dxx0000001234";
+  private static final String SOME_OTHER_PROPERTY_KEY = "some_other_property";
+  private static final String SOME_OTHER_PROPERTY_VALUE = "some_other_value";
 
-        verifyValidCopy(propsWithTenant);
-    }
+  @Test
+  public void testCopy() throws Exception {
+    final Properties propsWithTenant = new Properties();
+    propsWithTenant.put(PhoenixRuntime.TENANT_ID_ATTRIB, SOME_TENANT_ID);
 
-    @Test
-    public void testCopyOnWrappedProperties() throws Exception{
-        final Properties propsWithTenant = new Properties();
-        propsWithTenant.put(PhoenixRuntime.TENANT_ID_ATTRIB, SOME_TENANT_ID);
+    verifyValidCopy(propsWithTenant);
+  }
 
-        verifyValidCopy(new Properties(propsWithTenant));
-    }
+  @Test
+  public void testCopyOnWrappedProperties() throws Exception {
+    final Properties propsWithTenant = new Properties();
+    propsWithTenant.put(PhoenixRuntime.TENANT_ID_ATTRIB, SOME_TENANT_ID);
 
-    @Test
-    public void testCopyFromConfiguration() throws Exception{
-        //make sure that we don't only copy the ZK quorum, but all
-        //properties
-        final Configuration conf = HBaseConfiguration.create();
-        final Properties props = new Properties();
-        
-        conf.set(HConstants.ZOOKEEPER_QUORUM, HConstants.LOCALHOST);
-        conf.set(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY, 
-                PropertiesUtilTest.SOME_OTHER_PROPERTY_VALUE);
-        PropertiesUtil.extractProperties(props, conf);
-        assertEquals(props.getProperty(HConstants.ZOOKEEPER_QUORUM),
-                conf.get(HConstants.ZOOKEEPER_QUORUM));
-        assertEquals(props.getProperty(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY),
-                conf.get(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY));
-    }
-    private void verifyValidCopy(Properties props) throws SQLException {
+    verifyValidCopy(new Properties(propsWithTenant));
+  }
 
-        Properties copy = PropertiesUtil.deepCopy(props);
-        copy.containsKey(PhoenixRuntime.TENANT_ID_ATTRIB); //This checks the map and NOT the defaults in java.util.Properties
-        assertEquals(SOME_TENANT_ID, copy.getProperty(PhoenixRuntime.TENANT_ID_ATTRIB));
-    }
+  @Test
+  public void testCopyFromConfiguration() throws Exception {
+    //make sure that we don't only copy the ZK quorum, but all
+    //properties
+    final Configuration conf = HBaseConfiguration.create();
+    final Properties props = new Properties();
+
+    conf.set(HConstants.ZOOKEEPER_QUORUM, HConstants.LOCALHOST);
+    conf.set(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY,
+            PropertiesUtilTest.SOME_OTHER_PROPERTY_VALUE);
+    PropertiesUtil.extractProperties(props, conf);
+    assertEquals(props.getProperty(HConstants.ZOOKEEPER_QUORUM),
+            conf.get(HConstants.ZOOKEEPER_QUORUM));
+    assertEquals(props.getProperty(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY),
+            conf.get(PropertiesUtilTest.SOME_OTHER_PROPERTY_KEY));
+  }
+
+  private void verifyValidCopy(Properties props) throws SQLException {
+
+    Properties copy = PropertiesUtil.deepCopy(props);
+    copy.containsKey(PhoenixRuntime.TENANT_ID_ATTRIB); //This checks the map and NOT the defaults in java.util.Properties
+    assertEquals(SOME_TENANT_ID, copy.getProperty(PhoenixRuntime.TENANT_ID_ATTRIB));
+  }
 }

@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.covered.filter;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.filter.FilterBase;
 
 /**
- * Server-side only class used in the indexer to filter out keyvalues newer than a given timestamp
- * (so allows anything <code><=</code> timestamp through).
+ * Server-side only class used in the indexer to filter out keyvalues newer than
+ * a given timestamp (so allows anything <code><=</code> timestamp through).
  * <p>
  */
 public class NewerTimestampFilter extends FilterBase {

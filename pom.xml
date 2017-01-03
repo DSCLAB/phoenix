@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.phoenix</groupId>
   <artifactId>phoenix</artifactId>
@@ -9,17 +9,17 @@
   <description>A SQL layer over HBase</description>
 
   <licenses>
-      <license>
-          <name>The Apache Software License, Version 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-          <distribution>repo</distribution>
-          <comments />
-      </license>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments />
+    </license>
   </licenses>
 
   <organization>
-      <name>Apache Software Foundation</name>
-      <url>http://www.apache.org</url>
+    <name>Apache Software Foundation</name>
+    <url>http://www.apache.org</url>
   </organization>
 
   <modules>
@@ -138,7 +138,7 @@
           </configuration>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings 
-          only. It has no influence on the Maven build itself. -->
+        only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
@@ -181,13 +181,13 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <!-- Avoid defining exclusions in pluginManagement as they are global.
-               We already inherit some from the ASF parent pom. -->
+          We already inherit some from the ASF parent pom. -->
         </plugin>
         <!-- We put slow-running tests into src/it and run them during the
-            integration-test phase using the failsafe plugin. This way
-            developers can run unit tests conveniently from the IDE or via
-            "mvn package" from the command line without triggering time
-            consuming integration tests. -->
+        integration-test phase using the failsafe plugin. This way
+        developers can run unit tests conveniently from the IDE or via
+        "mvn package" from the command line without triggering time
+        consuming integration tests. -->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -227,40 +227,40 @@
           <version>${maven-failsafe-plugin.version}</version>
           <executions>
             <execution>
-               <id>ClientManagedTimeTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <runOrder>alphabetical</runOrder>
-                 <reuseForks>true</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.ClientManagedTimeTest</groups>
-                 <shutdown>kill</shutdown>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+              <id>ClientManagedTimeTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <runOrder>alphabetical</runOrder>
+                <reuseForks>true</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.ClientManagedTimeTest</groups>
+                <shutdown>kill</shutdown>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
             <execution>
-               <id>HBaseManagedTimeTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <runOrder>alphabetical</runOrder>
-                 <reuseForks>true</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.HBaseManagedTimeTest</groups>
-                 <shutdown>kill</shutdown>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+              <id>HBaseManagedTimeTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <runOrder>alphabetical</runOrder>
+                <reuseForks>true</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=128m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.HBaseManagedTimeTest</groups>
+                <shutdown>kill</shutdown>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
             <execution>
               <id>HBaseManagedTimeTableReuseTest</id>
@@ -280,23 +280,23 @@
                 <goal>verify</goal>
               </goals>
             </execution>
-	        <execution>
-               <id>NeedTheirOwnClusterTests</id>
-                 <configuration>
-                 <encoding>UTF-8</encoding>
-                 <forkCount>${numForkedIT}</forkCount>
-                 <runOrder>alphabetical</runOrder>
-                 <reuseForks>false</reuseForks>
-                 <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=256m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
-                 <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
-                 <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
-                 <groups>org.apache.phoenix.end2end.NeedsOwnMiniClusterTest</groups>
-                 <shutdown>kill</shutdown>
-               </configuration>
-               <goals>
-                 <goal>integration-test</goal>
-                 <goal>verify</goal>
-               </goals>
+            <execution>
+              <id>NeedTheirOwnClusterTests</id>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <forkCount>${numForkedIT}</forkCount>
+                <runOrder>alphabetical</runOrder>
+                <reuseForks>false</reuseForks>
+                <argLine>-enableassertions -Xmx2000m -XX:MaxPermSize=256m -Djava.security.egd=file:/dev/./urandom "-Djava.library.path=${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                <redirectTestOutputToFile>${test.output.tofile}</redirectTestOutputToFile>
+                <testSourceDirectory>${basedir}/src/it/java</testSourceDirectory>
+                <groups>org.apache.phoenix.end2end.NeedsOwnMiniClusterTest</groups>
+                <shutdown>kill</shutdown>
+              </configuration>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
             </execution>
           </executions>
         </plugin>
@@ -410,7 +410,7 @@
         <executions>
           <execution>
             <phase>prepare-package
-                </phase>
+            </phase>
             <goals>
               <goal>test-jar</goal>
             </goals>
@@ -439,7 +439,7 @@
             <!-- Header on changelog isn't normal -->
             <exclude>CHANGES</exclude>
             <!-- IDE configuration -->
-	          <exclude>dev/phoenix.importorder</exclude>
+            <exclude>dev/phoenix.importorder</exclude>
             <!-- Release L&N -->
             <exclude>dev/release_files/LICENSE</exclude>
             <exclude>dev/release_files/NOTICE</exclude>
@@ -447,7 +447,7 @@
             <exclude>docs/*.csv</exclude>
             <exclude>examples/*.csv</exclude>
             <!-- Exclude SQL files from rat. Sqlline 1.1.9 doesn't work with
-                 comments on the first line of a file. -->
+            comments on the first line of a file. -->
             <exclude>examples/*.sql</exclude>
             <exclude>examples/pig/testdata</exclude>
             <!-- precommit? -->
@@ -915,8 +915,8 @@
             <version>1.6</version>
             <executions>
               <execution>
-              <id>sign-artifacts</id>
-              <phase>verify</phase>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
                 <goals>
                   <goal>sign</goal>
                 </goals>

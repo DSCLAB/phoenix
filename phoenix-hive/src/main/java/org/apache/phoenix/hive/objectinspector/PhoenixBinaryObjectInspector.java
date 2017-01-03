@@ -24,35 +24,34 @@ import org.apache.hadoop.io.BytesWritable;
 /**
  * ObjectInspector for Binary type
  */
-
 public class PhoenixBinaryObjectInspector extends AbstractPhoenixObjectInspector<BytesWritable>
         implements BinaryObjectInspector {
 
-    public PhoenixBinaryObjectInspector() {
-        super(TypeInfoFactory.binaryTypeInfo);
+  public PhoenixBinaryObjectInspector() {
+    super(TypeInfoFactory.binaryTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    byte[] clone = null;
+
+    if (o != null) {
+      byte[] source = (byte[]) o;
+      clone = new byte[source.length];
+      System.arraycopy(source, 0, clone, 0, source.length);
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        byte[] clone = null;
+    return clone;
+  }
 
-        if (o != null) {
-            byte[] source = (byte[]) o;
-            clone = new byte[source.length];
-            System.arraycopy(source, 0, clone, 0, source.length);
-        }
+  @Override
+  public byte[] getPrimitiveJavaObject(Object o) {
+    return (byte[]) o;
+  }
 
-        return clone;
-    }
-
-    @Override
-    public byte[] getPrimitiveJavaObject(Object o) {
-        return (byte[]) o;
-    }
-
-    @Override
-    public BytesWritable getPrimitiveWritableObject(Object o) {
-        return new BytesWritable((byte[]) o);
-    }
+  @Override
+  public BytesWritable getPrimitiveWritableObject(Object o) {
+    return new BytesWritable((byte[]) o);
+  }
 
 }

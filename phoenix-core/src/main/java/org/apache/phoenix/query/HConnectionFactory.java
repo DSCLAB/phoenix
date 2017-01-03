@@ -26,25 +26,26 @@ import org.apache.hadoop.hbase.client.HConnectionManager;
 /**
  * Factory for creating {@link HConnection}
  *
- * 
+ *
  */
 public interface HConnectionFactory {
 
-    /**
-     * Creates HConnection to access HBase clusters.
-     * 
-     * @param configuration object
-     * @return A HConnection instance
-     */
-    HConnection createConnection(Configuration conf) throws IOException;
+  /**
+   * Creates HConnection to access HBase clusters.
+   *
+   * @param configuration object
+   * @return A HConnection instance
+   */
+  HConnection createConnection(Configuration conf) throws IOException;
 
-    /**
-     * Default implementation.  Uses standard HBase HConnections.
-     */
-    static class HConnectionFactoryImpl implements HConnectionFactory {
-        @Override
-        public HConnection createConnection(Configuration conf) throws IOException {
-            return HConnectionManager.createConnection(conf);
-        }
+  /**
+   * Default implementation. Uses standard HBase HConnections.
+   */
+  static class HConnectionFactoryImpl implements HConnectionFactory {
+
+    @Override
+    public HConnection createConnection(Configuration conf) throws IOException {
+      return HConnectionManager.createConnection(conf);
     }
+  }
 }

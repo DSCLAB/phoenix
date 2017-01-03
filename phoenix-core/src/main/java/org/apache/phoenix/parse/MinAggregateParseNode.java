@@ -25,15 +25,14 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.FunctionExpression;
 import org.apache.phoenix.expression.function.MinAggregateFunction;
 
-
 public class MinAggregateParseNode extends DelegateConstantToCountParseNode {
 
-    public MinAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
-    
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        return new MinAggregateFunction(children, getDelegateFunction(children,context));
-    }
+  public MinAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    return new MinAggregateFunction(children, getDelegateFunction(children, context));
+  }
 }

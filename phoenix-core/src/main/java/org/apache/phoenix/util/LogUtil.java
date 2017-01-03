@@ -24,30 +24,30 @@ import org.apache.phoenix.jdbc.PhoenixConnection;
 
 public class LogUtil {
 
-	private LogUtil() {
-    }
+  private LogUtil() {
+  }
 
-    public static String addCustomAnnotations(@Nullable String logLine, @Nullable PhoenixConnection con) {
-    	if (con == null || con.getCustomTracingAnnotations() == null || con.getCustomTracingAnnotations().isEmpty()) {
-            return logLine;
-    	} else {
-    		return customAnnotationsToString(con) + ' ' + logLine;
-    	}
+  public static String addCustomAnnotations(@Nullable String logLine, @Nullable PhoenixConnection con) {
+    if (con == null || con.getCustomTracingAnnotations() == null || con.getCustomTracingAnnotations().isEmpty()) {
+      return logLine;
+    } else {
+      return customAnnotationsToString(con) + ' ' + logLine;
     }
-    
-    public static String addCustomAnnotations(@Nullable String logLine, @Nullable byte[] annotations) {
-    	if (annotations == null) {
-            return logLine;
-    	} else {
-    		return Bytes.toString(annotations) + ' ' + logLine;
-    	}
+  }
+
+  public static String addCustomAnnotations(@Nullable String logLine, @Nullable byte[] annotations) {
+    if (annotations == null) {
+      return logLine;
+    } else {
+      return Bytes.toString(annotations) + ' ' + logLine;
     }
-    
-    public static String customAnnotationsToString(@Nullable PhoenixConnection con) {
-    	if (con == null || con.getCustomTracingAnnotations() == null || con.getCustomTracingAnnotations().isEmpty()) {
-            return null;
-        } else {
-        	return con.getCustomTracingAnnotations().toString();
-        }
+  }
+
+  public static String customAnnotationsToString(@Nullable PhoenixConnection con) {
+    if (con == null || con.getCustomTracingAnnotations() == null || con.getCustomTracingAnnotations().isEmpty()) {
+      return null;
+    } else {
+      return con.getCustomTracingAnnotations().toString();
     }
+  }
 }

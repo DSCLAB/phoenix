@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.end2end.salted;
 
 import static org.apache.phoenix.util.TestUtil.TEST_PROPERTIES;
@@ -34,58 +33,57 @@ import org.apache.phoenix.end2end.BaseHBaseManagedTimeTableReuseIT;
 import org.apache.phoenix.util.PropertiesUtil;
 import org.junit.Test;
 
-
 public class SaltedTableVarLengthRowKeyIT extends BaseHBaseManagedTimeTableReuseIT {
 
-    private static final String TEST_TABLE = generateRandomString();
+  private static final String TEST_TABLE = generateRandomString();
 
-    private static void initTableValues() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        
-        try {
-            createTestTable(getUrl(), "create table " + TEST_TABLE + " " +
-                    " (key_string varchar not null primary key, kv integer) SALT_BUCKETS=4\n");
-            String query = "UPSERT INTO " + TEST_TABLE + " VALUES(?,?)";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, "a");
-            stmt.setInt(2, 1);
-            stmt.execute();
-            
-            stmt.setString(1, "ab");
-            stmt.setInt(2, 2);
-            stmt.execute();
-            
-            stmt.setString(1, "abc");
-            stmt.setInt(2, 3);
-            stmt.execute();
-            conn.commit();
-        } finally {
-            conn.close();
-        }
-    }
+  private static void initTableValues() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
 
-    @Test
-    public void testSelectValueWithPointKeyQuery() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        try {
-            initTableValues();
-            String query;
-            PreparedStatement stmt;
-            ResultSet rs;
-            
-            query = "SELECT * FROM " + TEST_TABLE + " where key_string = 'abc'";
-            stmt = conn.prepareStatement(query);
-            rs = stmt.executeQuery();
-            assertTrue(rs.next());
-            assertEquals("abc", rs.getString(1));
-            assertEquals(3, rs.getInt(2));
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+    try {
+      createTestTable(getUrl(), "create table " + TEST_TABLE + " "
+              + " (key_string varchar not null primary key, kv integer) SALT_BUCKETS=4\n");
+      String query = "UPSERT INTO " + TEST_TABLE + " VALUES(?,?)";
+      PreparedStatement stmt = conn.prepareStatement(query);
+      stmt.setString(1, "a");
+      stmt.setInt(2, 1);
+      stmt.execute();
+
+      stmt.setString(1, "ab");
+      stmt.setInt(2, 2);
+      stmt.execute();
+
+      stmt.setString(1, "abc");
+      stmt.setInt(2, 3);
+      stmt.execute();
+      conn.commit();
+    } finally {
+      conn.close();
     }
+  }
+
+  @Test
+  public void testSelectValueWithPointKeyQuery() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    try {
+      initTableValues();
+      String query;
+      PreparedStatement stmt;
+      ResultSet rs;
+
+      query = "SELECT * FROM " + TEST_TABLE + " where key_string = 'abc'";
+      stmt = conn.prepareStatement(query);
+      rs = stmt.executeQuery();
+      assertTrue(rs.next());
+      assertEquals("abc", rs.getString(1));
+      assertEquals(3, rs.getInt(2));
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
+    }
+  }
 }

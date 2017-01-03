@@ -20,6 +20,7 @@ package org.apache.phoenix.expression.visitor;
 import org.apache.phoenix.expression.ProjectedColumnExpression;
 
 public abstract class ProjectedColumnExpressionVisitor extends StatelessTraverseAllExpressionVisitor<Void> {
-    @Override
-    abstract public Void visit(ProjectedColumnExpression node);
+
+  @Override
+  abstract public Void visit(ProjectedColumnExpression node);
 }

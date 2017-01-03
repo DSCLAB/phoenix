@@ -25,7 +25,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Factory avoids circular dependency problem in static initializers across types.
+ * Factory avoids circular dependency problem in static initializers across
+ * types.
  */
 public class PDataTypeFactory {
 

@@ -25,20 +25,22 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * A {@link TaskRunner} that ensures that all the tasks have been attempted before we return, even
- * if some of the tasks cause failures.
+ * A {@link TaskRunner} that ensures that all the tasks have been attempted
+ * before we return, even if some of the tasks cause failures.
  * <p>
- * Because we wait until the entire batch is complete to see the failure, checking for failure of
- * the {@link TaskBatch} on the submitted tasks will not help - they will never see the failure of
- * the other tasks. You will need to provide an external mechanism to propagate the error.
+ * Because we wait until the entire batch is complete to see the failure,
+ * checking for failure of the {@link TaskBatch} on the submitted tasks will not
+ * help - they will never see the failure of the other tasks. You will need to
+ * provide an external mechanism to propagate the error.
  * <p>
  * Does not throw an {@link ExecutionException} if any of the tasks fail.
  */
 public class WaitForCompletionTaskRunner extends BaseTaskRunner {
-  
+
   /**
-   * @param service thread pool to which {@link Task}s are submitted. This service is then 'owned'
-   *          by <tt>this</tt> and will be shutdown on calls to {@link #stop(String)}.
+   * @param service thread pool to which {@link Task}s are submitted. This
+   * service is then 'owned' by <tt>this</tt> and will be shutdown on calls to
+   * {@link #stop(String)}.
    */
   public WaitForCompletionTaskRunner(ExecutorService service) {
     super(service);

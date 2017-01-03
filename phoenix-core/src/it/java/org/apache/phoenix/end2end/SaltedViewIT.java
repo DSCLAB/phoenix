@@ -19,27 +19,26 @@ package org.apache.phoenix.end2end;
 
 import org.junit.Test;
 
-
 public class SaltedViewIT extends BaseViewIT {
 
-	public SaltedViewIT(boolean transactional) {
-		super(transactional);
-	}
+  public SaltedViewIT(boolean transactional) {
+    super(transactional);
+  }
 
-	/**
-     * Salted tests must be in their own test file to ensure that the underlying
-     * table is dropped. Otherwise, the splits may not be performed.
-     * TODO: we should throw in that case
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testSaltedUpdatableViewWithIndex() throws Exception {
-        testUpdatableViewWithIndex(3, false);
-    }
+  /**
+   * Salted tests must be in their own test file to ensure that the underlying
+   * table is dropped. Otherwise, the splits may not be performed. TODO: we
+   * should throw in that case
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSaltedUpdatableViewWithIndex() throws Exception {
+    testUpdatableViewWithIndex(3, false);
+  }
 
-    @Test
-    public void testSaltedUpdatableViewWithLocalIndex() throws Exception {
-        testUpdatableViewWithIndex(3, true);
-    }
+  @Test
+  public void testSaltedUpdatableViewWithLocalIndex() throws Exception {
+    testUpdatableViewWithIndex(3, true);
+  }
 }

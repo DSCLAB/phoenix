@@ -34,121 +34,124 @@ import org.junit.Test;
 
 /**
  * End to end tests for {@link SignFunction}
+ *
  * @since 4.0.0
  */
 public class SignFunctionEnd2EndIT extends BaseHBaseManagedTimeTableReuseIT {
 
-    private static final String KEY = "key";
-    private static final String TEST_SIGNED = generateRandomString();
-    private static final String TEST_UNSIGNED = generateRandomString();
+  private static final String KEY = "key";
+  private static final String TEST_SIGNED = generateRandomString();
+  private static final String TEST_UNSIGNED = generateRandomString();
 
-    @BeforeClass
-    public static void initTable() throws Exception {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DriverManager.getConnection(getUrl());
-            String ddl;
-            ddl = "CREATE TABLE " + TEST_SIGNED
-                + " (k VARCHAR NOT NULL PRIMARY KEY, dec DECIMAL, doub DOUBLE, fl FLOAT, inte INTEGER, lon BIGINT, smalli SMALLINT, tinyi TINYINT)";
-            conn.createStatement().execute(ddl);
-            ddl = "CREATE TABLE " + TEST_UNSIGNED
-                + " (k VARCHAR NOT NULL PRIMARY KEY, doub UNSIGNED_DOUBLE, fl UNSIGNED_FLOAT, inte UNSIGNED_INT, lon UNSIGNED_LONG, smalli UNSIGNED_SMALLINT, tinyi UNSIGNED_TINYINT)";
-            conn.createStatement().execute(ddl);
-            conn.commit();
-        } finally {
-            closeStmtAndConn(stmt, conn);
-        }
+  @BeforeClass
+  public static void initTable() throws Exception {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+      conn = DriverManager.getConnection(getUrl());
+      String ddl;
+      ddl = "CREATE TABLE " + TEST_SIGNED
+              + " (k VARCHAR NOT NULL PRIMARY KEY, dec DECIMAL, doub DOUBLE, fl FLOAT, inte INTEGER, lon BIGINT, smalli SMALLINT, tinyi TINYINT)";
+      conn.createStatement().execute(ddl);
+      ddl = "CREATE TABLE " + TEST_UNSIGNED
+              + " (k VARCHAR NOT NULL PRIMARY KEY, doub UNSIGNED_DOUBLE, fl UNSIGNED_FLOAT, inte UNSIGNED_INT, lon UNSIGNED_LONG, smalli UNSIGNED_SMALLINT, tinyi UNSIGNED_TINYINT)";
+      conn.createStatement().execute(ddl);
+      conn.commit();
+    } finally {
+      closeStmtAndConn(stmt, conn);
     }
+  }
 
-    private void updateSignedTable(Connection conn, double data) throws Exception {
-        PreparedStatement stmt = conn.prepareStatement(
+  private void updateSignedTable(Connection conn, double data) throws Exception {
+    PreparedStatement stmt = conn.prepareStatement(
             "UPSERT INTO " + TEST_SIGNED + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        stmt.setString(1, KEY);
-        Double d = Double.valueOf(data);
-        stmt.setBigDecimal(2, BigDecimal.valueOf(data));
-        stmt.setDouble(3, d.doubleValue());
-        stmt.setFloat(4, d.floatValue());
-        stmt.setInt(5, d.intValue());
-        stmt.setLong(6, d.longValue());
-        stmt.setShort(7, d.shortValue());
-        stmt.setByte(8, d.byteValue());
-        stmt.executeUpdate();
-        conn.commit();
-    }
+    stmt.setString(1, KEY);
+    Double d = Double.valueOf(data);
+    stmt.setBigDecimal(2, BigDecimal.valueOf(data));
+    stmt.setDouble(3, d.doubleValue());
+    stmt.setFloat(4, d.floatValue());
+    stmt.setInt(5, d.intValue());
+    stmt.setLong(6, d.longValue());
+    stmt.setShort(7, d.shortValue());
+    stmt.setByte(8, d.byteValue());
+    stmt.executeUpdate();
+    conn.commit();
+  }
 
-    private void updateUnsignedTable(Connection conn, double data) throws Exception {
-        PreparedStatement stmt = conn.prepareStatement(
+  private void updateUnsignedTable(Connection conn, double data) throws Exception {
+    PreparedStatement stmt = conn.prepareStatement(
             "UPSERT INTO " + TEST_UNSIGNED + " VALUES (?, ?, ?, ?, ?, ?, ?)");
-        stmt.setString(1, KEY);
-        Double d = Double.valueOf(data);
-        stmt.setDouble(2, d.doubleValue());
-        stmt.setFloat(3, d.floatValue());
-        stmt.setInt(4, d.intValue());
-        stmt.setLong(5, d.longValue());
-        stmt.setShort(6, d.shortValue());
-        stmt.setByte(7, d.byteValue());
-        stmt.executeUpdate();
-        conn.commit();
-    }
+    stmt.setString(1, KEY);
+    Double d = Double.valueOf(data);
+    stmt.setDouble(2, d.doubleValue());
+    stmt.setFloat(3, d.floatValue());
+    stmt.setInt(4, d.intValue());
+    stmt.setLong(5, d.longValue());
+    stmt.setShort(6, d.shortValue());
+    stmt.setByte(7, d.byteValue());
+    stmt.executeUpdate();
+    conn.commit();
+  }
 
-    private void testSignedNumberSpec(Connection conn, double data, int expected) throws Exception {
-        updateSignedTable(conn, data);
-        ResultSet rs = conn.createStatement().executeQuery(
+  private void testSignedNumberSpec(Connection conn, double data, int expected) throws Exception {
+    updateSignedTable(conn, data);
+    ResultSet rs = conn.createStatement().executeQuery(
             "SELECT SIGN(dec),SIGN(doub),SIGN(fl),SIGN(inte),SIGN(lon),SIGN(smalli),SIGN(tinyi) FROM "
-                + TEST_SIGNED);
-        assertTrue(rs.next());
-        for (int i = 1; i <= 7; ++i) {
-            assertEquals(rs.getInt(i), expected);
-        }
-        assertTrue(!rs.next());
+            + TEST_SIGNED);
+    assertTrue(rs.next());
+    for (int i = 1; i <= 7; ++i) {
+      assertEquals(rs.getInt(i), expected);
+    }
+    assertTrue(!rs.next());
 
-        PreparedStatement stmt = conn.prepareStatement("SELECT k FROM " + TEST_SIGNED
+    PreparedStatement stmt = conn.prepareStatement("SELECT k FROM " + TEST_SIGNED
             + " WHERE SIGN(dec)=? AND SIGN(doub)=? AND SIGN(fl)=? AND SIGN(inte)=? AND SIGN(lon)=? AND SIGN(smalli)=? AND SIGN(tinyi)=?");
-        for (int i = 1; i <= 7; ++i)
-            stmt.setInt(i, expected);
-        rs = stmt.executeQuery();
-        assertTrue(rs.next());
-        assertEquals(KEY, rs.getString(1));
-        assertTrue(!rs.next());
+    for (int i = 1; i <= 7; ++i) {
+      stmt.setInt(i, expected);
     }
+    rs = stmt.executeQuery();
+    assertTrue(rs.next());
+    assertEquals(KEY, rs.getString(1));
+    assertTrue(!rs.next());
+  }
 
-    private void testUnsignedNumberSpec(Connection conn, double data, int expected) throws Exception {
-        updateUnsignedTable(conn, data);
-        ResultSet rs = conn.createStatement().executeQuery(
+  private void testUnsignedNumberSpec(Connection conn, double data, int expected) throws Exception {
+    updateUnsignedTable(conn, data);
+    ResultSet rs = conn.createStatement().executeQuery(
             "SELECT SIGN(doub),SIGN(fl),SIGN(inte),SIGN(lon),SIGN(smalli),SIGN(tinyi) FROM "
-                + TEST_UNSIGNED);
-        assertTrue(rs.next());
-        for (int i = 1; i <= 6; ++i) {
-            assertEquals(rs.getInt(i), expected);
-        }
-        assertTrue(!rs.next());
+            + TEST_UNSIGNED);
+    assertTrue(rs.next());
+    for (int i = 1; i <= 6; ++i) {
+      assertEquals(rs.getInt(i), expected);
+    }
+    assertTrue(!rs.next());
 
-        PreparedStatement stmt = conn.prepareStatement("SELECT k FROM " + TEST_UNSIGNED
+    PreparedStatement stmt = conn.prepareStatement("SELECT k FROM " + TEST_UNSIGNED
             + " WHERE SIGN(doub)=? AND SIGN(fl)=? AND SIGN(inte)=? AND SIGN(lon)=? AND SIGN(smalli)=? AND SIGN(tinyi)=?");
-        for (int i = 1; i <= 6; ++i)
-            stmt.setInt(i, expected);
-        rs = stmt.executeQuery();
-        assertTrue(rs.next());
-        assertEquals(KEY, rs.getString(1));
-        assertTrue(!rs.next());
+    for (int i = 1; i <= 6; ++i) {
+      stmt.setInt(i, expected);
     }
+    rs = stmt.executeQuery();
+    assertTrue(rs.next());
+    assertEquals(KEY, rs.getString(1));
+    assertTrue(!rs.next());
+  }
 
-    @Test
-    public void testSignedNumber() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        testSignedNumberSpec(conn, 0.0, 0);
-        testSignedNumberSpec(conn, 1.0, 1);
-        testSignedNumberSpec(conn, -1.0, -1);
-        testSignedNumberSpec(conn, 123.1234, 1);
-        testSignedNumberSpec(conn, -123.1234, -1);
-    }
+  @Test
+  public void testSignedNumber() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    testSignedNumberSpec(conn, 0.0, 0);
+    testSignedNumberSpec(conn, 1.0, 1);
+    testSignedNumberSpec(conn, -1.0, -1);
+    testSignedNumberSpec(conn, 123.1234, 1);
+    testSignedNumberSpec(conn, -123.1234, -1);
+  }
 
-    @Test
-    public void testUnsignedNumber() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        testUnsignedNumberSpec(conn, 0.0, 0);
-        testUnsignedNumberSpec(conn, 1.0, 1);
-        testUnsignedNumberSpec(conn, 123.1234, 1);
-    }
+  @Test
+  public void testUnsignedNumber() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    testUnsignedNumberSpec(conn, 0.0, 0);
+    testUnsignedNumberSpec(conn, 1.0, 1);
+    testUnsignedNumberSpec(conn, 123.1234, 1);
+  }
 }

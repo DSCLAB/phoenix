@@ -26,26 +26,27 @@ import org.apache.phoenix.schema.TypeMismatchException;
 import org.apache.phoenix.schema.types.*;
 
 @FunctionParseNode.BuiltInFunction(name = ArrayAppendFunction.NAME, args = {
-        @FunctionParseNode.Argument(allowedTypes = {PBinaryArray.class, PVarbinaryArray.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PBinaryArray.class, PVarbinaryArray.class})
+  ,
         @FunctionParseNode.Argument(allowedTypes = {PVarbinary.class}, defaultValue = "null")})
 public class ArrayAppendFunction extends ArrayModifierFunction {
 
-    public static final String NAME = "ARRAY_APPEND";
+  public static final String NAME = "ARRAY_APPEND";
 
-    public ArrayAppendFunction() {
-    }
+  public ArrayAppendFunction() {
+  }
 
-    public ArrayAppendFunction(List<Expression> children) throws TypeMismatchException {
-        super(children);
-    }
+  public ArrayAppendFunction(List<Expression> children) throws TypeMismatchException {
+    super(children);
+  }
 
-    @Override
-    protected boolean modifierFunction(ImmutableBytesWritable ptr, int len, int offset, byte[] arrayBytes, PDataType baseDataType, int arrayLength, Integer maxLength, Expression arrayExp) {
-        return PArrayDataType.appendItemToArray(ptr, len, offset, arrayBytes, baseDataType, arrayLength, getMaxLength(), arrayExp.getSortOrder());
-    }
+  @Override
+  protected boolean modifierFunction(ImmutableBytesWritable ptr, int len, int offset, byte[] arrayBytes, PDataType baseDataType, int arrayLength, Integer maxLength, Expression arrayExp) {
+    return PArrayDataType.appendItemToArray(ptr, len, offset, arrayBytes, baseDataType, arrayLength, getMaxLength(), arrayExp.getSortOrder());
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

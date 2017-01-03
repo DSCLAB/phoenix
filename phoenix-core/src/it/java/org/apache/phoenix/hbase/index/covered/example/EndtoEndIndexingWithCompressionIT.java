@@ -24,22 +24,21 @@ import org.apache.hadoop.hbase.regionserver.wal.WALCellCodec;
 import org.junit.BeforeClass;
 
 /**
- * Test secondary indexing from an end-to-end perspective (client to server to index table).
+ * Test secondary indexing from an end-to-end perspective (client to server to
+ * index table).
  */
-
-
 public class EndtoEndIndexingWithCompressionIT extends EndToEndCoveredIndexingIT {
 
-    @BeforeClass
-    public static void setupCluster() throws Exception {
-        setupConfig();
-        //add our codec and enable WAL compression
-        Configuration conf = UTIL.getConfiguration();
-        conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY,
-                IndexedWALEditCodec.class.getName());
-        conf.setBoolean(HConstants.ENABLE_WAL_COMPRESSION, true);
-        //start the mini-cluster
-        UTIL.startMiniCluster();
-        initDriver();
-    }
+  @BeforeClass
+  public static void setupCluster() throws Exception {
+    setupConfig();
+    //add our codec and enable WAL compression
+    Configuration conf = UTIL.getConfiguration();
+    conf.set(WALCellCodec.WAL_CELL_CODEC_CLASS_KEY,
+            IndexedWALEditCodec.class.getName());
+    conf.setBoolean(HConstants.ENABLE_WAL_COMPRESSION, true);
+    //start the mini-cluster
+    UTIL.startMiniCluster();
+    initDriver();
+  }
 }

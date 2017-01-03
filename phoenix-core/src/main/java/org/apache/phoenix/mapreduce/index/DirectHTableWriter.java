@@ -32,48 +32,49 @@ import org.slf4j.LoggerFactory;
  * Writes mutations directly to HBase using HBase front-door APIs.
  */
 public class DirectHTableWriter {
-    private static final Logger LOG = LoggerFactory.getLogger(DirectHTableWriter.class);
 
-    private Configuration conf = null;
+  private static final Logger LOG = LoggerFactory.getLogger(DirectHTableWriter.class);
 
-    private HTable table;
+  private Configuration conf = null;
 
-    public DirectHTableWriter(Configuration otherConf) {
-        setConf(otherConf);
+  private HTable table;
+
+  public DirectHTableWriter(Configuration otherConf) {
+    setConf(otherConf);
+  }
+
+  protected void setConf(Configuration otherConf) {
+    this.conf = HBaseConfiguration.create(otherConf);
+
+    String tableName = this.conf.get(TableOutputFormat.OUTPUT_TABLE);
+    if (tableName == null || tableName.length() <= 0) {
+      throw new IllegalArgumentException("Must specify table name");
     }
 
-    protected void setConf(Configuration otherConf) {
-        this.conf = HBaseConfiguration.create(otherConf);
-
-        String tableName = this.conf.get(TableOutputFormat.OUTPUT_TABLE);
-        if (tableName == null || tableName.length() <= 0) {
-            throw new IllegalArgumentException("Must specify table name");
-        }
-
-        try {
-            this.table = new HTable(this.conf, tableName);
-            this.table.setAutoFlush(false, true);
-            LOG.info("Created table instance for " + tableName);
-        } catch (IOException e) {
-            LOG.error("IOException : ", e);
-            throw new RuntimeException(e);
-        }
+    try {
+      this.table = new HTable(this.conf, tableName);
+      this.table.setAutoFlush(false, true);
+      LOG.info("Created table instance for " + tableName);
+    } catch (IOException e) {
+      LOG.error("IOException : ", e);
+      throw new RuntimeException(e);
     }
+  }
 
-    public void write(List<Mutation> mutations) throws IOException, InterruptedException {
-        Object[] results = new Object[mutations.size()];
-        table.batch(mutations, results);
-    }
+  public void write(List<Mutation> mutations) throws IOException, InterruptedException {
+    Object[] results = new Object[mutations.size()];
+    table.batch(mutations, results);
+  }
 
-    protected Configuration getConf() {
-        return conf;
-    }
+  protected Configuration getConf() {
+    return conf;
+  }
 
-    protected HTable getTable() {
-        return table;
-    }
+  protected HTable getTable() {
+    return table;
+  }
 
-    public void close() throws IOException {
-        table.close();
-    }
+  public void close() throws IOException {
+    table.close();
+  }
 }

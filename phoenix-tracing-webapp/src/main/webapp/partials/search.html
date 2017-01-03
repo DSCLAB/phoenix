@@ -18,41 +18,41 @@ SQL Statment is: <em>{{sqlQuery}}</em> <em><b>{{tracingStatement}}</b></em>
       <div class="col-md-3">
         <p class="input-group">
           <input type="date" class="form-control" datepicker-popup ng-model="dt" is-open="opened"
-          min-date="minDate" max-date="maxDate" datepicker-options="dateOptions"
-          date-disabled="disabled(date, mode)" ng-required="true" close-text="Close"
-          />
+                 min-date="minDate" max-date="maxDate" datepicker-options="dateOptions"
+                 date-disabled="disabled(date, mode)" ng-required="true" close-text="Close"
+                 />
           <span class="input-group-btn">
-                <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
-              </span>
+            <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
+          </span>
         </p>
       </div>
 
-    <div class="col-md-3">
-      <p>End Date: </p>
+      <div class="col-md-3">
+        <p>End Date: </p>
+      </div>
+      <div class="col-md-3">
+        <p class="input-group">
+          <input type="date" class="form-control" datepicker-popup ng-model="edt" is-open="opened"
+                 min-date="minDate" max-date="maxDate" datepicker-options="dateOptions"
+                 date-disabled="disabled(date, mode)" ng-required="true" close-text="Close"
+                 />
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
+          </span>
+        </p>
+      </div>
     </div>
-    <div class="col-md-3">
-      <p class="input-group">
-        <input type="date" class="form-control" datepicker-popup ng-model="edt" is-open="opened"
-        min-date="minDate" max-date="maxDate" datepicker-options="dateOptions"
-        date-disabled="disabled(date, mode)" ng-required="true" close-text="Close"
-        />
-        <span class="input-group-btn">
-                <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
-              </span>
-      </p>
-    </div>
-  </div>
-  <!--SQL uery mapping-->
+    <!--SQL uery mapping-->
     <div class="row">
       <div class="col-md-3">
-      <p>SQL Query: </p>
-        </div>
-         <div class="col-md-9">
-      <p><input type="text" class="form-control" ng-model="sqlQuery"/></p>
-        </div>
-      </div> <!-- /row -->
+        <p>SQL Query: </p>
+      </div>
+      <div class="col-md-9">
+        <p><input type="text" class="form-control" ng-model="sqlQuery"/></p>
+      </div>
+    </div> <!-- /row -->
     <button type="button" class="btn btn-default" ng-click="search(sqlQuery)"><i class="fa fa-search"></i> Search</button>
-  <hr />
+    <hr />
 
-</div>
+  </div>
 </div>

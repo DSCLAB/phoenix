@@ -27,6 +27,7 @@ import org.apache.phoenix.hbase.index.covered.update.ColumnTracker;
  * Update to make to the index table.
  */
 public class IndexUpdate {
+
   Mutation update;
   byte[] tableName;
   ColumnTracker columns;
@@ -58,7 +59,7 @@ public class IndexUpdate {
   @Override
   public String toString() {
     return "IndexUpdate: \n\ttable - " + Bytes.toString(tableName) + "\n\tupdate: " + update
-        + "\n\tcolumns: " + columns;
+            + "\n\tcolumns: " + columns;
   }
 
   public static IndexUpdate createIndexUpdateForTesting(ColumnTracker tracker, byte[] table, Put p) {
@@ -69,7 +70,8 @@ public class IndexUpdate {
   }
 
   /**
-   * @return <tt>true</tt> if the necessary state for a valid index update has been set.
+   * @return <tt>true</tt> if the necessary state for a valid index update has
+   * been set.
    */
   public boolean isValid() {
     return this.tableName != null && this.update != null;

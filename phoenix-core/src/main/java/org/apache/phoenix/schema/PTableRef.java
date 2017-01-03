@@ -18,43 +18,44 @@
 package org.apache.phoenix.schema;
 
 public abstract class PTableRef {
-    
-    protected final int estSize;
-    protected final long createTime;
-    protected final long resolvedTimeStamp;
-    protected volatile long lastAccessTime;
-    
-    public PTableRef(long lastAccessTime, long resolvedTime, int estimatedSize) {
-        this.lastAccessTime = lastAccessTime;
-        this.estSize = estimatedSize;
-        this.resolvedTimeStamp = resolvedTime;
-        this.createTime = lastAccessTime;
-    }
-    
-    /**
-     * Tracks how long this entry has been in the cache
-     * @return time in milliseconds for how long this entry has been in the cache.
-     */
-    public long getCreateTime() {
-        return createTime;
-    }
-    
-    public abstract PTable getTable();
 
-    public long getResolvedTimeStamp() {
-        return resolvedTimeStamp;
-    }
-    
-    public int getEstimatedSize() {
-        return estSize;
-    }
+  protected final int estSize;
+  protected final long createTime;
+  protected final long resolvedTimeStamp;
+  protected volatile long lastAccessTime;
 
-    public long getLastAccessTime() {
-        return lastAccessTime;
-    }
+  public PTableRef(long lastAccessTime, long resolvedTime, int estimatedSize) {
+    this.lastAccessTime = lastAccessTime;
+    this.estSize = estimatedSize;
+    this.resolvedTimeStamp = resolvedTime;
+    this.createTime = lastAccessTime;
+  }
 
-    public void setLastAccessTime(long lastAccessTime) {
-        this.lastAccessTime = lastAccessTime;
-    }
-	
+  /**
+   * Tracks how long this entry has been in the cache
+   *
+   * @return time in milliseconds for how long this entry has been in the cache.
+   */
+  public long getCreateTime() {
+    return createTime;
+  }
+
+  public abstract PTable getTable();
+
+  public long getResolvedTimeStamp() {
+    return resolvedTimeStamp;
+  }
+
+  public int getEstimatedSize() {
+    return estSize;
+  }
+
+  public long getLastAccessTime() {
+    return lastAccessTime;
+  }
+
+  public void setLastAccessTime(long lastAccessTime) {
+    this.lastAccessTime = lastAccessTime;
+  }
+
 }

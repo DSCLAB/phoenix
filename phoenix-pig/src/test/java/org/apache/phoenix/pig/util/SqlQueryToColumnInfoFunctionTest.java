@@ -32,32 +32,32 @@ import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
-public class SqlQueryToColumnInfoFunctionTest  extends BaseConnectionlessQueryTest {
+public class SqlQueryToColumnInfoFunctionTest extends BaseConnectionlessQueryTest {
 
-    private Configuration configuration;
-    private SqlQueryToColumnInfoFunction function;
-    
-    @Before
-    public void setUp() throws SQLException {
-        configuration = Mockito.mock(Configuration.class);
-        Mockito.when(configuration.get(HConstants.ZOOKEEPER_QUORUM)).thenReturn(getUrl());
-        function = new SqlQueryToColumnInfoFunction(configuration);
-    }
-    
-    @Test
-    public void testValidSelectQuery() throws SQLException {
-        String ddl = "CREATE TABLE EMPLOYEE " +
-                "  (id integer not null, name varchar, age integer,location varchar " +
-                "  CONSTRAINT pk PRIMARY KEY (id))\n";
-        createTestTable(getUrl(), ddl);
-  
-        final String selectQuery = "SELECT name as a ,age AS b,UPPER(location) AS c FROM EMPLOYEE";
-        final ColumnInfo NAME_COLUMN = new ColumnInfo("A", Types.VARCHAR);
-        final ColumnInfo AGE_COLUMN = new ColumnInfo("B", Types.INTEGER);
-        final ColumnInfo LOCATION_COLUMN = new ColumnInfo("C", Types.VARCHAR);
-        final List<ColumnInfo> expectedColumnInfos = ImmutableList.of(NAME_COLUMN, AGE_COLUMN,LOCATION_COLUMN);
-        final List<ColumnInfo> actualColumnInfos = function.apply(selectQuery);
-        Assert.assertEquals(expectedColumnInfos, actualColumnInfos);
-        
-    }
+  private Configuration configuration;
+  private SqlQueryToColumnInfoFunction function;
+
+  @Before
+  public void setUp() throws SQLException {
+    configuration = Mockito.mock(Configuration.class);
+    Mockito.when(configuration.get(HConstants.ZOOKEEPER_QUORUM)).thenReturn(getUrl());
+    function = new SqlQueryToColumnInfoFunction(configuration);
+  }
+
+  @Test
+  public void testValidSelectQuery() throws SQLException {
+    String ddl = "CREATE TABLE EMPLOYEE "
+            + "  (id integer not null, name varchar, age integer,location varchar "
+            + "  CONSTRAINT pk PRIMARY KEY (id))\n";
+    createTestTable(getUrl(), ddl);
+
+    final String selectQuery = "SELECT name as a ,age AS b,UPPER(location) AS c FROM EMPLOYEE";
+    final ColumnInfo NAME_COLUMN = new ColumnInfo("A", Types.VARCHAR);
+    final ColumnInfo AGE_COLUMN = new ColumnInfo("B", Types.INTEGER);
+    final ColumnInfo LOCATION_COLUMN = new ColumnInfo("C", Types.VARCHAR);
+    final List<ColumnInfo> expectedColumnInfos = ImmutableList.of(NAME_COLUMN, AGE_COLUMN, LOCATION_COLUMN);
+    final List<ColumnInfo> actualColumnInfos = function.apply(selectQuery);
+    Assert.assertEquals(expectedColumnInfos, actualColumnInfos);
+
+  }
 }

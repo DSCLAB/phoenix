@@ -42,8 +42,8 @@
       </includes>
       <excludes>
         <!-- The sandbox doesn't work with the binary distribution, and it
-             would complicate things a lot to make it work there, so we just
-             exclude it. -->
+        would complicate things a lot to make it work there, so we just
+        exclude it. -->
         <exclude>*sandbox*</exclude>
       </excludes>
     </fileSet>
@@ -57,8 +57,8 @@
         <exclude>*.py*</exclude>
         <exclude>*.sh*</exclude>
         <!-- The sandbox doesn't work with the binary distribution, and it
-             would complicate things a lot to make it work there, so we just
-             exclude it. -->
+        would complicate things a lot to make it work there, so we just
+        exclude it. -->
         <exclude>*sandbox*</exclude>
       </excludes>
     </fileSet>
@@ -77,14 +77,14 @@
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
-      <fileSet>
-          <directory>${project.basedir}/../phoenix-pherf/target</directory>
-          <outputDirectory>phoenix-pherf</outputDirectory>
-          <includes>
-              <include>*.zip</include>
-          </includes>
-          <fileMode>0644</fileMode>
-          <directoryMode>0755</directoryMode>
-      </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/../phoenix-pherf/target</directory>
+      <outputDirectory>phoenix-pherf</outputDirectory>
+      <includes>
+        <include>*.zip</include>
+      </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
   </fileSets>
 </component>

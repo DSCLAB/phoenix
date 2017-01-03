@@ -27,25 +27,23 @@ import org.apache.phoenix.query.QueryServicesOptions;
 
 class IndexRpcController extends DelegatingPayloadCarryingRpcController {
 
-    private final int priority;
-    private final String tracingTableName;
-    
-    public IndexRpcController(PayloadCarryingRpcController delegate, Configuration conf) {
-        super(delegate);
-        this.priority = PhoenixRpcSchedulerFactory.getIndexPriority(conf);
-        this.tracingTableName = conf.get(QueryServices.TRACING_STATS_TABLE_NAME_ATTRIB,
-                QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME);
+  private final int priority;
+  private final String tracingTableName;
+
+  public IndexRpcController(PayloadCarryingRpcController delegate, Configuration conf) {
+    super(delegate);
+    this.priority = PhoenixRpcSchedulerFactory.getIndexPriority(conf);
+    this.tracingTableName = conf.get(QueryServices.TRACING_STATS_TABLE_NAME_ATTRIB,
+            QueryServicesOptions.DEFAULT_TRACING_STATS_TABLE_NAME);
+  }
+
+  @Override
+  public void setPriority(final TableName tn) {
+    if (!tn.isSystemTable() && !tn.getNameAsString().equals(tracingTableName)) {
+      setPriority(this.priority);
+    } else {
+      super.setPriority(tn);
     }
-    
-    @Override
-    public void setPriority(final TableName tn) {
-		if (!tn.isSystemTable() && !tn.getNameAsString().equals(tracingTableName)) {
-			setPriority(this.priority);
-		}  
-        else {
-            super.setPriority(tn);
-        }
-    }
-    
+  }
 
 }

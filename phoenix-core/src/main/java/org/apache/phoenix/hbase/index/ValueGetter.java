@@ -26,13 +26,15 @@ public interface ValueGetter {
 
   /**
    * Get the most recent (largest timestamp) for the given column reference
-   * @param ref to match against an underlying key value. Uses the passed object to match the
-   *          keyValue via {@link ColumnReference#matches}
-   * @return the stored value for the given {@link ColumnReference}, or <tt>null</tt> if no value is
-   *         present.
-   * @throws IOException if there is an error accessing the underlying data storage
+   *
+   * @param ref to match against an underlying key value. Uses the passed object
+   * to match the keyValue via {@link ColumnReference#matches}
+   * @return the stored value for the given {@link ColumnReference}, or
+   * <tt>null</tt> if no value is present.
+   * @throws IOException if there is an error accessing the underlying data
+   * storage
    */
   public ImmutableBytesWritable getLatestValue(ColumnReference ref) throws IOException;
-  
+
   public byte[] getRowKey();
 }

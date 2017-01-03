@@ -21,62 +21,62 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class CombinableMetricImpl implements CombinableMetric {
 
-    private final Metric metric;
+  private final Metric metric;
 
-    public CombinableMetricImpl(MetricType type) {
-        metric = new NonAtomicMetric(type);
-    }
+  public CombinableMetricImpl(MetricType type) {
+    metric = new NonAtomicMetric(type);
+  }
 
-    @Override
-    public String getName() {
-        return metric.getName();
-    }
+  @Override
+  public String getName() {
+    return metric.getName();
+  }
 
-    @Override
-    public String getDescription() {
-        return metric.getDescription();
-    }
+  @Override
+  public String getDescription() {
+    return metric.getDescription();
+  }
 
-    @Override
-    public long getValue() {
-        return metric.getValue();
-    }
+  @Override
+  public long getValue() {
+    return metric.getValue();
+  }
 
-    @Override
-    public void change(long delta) {
-        metric.change(delta);
-    }
+  @Override
+  public void change(long delta) {
+    metric.change(delta);
+  }
 
-    @Override
-    public void increment() {
-        metric.increment();
-    }
+  @Override
+  public void increment() {
+    metric.increment();
+  }
 
-    @Override
-    public String getCurrentMetricState() {
-        return metric.getCurrentMetricState();
-    }
+  @Override
+  public String getCurrentMetricState() {
+    return metric.getCurrentMetricState();
+  }
 
-    @Override
-    public void reset() {
-        metric.reset();
-    }
+  @Override
+  public void reset() {
+    metric.reset();
+  }
 
-    @Override
-    public String getPublishString() {
-        return getCurrentMetricState();
-    }
+  @Override
+  public String getPublishString() {
+    return getCurrentMetricState();
+  }
 
-    @Override
-    public CombinableMetric combine(CombinableMetric metric) {
-        checkArgument(this.getClass().equals(metric.getClass()));
-        this.metric.change(metric.getValue());
-        return this;
-    }
+  @Override
+  public CombinableMetric combine(CombinableMetric metric) {
+    checkArgument(this.getClass().equals(metric.getClass()));
+    this.metric.change(metric.getValue());
+    return this;
+  }
 
-    @Override
-    public void decrement() {
-        metric.decrement();
-    }
+  @Override
+  public void decrement() {
+    metric.decrement();
+  }
 
 }

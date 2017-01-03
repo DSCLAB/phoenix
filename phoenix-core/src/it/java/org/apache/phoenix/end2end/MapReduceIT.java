@@ -43,188 +43,189 @@ import static org.junit.Assert.*;
  */
 public class MapReduceIT extends BaseHBaseManagedTimeIT {
 
-    private static final String STOCK_TABLE_NAME = "stock";
-    private static final String STOCK_STATS_TABLE_NAME = "stock_stats";
-    private static final String STOCK_NAME = "STOCK_NAME";
-    private static final String RECORDING_YEAR = "RECORDING_YEAR";
-    private static final String RECORDINGS_QUARTER = "RECORDINGS_QUARTER";
-    private static final String CREATE_STOCK_TABLE = "CREATE TABLE IF NOT EXISTS " + STOCK_TABLE_NAME + " ( " +
-            STOCK_NAME + " VARCHAR NOT NULL ," + RECORDING_YEAR + " INTEGER NOT  NULL, " + RECORDINGS_QUARTER +
-            " DOUBLE array[] CONSTRAINT pk PRIMARY KEY (" + STOCK_NAME + " , " + RECORDING_YEAR + "))";
+  private static final String STOCK_TABLE_NAME = "stock";
+  private static final String STOCK_STATS_TABLE_NAME = "stock_stats";
+  private static final String STOCK_NAME = "STOCK_NAME";
+  private static final String RECORDING_YEAR = "RECORDING_YEAR";
+  private static final String RECORDINGS_QUARTER = "RECORDINGS_QUARTER";
+  private static final String CREATE_STOCK_TABLE = "CREATE TABLE IF NOT EXISTS " + STOCK_TABLE_NAME + " ( "
+          + STOCK_NAME + " VARCHAR NOT NULL ," + RECORDING_YEAR + " INTEGER NOT  NULL, " + RECORDINGS_QUARTER
+          + " DOUBLE array[] CONSTRAINT pk PRIMARY KEY (" + STOCK_NAME + " , " + RECORDING_YEAR + "))";
 
-    private static final String MAX_RECORDING = "MAX_RECORDING";
-    private static final String CREATE_STOCK_STATS_TABLE =
-            "CREATE TABLE IF NOT EXISTS " + STOCK_STATS_TABLE_NAME + "(" + STOCK_NAME + " VARCHAR NOT NULL , "
-                    + MAX_RECORDING + " DOUBLE CONSTRAINT pk PRIMARY KEY (" + STOCK_NAME + "))";
-    private static final String UPSERT = "UPSERT into " + STOCK_TABLE_NAME + " values (?, ?, ?)";
+  private static final String MAX_RECORDING = "MAX_RECORDING";
+  private static final String CREATE_STOCK_STATS_TABLE
+          = "CREATE TABLE IF NOT EXISTS " + STOCK_STATS_TABLE_NAME + "(" + STOCK_NAME + " VARCHAR NOT NULL , "
+          + MAX_RECORDING + " DOUBLE CONSTRAINT pk PRIMARY KEY (" + STOCK_NAME + "))";
+  private static final String UPSERT = "UPSERT into " + STOCK_TABLE_NAME + " values (?, ?, ?)";
 
-    @Before
-    public void setupTables() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        conn.createStatement().execute(CREATE_STOCK_TABLE);
-        conn.createStatement().execute(CREATE_STOCK_STATS_TABLE);
-        conn.commit();
+  @Before
+  public void setupTables() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    conn.createStatement().execute(CREATE_STOCK_TABLE);
+    conn.createStatement().execute(CREATE_STOCK_STATS_TABLE);
+    conn.commit();
+  }
+
+  @Test
+  public void testNoConditionsOnSelect() throws Exception {
+    final Configuration conf = getUtility().getConfiguration();
+    Job job = Job.getInstance(conf);
+    PhoenixMapReduceUtil.setInput(job, StockWritable.class, STOCK_TABLE_NAME, null,
+            STOCK_NAME, RECORDING_YEAR, "0." + RECORDINGS_QUARTER);
+    testJob(job, 91.04);
+  }
+
+  @Test
+  public void testConditionsOnSelect() throws Exception {
+    final Configuration conf = getUtility().getConfiguration();
+    Job job = Job.getInstance(conf);
+    PhoenixMapReduceUtil.setInput(job, StockWritable.class, STOCK_TABLE_NAME, RECORDING_YEAR + "  < 2009",
+            STOCK_NAME, RECORDING_YEAR, "0." + RECORDINGS_QUARTER);
+    testJob(job, 81.04);
+  }
+
+  private void testJob(Job job, double expectedMax)
+          throws SQLException, InterruptedException, IOException, ClassNotFoundException {
+    upsertData();
+
+    // only run locally, rather than having to spin up a MiniMapReduce cluster and lets us use breakpoints
+    job.getConfiguration().set("mapreduce.framework.name", "local");
+    setOutput(job);
+
+    job.setMapperClass(StockMapper.class);
+    job.setReducerClass(StockReducer.class);
+    job.setOutputFormatClass(PhoenixOutputFormat.class);
+
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(DoubleWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(StockWritable.class);
+
+    // run job
+    assertTrue("Job didn't complete successfully! Check logs for reason.", job.waitForCompletion(true));
+
+    // verify
+    ResultSet stats = DriverManager.getConnection(getUrl()).createStatement()
+            .executeQuery("SELECT * FROM " + STOCK_STATS_TABLE_NAME);
+    assertTrue("No data stored in stats table!", stats.next());
+    String name = stats.getString(1);
+    double max = stats.getDouble(2);
+    assertEquals("Got the wrong stock name!", "AAPL", name);
+    assertEquals("Max value didn't match the expected!", expectedMax, max, 0);
+    assertFalse("Should only have stored one row in stats table!", stats.next());
+  }
+
+  /**
+   * Custom output setting because output upsert statement setting is broken
+   * (PHOENIX-2677)
+   *
+   * @param job to update
+   */
+  private void setOutput(Job job) {
+    final Configuration configuration = job.getConfiguration();
+    PhoenixConfigurationUtil.setOutputTableName(configuration, STOCK_STATS_TABLE_NAME);
+    configuration.set(PhoenixConfigurationUtil.UPSERT_STATEMENT, "UPSERT into " + STOCK_STATS_TABLE_NAME
+            + " (" + STOCK_NAME + ", " + MAX_RECORDING + ") values (?,?)");
+    job.setOutputFormatClass(PhoenixOutputFormat.class);
+  }
+
+  private void upsertData() throws SQLException {
+    Connection conn = DriverManager.getConnection(getUrl());
+    PreparedStatement stmt = conn.prepareStatement(UPSERT);
+    upsertData(stmt, "AAPL", 2009, new Double[]{85.88, 91.04, 88.5, 90.3});
+    upsertData(stmt, "AAPL", 2008, new Double[]{75.88, 81.04, 78.5, 80.3});
+    conn.commit();
+  }
+
+  private void upsertData(PreparedStatement stmt, String name, int year, Double[] data) throws SQLException {
+    int i = 1;
+    stmt.setString(i++, name);
+    stmt.setInt(i++, year);
+    Array recordings = new PhoenixArray.PrimitiveDoublePhoenixArray(PDouble.INSTANCE, data);
+    stmt.setArray(i++, recordings);
+    stmt.execute();
+  }
+
+  public static class StockWritable implements DBWritable {
+
+    private String stockName;
+    private double[] recordings;
+    private double maxPrice;
+
+    @Override
+    public void readFields(ResultSet rs) throws SQLException {
+      stockName = rs.getString(STOCK_NAME);
+      final Array recordingsArray = rs.getArray(RECORDINGS_QUARTER);
+      recordings = (double[]) recordingsArray.getArray();
     }
 
-    @Test
-    public void testNoConditionsOnSelect() throws Exception {
-        final Configuration conf = getUtility().getConfiguration();
-        Job job = Job.getInstance(conf);
-        PhoenixMapReduceUtil.setInput(job, StockWritable.class, STOCK_TABLE_NAME, null,
-                STOCK_NAME, RECORDING_YEAR, "0." + RECORDINGS_QUARTER);
-        testJob(job, 91.04);
+    @Override
+    public void write(PreparedStatement pstmt) throws SQLException {
+      pstmt.setString(1, stockName);
+      pstmt.setDouble(2, maxPrice);
     }
 
-    @Test
-    public void testConditionsOnSelect() throws Exception {
-        final Configuration conf = getUtility().getConfiguration();
-        Job job = Job.getInstance(conf);
-        PhoenixMapReduceUtil.setInput(job, StockWritable.class, STOCK_TABLE_NAME, RECORDING_YEAR+"  < 2009",
-                STOCK_NAME, RECORDING_YEAR, "0." + RECORDINGS_QUARTER);
-        testJob(job, 81.04);
+    public double[] getRecordings() {
+      return recordings;
     }
 
-    private void testJob(Job job, double expectedMax)
-            throws SQLException, InterruptedException, IOException, ClassNotFoundException {
-        upsertData();
-
-        // only run locally, rather than having to spin up a MiniMapReduce cluster and lets us use breakpoints
-        job.getConfiguration().set("mapreduce.framework.name", "local");
-        setOutput(job);
-
-        job.setMapperClass(StockMapper.class);
-        job.setReducerClass(StockReducer.class);
-        job.setOutputFormatClass(PhoenixOutputFormat.class);
-
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(DoubleWritable.class);
-        job.setOutputKeyClass(NullWritable.class);
-        job.setOutputValueClass(StockWritable.class);
-
-        // run job
-        assertTrue("Job didn't complete successfully! Check logs for reason.", job.waitForCompletion(true));
-
-        // verify
-        ResultSet stats = DriverManager.getConnection(getUrl()).createStatement()
-                .executeQuery("SELECT * FROM " + STOCK_STATS_TABLE_NAME);
-        assertTrue("No data stored in stats table!", stats.next());
-        String name = stats.getString(1);
-        double max = stats.getDouble(2);
-        assertEquals("Got the wrong stock name!", "AAPL", name);
-        assertEquals("Max value didn't match the expected!", expectedMax, max, 0);
-        assertFalse("Should only have stored one row in stats table!", stats.next());
+    public String getStockName() {
+      return stockName;
     }
 
-    /**
-     * Custom output setting because output upsert statement setting is broken (PHOENIX-2677)
-     *
-     * @param job to update
-     */
-    private void setOutput(Job job) {
-        final Configuration configuration = job.getConfiguration();
-        PhoenixConfigurationUtil.setOutputTableName(configuration, STOCK_STATS_TABLE_NAME);
-        configuration.set(PhoenixConfigurationUtil.UPSERT_STATEMENT, "UPSERT into " + STOCK_STATS_TABLE_NAME +
-                " (" + STOCK_NAME + ", " + MAX_RECORDING + ") values (?,?)");
-        job.setOutputFormatClass(PhoenixOutputFormat.class);
+    public void setStockName(String stockName) {
+      this.stockName = stockName;
     }
 
-    private void upsertData() throws SQLException {
-        Connection conn = DriverManager.getConnection(getUrl());
-        PreparedStatement stmt = conn.prepareStatement(UPSERT);
-        upsertData(stmt, "AAPL", 2009, new Double[]{85.88, 91.04, 88.5, 90.3});
-        upsertData(stmt, "AAPL", 2008, new Double[]{75.88, 81.04, 78.5, 80.3});
-        conn.commit();
+    public void setMaxPrice(double maxPrice) {
+      this.maxPrice = maxPrice;
     }
+  }
 
-    private void upsertData(PreparedStatement stmt, String name, int year, Double[] data) throws SQLException {
-        int i = 1;
-        stmt.setString(i++, name);
-        stmt.setInt(i++, year);
-        Array recordings = new PhoenixArray.PrimitiveDoublePhoenixArray(PDouble.INSTANCE, data);
-        stmt.setArray(i++, recordings);
-        stmt.execute();
-    }
+  /**
+   * Extract the max price for each stock recording
+   */
+  public static class StockMapper extends Mapper<NullWritable, StockWritable, Text, DoubleWritable> {
 
-    public static class StockWritable implements DBWritable {
+    private Text stock = new Text();
+    private DoubleWritable price = new DoubleWritable();
 
-        private String stockName;
-        private double[] recordings;
-        private double maxPrice;
-
-        @Override
-        public void readFields(ResultSet rs) throws SQLException {
-            stockName = rs.getString(STOCK_NAME);
-            final Array recordingsArray = rs.getArray(RECORDINGS_QUARTER);
-            recordings = (double[]) recordingsArray.getArray();
+    @Override
+    protected void map(NullWritable key, StockWritable stockWritable, Context context)
+            throws IOException, InterruptedException {
+      double[] recordings = stockWritable.getRecordings();
+      final String stockName = stockWritable.getStockName();
+      double maxPrice = Double.MIN_VALUE;
+      for (double recording : recordings) {
+        if (maxPrice < recording) {
+          maxPrice = recording;
         }
+      }
+      stock.set(stockName);
+      price.set(maxPrice);
+      context.write(stock, price);
+    }
+  }
 
-        @Override
-        public void write(PreparedStatement pstmt) throws SQLException {
-            pstmt.setString(1, stockName);
-            pstmt.setDouble(2, maxPrice);
-        }
+  /**
+   * Store the max price seen for each stock
+   */
+  public static class StockReducer extends Reducer<Text, DoubleWritable, NullWritable, StockWritable> {
 
-        public double[] getRecordings() {
-            return recordings;
+    @Override
+    protected void reduce(Text key, Iterable<DoubleWritable> recordings, Context context)
+            throws IOException, InterruptedException {
+      double maxPrice = Double.MIN_VALUE;
+      for (DoubleWritable recording : recordings) {
+        if (maxPrice < recording.get()) {
+          maxPrice = recording.get();
         }
-
-        public String getStockName() {
-            return stockName;
-        }
-
-        public void setStockName(String stockName) {
-            this.stockName = stockName;
-        }
-
-        public void setMaxPrice(double maxPrice) {
-            this.maxPrice = maxPrice;
-        }
+      }
+      final StockWritable stock = new StockWritable();
+      stock.setStockName(key.toString());
+      stock.setMaxPrice(maxPrice);
+      context.write(NullWritable.get(), stock);
     }
 
-    /**
-     * Extract the max price for each stock recording
-     */
-    public static class StockMapper extends Mapper<NullWritable, StockWritable, Text, DoubleWritable> {
-
-        private Text stock = new Text();
-        private DoubleWritable price = new DoubleWritable();
-
-        @Override
-        protected void map(NullWritable key, StockWritable stockWritable, Context context)
-                throws IOException, InterruptedException {
-            double[] recordings = stockWritable.getRecordings();
-            final String stockName = stockWritable.getStockName();
-            double maxPrice = Double.MIN_VALUE;
-            for (double recording : recordings) {
-                if (maxPrice < recording) {
-                    maxPrice = recording;
-                }
-            }
-            stock.set(stockName);
-            price.set(maxPrice);
-            context.write(stock, price);
-        }
-    }
-
-    /**
-     * Store the max price seen for each stock
-     */
-    public static class StockReducer extends Reducer<Text, DoubleWritable, NullWritable, StockWritable> {
-
-        @Override
-        protected void reduce(Text key, Iterable<DoubleWritable> recordings, Context context)
-                throws IOException, InterruptedException {
-            double maxPrice = Double.MIN_VALUE;
-            for (DoubleWritable recording : recordings) {
-                if (maxPrice < recording.get()) {
-                    maxPrice = recording.get();
-                }
-            }
-            final StockWritable stock = new StockWritable();
-            stock.setStockName(key.toString());
-            stock.setMaxPrice(maxPrice);
-            context.write(NullWritable.get(), stock);
-        }
-
-    }
+  }
 }

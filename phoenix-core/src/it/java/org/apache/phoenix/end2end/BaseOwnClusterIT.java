@@ -23,8 +23,9 @@ import org.junit.experimental.categories.Category;
 
 @Category(NeedsOwnMiniClusterTest.class)
 public class BaseOwnClusterIT extends BaseTest {
-    @AfterClass
-    public static void doTeardown() throws Exception {
-        tearDownMiniCluster();
-    }
+
+  @AfterClass
+  public static void doTeardown() throws Exception {
+    tearDownMiniCluster();
+  }
 }

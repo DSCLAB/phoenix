@@ -20,5 +20,5 @@ package org.apache.hadoop.hbase.regionserver;
 import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
 
 public class LocalIndexSplitter extends BaseRegionObserver {
-    
+
 }

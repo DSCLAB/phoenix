@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
@@ -24,9 +23,9 @@ import java.lang.management.ManagementFactory;
 
 public class ThreadMonitor implements Monitor {
 
-    @Override
-    public Stat getStat() {
-        Stat<Integer> stat = new Stat(new Integer(ManagementFactory.getThreadMXBean().getThreadCount()));
-        return stat;
-    }
+  @Override
+  public Stat getStat() {
+    Stat<Integer> stat = new Stat(new Integer(ManagementFactory.getThreadMXBean().getThreadCount()));
+    return stat;
+  }
 }

@@ -36,54 +36,53 @@ import org.apache.phoenix.mapreduce.util.PhoenixConfigurationUtil;
  * Default {@link RecordWriter} implementation from Phoenix
  *
  */
-public class PhoenixRecordWriter<T extends DBWritable>  extends RecordWriter<NullWritable, T> {
-    
-    private static final Log LOG = LogFactory.getLog(PhoenixRecordWriter.class);
-    
-    private final Connection conn;
-    private final PreparedStatement statement;
-    private final long batchSize;
-    private long numRecords = 0;
-    
-    public PhoenixRecordWriter(final Configuration configuration) throws SQLException {
-        this.conn = ConnectionUtil.getOutputConnection(configuration);
-        this.batchSize = PhoenixConfigurationUtil.getBatchSize(configuration);
-        final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-        this.statement = this.conn.prepareStatement(upsertQuery);
-    }
+public class PhoenixRecordWriter<T extends DBWritable> extends RecordWriter<NullWritable, T> {
 
-    @Override
-    public void close(TaskAttemptContext context) throws IOException, InterruptedException {
-        try {
-            conn.commit();
-         } catch (SQLException e) {
-             LOG.error("SQLException while performing the commit for the task.");
-             throw new RuntimeException(e);
-          } finally {
-            try {
-              statement.close();
-              conn.close();
-            }
-            catch (SQLException ex) {
-              LOG.error("SQLException while closing the connection for the task.");
-              throw new RuntimeException(ex);
-            }
-          }
-    }
+  private static final Log LOG = LogFactory.getLog(PhoenixRecordWriter.class);
 
-    @Override
-    public void write(NullWritable n, T record) throws IOException, InterruptedException {      
-        try {
-            record.write(statement);
-            numRecords++;
-            statement.execute();
-            if (numRecords % batchSize == 0) {
-                LOG.debug("commit called on a batch of size : " + batchSize);
-                conn.commit();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Exception while committing to database.", e);
-        }
+  private final Connection conn;
+  private final PreparedStatement statement;
+  private final long batchSize;
+  private long numRecords = 0;
+
+  public PhoenixRecordWriter(final Configuration configuration) throws SQLException {
+    this.conn = ConnectionUtil.getOutputConnection(configuration);
+    this.batchSize = PhoenixConfigurationUtil.getBatchSize(configuration);
+    final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+    this.statement = this.conn.prepareStatement(upsertQuery);
+  }
+
+  @Override
+  public void close(TaskAttemptContext context) throws IOException, InterruptedException {
+    try {
+      conn.commit();
+    } catch (SQLException e) {
+      LOG.error("SQLException while performing the commit for the task.");
+      throw new RuntimeException(e);
+    } finally {
+      try {
+        statement.close();
+        conn.close();
+      } catch (SQLException ex) {
+        LOG.error("SQLException while closing the connection for the task.");
+        throw new RuntimeException(ex);
+      }
     }
+  }
+
+  @Override
+  public void write(NullWritable n, T record) throws IOException, InterruptedException {
+    try {
+      record.write(statement);
+      numRecords++;
+      statement.execute();
+      if (numRecords % batchSize == 0) {
+        LOG.debug("commit called on a batch of size : " + batchSize);
+        conn.commit();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Exception while committing to database.", e);
+    }
+  }
 
 }

@@ -47,79 +47,79 @@ import org.apache.phoenix.query.QueryServicesOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
- * Central place where we keep track of all the global client phoenix metrics. These metrics are different from
- * {@link ReadMetricQueue} or {@link MutationMetricQueue} as they are collected at the client JVM level as opposed
- * to the above two which are collected for every phoenix request.
+ * Central place where we keep track of all the global client phoenix metrics.
+ * These metrics are different from {@link ReadMetricQueue} or
+ * {@link MutationMetricQueue} as they are collected at the client JVM level as
+ * opposed to the above two which are collected for every phoenix request.
  */
-
 public enum GlobalClientMetrics {
-    
-    GLOBAL_MUTATION_BATCH_SIZE(MUTATION_BATCH_SIZE),
-    GLOBAL_MUTATION_BYTES(MUTATION_BYTES),
-    GLOBAL_MUTATION_COMMIT_TIME(MUTATION_COMMIT_TIME),
-    GLOBAL_QUERY_TIME(QUERY_TIME),
-    GLOBAL_NUM_PARALLEL_SCANS(NUM_PARALLEL_SCANS),
-    GLOBAL_SCAN_BYTES(SCAN_BYTES),
-    GLOBAL_SPOOL_FILE_SIZE(SPOOL_FILE_SIZE),
-    GLOBAL_MEMORY_CHUNK_BYTES(MEMORY_CHUNK_BYTES),
-    GLOBAL_MEMORY_WAIT_TIME(MEMORY_WAIT_TIME),
-    GLOBAL_TASK_QUEUE_WAIT_TIME(TASK_QUEUE_WAIT_TIME),
-    GLOBAL_TASK_END_TO_END_TIME(TASK_END_TO_END_TIME),
-    GLOBAL_TASK_EXECUTION_TIME(TASK_EXECUTION_TIME),
-    GLOBAL_MUTATION_SQL_COUNTER(MUTATION_SQL_COUNTER),
-    GLOBAL_SELECT_SQL_COUNTER(SELECT_SQL_COUNTER),
-    GLOBAL_TASK_EXECUTED_COUNTER(TASK_EXECUTED_COUNTER),
-    GLOBAL_REJECTED_TASK_COUNTER(TASK_REJECTED_COUNTER),
-    GLOBAL_QUERY_TIMEOUT_COUNTER(QUERY_TIMEOUT_COUNTER),
-    GLOBAL_FAILED_QUERY_COUNTER(QUERY_FAILED_COUNTER),
-    GLOBAL_SPOOL_FILE_COUNTER(SPOOL_FILE_COUNTER),
-    GLOBAL_OPEN_PHOENIX_CONNECTIONS(OPEN_PHOENIX_CONNECTIONS_COUNTER);
-    
-    private static final boolean isGlobalMetricsEnabled = QueryServicesOptions.withDefaults().isGlobalMetricsEnabled();
-    private GlobalMetric metric;
 
-    public void update(long value) {
-        if (isGlobalMetricsEnabled) {
-            metric.change(value);
-        }
-    }
+  GLOBAL_MUTATION_BATCH_SIZE(MUTATION_BATCH_SIZE),
+  GLOBAL_MUTATION_BYTES(MUTATION_BYTES),
+  GLOBAL_MUTATION_COMMIT_TIME(MUTATION_COMMIT_TIME),
+  GLOBAL_QUERY_TIME(QUERY_TIME),
+  GLOBAL_NUM_PARALLEL_SCANS(NUM_PARALLEL_SCANS),
+  GLOBAL_SCAN_BYTES(SCAN_BYTES),
+  GLOBAL_SPOOL_FILE_SIZE(SPOOL_FILE_SIZE),
+  GLOBAL_MEMORY_CHUNK_BYTES(MEMORY_CHUNK_BYTES),
+  GLOBAL_MEMORY_WAIT_TIME(MEMORY_WAIT_TIME),
+  GLOBAL_TASK_QUEUE_WAIT_TIME(TASK_QUEUE_WAIT_TIME),
+  GLOBAL_TASK_END_TO_END_TIME(TASK_END_TO_END_TIME),
+  GLOBAL_TASK_EXECUTION_TIME(TASK_EXECUTION_TIME),
+  GLOBAL_MUTATION_SQL_COUNTER(MUTATION_SQL_COUNTER),
+  GLOBAL_SELECT_SQL_COUNTER(SELECT_SQL_COUNTER),
+  GLOBAL_TASK_EXECUTED_COUNTER(TASK_EXECUTED_COUNTER),
+  GLOBAL_REJECTED_TASK_COUNTER(TASK_REJECTED_COUNTER),
+  GLOBAL_QUERY_TIMEOUT_COUNTER(QUERY_TIMEOUT_COUNTER),
+  GLOBAL_FAILED_QUERY_COUNTER(QUERY_FAILED_COUNTER),
+  GLOBAL_SPOOL_FILE_COUNTER(SPOOL_FILE_COUNTER),
+  GLOBAL_OPEN_PHOENIX_CONNECTIONS(OPEN_PHOENIX_CONNECTIONS_COUNTER);
 
-    @VisibleForTesting
-    public GlobalMetric getMetric() {
-        return metric;
-    }
+  private static final boolean isGlobalMetricsEnabled = QueryServicesOptions.withDefaults().isGlobalMetricsEnabled();
+  private GlobalMetric metric;
 
-    @Override
-    public String toString() {
-        return metric.toString();
+  public void update(long value) {
+    if (isGlobalMetricsEnabled) {
+      metric.change(value);
     }
+  }
 
-    private GlobalClientMetrics(MetricType metricType) {
-        this.metric = new GlobalMetricImpl(metricType);
-    }
+  @VisibleForTesting
+  public GlobalMetric getMetric() {
+    return metric;
+  }
 
-    public void increment() {
-        if (isGlobalMetricsEnabled) {
-            metric.increment();
-        }
-    }
-    
-    public void decrement() {
-        if (isGlobalMetricsEnabled) {
-            metric.decrement();
-        }
-    }
+  @Override
+  public String toString() {
+    return metric.toString();
+  }
 
-    public static Collection<GlobalMetric> getMetrics() {
-        List<GlobalMetric> metrics = new ArrayList<>();
-        for (GlobalClientMetrics m : GlobalClientMetrics.values()) {
-            metrics.add(m.metric);
-        }
-        return metrics;
-    }
+  private GlobalClientMetrics(MetricType metricType) {
+    this.metric = new GlobalMetricImpl(metricType);
+  }
 
-    public static boolean isMetricsEnabled() {
-        return isGlobalMetricsEnabled;
+  public void increment() {
+    if (isGlobalMetricsEnabled) {
+      metric.increment();
     }
+  }
+
+  public void decrement() {
+    if (isGlobalMetricsEnabled) {
+      metric.decrement();
+    }
+  }
+
+  public static Collection<GlobalMetric> getMetrics() {
+    List<GlobalMetric> metrics = new ArrayList<>();
+    for (GlobalClientMetrics m : GlobalClientMetrics.values()) {
+      metrics.add(m.metric);
+    }
+    return metrics;
+  }
+
+  public static boolean isMetricsEnabled() {
+    return isGlobalMetricsEnabled;
+  }
 
 }

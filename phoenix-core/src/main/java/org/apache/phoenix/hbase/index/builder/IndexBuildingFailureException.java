@@ -22,16 +22,17 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 
 /**
- * Unexpected failure while building index updates that wasn't caused by an {@link IOException}.
- * This should be used if there is some basic issue with indexing - and no matter of retries will
- * fix it.
+ * Unexpected failure while building index updates that wasn't caused by an
+ * {@link IOException}. This should be used if there is some basic issue with
+ * indexing - and no matter of retries will fix it.
  */
 @SuppressWarnings("serial")
 public class IndexBuildingFailureException extends DoNotRetryIOException {
 
   /**
-   * Constructor for over the wire propagation. Generally, shouldn't be used since index failure
-   * should have an underlying cause to propagate.
+   * Constructor for over the wire propagation. Generally, shouldn't be used
+   * since index failure should have an underlying cause to propagate.
+   *
    * @param msg reason for the failure
    */
   public IndexBuildingFailureException(String msg) {

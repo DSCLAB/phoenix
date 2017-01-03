@@ -25,6 +25,7 @@ package org.apache.phoenix.util;
  * @see EnvironmentEdgeManager
  */
 public interface EnvironmentEdge {
+
   /**
    * Returns the currentTime.
    *

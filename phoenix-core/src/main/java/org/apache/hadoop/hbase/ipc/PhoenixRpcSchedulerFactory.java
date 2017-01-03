@@ -33,63 +33,64 @@ import org.apache.phoenix.query.QueryServicesOptions;
 import com.google.common.base.Preconditions;
 
 /**
- * Factory to create a {@link PhoenixRpcScheduler}. In this package so we can access the
- * {@link SimpleRpcSchedulerFactory}.
+ * Factory to create a {@link PhoenixRpcScheduler}. In this package so we can
+ * access the {@link SimpleRpcSchedulerFactory}.
  */
 public class PhoenixRpcSchedulerFactory implements RpcSchedulerFactory {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixRpcSchedulerFactory.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixRpcSchedulerFactory.class);
 
-    private static final String VERSION_TOO_OLD_FOR_INDEX_RPC =
-            "Running an older version of HBase (less than 0.98.4), Phoenix index RPC handling cannot be enabled.";
+  private static final String VERSION_TOO_OLD_FOR_INDEX_RPC
+          = "Running an older version of HBase (less than 0.98.4), Phoenix index RPC handling cannot be enabled.";
 
-    @Override
-    public RpcScheduler create(Configuration conf, PriorityFunction priorityFunction, Abortable abortable) {
-        // create the delegate scheduler
-        RpcScheduler delegate;
-        try {
-            // happens in <=0.98.4 where the scheduler factory is not visible
-            delegate = new SimpleRpcSchedulerFactory().create(conf, priorityFunction, abortable);
-        } catch (IllegalAccessError e) {
-            LOG.fatal(VERSION_TOO_OLD_FOR_INDEX_RPC);
-            throw e;
-        }
-
-        // get the index priority configs
-        int indexPriority = getIndexPriority(conf);
-        validatePriority(indexPriority);
-        // get the metadata priority configs
-        int metadataPriority = getMetadataPriority(conf);
-        validatePriority(metadataPriority);
-
-        // validate index and metadata priorities are not the same
-        Preconditions.checkArgument(indexPriority != metadataPriority, "Index and Metadata priority must not be same "+ indexPriority);
-        LOG.info("Using custom Phoenix Index RPC Handling with index rpc priority " + indexPriority + " and metadata rpc priority " + metadataPriority);
-
-        PhoenixRpcScheduler scheduler =
-                new PhoenixRpcScheduler(conf, delegate, indexPriority, metadataPriority);
-        return scheduler;
+  @Override
+  public RpcScheduler create(Configuration conf, PriorityFunction priorityFunction, Abortable abortable) {
+    // create the delegate scheduler
+    RpcScheduler delegate;
+    try {
+      // happens in <=0.98.4 where the scheduler factory is not visible
+      delegate = new SimpleRpcSchedulerFactory().create(conf, priorityFunction, abortable);
+    } catch (IllegalAccessError e) {
+      LOG.fatal(VERSION_TOO_OLD_FOR_INDEX_RPC);
+      throw e;
     }
 
-    @Override
-    public RpcScheduler create(Configuration configuration, PriorityFunction priorityFunction) {
-        return create(configuration, priorityFunction, null);
-    }
+    // get the index priority configs
+    int indexPriority = getIndexPriority(conf);
+    validatePriority(indexPriority);
+    // get the metadata priority configs
+    int metadataPriority = getMetadataPriority(conf);
+    validatePriority(metadataPriority);
 
-    /**
-     * Validates that the given priority does not overlap with the HBase priority range
-     */
-    private void validatePriority(int priority) {
-        Preconditions.checkArgument( priority < HConstants.NORMAL_QOS || priority > HConstants.HIGH_QOS, "priority cannot be within hbase priority range " 
-        			+ HConstants.NORMAL_QOS +" to " + HConstants.HIGH_QOS ); 
-    }
+    // validate index and metadata priorities are not the same
+    Preconditions.checkArgument(indexPriority != metadataPriority, "Index and Metadata priority must not be same " + indexPriority);
+    LOG.info("Using custom Phoenix Index RPC Handling with index rpc priority " + indexPriority + " and metadata rpc priority " + metadataPriority);
 
-    public static int getIndexPriority(Configuration conf) {
-        return conf.getInt(QueryServices.INDEX_PRIOIRTY_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_PRIORITY);
-    }
-    
-    public static int getMetadataPriority(Configuration conf) {
-        return conf.getInt(QueryServices.METADATA_PRIOIRTY_ATTRIB, QueryServicesOptions.DEFAULT_METADATA_PRIORITY);
-    }
-    
+    PhoenixRpcScheduler scheduler
+            = new PhoenixRpcScheduler(conf, delegate, indexPriority, metadataPriority);
+    return scheduler;
+  }
+
+  @Override
+  public RpcScheduler create(Configuration configuration, PriorityFunction priorityFunction) {
+    return create(configuration, priorityFunction, null);
+  }
+
+  /**
+   * Validates that the given priority does not overlap with the HBase priority
+   * range
+   */
+  private void validatePriority(int priority) {
+    Preconditions.checkArgument(priority < HConstants.NORMAL_QOS || priority > HConstants.HIGH_QOS, "priority cannot be within hbase priority range "
+            + HConstants.NORMAL_QOS + " to " + HConstants.HIGH_QOS);
+  }
+
+  public static int getIndexPriority(Configuration conf) {
+    return conf.getInt(QueryServices.INDEX_PRIOIRTY_ATTRIB, QueryServicesOptions.DEFAULT_INDEX_PRIORITY);
+  }
+
+  public static int getMetadataPriority(Configuration conf) {
+    return conf.getInt(QueryServices.METADATA_PRIOIRTY_ATTRIB, QueryServicesOptions.DEFAULT_METADATA_PRIORITY);
+  }
+
 }

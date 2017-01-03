@@ -34,57 +34,58 @@ import org.apache.pig.ResourceSchema.ResourceFieldSchema;
 import com.google.common.base.Preconditions;
 
 /**
- * 
+ *
  * Utility to generate the ResourceSchema from the list of {@link ColumnInfo}
  *
  */
 public final class PhoenixPigSchemaUtil {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixPigSchemaUtil.class);
-    
-    private PhoenixPigSchemaUtil() {
+  private static final Log LOG = LogFactory.getLog(PhoenixPigSchemaUtil.class);
+
+  private PhoenixPigSchemaUtil() {
+  }
+
+  static class Dependencies {
+
+    List<ColumnInfo> getSelectColumnMetadataList(Configuration configuration) throws SQLException {
+      return PhoenixConfigurationUtil.getSelectColumnMetadataList(configuration);
     }
-    
-    static class Dependencies {
-    	List<ColumnInfo> getSelectColumnMetadataList(Configuration configuration) throws SQLException {
-    		return PhoenixConfigurationUtil.getSelectColumnMetadataList(configuration);
-    	}
+  }
+
+  public static ResourceSchema getResourceSchema(final Configuration configuration, Dependencies dependencies) throws IOException {
+
+    final ResourceSchema schema = new ResourceSchema();
+    try {
+      List<ColumnInfo> columns = null;
+      final SchemaType schemaType = PhoenixConfigurationUtil.getSchemaType(configuration);
+      if (SchemaType.QUERY.equals(schemaType)) {
+        final String sqlQuery = PhoenixConfigurationUtil.getSelectStatement(configuration);
+        Preconditions.checkNotNull(sqlQuery, "No Sql Query exists within the configuration");
+        final SqlQueryToColumnInfoFunction function = new SqlQueryToColumnInfoFunction(configuration);
+        columns = function.apply(sqlQuery);
+      } else {
+        columns = dependencies.getSelectColumnMetadataList(configuration);
+      }
+      ResourceFieldSchema fields[] = new ResourceFieldSchema[columns.size()];
+      int i = 0;
+      for (ColumnInfo cinfo : columns) {
+        int sqlType = cinfo.getSqlType();
+        PDataType phoenixDataType = PDataType.fromTypeId(sqlType);
+        byte pigType = TypeUtil.getPigDataTypeForPhoenixType(phoenixDataType);
+        ResourceFieldSchema field = new ResourceFieldSchema();
+        field.setType(pigType).setName(cinfo.getDisplayName());
+        fields[i++] = field;
+      }
+      schema.setFields(fields);
+    } catch (SQLException sqle) {
+      LOG.error(String.format("Error: SQLException [%s] ", sqle.getMessage()));
+      throw new IOException(sqle);
     }
-    
-    public static ResourceSchema getResourceSchema(final Configuration configuration, Dependencies dependencies) throws IOException {
-        
-        final ResourceSchema schema = new ResourceSchema();
-        try {
-            List<ColumnInfo> columns = null;
-            final SchemaType schemaType = PhoenixConfigurationUtil.getSchemaType(configuration);
-            if(SchemaType.QUERY.equals(schemaType)) {
-                final String sqlQuery = PhoenixConfigurationUtil.getSelectStatement(configuration);
-                Preconditions.checkNotNull(sqlQuery, "No Sql Query exists within the configuration");
-                final SqlQueryToColumnInfoFunction function = new SqlQueryToColumnInfoFunction(configuration);
-                columns = function.apply(sqlQuery);
-            } else {
-                columns = dependencies.getSelectColumnMetadataList(configuration);
-            }
-            ResourceFieldSchema fields[] = new ResourceFieldSchema[columns.size()];
-            int i = 0;
-            for(ColumnInfo cinfo : columns) {
-                int sqlType = cinfo.getSqlType();
-                PDataType phoenixDataType = PDataType.fromTypeId(sqlType);
-                byte pigType = TypeUtil.getPigDataTypeForPhoenixType(phoenixDataType);
-                ResourceFieldSchema field = new ResourceFieldSchema();
-                field.setType(pigType).setName(cinfo.getDisplayName());
-                fields[i++] = field;
-            }
-            schema.setFields(fields);    
-        } catch(SQLException sqle) {
-            LOG.error(String.format("Error: SQLException [%s] ",sqle.getMessage()));
-            throw new IOException(sqle);
-        }
-        
-        return schema;
-    }
-    
-    public static ResourceSchema getResourceSchema(final Configuration configuration) throws IOException {
-        return getResourceSchema(configuration, new Dependencies());
-    }
+
+    return schema;
+  }
+
+  public static ResourceSchema getResourceSchema(final Configuration configuration) throws IOException {
+    return getResourceSchema(configuration, new Dependencies());
+  }
 }

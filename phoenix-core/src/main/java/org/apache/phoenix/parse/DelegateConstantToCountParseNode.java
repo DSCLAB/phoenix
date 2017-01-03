@@ -25,22 +25,21 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.CountAggregateFunction;
 import org.apache.phoenix.expression.function.FunctionExpression;
 
-
 public abstract class DelegateConstantToCountParseNode extends AggregateFunctionParseNode {
 
-    public DelegateConstantToCountParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
+  public DelegateConstantToCountParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  protected CountAggregateFunction getDelegateFunction(List<Expression> children, StatementContext context) {
+    CountAggregateFunction countFunc = null;
+    if (getChildren().get(0).isStateless()) {
+      countFunc = (CountAggregateFunction) context.getExpressionManager().addIfAbsent(new CountAggregateFunction(children));
     }
-    
-    protected CountAggregateFunction getDelegateFunction(List<Expression> children, StatementContext context) {
-        CountAggregateFunction countFunc = null;
-        if (getChildren().get(0).isStateless()) {
-            countFunc = (CountAggregateFunction)context.getExpressionManager().addIfAbsent(new CountAggregateFunction(children));
-        }
-        return countFunc;
-    }
-    
-    @Override
-    public abstract FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException;
+    return countFunc;
+  }
+
+  @Override
+  public abstract FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException;
 
 }

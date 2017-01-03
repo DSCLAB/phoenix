@@ -31,53 +31,55 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.joda.time.DateTime;
 
 /**
- * 
- * Implementation of the WEEK() buildin. Input Date/Timestamp.
- * Returns an integer from 1 to 53 representing the week of the year in date
- * 
+ *
+ * Implementation of the WEEK() buildin. Input Date/Timestamp. Returns an
+ * integer from 1 to 53 representing the week of the year in date
+ *
  */
-@BuiltInFunction(name=WeekFunction.NAME, 
-args={@Argument(allowedTypes={PTimestamp.class})})
+@BuiltInFunction(name = WeekFunction.NAME,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class})})
 public class WeekFunction extends DateScalarFunction {
-    public static final String NAME = "WEEK";
 
-    public WeekFunction() {
-    }
+  public static final String NAME = "WEEK";
 
-    public WeekFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public WeekFunction() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression expression = getChildExpression();
-        if (!expression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if ( ptr.getLength() == 0) {
-            return true; //means null
-        }
-        long dateTime = inputCodec.decodeLong(ptr, expression.getSortOrder());
-        DateTime dt = new DateTime(dateTime);
-        int week = dt.getWeekOfWeekyear();
-        PDataType returnType = getDataType();
-        byte[] byteValue = new byte[returnType.getByteSize()];
-        returnType.getCodec().encodeInt(week, byteValue, 0);
-        ptr.set(byteValue);
-        return true;
-    }
+  public WeekFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression expression = getChildExpression();
+    if (!expression.evaluate(tuple, ptr)) {
+      return false;
     }
+    if (ptr.getLength() == 0) {
+      return true; //means null
+    }
+    long dateTime = inputCodec.decodeLong(ptr, expression.getSortOrder());
+    DateTime dt = new DateTime(dateTime);
+    int week = dt.getWeekOfWeekyear();
+    PDataType returnType = getDataType();
+    byte[] byteValue = new byte[returnType.getByteSize()];
+    returnType.getCodec().encodeInt(week, byteValue, 0);
+    ptr.set(byteValue);
+    return true;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

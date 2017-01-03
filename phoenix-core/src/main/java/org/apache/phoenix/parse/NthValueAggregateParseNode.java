@@ -27,12 +27,12 @@ import org.apache.phoenix.expression.function.NthValueFunction;
 
 public class NthValueAggregateParseNode extends DelegateConstantToCountParseNode {
 
-    public NthValueAggregateParseNode(String name, List<ParseNode> children, FunctionParseNode.BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  public NthValueAggregateParseNode(String name, List<ParseNode> children, FunctionParseNode.BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        return new NthValueFunction(children, getDelegateFunction(children, context));
-    }
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    return new NthValueFunction(children, getDelegateFunction(children, context));
+  }
 }

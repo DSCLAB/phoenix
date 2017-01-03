@@ -41,50 +41,51 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-
 public class RenewLeaseIT extends BaseOwnClusterHBaseManagedTimeIT {
-    private static final long RPC_TIMEOUT = 2000;
-    private static volatile boolean SLEEP_NOW = false;
-    private static final String TABLE_NAME = "FOO_BAR";
-    
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        Map<String, String> serverProps = Maps.newHashMapWithExpectedSize(1);
-        serverProps.put("hbase.coprocessor.region.classes", SleepingRegionObserver.class.getName());
-        Map<String,String> clientProps = Maps.newHashMapWithExpectedSize(1);
-        // Must update config before starting server
-        clientProps.put("hbase.rpc.timeout", Long.toString(RPC_TIMEOUT));
-        setUpTestDriver(new ReadOnlyProps(serverProps.entrySet().iterator()), new ReadOnlyProps(clientProps.entrySet().iterator()));
+
+  private static final long RPC_TIMEOUT = 2000;
+  private static volatile boolean SLEEP_NOW = false;
+  private static final String TABLE_NAME = "FOO_BAR";
+
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    Map<String, String> serverProps = Maps.newHashMapWithExpectedSize(1);
+    serverProps.put("hbase.coprocessor.region.classes", SleepingRegionObserver.class.getName());
+    Map<String, String> clientProps = Maps.newHashMapWithExpectedSize(1);
+    // Must update config before starting server
+    clientProps.put("hbase.rpc.timeout", Long.toString(RPC_TIMEOUT));
+    setUpTestDriver(new ReadOnlyProps(serverProps.entrySet().iterator()), new ReadOnlyProps(clientProps.entrySet().iterator()));
+  }
+
+  @Test
+  public void testLeaseDoesNotTimeout() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(url, props);
+    conn.createStatement().execute("create table " + TABLE_NAME + "(k VARCHAR PRIMARY KEY)");
+    SLEEP_NOW = true;
+    try {
+      ResultSet rs = conn.createStatement().executeQuery("select count(*) from " + TABLE_NAME);
+      assertTrue(rs.next());
+      assertEquals(0, rs.getLong(1));
+    } finally {
+      SLEEP_NOW = false;
     }
-    
-    @Test
-    public void testLeaseDoesNotTimeout() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(url, props);
-        conn.createStatement().execute("create table " + TABLE_NAME + "(k VARCHAR PRIMARY KEY)");
-        SLEEP_NOW = true;
-        try {
-            ResultSet rs = conn.createStatement().executeQuery("select count(*) from " + TABLE_NAME);
-            assertTrue(rs.next());
-            assertEquals(0, rs.getLong(1));
-        } finally {
-            SLEEP_NOW = false;
+  }
+
+  public static class SleepingRegionObserver extends SimpleRegionObserver {
+
+    @Override
+    public boolean preScannerNext(final ObserverContext<RegionCoprocessorEnvironment> c,
+            final InternalScanner s, final List<Result> results,
+            final int limit, final boolean hasMore) throws IOException {
+      try {
+        if (SLEEP_NOW && c.getEnvironment().getRegion().getRegionInfo().getTable().getNameAsString().equals(TABLE_NAME)) {
+          Thread.sleep(RPC_TIMEOUT * 2);
         }
+      } catch (InterruptedException e) {
+        throw new IOException(e);
+      }
+      return super.preScannerNext(c, s, results, limit, hasMore);
     }
-    
-    public static class SleepingRegionObserver extends SimpleRegionObserver {
-        @Override
-        public boolean preScannerNext(final ObserverContext<RegionCoprocessorEnvironment> c,
-                final InternalScanner s, final List<Result> results,
-                final int limit, final boolean hasMore) throws IOException {
-            try {
-                if (SLEEP_NOW && c.getEnvironment().getRegion().getRegionInfo().getTable().getNameAsString().equals(TABLE_NAME)) {
-                    Thread.sleep(RPC_TIMEOUT * 2);
-                }
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
-            return super.preScannerNext(c, s, results, limit, hasMore);
-        }
-    }
+  }
 }

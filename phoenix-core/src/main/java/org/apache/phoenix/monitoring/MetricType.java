@@ -19,38 +19,38 @@ package org.apache.phoenix.monitoring;
 
 public enum MetricType {
 
-    MUTATION_BATCH_SIZE("Batch sizes of mutations"),
-    MUTATION_BYTES("Size of mutations in bytes"),
-    MUTATION_COMMIT_TIME("Time it took to commit mutations"),
-    QUERY_TIME("Query times"),
-    NUM_PARALLEL_SCANS("Number of scans that were executed in parallel"),
-    SCAN_BYTES("Number of bytes read by scans"),
-    MEMORY_CHUNK_BYTES("Number of bytes allocated by the memory manager"),
-    MEMORY_WAIT_TIME("Number of milliseconds threads needed to wait for memory to be allocated through memory manager"),
-    MUTATION_SQL_COUNTER("Counter for number of mutation sql statements"),
-    SELECT_SQL_COUNTER("Counter for number of sql queries"),
-    TASK_QUEUE_WAIT_TIME("Time in milliseconds tasks had to wait in the queue of the thread pool executor"),
-    TASK_END_TO_END_TIME("Time in milliseconds spent by tasks from creation to completion"),
-    TASK_EXECUTION_TIME("Time in milliseconds tasks took to execute"),
-    TASK_EXECUTED_COUNTER("Counter for number of tasks submitted to the thread pool executor"),
-    TASK_REJECTED_COUNTER("Counter for number of tasks that were rejected by the thread pool executor"),
-    QUERY_TIMEOUT_COUNTER("Number of times query timed out"),
-    QUERY_FAILED_COUNTER("Number of times query failed"),
-    SPOOL_FILE_SIZE("Size of spool files created in bytes"),
-    SPOOL_FILE_COUNTER("Number of spool files created"),
-    CACHE_REFRESH_SPLITS_COUNTER("Number of times cache was refreshed because of splits"),
-    WALL_CLOCK_TIME_MS("Wall clock time elapsed for the overall query execution"),
-    RESULT_SET_TIME_MS("Wall clock time elapsed for reading all records using resultSet.next()"),
-    OPEN_PHOENIX_CONNECTIONS_COUNTER("Number of open phoenix connections");
-    
-    private final String description;
+  MUTATION_BATCH_SIZE("Batch sizes of mutations"),
+  MUTATION_BYTES("Size of mutations in bytes"),
+  MUTATION_COMMIT_TIME("Time it took to commit mutations"),
+  QUERY_TIME("Query times"),
+  NUM_PARALLEL_SCANS("Number of scans that were executed in parallel"),
+  SCAN_BYTES("Number of bytes read by scans"),
+  MEMORY_CHUNK_BYTES("Number of bytes allocated by the memory manager"),
+  MEMORY_WAIT_TIME("Number of milliseconds threads needed to wait for memory to be allocated through memory manager"),
+  MUTATION_SQL_COUNTER("Counter for number of mutation sql statements"),
+  SELECT_SQL_COUNTER("Counter for number of sql queries"),
+  TASK_QUEUE_WAIT_TIME("Time in milliseconds tasks had to wait in the queue of the thread pool executor"),
+  TASK_END_TO_END_TIME("Time in milliseconds spent by tasks from creation to completion"),
+  TASK_EXECUTION_TIME("Time in milliseconds tasks took to execute"),
+  TASK_EXECUTED_COUNTER("Counter for number of tasks submitted to the thread pool executor"),
+  TASK_REJECTED_COUNTER("Counter for number of tasks that were rejected by the thread pool executor"),
+  QUERY_TIMEOUT_COUNTER("Number of times query timed out"),
+  QUERY_FAILED_COUNTER("Number of times query failed"),
+  SPOOL_FILE_SIZE("Size of spool files created in bytes"),
+  SPOOL_FILE_COUNTER("Number of spool files created"),
+  CACHE_REFRESH_SPLITS_COUNTER("Number of times cache was refreshed because of splits"),
+  WALL_CLOCK_TIME_MS("Wall clock time elapsed for the overall query execution"),
+  RESULT_SET_TIME_MS("Wall clock time elapsed for reading all records using resultSet.next()"),
+  OPEN_PHOENIX_CONNECTIONS_COUNTER("Number of open phoenix connections");
 
-    private MetricType(String description) {
-        this.description = description;
-    }
+  private final String description;
 
-    public String description() {
-        return description;
-    }
+  private MetricType(String description) {
+    this.description = description;
+  }
+
+  public String description() {
+    return description;
+  }
 
 }

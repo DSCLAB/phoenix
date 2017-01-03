@@ -17,51 +17,65 @@
  */
 package org.apache.phoenix.parse;
 
-
 public class OffsetNode {
-    private final BindParseNode bindNode;
-    private final LiteralParseNode offsetNode;
-    
-    OffsetNode(BindParseNode bindNode) {
-        this.bindNode = bindNode;
-        offsetNode = null;
-    }
-    
-    OffsetNode(LiteralParseNode limitNode) {
-        this.offsetNode = limitNode;
-        this.bindNode = null;
-    }
-    
-    public ParseNode getOffsetParseNode() {
-        return bindNode == null ? offsetNode : bindNode;
-    }
-    
-    @Override
-    public String toString() {
-        return bindNode == null ? offsetNode.toString() : bindNode.toString();
-    }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((bindNode == null) ? 0 : bindNode.hashCode());
-        result = prime * result + ((offsetNode == null) ? 0 : offsetNode.hashCode());
-        return result;
-    }
+  private final BindParseNode bindNode;
+  private final LiteralParseNode offsetNode;
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        OffsetNode other = (OffsetNode)obj;
-        if (bindNode == null) {
-            if (other.bindNode != null) return false;
-        } else if (!bindNode.equals(other.bindNode)) return false;
-        if (offsetNode == null) {
-            if (other.offsetNode != null) return false;
-        } else if (!offsetNode.equals(other.offsetNode)) return false;
-        return true;
+  OffsetNode(BindParseNode bindNode) {
+    this.bindNode = bindNode;
+    offsetNode = null;
+  }
+
+  OffsetNode(LiteralParseNode limitNode) {
+    this.offsetNode = limitNode;
+    this.bindNode = null;
+  }
+
+  public ParseNode getOffsetParseNode() {
+    return bindNode == null ? offsetNode : bindNode;
+  }
+
+  @Override
+  public String toString() {
+    return bindNode == null ? offsetNode.toString() : bindNode.toString();
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((bindNode == null) ? 0 : bindNode.hashCode());
+    result = prime * result + ((offsetNode == null) ? 0 : offsetNode.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    OffsetNode other = (OffsetNode) obj;
+    if (bindNode == null) {
+      if (other.bindNode != null) {
+        return false;
+      }
+    } else if (!bindNode.equals(other.bindNode)) {
+      return false;
+    }
+    if (offsetNode == null) {
+      if (other.offsetNode != null) {
+        return false;
+      }
+    } else if (!offsetNode.equals(other.offsetNode)) {
+      return false;
+    }
+    return true;
+  }
 }

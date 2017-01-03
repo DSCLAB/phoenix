@@ -42,53 +42,53 @@ import static org.junit.Assert.assertTrue;
  */
 public class AlterSessionIT extends BaseHBaseManagedTimeTableReuseIT {
 
-    private static final String TABLE_NAME = generateRandomString();
-    private static Connection testConn;
+  private static final String TABLE_NAME = generateRandomString();
+  private static Connection testConn;
 
-    @BeforeClass
-    public static void initTable() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        testConn = DriverManager.getConnection(getUrl(), props);
-        assertEquals(Consistency.STRONG, ((PhoenixConnection)testConn).getConsistency());
-        testConn.createStatement().execute(
+  @BeforeClass
+  public static void initTable() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    testConn = DriverManager.getConnection(getUrl(), props);
+    assertEquals(Consistency.STRONG, ((PhoenixConnection) testConn).getConsistency());
+    testConn.createStatement().execute(
             "create table " + TABLE_NAME + " (col1 varchar primary key)");
-        testConn.commit();
-    }
+    testConn.commit();
+  }
 
-    @Test
-    public void testUpdateConsistency() throws Exception {
-        try {
-            Statement st = testConn.createStatement();
-            st.execute("alter session set Consistency = 'timeline'");
-            ResultSet rs = st.executeQuery("explain select * from " + TABLE_NAME);
-            assertEquals(Consistency.TIMELINE, ((PhoenixConnection)testConn).getConsistency());
-            String queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") > 0);
+  @Test
+  public void testUpdateConsistency() throws Exception {
+    try {
+      Statement st = testConn.createStatement();
+      st.execute("alter session set Consistency = 'timeline'");
+      ResultSet rs = st.executeQuery("explain select * from " + TABLE_NAME);
+      assertEquals(Consistency.TIMELINE, ((PhoenixConnection) testConn).getConsistency());
+      String queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") > 0);
 
-            // turn off timeline read consistency
-            st.execute("alter session set Consistency = 'strong'");
-            rs = st.executeQuery("explain select * from " + TABLE_NAME);
-            queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") < 0);
-        } finally {
-            this.testConn.close();
-        }
+      // turn off timeline read consistency
+      st.execute("alter session set Consistency = 'strong'");
+      rs = st.executeQuery("explain select * from " + TABLE_NAME);
+      queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") < 0);
+    } finally {
+      this.testConn.close();
     }
+  }
 
-    @Test
-    public void testSetConsistencyInURL() throws Exception {
-        try {
-            Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-            Connection conn = DriverManager.getConnection(getUrl() + PhoenixRuntime.JDBC_PROTOCOL_TERMINATOR +
-                    "Consistency=TIMELINE", props);
-            assertEquals(Consistency.TIMELINE, ((PhoenixConnection)conn).getConsistency());
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("explain select * from " + TABLE_NAME);
-            String queryPlan = QueryUtil.getExplainPlan(rs);
-            assertTrue(queryPlan.indexOf("TIMELINE") > 0);
-            conn.close();
-        } finally {
-            this.testConn.close();
-        }
+  @Test
+  public void testSetConsistencyInURL() throws Exception {
+    try {
+      Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+      Connection conn = DriverManager.getConnection(getUrl() + PhoenixRuntime.JDBC_PROTOCOL_TERMINATOR
+              + "Consistency=TIMELINE", props);
+      assertEquals(Consistency.TIMELINE, ((PhoenixConnection) conn).getConsistency());
+      Statement st = conn.createStatement();
+      ResultSet rs = st.executeQuery("explain select * from " + TABLE_NAME);
+      String queryPlan = QueryUtil.getExplainPlan(rs);
+      assertTrue(queryPlan.indexOf("TIMELINE") > 0);
+      conn.close();
+    } finally {
+      this.testConn.close();
     }
+  }
 }

@@ -22,32 +22,32 @@ import java.sql.SQLException;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 /**
- * 
+ *
  * Exception thrown when a schema name already exists
  *
- * 
+ *
  * @since 0.1
  */
 public class SchemaAlreadyExistsException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.SCHEMA_ALREADY_EXISTS;
-    private final String schemaName;
 
-    public SchemaAlreadyExistsException(String schemaName) {
-        this(schemaName, null);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.SCHEMA_ALREADY_EXISTS;
+  private final String schemaName;
 
-    public SchemaAlreadyExistsException(String schemaName, String msg) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setMessage(msg).build().toString(),
-                code.getSQLState(), code.getErrorCode());
-        this.schemaName = schemaName;
+  public SchemaAlreadyExistsException(String schemaName) {
+    this(schemaName, null);
+  }
 
-    }
+  public SchemaAlreadyExistsException(String schemaName, String msg) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setMessage(msg).build().toString(),
+            code.getSQLState(), code.getErrorCode());
+    this.schemaName = schemaName;
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  }
+
+  public String getSchemaName() {
+    return schemaName;
+  }
 
 }

@@ -25,34 +25,40 @@ import org.apache.htrace.Span;
  * Utilities for tracing
  */
 public class TracingUtils {
-    public static final String METRIC_SOURCE_KEY = "phoenix.";
 
-    /** Set context to enable filtering */
-    public static final String METRICS_CONTEXT = "tracing";
+  public static final String METRIC_SOURCE_KEY = "phoenix.";
 
-    /** Marker metric to ensure that we register the tracing mbeans */
-    public static final String METRICS_MARKER_CONTEXT = "marker";
+  /**
+   * Set context to enable filtering
+   */
+  public static final String METRICS_CONTEXT = "tracing";
 
-    public static void addAnnotation(Span span, String message, int value) {
-        span.addKVAnnotation(message.getBytes(), Bytes.toBytes(Integer.toString(value)));
-    }
+  /**
+   * Marker metric to ensure that we register the tracing mbeans
+   */
+  public static final String METRICS_MARKER_CONTEXT = "marker";
 
-    public static Pair<String, String> readAnnotation(byte[] key, byte[] value) {
-        return new Pair<String, String>(new String(key), Bytes.toString(value));
-    }
+  public static void addAnnotation(Span span, String message, int value) {
+    span.addKVAnnotation(message.getBytes(), Bytes.toBytes(Integer.toString(value)));
+  }
 
-    /**
-     * @see #getTraceMetricName(String)
-     */
-    public static final String getTraceMetricName(long traceId) {
-        return getTraceMetricName(Long.toString(traceId));
-    }
+  public static Pair<String, String> readAnnotation(byte[] key, byte[] value) {
+    return new Pair<String, String>(new String(key), Bytes.toString(value));
+  }
 
-    /**
-     * @param traceId unique id of the trace
-     * @return the name of the metric record that should be generated for a given trace
-     */
-    public static final String getTraceMetricName(String traceId) {
-        return METRIC_SOURCE_KEY + traceId;
-    }
+  /**
+   * @see #getTraceMetricName(String)
+   */
+  public static final String getTraceMetricName(long traceId) {
+    return getTraceMetricName(Long.toString(traceId));
+  }
+
+  /**
+   * @param traceId unique id of the trace
+   * @return the name of the metric record that should be generated for a given
+   * trace
+   */
+  public static final String getTraceMetricName(String traceId) {
+    return METRIC_SOURCE_KEY + traceId;
+  }
 }

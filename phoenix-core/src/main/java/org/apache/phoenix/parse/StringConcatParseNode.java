@@ -23,41 +23,37 @@ import java.util.List;
 
 import org.apache.phoenix.compile.ColumnResolver;
 
-
-
-
 /**
- * 
+ *
  * Node representing || String concatenation in a SQL expression
  *
- * 
+ *
  * @since 0.1
  */
 public class StringConcatParseNode extends CompoundParseNode {
 
-    StringConcatParseNode(List<ParseNode> children) {
-        super(children);
-    }
+  StringConcatParseNode(List<ParseNode> children) {
+    super(children);
+  }
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
-    
-    
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        buf.append('(');
-        List<ParseNode> children = getChildren();
-        children.get(0).toSQL(resolver, buf);
-        for (int i = 1 ; i < children.size(); i++) {
-            buf.append(" || ");
-            children.get(i).toSQL(resolver, buf);
-        }
-        buf.append(')');
+    return visitor.visitLeave(this, l);
+  }
+
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    buf.append('(');
+    List<ParseNode> children = getChildren();
+    children.get(0).toSQL(resolver, buf);
+    for (int i = 1; i < children.size(); i++) {
+      buf.append(" || ");
+      children.get(i).toSQL(resolver, buf);
     }
+    buf.append(')');
+  }
 }

@@ -51,169 +51,168 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-
 public class ReverseScanIT extends BaseHBaseManagedTimeIT {
-    protected static final String ATABLE_INDEX_NAME = "ATABLE_IDX";
 
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(1);
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-        // Ensures our split points will be used
-        // TODO: do deletePriorTables before test?
-        Connection conn = DriverManager.getConnection(getUrl());
-        HBaseAdmin admin = conn.unwrap(PhoenixConnection.class).getQueryServices().getAdmin();
-        try {
-            admin.disableTable(TestUtil.ATABLE_NAME);
-            admin.deleteTable(TestUtil.ATABLE_NAME);
-        } catch (TableNotFoundException e) {
-        } finally {
-            admin.close();
-            conn.close();
-        }
-     }
+  protected static final String ATABLE_INDEX_NAME = "ATABLE_IDX";
 
-    private static byte[][] getSplitsAtRowKeys(String tenantId) {
-        return new byte[][] { 
-            Bytes.toBytes(tenantId + ROW3),
-            Bytes.toBytes(tenantId + ROW7),
-            Bytes.toBytes(tenantId + ROW9),
-            };
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(1);
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+    // Ensures our split points will be used
+    // TODO: do deletePriorTables before test?
+    Connection conn = DriverManager.getConnection(getUrl());
+    HBaseAdmin admin = conn.unwrap(PhoenixConnection.class).getQueryServices().getAdmin();
+    try {
+      admin.disableTable(TestUtil.ATABLE_NAME);
+      admin.deleteTable(TestUtil.ATABLE_NAME);
+    } catch (TableNotFoundException e) {
+    } finally {
+      admin.close();
+      conn.close();
     }
-    
-    @Test
-    public void testReverseRangeScan() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        String query = "SELECT entity_id FROM aTable WHERE entity_id >= '" + ROW3 + "' ORDER BY organization_id DESC, entity_id DESC";
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.setFetchSize(2);
-            ResultSet rs = stmt.executeQuery(query);
+  }
 
-            assertTrue (rs.next());
-            assertEquals(ROW9,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW8,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW7,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW6,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW5,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW4,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW3,rs.getString(1));
+  private static byte[][] getSplitsAtRowKeys(String tenantId) {
+    return new byte[][]{
+      Bytes.toBytes(tenantId + ROW3),
+      Bytes.toBytes(tenantId + ROW7),
+      Bytes.toBytes(tenantId + ROW9),};
+  }
 
-            assertFalse(rs.next());
-            
-            rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-            assertEquals(
-                    "CLIENT PARALLEL 1-WAY REVERSE FULL SCAN OVER ATABLE\n" + 
-                    "    SERVER FILTER BY FIRST KEY ONLY AND ENTITY_ID >= '00A323122312312'",
-                    QueryUtil.getExplainPlan(rs));
-            
-            PreparedStatement statement = conn.prepareStatement("SELECT entity_id FROM aTable WHERE organization_id = ? AND entity_id >= ? ORDER BY organization_id DESC, entity_id DESC");
-            statement.setString(1, tenantId);
-            statement.setString(2, ROW7);
-            rs = statement.executeQuery();
+  @Test
+  public void testReverseRangeScan() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    String query = "SELECT entity_id FROM aTable WHERE entity_id >= '" + ROW3 + "' ORDER BY organization_id DESC, entity_id DESC";
+    try {
+      Statement stmt = conn.createStatement();
+      stmt.setFetchSize(2);
+      ResultSet rs = stmt.executeQuery(query);
 
-            assertTrue (rs.next());
-            assertEquals(ROW9,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW8,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW7,rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW9, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW8, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW7, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW6, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW5, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW4, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW3, rs.getString(1));
 
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+      assertFalse(rs.next());
+
+      rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+      assertEquals(
+              "CLIENT PARALLEL 1-WAY REVERSE FULL SCAN OVER ATABLE\n"
+              + "    SERVER FILTER BY FIRST KEY ONLY AND ENTITY_ID >= '00A323122312312'",
+              QueryUtil.getExplainPlan(rs));
+
+      PreparedStatement statement = conn.prepareStatement("SELECT entity_id FROM aTable WHERE organization_id = ? AND entity_id >= ? ORDER BY organization_id DESC, entity_id DESC");
+      statement.setString(1, tenantId);
+      statement.setString(2, ROW7);
+      rs = statement.executeQuery();
+
+      assertTrue(rs.next());
+      assertEquals(ROW9, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW8, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW7, rs.getString(1));
+
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
-    
-    @Test
-    public void testReverseSkipScan() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        String query = "SELECT entity_id FROM aTable WHERE organization_id = ? AND entity_id IN (?,?,?,?,?) ORDER BY organization_id DESC, entity_id DESC";
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            statement.setString(1, tenantId);
-            statement.setString(2, ROW2);
-            statement.setString(3, ROW3);
-            statement.setString(4, ROW7);
-            statement.setString(5, ROW9);
-            statement.setString(6, "00BOGUSROW00000");
-            ResultSet rs = statement.executeQuery();
+  }
 
-            assertTrue (rs.next());
-            assertEquals(ROW9,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW7,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW3,rs.getString(1));
-            assertTrue (rs.next());
-            assertEquals(ROW2,rs.getString(1));
+  @Test
+  public void testReverseSkipScan() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    String query = "SELECT entity_id FROM aTable WHERE organization_id = ? AND entity_id IN (?,?,?,?,?) ORDER BY organization_id DESC, entity_id DESC";
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      statement.setString(1, tenantId);
+      statement.setString(2, ROW2);
+      statement.setString(3, ROW3);
+      statement.setString(4, ROW7);
+      statement.setString(5, ROW9);
+      statement.setString(6, "00BOGUSROW00000");
+      ResultSet rs = statement.executeQuery();
 
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+      assertTrue(rs.next());
+      assertEquals(ROW9, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW7, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW3, rs.getString(1));
+      assertTrue(rs.next());
+      assertEquals(ROW2, rs.getString(1));
+
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
+  }
 
-    @Test
-    public void testReverseScanForSpecificRangeInRegion() throws Exception {
-        Connection conn;
-        ResultSet rs;
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        conn = DriverManager.getConnection(getUrl(), props);
-        conn.createStatement()
-                .execute("CREATE TABLE T" + " ( k VARCHAR, c1.a bigint,c2.b bigint CONSTRAINT pk PRIMARY KEY (k)) ");
-        conn.createStatement().execute("upsert into T values ('a',1,3)");
-        conn.createStatement().execute("upsert into T values ('b',1,3)");
-        conn.createStatement().execute("upsert into T values ('c',1,3)");
-        conn.createStatement().execute("upsert into T values ('d',1,3)");
-        conn.createStatement().execute("upsert into T values ('e',1,3)");
-        conn.commit();
-        rs = conn.createStatement().executeQuery("SELECT k FROM T where k>'b' and k<'d' order by k desc");
-        assertTrue(rs.next());
-        assertEquals("c", rs.getString(1));
-        assertTrue(!rs.next());
-        conn.close();
-    }
+  @Test
+  public void testReverseScanForSpecificRangeInRegion() throws Exception {
+    Connection conn;
+    ResultSet rs;
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    conn = DriverManager.getConnection(getUrl(), props);
+    conn.createStatement()
+            .execute("CREATE TABLE T" + " ( k VARCHAR, c1.a bigint,c2.b bigint CONSTRAINT pk PRIMARY KEY (k)) ");
+    conn.createStatement().execute("upsert into T values ('a',1,3)");
+    conn.createStatement().execute("upsert into T values ('b',1,3)");
+    conn.createStatement().execute("upsert into T values ('c',1,3)");
+    conn.createStatement().execute("upsert into T values ('d',1,3)");
+    conn.createStatement().execute("upsert into T values ('e',1,3)");
+    conn.commit();
+    rs = conn.createStatement().executeQuery("SELECT k FROM T where k>'b' and k<'d' order by k desc");
+    assertTrue(rs.next());
+    assertEquals("c", rs.getString(1));
+    assertTrue(!rs.next());
+    conn.close();
+  }
 
-    @Test
-    public void testReverseScanIndex() throws Exception {
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
-        
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        String ddl = "CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
-        + "    A_STRING, " + "    B_STRING, " + "    A_DATE)";
-        conn.createStatement().execute(ddl);
-        
-        String query = 
-                "SELECT a_integer FROM atable where a_integer is not null order by a_integer nulls last limit 1";
+  @Test
+  public void testReverseScanIndex() throws Exception {
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getSplitsAtRowKeys(tenantId), getUrl());
 
-        PreparedStatement statement = conn.prepareStatement(query);
-        ResultSet rs=statement.executeQuery();
-        assertTrue(rs.next());
-        assertEquals(1,rs.getInt(1));
-        assertFalse(rs.next());
-        
-        rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-        assertEquals(
-                "CLIENT SERIAL 1-WAY REVERSE RANGE SCAN OVER ATABLE_IDX [not null]\n" + 
-                "    SERVER FILTER BY FIRST KEY ONLY\n" + 
-                "    SERVER 1 ROW LIMIT\n" + 
-                "CLIENT 1 ROW LIMIT",QueryUtil.getExplainPlan(rs));
-    }
-    
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    String ddl = "CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
+            + "    A_STRING, " + "    B_STRING, " + "    A_DATE)";
+    conn.createStatement().execute(ddl);
+
+    String query
+            = "SELECT a_integer FROM atable where a_integer is not null order by a_integer nulls last limit 1";
+
+    PreparedStatement statement = conn.prepareStatement(query);
+    ResultSet rs = statement.executeQuery();
+    assertTrue(rs.next());
+    assertEquals(1, rs.getInt(1));
+    assertFalse(rs.next());
+
+    rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+    assertEquals(
+            "CLIENT SERIAL 1-WAY REVERSE RANGE SCAN OVER ATABLE_IDX [not null]\n"
+            + "    SERVER FILTER BY FIRST KEY ONLY\n"
+            + "    SERVER 1 ROW LIMIT\n"
+            + "CLIENT 1 ROW LIMIT", QueryUtil.getExplainPlan(rs));
+  }
+
 }

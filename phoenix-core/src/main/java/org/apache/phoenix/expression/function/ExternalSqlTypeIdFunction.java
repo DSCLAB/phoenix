@@ -30,59 +30,59 @@ import org.apache.phoenix.util.ByteUtil;
 import java.sql.SQLException;
 import java.util.List;
 
-
 /**
- * 
- * Function used to get the external SQL type id from the internal SQL type integer.
- * Typically the external and internal ids are the same, but for some types (e.g. arrays)
- * there is are multiple specific internal types to represent multiple external types.
+ *
+ * Function used to get the external SQL type id from the internal SQL type
+ * integer. Typically the external and internal ids are the same, but for some
+ * types (e.g. arrays) there is are multiple specific internal types to
+ * represent multiple external types.
  * <p/>
- * Usage:
- * ExternalSqlTypeId(12)
- * will return 12 based on {@link java.sql.Types#VARCHAR} being 12
- * 
- * 
+ * Usage: ExternalSqlTypeId(12) will return 12 based on
+ * {@link java.sql.Types#VARCHAR} being 12
+ *
+ *
  * @since 3.0
  */
-@BuiltInFunction(name=ExternalSqlTypeIdFunction.NAME, args= {
-    @Argument(allowedTypes= PInteger.class )} )
+@BuiltInFunction(name = ExternalSqlTypeIdFunction.NAME, args = {
+  @Argument(allowedTypes = PInteger.class)})
 public class ExternalSqlTypeIdFunction extends ScalarFunction {
-    public static final String NAME = "ExternalSqlTypeId";
 
-    public ExternalSqlTypeIdFunction() {
-    }
+  public static final String NAME = "ExternalSqlTypeId";
 
-    public ExternalSqlTypeIdFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression child = children.get(0);
-        if (!child.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if (ptr.getLength() == 0) {
-            return true;
-        }
-        int sqlType = child.getDataType().getCodec().decodeInt(ptr, child.getSortOrder());
-        try {
-            byte[] externalIdTypeBytes = PInteger.INSTANCE.toBytes(
-                PDataType.fromTypeId(sqlType).getResultSetSqlType());
-            ptr.set(externalIdTypeBytes);
-        } catch (IllegalDataException e) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-        }
-        return true;
-    }
+  public ExternalSqlTypeIdFunction() {
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  public ExternalSqlTypeIdFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression child = children.get(0);
+    if (!child.evaluate(tuple, ptr)) {
+      return false;
     }
-    
-    @Override
-    public String getName() {
-        return NAME;
+    if (ptr.getLength() == 0) {
+      return true;
     }
+    int sqlType = child.getDataType().getCodec().decodeInt(ptr, child.getSortOrder());
+    try {
+      byte[] externalIdTypeBytes = PInteger.INSTANCE.toBytes(
+              PDataType.fromTypeId(sqlType).getResultSetSqlType());
+      ptr.set(externalIdTypeBytes);
+    } catch (IllegalDataException e) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+    }
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

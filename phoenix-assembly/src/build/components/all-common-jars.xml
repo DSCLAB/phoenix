@@ -21,8 +21,8 @@
 -->
 <component>
   <fileSets>
-     <!-- Add the client & mapreduce jars. Expects the client jar packaging phase to already be run,
-      which is determined by specification order in the pom. -->
+    <!-- Add the client & mapreduce jars. Expects the client jar packaging phase to already be run,
+    which is determined by specification order in the pom. -->
     <fileSet>
       <directory>${project.basedir}/../phoenix-client/target</directory>
       <outputDirectory>/</outputDirectory>
@@ -63,9 +63,9 @@
     </fileSet>
 
     <!-- This is only necessary until maven fixes the intra-project dependency bug
-      in maven 3.0. Until then, we have to include the jars for sub-projects explicitly.
-      Otherwise, test jars are pulled in wrongly.
-     -->
+     in maven 3.0. Until then, we have to include the jars for sub-projects explicitly.
+     Otherwise, test jars are pulled in wrongly.
+    -->
     <fileSet>
       <directory>${project.basedir}/../phoenix-hadoop-compat/target/</directory>
       <outputDirectory>lib</outputDirectory>
@@ -110,7 +110,7 @@
       <directory>${project.basedir}/../phoenix-spark/target/</directory>
       <outputDirectory>lib</outputDirectory>
       <includes>
-          <include>phoenix-*.jar</include>
+        <include>phoenix-*.jar</include>
       </includes>
       <fileMode>0644</fileMode>
     </fileSet>

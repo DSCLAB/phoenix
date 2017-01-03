@@ -22,7 +22,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.phoenix</groupId>
@@ -99,26 +99,26 @@
             </goals>
             <configuration>
               <finalName>phoenix-${project.version}-server</finalName>
-                <shadedArtifactAttached>false</shadedArtifactAttached>
-                <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
-                <shadeTestJar>false</shadeTestJar>
-                <transformers>
-                    <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-                        <addHeader>false</addHeader>
-                    </transformer>
-                  <transformer
-                      implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
-                    <resource>LICENSE.txt</resource>
-                    <file>${project.basedir}/../LICENSE</file>
-                  </transformer>
-                  <transformer
-                      implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
-                    <resource>NOTICE</resource>
-                    <file>${project.basedir}/../NOTICE</file>
-                  </transformer>
-                </transformers>
-                <artifactSet>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+              <shadeTestJar>false</shadeTestJar>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                  <addHeader>false</addHeader>
+                </transformer>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>LICENSE.txt</resource>
+                  <file>${project.basedir}/../LICENSE</file>
+                </transformer>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>NOTICE</resource>
+                  <file>${project.basedir}/../NOTICE</file>
+                </transformer>
+              </transformers>
+              <artifactSet>
                 <includes>
                   <include>org.apache.phoenix:phoenix-core</include>
                   <include>org.iq80.snappy:snappy</include>
@@ -134,9 +134,9 @@
                   <include>io.dropwizard.metrics:metrics-core</include>
                   <include>org.apache.thrift:libthrift</include>
                 </includes>
-                  <excludes>
-                    <exclude>org.apache.phoenix:phoenix-server</exclude>
-                  </excludes>
+                <excludes>
+                  <exclude>org.apache.phoenix:phoenix-server</exclude>
+                </excludes>
               </artifactSet>
               <filters>
                 <filter>

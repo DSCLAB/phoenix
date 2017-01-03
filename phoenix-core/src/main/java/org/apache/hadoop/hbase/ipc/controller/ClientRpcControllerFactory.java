@@ -26,35 +26,35 @@ import org.apache.hadoop.hbase.ipc.PayloadCarryingRpcController;
 import org.apache.hadoop.hbase.ipc.RpcControllerFactory;
 
 /**
- * {@link RpcControllerFactory} that sets the priority of metadata rpc calls to be processed
- * in its own queue.
+ * {@link RpcControllerFactory} that sets the priority of metadata rpc calls to
+ * be processed in its own queue.
  */
 public class ClientRpcControllerFactory extends RpcControllerFactory {
 
-    public ClientRpcControllerFactory(Configuration conf) {
-        super(conf);
-    }
+  public ClientRpcControllerFactory(Configuration conf) {
+    super(conf);
+  }
 
-    @Override
-    public PayloadCarryingRpcController newController() {
-        PayloadCarryingRpcController delegate = super.newController();
-        return getController(delegate);
-    }
+  @Override
+  public PayloadCarryingRpcController newController() {
+    PayloadCarryingRpcController delegate = super.newController();
+    return getController(delegate);
+  }
 
-    @Override
-    public PayloadCarryingRpcController newController(CellScanner cellScanner) {
-        PayloadCarryingRpcController delegate = super.newController(cellScanner);
-        return getController(delegate);
-    }
+  @Override
+  public PayloadCarryingRpcController newController(CellScanner cellScanner) {
+    PayloadCarryingRpcController delegate = super.newController(cellScanner);
+    return getController(delegate);
+  }
 
-    @Override
-    public PayloadCarryingRpcController newController(List<CellScannable> cellIterables) {
-        PayloadCarryingRpcController delegate = super.newController(cellIterables);
-        return getController(delegate);
-    }
-    
-    private PayloadCarryingRpcController getController(PayloadCarryingRpcController delegate) {
-		return new MetadataRpcController(delegate, conf);
-    }
-    
+  @Override
+  public PayloadCarryingRpcController newController(List<CellScannable> cellIterables) {
+    PayloadCarryingRpcController delegate = super.newController(cellIterables);
+    return getController(delegate);
+  }
+
+  private PayloadCarryingRpcController getController(PayloadCarryingRpcController delegate) {
+    return new MetadataRpcController(delegate, conf);
+  }
+
 }

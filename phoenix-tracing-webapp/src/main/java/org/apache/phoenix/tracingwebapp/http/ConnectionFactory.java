@@ -22,10 +22,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
-*
-* ConnectionFactory is to handle database connection
-*
-*/
+ *
+ * ConnectionFactory is to handle database connection
+ *
+ */
 public class ConnectionFactory {
 
   private static Connection con;
@@ -36,7 +36,7 @@ public class ConnectionFactory {
   public static Connection getConnection() throws SQLException, ClassNotFoundException {
     if (con == null || con.isClosed()) {
       Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
-      con = DriverManager.getConnection("jdbc:phoenix:"+PHOENIX_HOST+":"+PHOENIX_PORT);
+      con = DriverManager.getConnection("jdbc:phoenix:" + PHOENIX_HOST + ":" + PHOENIX_PORT);
     }
     return con;
   }

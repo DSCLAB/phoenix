@@ -30,38 +30,41 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.apache.phoenix.schema.types.PVarchar;
 
 /**
- * 
- * Function used to bucketize date/time values by truncating them to
- * an even increment.  Usage:
- * TRUNC(<date/time col ref>,<'day'|'hour'|'minute'|'second'|'millisecond'>,[<optional integer multiplier>])
- * The integer multiplier is optional and is used to do rollups to a partial time unit (i.e. 10 minute rollup)
- * The function returns a {@link org.apache.phoenix.schema.types.PDate}
  *
- * 
+ * Function used to bucketize date/time values by truncating them to an even
+ * increment. Usage:
+ * TRUNC(<date/time col ref>,<'day'|'hour'|'minute'|'second'|'millisecond'>,[<optional integer multiplier>])
+ * The integer multiplier is optional and is used to do rollups to a partial
+ * time unit (i.e. 10 minute rollup) The function returns a
+ * {@link org.apache.phoenix.schema.types.PDate}
+ *
+ *
  * @since 0.1
  */
 @BuiltInFunction(name = TruncFunction.NAME,
-nodeClass = FloorParseNode.class,
-args = {
-       @Argument(allowedTypes={PTimestamp.class, PDecimal.class}),
-       @Argument(allowedTypes={PVarchar.class, PInteger.class}, defaultValue = "null", isConstant=true),
-       @Argument(allowedTypes={PInteger.class}, defaultValue="1", isConstant=true)
-       } 
+        nodeClass = FloorParseNode.class,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class, PDecimal.class})
+          ,
+       @Argument(allowedTypes = {PVarchar.class, PInteger.class}, defaultValue = "null", isConstant = true)
+          ,
+       @Argument(allowedTypes = {PInteger.class}, defaultValue = "1", isConstant = true)
+        }
 )
 public abstract class TruncFunction extends ScalarFunction {
-    
-    public static final String NAME = "TRUNC";
 
-    public TruncFunction() {}
-    
-    public TruncFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public static final String NAME = "TRUNC";
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
-    
+  public TruncFunction() {
+  }
+
+  public TruncFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
 }

@@ -29,35 +29,35 @@ public class PhoenixDecimalObjectInspector extends
         AbstractPhoenixObjectInspector<HiveDecimalWritable>
         implements HiveDecimalObjectInspector {
 
-    public PhoenixDecimalObjectInspector() {
-        super(TypeInfoFactory.decimalTypeInfo);
+  public PhoenixDecimalObjectInspector() {
+    super(TypeInfoFactory.decimalTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new Decimal((Decimal) o);
+  }
+
+  @Override
+  public HiveDecimal getPrimitiveJavaObject(Object o) {
+    return HiveDecimal.create((BigDecimal) o);
+  }
+
+  @Override
+  public HiveDecimalWritable getPrimitiveWritableObject(Object o) {
+    HiveDecimalWritable value = null;
+
+    if (o != null) {
+      try {
+        value = new HiveDecimalWritable((HiveDecimalWritable) o);
+      } catch (Exception e) {
+        logExceptionMessage(o, "DECIMAL");
+      }
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new Decimal((Decimal) o);
-    }
-
-    @Override
-    public HiveDecimal getPrimitiveJavaObject(Object o) {
-        return HiveDecimal.create((BigDecimal) o);
-    }
-
-    @Override
-    public HiveDecimalWritable getPrimitiveWritableObject(Object o) {
-        HiveDecimalWritable value = null;
-
-        if (o != null) {
-            try {
-                value = new HiveDecimalWritable((HiveDecimalWritable) o);
-            } catch (Exception e) {
-                logExceptionMessage(o, "DECIMAL");
-            }
-        }
-
-        return value;
+    return value;
 
 //		return super.getPrimitiveWritableObject(o);
-    }
+  }
 
 }

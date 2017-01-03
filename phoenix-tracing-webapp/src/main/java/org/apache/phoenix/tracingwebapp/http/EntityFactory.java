@@ -44,7 +44,7 @@ public class EntityFactory {
 
     if (objects.size() != 1) {
       throw new SQLException("Query did not produce one object it produced: "
-          + objects.size() + " objects.");
+              + objects.size() + " objects.");
     }
 
     Map<String, Object> object = objects.get(0); // get first record;
@@ -53,7 +53,7 @@ public class EntityFactory {
   }
 
   public List<Map<String, Object>> findMultiple(Object[] params)
-      throws SQLException {
+          throws SQLException {
     ResultSet rs = null;
     PreparedStatement ps = null;
     try {
@@ -77,7 +77,7 @@ public class EntityFactory {
   }
 
   protected static List<Map<String, Object>> getEntitiesFromResultSet(
-      ResultSet resultSet) throws SQLException {
+          ResultSet resultSet) throws SQLException {
     ArrayList<Map<String, Object>> entities = new ArrayList<>();
     while (resultSet.next()) {
       entities.add(getEntityFromResultSet(resultSet));
@@ -86,7 +86,7 @@ public class EntityFactory {
   }
 
   protected static Map<String, Object> getEntityFromResultSet(ResultSet resultSet)
-      throws SQLException {
+          throws SQLException {
     ResultSetMetaData metaData = resultSet.getMetaData();
     int columnCount = metaData.getColumnCount();
     Map<String, Object> resultsMap = new HashMap<>();

@@ -24,10 +24,12 @@ import org.apache.hadoop.security.UserGroupInformation;
 import sqlline.SqlLine;
 
 /**
- * Utility class which automatically performs a Kerberos login and then launches sqlline. Tries to
- * make a pre-populated ticket cache (via kinit before launching) transparently work.
+ * Utility class which automatically performs a Kerberos login and then launches
+ * sqlline. Tries to make a pre-populated ticket cache (via kinit before
+ * launching) transparently work.
  */
 public class SqllineWrapper {
+
   public static final String HBASE_AUTHENTICATION_ATTR = "hbase.security.authentication";
 
   static UserGroupInformation loginIfNecessary() {

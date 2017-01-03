@@ -22,31 +22,32 @@ import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
 public class SchemaNotFoundException extends MetaDataEntityNotFoundException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.SCHEMA_NOT_FOUND;
-    private final String schemaName;
-    private final long timestamp;
 
-    public SchemaNotFoundException(SchemaNotFoundException e, long timestamp) {
-        this(e.schemaName, timestamp);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.SCHEMA_NOT_FOUND;
+  private final String schemaName;
+  private final long timestamp;
 
-    public SchemaNotFoundException(String schemaName) {
-        this(schemaName, HConstants.LATEST_TIMESTAMP);
-    }
+  public SchemaNotFoundException(SchemaNotFoundException e, long timestamp) {
+    this(e.schemaName, timestamp);
+  }
 
-    public SchemaNotFoundException(String schemaName, long timestamp) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).build().toString(), code.getSQLState(),
-                code.getErrorCode(), null);
-        this.schemaName = schemaName;
-        this.timestamp = timestamp;
-    }
+  public SchemaNotFoundException(String schemaName) {
+    this(schemaName, HConstants.LATEST_TIMESTAMP);
+  }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+  public SchemaNotFoundException(String schemaName, long timestamp) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).build().toString(), code.getSQLState(),
+            code.getErrorCode(), null);
+    this.schemaName = schemaName;
+    this.timestamp = timestamp;
+  }
 
-    public long getTimeStamp() {
-        return timestamp;
-    }
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public long getTimeStamp() {
+    return timestamp;
+  }
 }

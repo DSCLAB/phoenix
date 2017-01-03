@@ -24,36 +24,38 @@ import org.apache.phoenix.exception.SQLExceptionInfo;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * Exception thrown when we try to convert one type into a different incompatible type.
- * 
- * 
+ * Exception thrown when we try to convert one type into a different
+ * incompatible type.
+ *
+ *
  * @since 1.0
  */
 public class TypeMismatchException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.TYPE_MISMATCH;
 
-    public TypeMismatchException(String msg) {
-        super(new SQLExceptionInfo.Builder(code).setMessage(msg).build().toString(), code.getSQLState(), code.getErrorCode());
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.TYPE_MISMATCH;
 
-    public static TypeMismatchException newException(PDataType lhs)  {
-        return new TypeMismatchException(getMessage(lhs,null,null));
-    }
-    
-    public static TypeMismatchException newException(PDataType lhs, String location)  {
-        return new TypeMismatchException(getMessage(lhs,null,location));
-    }
-    
-    public static TypeMismatchException newException(PDataType lhs, PDataType rhs)  {
-        return new TypeMismatchException(getMessage(lhs,rhs,null));
-    }
-    
-    public static TypeMismatchException newException(PDataType lhs, PDataType rhs, String location)  {
-        return new TypeMismatchException(getMessage(lhs,rhs,location));
-    }
-    
-    public static String getMessage(PDataType lhs, PDataType rhs, String location) {
-        return lhs + (rhs == null ? "" : " and " + rhs) + (location == null ? "" : " for " + location);
-    }
+  public TypeMismatchException(String msg) {
+    super(new SQLExceptionInfo.Builder(code).setMessage(msg).build().toString(), code.getSQLState(), code.getErrorCode());
+  }
+
+  public static TypeMismatchException newException(PDataType lhs) {
+    return new TypeMismatchException(getMessage(lhs, null, null));
+  }
+
+  public static TypeMismatchException newException(PDataType lhs, String location) {
+    return new TypeMismatchException(getMessage(lhs, null, location));
+  }
+
+  public static TypeMismatchException newException(PDataType lhs, PDataType rhs) {
+    return new TypeMismatchException(getMessage(lhs, rhs, null));
+  }
+
+  public static TypeMismatchException newException(PDataType lhs, PDataType rhs, String location) {
+    return new TypeMismatchException(getMessage(lhs, rhs, location));
+  }
+
+  public static String getMessage(PDataType lhs, PDataType rhs, String location) {
+    return lhs + (rhs == null ? "" : " and " + rhs) + (location == null ? "" : " for " + location);
+  }
 }

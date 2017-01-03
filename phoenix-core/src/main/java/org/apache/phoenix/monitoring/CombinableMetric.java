@@ -17,64 +17,66 @@
  */
 package org.apache.phoenix.monitoring;
 
-
-
 /**
- * Interface for representing a metric that could be published and possibly combined with a metric of the same
- * type.
+ * Interface for representing a metric that could be published and possibly
+ * combined with a metric of the same type.
  */
 public interface CombinableMetric extends Metric {
 
-    String getPublishString();
+  String getPublishString();
 
-    CombinableMetric combine(CombinableMetric metric);
+  CombinableMetric combine(CombinableMetric metric);
 
-    public class NoOpRequestMetric implements CombinableMetric {
+  public class NoOpRequestMetric implements CombinableMetric {
 
-        public static NoOpRequestMetric INSTANCE = new NoOpRequestMetric();
-        private static final String EMPTY_STRING = "";
+    public static NoOpRequestMetric INSTANCE = new NoOpRequestMetric();
+    private static final String EMPTY_STRING = "";
 
-        @Override
-        public String getName() {
-            return EMPTY_STRING;
-        }
-
-        @Override
-        public String getDescription() {
-            return EMPTY_STRING;
-        }
-
-        @Override
-        public long getValue() {
-            return 0;
-        }
-
-        @Override
-        public void change(long delta) {}
-
-        @Override
-        public void increment() {}
-
-        @Override
-        public String getCurrentMetricState() {
-            return EMPTY_STRING;
-        }
-
-        @Override
-        public void reset() {}
-
-        @Override
-        public String getPublishString() {
-            return EMPTY_STRING;
-        }
-
-        @Override
-        public CombinableMetric combine(CombinableMetric metric) {
-            return INSTANCE;
-        }
-
-        @Override
-        public void decrement() {}
+    @Override
+    public String getName() {
+      return EMPTY_STRING;
     }
+
+    @Override
+    public String getDescription() {
+      return EMPTY_STRING;
+    }
+
+    @Override
+    public long getValue() {
+      return 0;
+    }
+
+    @Override
+    public void change(long delta) {
+    }
+
+    @Override
+    public void increment() {
+    }
+
+    @Override
+    public String getCurrentMetricState() {
+      return EMPTY_STRING;
+    }
+
+    @Override
+    public void reset() {
+    }
+
+    @Override
+    public String getPublishString() {
+      return EMPTY_STRING;
+    }
+
+    @Override
+    public CombinableMetric combine(CombinableMetric metric) {
+      return INSTANCE;
+    }
+
+    @Override
+    public void decrement() {
+    }
+  }
 
 }

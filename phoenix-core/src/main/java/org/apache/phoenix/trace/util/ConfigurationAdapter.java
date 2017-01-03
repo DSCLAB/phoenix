@@ -28,6 +28,7 @@ abstract class ConfigurationAdapter {
   public abstract String get(String key, String defaultValue);
 
   public static class ConnectionConfigurationAdapter extends ConfigurationAdapter {
+
     private PhoenixConnection conn;
 
     public ConnectionConfigurationAdapter(PhoenixConnection connection) {
@@ -41,6 +42,7 @@ abstract class ConfigurationAdapter {
   }
 
   public static class HadoopConfigConfigurationAdapter extends ConfigurationAdapter {
+
     private Configuration conf;
 
     public HadoopConfigConfigurationAdapter(Configuration conf) {

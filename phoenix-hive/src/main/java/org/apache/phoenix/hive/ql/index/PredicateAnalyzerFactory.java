@@ -22,19 +22,20 @@ import org.apache.phoenix.hive.ql.index.IndexPredicateAnalyzer.FieldValidator;
 import java.util.List;
 
 public class PredicateAnalyzerFactory {
-    public static IndexPredicateAnalyzer createPredicateAnalyzer(List<String> ppdColumnList,
-                                                                 FieldValidator fieldValdator) {
-        // Create analyzer for conditions  =, <, <=, >, >=
-        IndexPredicateAnalyzer analyzer = IndexPredicateAnalyzer.createAnalyzer(false);
 
-        for (String columnName : ppdColumnList) {
-            analyzer.allowColumnName(columnName);
-        }
+  public static IndexPredicateAnalyzer createPredicateAnalyzer(List<String> ppdColumnList,
+          FieldValidator fieldValdator) {
+    // Create analyzer for conditions  =, <, <=, >, >=
+    IndexPredicateAnalyzer analyzer = IndexPredicateAnalyzer.createAnalyzer(false);
 
-        analyzer.setAcceptsFields(true);
-        analyzer.setFieldValidator(fieldValdator);
-
-        return analyzer;
+    for (String columnName : ppdColumnList) {
+      analyzer.allowColumnName(columnName);
     }
+
+    analyzer.setAcceptsFields(true);
+    analyzer.setFieldValidator(fieldValdator);
+
+    return analyzer;
+  }
 
 }

@@ -28,31 +28,31 @@ import com.google.common.collect.Multimap;
 
 public class DelegateIndexFailurePolicy implements IndexFailurePolicy {
 
-    private final IndexFailurePolicy delegate;
-    
-    public DelegateIndexFailurePolicy(IndexFailurePolicy delegate) {
-        this.delegate = delegate;
-    }
+  private final IndexFailurePolicy delegate;
 
-    @Override
-    public void handleFailure(Multimap<HTableInterfaceReference, Mutation> attempted, Exception cause)
-            throws IOException {
-        delegate.handleFailure(attempted, cause);
-    }
+  public DelegateIndexFailurePolicy(IndexFailurePolicy delegate) {
+    this.delegate = delegate;
+  }
 
-    @Override
-    public boolean isStopped() {
-        return delegate.isStopped();
-    }
+  @Override
+  public void handleFailure(Multimap<HTableInterfaceReference, Mutation> attempted, Exception cause)
+          throws IOException {
+    delegate.handleFailure(attempted, cause);
+  }
 
-    @Override
-    public void setup(Stoppable parent, RegionCoprocessorEnvironment env) {
-        delegate.setup(parent, env);
-    }
+  @Override
+  public boolean isStopped() {
+    return delegate.isStopped();
+  }
 
-    @Override
-    public void stop(String arg0) {
-        delegate.stop(arg0);
-    }
+  @Override
+  public void setup(Stoppable parent, RegionCoprocessorEnvironment env) {
+    delegate.setup(parent, env);
+  }
+
+  @Override
+  public void stop(String arg0) {
+    delegate.stop(arg0);
+  }
 
 }

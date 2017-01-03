@@ -43,41 +43,41 @@ import org.junit.BeforeClass;
 import com.google.common.collect.Maps;
 
 public class BasePigIT extends BaseHBaseManagedTimeIT {
-    protected TupleFactory tupleFactory;
-    protected String zkQuorum;
-    protected Connection conn;
-    protected Configuration conf;
-    protected PigServer pigServer;
 
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(3);
-        props.put(QueryServices.EXTRA_JDBC_ARGUMENTS_ATTRIB, QueryServicesOptions.DEFAULT_EXTRA_JDBC_ARGUMENTS);
-        // Must update config before starting server
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-    
-    @Before
-    public void setUp() throws Exception {
-        conf = getTestClusterConfig();
-        conf.set(QueryServices.EXTRA_JDBC_ARGUMENTS_ATTRIB, QueryServicesOptions.DEFAULT_EXTRA_JDBC_ARGUMENTS);
-        pigServer = new PigServer(ExecType.LOCAL, conf);
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        conn = DriverManager.getConnection(getUrl(), props);
-        zkQuorum = LOCALHOST + JDBC_PROTOCOL_SEPARATOR + getZKClientPort(conf);
-        tupleFactory = TupleFactory.getInstance();
-    }
+  protected TupleFactory tupleFactory;
+  protected String zkQuorum;
+  protected Connection conn;
+  protected Configuration conf;
+  protected PigServer pigServer;
 
-    @After
-    public void tearDown() throws Exception {
-        if(conn != null) {
-            conn.close();
-        }
-        if (pigServer != null) {
-            pigServer.shutdown();
-        }
-    }
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(3);
+    props.put(QueryServices.EXTRA_JDBC_ARGUMENTS_ATTRIB, QueryServicesOptions.DEFAULT_EXTRA_JDBC_ARGUMENTS);
+    // Must update config before starting server
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 
+  @Before
+  public void setUp() throws Exception {
+    conf = getTestClusterConfig();
+    conf.set(QueryServices.EXTRA_JDBC_ARGUMENTS_ATTRIB, QueryServicesOptions.DEFAULT_EXTRA_JDBC_ARGUMENTS);
+    pigServer = new PigServer(ExecType.LOCAL, conf);
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    conn = DriverManager.getConnection(getUrl(), props);
+    zkQuorum = LOCALHOST + JDBC_PROTOCOL_SEPARATOR + getZKClientPort(conf);
+    tupleFactory = TupleFactory.getInstance();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    if (conn != null) {
+      conn.close();
+    }
+    if (pigServer != null) {
+      pigServer.shutdown();
+    }
+  }
 
 }

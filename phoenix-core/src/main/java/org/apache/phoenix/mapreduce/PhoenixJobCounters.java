@@ -18,12 +18,12 @@
 package org.apache.phoenix.mapreduce;
 
 /**
- *  Counters used during Map Reduce jobs
+ * Counters used during Map Reduce jobs
  *
  */
 public enum PhoenixJobCounters {
 
-    INPUT_RECORDS,
-    FAILED_RECORDS,
-    OUTPUT_RECORDS;
+  INPUT_RECORDS,
+  FAILED_RECORDS,
+  OUTPUT_RECORDS;
 }

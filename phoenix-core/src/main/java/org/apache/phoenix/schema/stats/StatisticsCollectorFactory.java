@@ -23,43 +23,42 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.phoenix.query.QueryServices;
 
 /**
- * Provides new {@link StatisticsCollector} instances based on configuration settings for a
- * table (or system-wide configuration of statistics).
+ * Provides new {@link StatisticsCollector} instances based on configuration
+ * settings for a table (or system-wide configuration of statistics).
  */
 public class StatisticsCollectorFactory {
 
-    public static StatisticsCollector createStatisticsCollector(RegionCoprocessorEnvironment env,
-            String tableName, long clientTimestamp, byte[] guidepostWidthBytes,
-            byte[] guidepostsPerRegionBytes) throws IOException {
-        if (statisticsEnabled(env)) {
-            return new DefaultStatisticsCollector(env, tableName, clientTimestamp, null,
-                    guidepostWidthBytes, guidepostsPerRegionBytes);
-        } else {
-            return new NoOpStatisticsCollector();
-        }
+  public static StatisticsCollector createStatisticsCollector(RegionCoprocessorEnvironment env,
+          String tableName, long clientTimestamp, byte[] guidepostWidthBytes,
+          byte[] guidepostsPerRegionBytes) throws IOException {
+    if (statisticsEnabled(env)) {
+      return new DefaultStatisticsCollector(env, tableName, clientTimestamp, null,
+              guidepostWidthBytes, guidepostsPerRegionBytes);
+    } else {
+      return new NoOpStatisticsCollector();
     }
+  }
 
-    public static StatisticsCollector createStatisticsCollector(
-            RegionCoprocessorEnvironment env, String tableName, long clientTimeStamp,
-            byte[] storeName) throws IOException {
-        if (statisticsEnabled(env)) {
-            return new DefaultStatisticsCollector(env, tableName, clientTimeStamp, storeName,
-                    null, null);
-        } else {
-            return new NoOpStatisticsCollector();
-        }
+  public static StatisticsCollector createStatisticsCollector(
+          RegionCoprocessorEnvironment env, String tableName, long clientTimeStamp,
+          byte[] storeName) throws IOException {
+    if (statisticsEnabled(env)) {
+      return new DefaultStatisticsCollector(env, tableName, clientTimeStamp, storeName,
+              null, null);
+    } else {
+      return new NoOpStatisticsCollector();
     }
+  }
 
-    
-    /**
-     * Determines if statistics are enabled (which is the default). This is done on the
-     * RegionCoprocessorEnvironment for now to allow setting this on a per-table basis, although
-     * it could be moved to the general table metadata in the future if there is a realistic
-     * use case for that.
-     */
-    private static boolean statisticsEnabled(RegionCoprocessorEnvironment env) {
-        return env.getConfiguration().getBoolean(QueryServices.STATS_ENABLED_ATTRIB, true) &&
-                StatisticsUtil.isStatsEnabled(env.getRegionInfo().getTable());
-    }
+  /**
+   * Determines if statistics are enabled (which is the default). This is done
+   * on the RegionCoprocessorEnvironment for now to allow setting this on a
+   * per-table basis, although it could be moved to the general table metadata
+   * in the future if there is a realistic use case for that.
+   */
+  private static boolean statisticsEnabled(RegionCoprocessorEnvironment env) {
+    return env.getConfiguration().getBoolean(QueryServices.STATS_ENABLED_ATTRIB, true)
+            && StatisticsUtil.isStatsEnabled(env.getRegionInfo().getTable());
+  }
 
 }

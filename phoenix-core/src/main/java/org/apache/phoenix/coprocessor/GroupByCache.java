@@ -24,15 +24,17 @@ import org.apache.phoenix.expression.aggregator.Aggregator;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * 
- * Interface to abstract the way in which distinct group by
- * elements are cached
  *
- * 
+ * Interface to abstract the way in which distinct group by elements are cached
+ *
+ *
  * @since 3.0.0
  */
 public interface GroupByCache extends Closeable {
-    long size();
-    Aggregator[] cache(ImmutableBytesPtr key);
-    RegionScanner getScanner(RegionScanner s);
+
+  long size();
+
+  Aggregator[] cache(ImmutableBytesPtr key);
+
+  RegionScanner getScanner(RegionScanner s);
 }

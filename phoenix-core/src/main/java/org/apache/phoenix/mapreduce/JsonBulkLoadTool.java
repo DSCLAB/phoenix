@@ -27,27 +27,27 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.phoenix.util.ColumnInfo;
 
 /**
- * A tool for running MapReduce-based ingests of JSON data. Nested JSON data structures are not
- * handled, though lists are converted into typed ARRAYS.
+ * A tool for running MapReduce-based ingests of JSON data. Nested JSON data
+ * structures are not handled, though lists are converted into typed ARRAYS.
  */
 public class JsonBulkLoadTool extends AbstractBulkLoadTool {
 
-    @Override
-    protected void configureOptions(CommandLine cmdLine, List<ColumnInfo> importColumns,
-                                         Configuration conf) throws SQLException {
-        // noop
-    }
+  @Override
+  protected void configureOptions(CommandLine cmdLine, List<ColumnInfo> importColumns,
+          Configuration conf) throws SQLException {
+    // noop
+  }
 
-    @Override
-    protected void setupJob(Job job) {
-        // Allow overriding the job jar setting by using a -D system property at startup
-        if (job.getJar() == null) {
-            job.setJarByClass(JsonToKeyValueMapper.class);
-        }
-        job.setMapperClass(JsonToKeyValueMapper.class);
+  @Override
+  protected void setupJob(Job job) {
+    // Allow overriding the job jar setting by using a -D system property at startup
+    if (job.getJar() == null) {
+      job.setJarByClass(JsonToKeyValueMapper.class);
     }
+    job.setMapperClass(JsonToKeyValueMapper.class);
+  }
 
-    public static void main(String[] args) throws Exception {
-        ToolRunner.run(new JsonBulkLoadTool(), args);
-    }
+  public static void main(String[] args) throws Exception {
+    ToolRunner.run(new JsonBulkLoadTool(), args);
+  }
 }

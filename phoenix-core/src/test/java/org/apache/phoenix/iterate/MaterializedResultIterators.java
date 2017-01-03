@@ -25,42 +25,44 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.phoenix.query.KeyRange;
 
 /**
- * 
- * ResultIteraors implementation backed by in-memory list of PeekingResultIterator
+ *
+ * ResultIteraors implementation backed by in-memory list of
+ * PeekingResultIterator
  *
  */
 public class MaterializedResultIterators implements ResultIterators {
-    private final List<PeekingResultIterator> results;
 
-    public MaterializedResultIterators(List<PeekingResultIterator> results) {
-        this.results = results;
-    }
+  private final List<PeekingResultIterator> results;
 
-    @Override
-    public List<PeekingResultIterator> getIterators() throws SQLException {
-        return results;
-    }
+  public MaterializedResultIterators(List<PeekingResultIterator> results) {
+    this.results = results;
+  }
 
-    @Override
-    public int size() {
-        return results.size();
-    }
+  @Override
+  public List<PeekingResultIterator> getIterators() throws SQLException {
+    return results;
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {
-    }
+  @Override
+  public int size() {
+    return results.size();
+  }
 
-    @Override
-    public List<KeyRange> getSplits() {
-    	return Collections.emptyList();
-    }
+  @Override
+  public void explain(List<String> planSteps) {
+  }
 
-    @Override
-    public List<List<Scan>> getScans() {
-    	return Collections.emptyList();
-    }
+  @Override
+  public List<KeyRange> getSplits() {
+    return Collections.emptyList();
+  }
 
-    @Override
-    public void close() throws SQLException {
-    }
+  @Override
+  public List<List<Scan>> getScans() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public void close() throws SQLException {
+  }
 }

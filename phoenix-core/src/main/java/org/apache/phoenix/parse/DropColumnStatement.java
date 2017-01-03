@@ -22,20 +22,21 @@ import java.util.List;
 import org.apache.phoenix.schema.PTableType;
 
 public class DropColumnStatement extends AlterTableStatement {
-    private final List<ColumnName> columnRefs;
-    private final boolean ifExists;
-    
-    protected DropColumnStatement(NamedTableNode table, PTableType tableType, List<ColumnName> columnRefs, boolean ifExists) {
-        super(table, tableType);
-        this.columnRefs = columnRefs;
-        this.ifExists = ifExists;
-    }
 
-    public List<ColumnName> getColumnRefs() {
-        return columnRefs;
-    }
+  private final List<ColumnName> columnRefs;
+  private final boolean ifExists;
 
-    public boolean ifExists() {
-        return ifExists;
-    }
+  protected DropColumnStatement(NamedTableNode table, PTableType tableType, List<ColumnName> columnRefs, boolean ifExists) {
+    super(table, tableType);
+    this.columnRefs = columnRefs;
+    this.ifExists = ifExists;
+  }
+
+  public List<ColumnName> getColumnRefs() {
+    return columnRefs;
+  }
+
+  public boolean ifExists() {
+    return ifExists;
+  }
 }

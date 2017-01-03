@@ -21,62 +21,66 @@ import java.sql.SQLException;
 
 import org.apache.phoenix.compile.ColumnResolver;
 
-
-
 /**
- * 
- * Node representing the selection of all columns (*) in the SELECT clause of SQL
  *
- * 
+ * Node representing the selection of all columns (*) in the SELECT clause of
+ * SQL
+ *
+ *
  * @since 0.1
  */
 public class WildcardParseNode extends TerminalParseNode {
-    public static final String NAME = "*";
-    public static final WildcardParseNode INSTANCE = new WildcardParseNode(false);
-    public static final WildcardParseNode REWRITE_INSTANCE = new WildcardParseNode(true);
 
-    private final boolean isRewrite;
+  public static final String NAME = "*";
+  public static final WildcardParseNode INSTANCE = new WildcardParseNode(false);
+  public static final WildcardParseNode REWRITE_INSTANCE = new WildcardParseNode(true);
 
-    private WildcardParseNode(boolean isRewrite) {
-        this.isRewrite = isRewrite;
+  private final boolean isRewrite;
+
+  private WildcardParseNode(boolean isRewrite) {
+    this.isRewrite = isRewrite;
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    return visitor.visit(this);
+  }
+
+  public boolean isRewrite() {
+    return isRewrite;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + (isRewrite ? 1231 : 1237);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        return visitor.visit(this);
+    if (obj == null) {
+      return false;
     }
-
-    public boolean isRewrite() {
-        return isRewrite;
+    if (getClass() != obj.getClass()) {
+      return false;
     }
+    WildcardParseNode other = (WildcardParseNode) obj;
+    if (isRewrite != other.isRewrite) {
+      return false;
+    }
+    return true;
+  }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (isRewrite ? 1231 : 1237);
-		return result;
-	}
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    buf.append(' ');
+    buf.append(NAME);
+    buf.append(' ');
+  }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		WildcardParseNode other = (WildcardParseNode) obj;
-		if (isRewrite != other.isRewrite)
-			return false;
-		return true;
-	}
-
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        buf.append(' ');
-        buf.append(NAME);
-        buf.append(' ');
-    }    
-    
 }

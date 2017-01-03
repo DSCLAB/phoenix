@@ -32,16 +32,17 @@ import org.apache.phoenix.util.PropertiesUtil;
 import org.junit.Test;
 
 public class CreateTableCompilerTest extends BaseConnectionlessQueryTest {
-    @Test
-    public void testCreateTableWithDuplicateColumns() throws SQLException {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        PhoenixConnection conn = DriverManager.getConnection(getUrl(), props).unwrap(PhoenixConnection.class);
-        String ddl = "CREATE TABLE T (ID INTEGER PRIMARY KEY, DUPE INTEGER, DUPE INTEGER)";
-        try {
-            conn.createStatement().execute(ddl);
-            fail();
-        } catch (ColumnAlreadyExistsException e) {
-            assertEquals("DUPE", e.getColumnName());
-        }
+
+  @Test
+  public void testCreateTableWithDuplicateColumns() throws SQLException {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    PhoenixConnection conn = DriverManager.getConnection(getUrl(), props).unwrap(PhoenixConnection.class);
+    String ddl = "CREATE TABLE T (ID INTEGER PRIMARY KEY, DUPE INTEGER, DUPE INTEGER)";
+    try {
+      conn.createStatement().execute(ddl);
+      fail();
+    } catch (ColumnAlreadyExistsException e) {
+      assertEquals("DUPE", e.getColumnName());
     }
+  }
 }

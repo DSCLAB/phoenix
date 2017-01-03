@@ -31,41 +31,41 @@ import org.junit.Test;
 
 public class BuiltinFunctionConstructorTest {
 
-    @Test
-    public void testChildrenListConstructors() throws Exception {
-        ExpressionType[] types = ExpressionType.values();
-        for(int i = 0; i < types.length; i++) {
-            try {
-                Class<? extends Expression> expressionClass= types[i].getExpressionClass();
-                if(!Modifier.isAbstract( expressionClass.getModifiers() ) && (ScalarFunction.class.isAssignableFrom(expressionClass)) && (expressionClass != UDFExpression.class)) {
-                	Method cloneMethod = expressionClass.getMethod("clone", List.class);
-                	assertNotNull(cloneMethod);
-                	// ScalarFunctions that implement clone(List<Expression>) don't need to implement a constructor that takes a List<Expression>  
-                	if (cloneMethod.getDeclaringClass() == ScalarFunction.class) {
-	                    Constructor cons = expressionClass.getDeclaredConstructor(List.class);
-	                    assertTrue("Constructor for " + expressionClass + " is not public", Modifier.isPublic(cons.getModifiers()));
-                	}
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Unable to find required List<Expression> constructor " + types[i].getExpressionClass().getName(), e);
-            }
+  @Test
+  public void testChildrenListConstructors() throws Exception {
+    ExpressionType[] types = ExpressionType.values();
+    for (int i = 0; i < types.length; i++) {
+      try {
+        Class<? extends Expression> expressionClass = types[i].getExpressionClass();
+        if (!Modifier.isAbstract(expressionClass.getModifiers()) && (ScalarFunction.class.isAssignableFrom(expressionClass)) && (expressionClass != UDFExpression.class)) {
+          Method cloneMethod = expressionClass.getMethod("clone", List.class);
+          assertNotNull(cloneMethod);
+          // ScalarFunctions that implement clone(List<Expression>) don't need to implement a constructor that takes a List<Expression>  
+          if (cloneMethod.getDeclaringClass() == ScalarFunction.class) {
+            Constructor cons = expressionClass.getDeclaredConstructor(List.class);
+            assertTrue("Constructor for " + expressionClass + " is not public", Modifier.isPublic(cons.getModifiers()));
+          }
         }
+      } catch (Exception e) {
+        throw new RuntimeException("Unable to find required List<Expression> constructor " + types[i].getExpressionClass().getName(), e);
+      }
     }
+  }
 
-    @Test
-    public void testNoArgumentConstructors() {
-        ExpressionType[] types = ExpressionType.values();
-        for(int i = 0; i < types.length; i++) {
-            try {
-                if(!AggregateFunction.class.isAssignableFrom(types[i].getExpressionClass())) {
-                    Constructor cons = types[i].getExpressionClass().getDeclaredConstructor();
-                    cons.setAccessible(true);
-                    cons.newInstance();
-                }
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            } catch (Exception e) {
-            }
+  @Test
+  public void testNoArgumentConstructors() {
+    ExpressionType[] types = ExpressionType.values();
+    for (int i = 0; i < types.length; i++) {
+      try {
+        if (!AggregateFunction.class.isAssignableFrom(types[i].getExpressionClass())) {
+          Constructor cons = types[i].getExpressionClass().getDeclaredConstructor();
+          cons.setAccessible(true);
+          cons.newInstance();
         }
+      } catch (NoSuchMethodException e) {
+        throw new RuntimeException(e);
+      } catch (Exception e) {
+      }
     }
+  }
 }

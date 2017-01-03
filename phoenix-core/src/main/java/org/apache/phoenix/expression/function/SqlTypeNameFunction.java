@@ -32,55 +32,54 @@ import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ByteUtil;
 
-
 /**
- * 
- * Function used to get the SQL type name from the SQL type integer.
- * Usage:
- * SqlTypeName(12)
- * will return 'VARCHAR' based on {@link java.sql.Types#VARCHAR} being 12
- * 
- * 
+ *
+ * Function used to get the SQL type name from the SQL type integer. Usage:
+ * SqlTypeName(12) will return 'VARCHAR' based on {@link java.sql.Types#VARCHAR}
+ * being 12
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=SqlTypeNameFunction.NAME, args= {
-    @Argument(allowedTypes= PInteger.class)} )
+@BuiltInFunction(name = SqlTypeNameFunction.NAME, args = {
+  @Argument(allowedTypes = PInteger.class)})
 public class SqlTypeNameFunction extends ScalarFunction {
-    public static final String NAME = "SqlTypeName";
 
-    public SqlTypeNameFunction() {
-    }
-    
-    public SqlTypeNameFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression child = children.get(0);
-        if (!child.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if (ptr.getLength() == 0) {
-            return true;
-        }
-        int sqlType = child.getDataType().getCodec().decodeInt(ptr, child.getSortOrder());
-        try {
-            byte[] sqlTypeNameBytes = PDataType.fromTypeId(sqlType).getSqlTypeNameBytes();
-            ptr.set(sqlTypeNameBytes);
-        } catch (IllegalDataException e) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-        }
-        return true;
-    }
+  public static final String NAME = "SqlTypeName";
 
-    @Override
-    public PDataType getDataType() {
-        return PVarchar.INSTANCE;
+  public SqlTypeNameFunction() {
+  }
+
+  public SqlTypeNameFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression child = children.get(0);
+    if (!child.evaluate(tuple, ptr)) {
+      return false;
     }
-    
-    @Override
-    public String getName() {
-        return NAME;
+    if (ptr.getLength() == 0) {
+      return true;
     }
+    int sqlType = child.getDataType().getCodec().decodeInt(ptr, child.getSortOrder());
+    try {
+      byte[] sqlTypeNameBytes = PDataType.fromTypeId(sqlType).getSqlTypeNameBytes();
+      ptr.set(sqlTypeNameBytes);
+    } catch (IllegalDataException e) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+    }
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PVarchar.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

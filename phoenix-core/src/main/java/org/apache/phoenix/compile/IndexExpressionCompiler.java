@@ -20,34 +20,35 @@ import org.apache.phoenix.schema.ColumnRef;
  */
 public class IndexExpressionCompiler extends ExpressionCompiler {
 
-    //
-    private ColumnRef columnRef;
+  //
+  private ColumnRef columnRef;
 
-    public IndexExpressionCompiler(StatementContext context) {
-        super(context);
-        this.columnRef = null;
-    }
+  public IndexExpressionCompiler(StatementContext context) {
+    super(context);
+    this.columnRef = null;
+  }
 
-    @Override
-    public void reset() {
-        super.reset();
-        this.columnRef = null;
-    }
+  @Override
+  public void reset() {
+    super.reset();
+    this.columnRef = null;
+  }
 
-    @Override
-    protected ColumnRef resolveColumn(ColumnParseNode node) throws SQLException {
-        ColumnRef columnRef = super.resolveColumn(node);
-        if (isTopLevel()) {
-            this.columnRef = columnRef;
-        }
-        return columnRef;
+  @Override
+  protected ColumnRef resolveColumn(ColumnParseNode node) throws SQLException {
+    ColumnRef columnRef = super.resolveColumn(node);
+    if (isTopLevel()) {
+      this.columnRef = columnRef;
     }
+    return columnRef;
+  }
 
-    /**
-     * @return if the expression being compiled is a regular column the column ref, else is null
-     */
-    public ColumnRef getColumnRef() {
-        return columnRef;
-    }
+  /**
+   * @return if the expression being compiled is a regular column the column
+   * ref, else is null
+   */
+  public ColumnRef getColumnRef() {
+    return columnRef;
+  }
 
 }

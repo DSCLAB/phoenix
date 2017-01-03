@@ -35,40 +35,41 @@ import org.apache.phoenix.query.BaseConnectionlessQueryTest;
 import org.junit.Test;
 
 public class MutationTest extends BaseConnectionlessQueryTest {
-    @Test
-    public void testDurability() throws Exception {
-        testDurability(true);
-        testDurability(false);
-    }
 
-    private void testDurability(boolean disableWAL) throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        try {
-            Durability expectedDurability = disableWAL ? Durability.SKIP_WAL : Durability.USE_DEFAULT;
-            conn.setAutoCommit(false);
-            conn.createStatement().execute("CREATE TABLE t1 (k integer not null primary key, a.k varchar, b.k varchar) " + (disableWAL ? "DISABLE_WAL=true" : ""));
-            conn.createStatement().execute("UPSERT INTO t1 VALUES(1,'a','b')");
-            conn.createStatement().execute("DELETE FROM t1 WHERE k=2");
-            assertDurability(conn,expectedDurability);
-            conn.createStatement().execute("DELETE FROM t1 WHERE k=1");
-            assertDurability(conn,expectedDurability);
-            conn.createStatement().execute("DROP TABLE t1");
-        } finally {
-            conn.close();
-        }
+  @Test
+  public void testDurability() throws Exception {
+    testDurability(true);
+    testDurability(false);
+  }
+
+  private void testDurability(boolean disableWAL) throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    try {
+      Durability expectedDurability = disableWAL ? Durability.SKIP_WAL : Durability.USE_DEFAULT;
+      conn.setAutoCommit(false);
+      conn.createStatement().execute("CREATE TABLE t1 (k integer not null primary key, a.k varchar, b.k varchar) " + (disableWAL ? "DISABLE_WAL=true" : ""));
+      conn.createStatement().execute("UPSERT INTO t1 VALUES(1,'a','b')");
+      conn.createStatement().execute("DELETE FROM t1 WHERE k=2");
+      assertDurability(conn, expectedDurability);
+      conn.createStatement().execute("DELETE FROM t1 WHERE k=1");
+      assertDurability(conn, expectedDurability);
+      conn.createStatement().execute("DROP TABLE t1");
+    } finally {
+      conn.close();
     }
-    
-    private void assertDurability(Connection conn, Durability durability) throws SQLException {
-        PhoenixConnection pconn = conn.unwrap(PhoenixConnection.class);
-        Iterator<Pair<byte[], List<Mutation>>> it = pconn.getMutationState().toMutations();
-        assertTrue(it.hasNext());
-        while (it.hasNext()) {
-            Pair<byte[], List<Mutation>> pair = it.next();
-            assertFalse(pair.getSecond().isEmpty());
-            for (Mutation m : pair.getSecond()) {
-                assertEquals(durability, m.getDurability());
-            }
-        }
+  }
+
+  private void assertDurability(Connection conn, Durability durability) throws SQLException {
+    PhoenixConnection pconn = conn.unwrap(PhoenixConnection.class);
+    Iterator<Pair<byte[], List<Mutation>>> it = pconn.getMutationState().toMutations();
+    assertTrue(it.hasNext());
+    while (it.hasNext()) {
+      Pair<byte[], List<Mutation>> pair = it.next();
+      assertFalse(pair.getSecond().isEmpty());
+      for (Mutation m : pair.getSecond()) {
+        assertEquals(durability, m.getDurability());
+      }
     }
+  }
 
 }

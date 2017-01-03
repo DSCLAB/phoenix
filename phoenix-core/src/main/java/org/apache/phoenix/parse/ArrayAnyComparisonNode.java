@@ -21,27 +21,28 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-/** 
- * The Expression a = ANY(b) where b is of type array is rewritten in this
- * node as ANY(a = b(n))
+
+/**
+ * The Expression a = ANY(b) where b is of type array is rewritten in this node
+ * as ANY(a = b(n))
  */
 public class ArrayAnyComparisonNode extends ArrayAllAnyComparisonNode {
 
-    ArrayAnyComparisonNode(ParseNode rhs, ComparisonParseNode compareNode) {
-        super(Arrays.<ParseNode>asList(rhs, compareNode));
-    }
-    
-    @Override
-    public String getType() {
-        return "ANY";
-    }
+  ArrayAnyComparisonNode(ParseNode rhs, ComparisonParseNode compareNode) {
+    super(Arrays.<ParseNode>asList(rhs, compareNode));
+  }
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  @Override
+  public String getType() {
+    return "ANY";
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
+    return visitor.visitLeave(this, l);
+  }
 }

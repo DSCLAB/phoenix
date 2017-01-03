@@ -20,27 +20,26 @@ package org.apache.phoenix.parse;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 
-
 /**
- * 
+ *
  * Node representing the greater than operator (>) in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public class GreaterThanParseNode extends ComparisonParseNode {
 
-    GreaterThanParseNode(ParseNode lhs, ParseNode rhs) {
-        super(lhs, rhs);
-    }
+  GreaterThanParseNode(ParseNode lhs, ParseNode rhs) {
+    super(lhs, rhs);
+  }
 
-    @Override
-    public CompareOp getFilterOp() {
-        return CompareFilter.CompareOp.GREATER;
-    }
+  @Override
+  public CompareOp getFilterOp() {
+    return CompareFilter.CompareOp.GREATER;
+  }
 
-    @Override
-    public CompareOp getInvertFilterOp() {
-        return CompareOp.LESS;
-    }
+  @Override
+  public CompareOp getInvertFilterOp() {
+    return CompareOp.LESS;
+  }
 }

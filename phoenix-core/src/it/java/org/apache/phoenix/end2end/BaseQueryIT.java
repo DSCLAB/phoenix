@@ -46,90 +46,89 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.google.common.collect.Lists;
 
-
-
 /**
- * 
+ *
  * Basic tests for Phoenix JDBC implementation
  *
- * 
+ *
  * @since 0.1
  */
-
 @RunWith(Parameterized.class)
 public abstract class BaseQueryIT extends BaseClientManagedTimeIT {
-    protected static final String tenantId = getOrganizationId();
-    protected static final String ATABLE_INDEX_NAME = "ATABLE_IDX";
-    protected static final long BATCH_SIZE = 3;
-    
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        doSetup(null);
-    }
-    
-    protected static void doSetup(Map<String,String> customProps) throws Exception {
-        Map<String,String> props = getDefaultProps();
-        if(customProps != null) {
-        	props.putAll(customProps);
-        }
-        // Make a small batch size to test multiple calls to reserve sequences
-        props.put(QueryServices.SEQUENCE_CACHE_SIZE_ATTRIB, Long.toString(BATCH_SIZE));
-        // Must update config before starting server
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-    
-    protected long ts;
-    protected Date date;
-    private String indexDDL;
-    
-    public BaseQueryIT(String indexDDL) {
-        this.indexDDL = indexDDL;
-    }
-    
-    @Before
-    public void initTable() throws Exception {
-         ts = nextTimestamp();
-        initATableValues(tenantId, getDefaultSplits(tenantId), date=new Date(System.currentTimeMillis()), ts);
-        if (indexDDL != null && indexDDL.length() > 0) {
-            Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-            props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts));
-            Connection conn = DriverManager.getConnection(getUrl(), props);
-            conn.createStatement().execute(indexDDL);
-        }
-    }
-    
-    @Parameters(name="{0}")
-    public static Collection<Object> data() {
-        List<Object> testCases = Lists.newArrayList();
-        testCases.add(new String[] { "CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
-                + "    A_STRING, " + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer, a_string) INCLUDE ("
-                + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer) INCLUDE ("
-                + "    A_STRING, " + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
-                + "    A_STRING, " + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer, a_string) INCLUDE ("
-                + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer) INCLUDE ("
-                + "    A_STRING, " + "    B_STRING, " + "    A_DATE)" });
-        testCases.add(new String[] { "" });
-        return testCases;
-    }
-    
-    protected static boolean compare(CompareOp op, ImmutableBytesWritable lhsOutPtr, ImmutableBytesWritable rhsOutPtr) {
-        int compareResult = Bytes.compareTo(lhsOutPtr.get(), lhsOutPtr.getOffset(), lhsOutPtr.getLength(), rhsOutPtr.get(), rhsOutPtr.getOffset(), rhsOutPtr.getLength());
-        return ByteUtil.compare(op, compareResult);
-    }
 
-    protected static void analyzeTable(Connection conn, String tableName) throws IOException, SQLException {
-        String query = "UPDATE STATISTICS " + tableName;
-        conn.createStatement().execute(query);
+  protected static final String tenantId = getOrganizationId();
+  protected static final String ATABLE_INDEX_NAME = "ATABLE_IDX";
+  protected static final long BATCH_SIZE = 3;
+
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    doSetup(null);
+  }
+
+  protected static void doSetup(Map<String, String> customProps) throws Exception {
+    Map<String, String> props = getDefaultProps();
+    if (customProps != null) {
+      props.putAll(customProps);
     }
-    
-    private static AtomicInteger runCount = new AtomicInteger(0);
-    protected static int nextRunCount() {
-        return runCount.getAndAdd(1);
+    // Make a small batch size to test multiple calls to reserve sequences
+    props.put(QueryServices.SEQUENCE_CACHE_SIZE_ATTRIB, Long.toString(BATCH_SIZE));
+    // Must update config before starting server
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
+
+  protected long ts;
+  protected Date date;
+  private String indexDDL;
+
+  public BaseQueryIT(String indexDDL) {
+    this.indexDDL = indexDDL;
+  }
+
+  @Before
+  public void initTable() throws Exception {
+    ts = nextTimestamp();
+    initATableValues(tenantId, getDefaultSplits(tenantId), date = new Date(System.currentTimeMillis()), ts);
+    if (indexDDL != null && indexDDL.length() > 0) {
+      Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+      props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts));
+      Connection conn = DriverManager.getConnection(getUrl(), props);
+      conn.createStatement().execute(indexDDL);
     }
+  }
+
+  @Parameters(name = "{0}")
+  public static Collection<Object> data() {
+    List<Object> testCases = Lists.newArrayList();
+    testCases.add(new String[]{"CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
+      + "    A_STRING, " + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{"CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer, a_string) INCLUDE ("
+      + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{"CREATE INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer) INCLUDE ("
+      + "    A_STRING, " + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{"CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer DESC) INCLUDE ("
+      + "    A_STRING, " + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{"CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer, a_string) INCLUDE ("
+      + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{"CREATE LOCAL INDEX " + ATABLE_INDEX_NAME + " ON aTable (a_integer) INCLUDE ("
+      + "    A_STRING, " + "    B_STRING, " + "    A_DATE)"});
+    testCases.add(new String[]{""});
+    return testCases;
+  }
+
+  protected static boolean compare(CompareOp op, ImmutableBytesWritable lhsOutPtr, ImmutableBytesWritable rhsOutPtr) {
+    int compareResult = Bytes.compareTo(lhsOutPtr.get(), lhsOutPtr.getOffset(), lhsOutPtr.getLength(), rhsOutPtr.get(), rhsOutPtr.getOffset(), rhsOutPtr.getLength());
+    return ByteUtil.compare(op, compareResult);
+  }
+
+  protected static void analyzeTable(Connection conn, String tableName) throws IOException, SQLException {
+    String query = "UPDATE STATISTICS " + tableName;
+    conn.createStatement().execute(query);
+  }
+
+  private static AtomicInteger runCount = new AtomicInteger(0);
+
+  protected static int nextRunCount() {
+    return runCount.getAndAdd(1);
+  }
 }

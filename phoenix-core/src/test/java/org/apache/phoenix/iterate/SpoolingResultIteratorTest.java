@@ -35,40 +35,38 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.AssertResults;
 import org.junit.Test;
 
-
-
 public class SpoolingResultIteratorTest {
-    private final static byte[] A = Bytes.toBytes("a");
-    private final static byte[] B = Bytes.toBytes("b");
 
-    private void testSpooling(int threshold, long maxSizeSpool) throws Throwable {
-        Tuple[] results = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
-                new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
-            };
-        PeekingResultIterator iterator = new MaterializedResultIterator(Arrays.asList(results));
+  private final static byte[] A = Bytes.toBytes("a");
+  private final static byte[] B = Bytes.toBytes("b");
 
-        Tuple[] expectedResults = new Tuple[] {
-                new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
-                new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
-            };
+  private void testSpooling(int threshold, long maxSizeSpool) throws Throwable {
+    Tuple[] results = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
+      new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),};
+    PeekingResultIterator iterator = new MaterializedResultIterator(Arrays.asList(results));
 
-        MemoryManager memoryManager = new DelegatingMemoryManager(new GlobalMemoryManager(threshold, 0));
-        ResultIterator scanner = new SpoolingResultIterator(SpoolingMetricsHolder.NO_OP_INSTANCE, MemoryMetricsHolder.NO_OP_INSTANCE, iterator, memoryManager, threshold, maxSizeSpool,"/tmp");
-        AssertResults.assertResults(scanner, expectedResults);
-    }
+    Tuple[] expectedResults = new Tuple[]{
+      new SingleKeyValueTuple(new KeyValue(A, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),
+      new SingleKeyValueTuple(new KeyValue(B, SINGLE_COLUMN_FAMILY, SINGLE_COLUMN, Bytes.toBytes(1))),};
 
-    @Test
-    public void testInMemorySpooling() throws Throwable {
-        testSpooling(1024*1024, QueryServicesOptions.DEFAULT_MAX_SPOOL_TO_DISK_BYTES);
-    }
-    @Test
-    public void testOnDiskSpooling() throws Throwable {
-        testSpooling(1, QueryServicesOptions.DEFAULT_MAX_SPOOL_TO_DISK_BYTES);
-    }
+    MemoryManager memoryManager = new DelegatingMemoryManager(new GlobalMemoryManager(threshold, 0));
+    ResultIterator scanner = new SpoolingResultIterator(SpoolingMetricsHolder.NO_OP_INSTANCE, MemoryMetricsHolder.NO_OP_INSTANCE, iterator, memoryManager, threshold, maxSizeSpool, "/tmp");
+    AssertResults.assertResults(scanner, expectedResults);
+  }
 
-    @Test(expected = SpoolTooBigToDiskException.class)
-    public void testFailToSpool() throws Throwable{
-    		testSpooling(1, 0L);
-    }
+  @Test
+  public void testInMemorySpooling() throws Throwable {
+    testSpooling(1024 * 1024, QueryServicesOptions.DEFAULT_MAX_SPOOL_TO_DISK_BYTES);
+  }
+
+  @Test
+  public void testOnDiskSpooling() throws Throwable {
+    testSpooling(1, QueryServicesOptions.DEFAULT_MAX_SPOOL_TO_DISK_BYTES);
+  }
+
+  @Test(expected = SpoolTooBigToDiskException.class)
+  public void testFailToSpool() throws Throwable {
+    testSpooling(1, 0L);
+  }
 }

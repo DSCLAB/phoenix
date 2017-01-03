@@ -27,41 +27,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Starts up a self-contained HBase cluster with Phoenix installed to allow simple local
- * testing of Phoenix.
+ * Starts up a self-contained HBase cluster with Phoenix installed to allow
+ * simple local testing of Phoenix.
  */
 public class Sandbox {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Sandbox.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Sandbox.class);
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Starting Phoenix sandbox");
-        Configuration conf = HBaseConfiguration.create();
-        BaseTest.setUpConfigForMiniCluster(conf, new ReadOnlyProps(ImmutableMap.<String, String>of()));
+  public static void main(String[] args) throws Exception {
+    System.out.println("Starting Phoenix sandbox");
+    Configuration conf = HBaseConfiguration.create();
+    BaseTest.setUpConfigForMiniCluster(conf, new ReadOnlyProps(ImmutableMap.<String, String>of()));
 
-        final HBaseTestingUtility testUtil = new HBaseTestingUtility(conf);
-        testUtil.startMiniCluster();
+    final HBaseTestingUtility testUtil = new HBaseTestingUtility(conf);
+    testUtil.startMiniCluster();
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    if (testUtil != null) {
-                        testUtil.shutdownMiniCluster();
-                    }
-                } catch (Exception e) {
-                    LOG.error("Exception caught when shutting down mini cluster", e);
-                }
-            }
-        });
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        try {
+          if (testUtil != null) {
+            testUtil.shutdownMiniCluster();
+          }
+        } catch (Exception e) {
+          LOG.error("Exception caught when shutting down mini cluster", e);
+        }
+      }
+    });
 
-        int clientPort = testUtil.getZkCluster().getClientPort();
-        System.out.println("\n\n\tPhoenix Sandbox is started\n\n");
-        System.out.printf("\tYou can now connect with url 'jdbc:phoenix:localhost:%d'\n" +
-                        "\tor connect via sqlline with 'bin/sqlline.py localhost:%d'\n\n",
-                clientPort, clientPort);
+    int clientPort = testUtil.getZkCluster().getClientPort();
+    System.out.println("\n\n\tPhoenix Sandbox is started\n\n");
+    System.out.printf("\tYou can now connect with url 'jdbc:phoenix:localhost:%d'\n"
+            + "\tor connect via sqlline with 'bin/sqlline.py localhost:%d'\n\n",
+            clientPort, clientPort);
 
-        Thread.sleep(Long.MAX_VALUE);
-    }
+    Thread.sleep(Long.MAX_VALUE);
+  }
 
 }

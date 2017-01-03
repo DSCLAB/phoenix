@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.rules;
 
 import org.apache.phoenix.pherf.configuration.DataTypeMapping;
@@ -23,78 +22,79 @@ import org.apache.phoenix.pherf.configuration.DataTypeMapping;
 import javax.xml.bind.annotation.*;
 
 public class DataValue {
-    private DataTypeMapping type;
-    private String value;
-    private String maxValue;
-    private String minValue;
-    private int distribution;
-    private boolean useCurrentDate;
 
-    public DataValue() {
-        super();
-    }
+  private DataTypeMapping type;
+  private String value;
+  private String maxValue;
+  private String minValue;
+  private int distribution;
+  private boolean useCurrentDate;
 
-    public DataValue(DataTypeMapping type, String value) {
-        this.type = type;
-        this.value = value;
-        this.distribution = Integer.MIN_VALUE;
-        this.useCurrentDate = false;
-    }
+  public DataValue() {
+    super();
+  }
 
-    public DataValue(DataValue dataValue) {
-        this(dataValue.getType(), dataValue.getValue());
-        this.setDistribution(dataValue.getDistribution());
-        this.setMinValue(dataValue.getMinValue());
-        this.setMaxValue(dataValue.getMaxValue());
-        this.setUseCurrentDate(dataValue.getUseCurrentDate());
-    }
+  public DataValue(DataTypeMapping type, String value) {
+    this.type = type;
+    this.value = value;
+    this.distribution = Integer.MIN_VALUE;
+    this.useCurrentDate = false;
+  }
 
-    public String getValue() {
-        return value;
-    }
+  public DataValue(DataValue dataValue) {
+    this(dataValue.getType(), dataValue.getValue());
+    this.setDistribution(dataValue.getDistribution());
+    this.setMinValue(dataValue.getMinValue());
+    this.setMaxValue(dataValue.getMaxValue());
+    this.setUseCurrentDate(dataValue.getUseCurrentDate());
+  }
 
-    public DataTypeMapping getType() {
-        return type;
-    }
+  public String getValue() {
+    return value;
+  }
 
-    public int getDistribution() {
-        return distribution;
-    }
+  public DataTypeMapping getType() {
+    return type;
+  }
 
-    @XmlAttribute()
-    public void setDistribution(int distribution) {
-        this.distribution = distribution;
-    }
+  public int getDistribution() {
+    return distribution;
+  }
 
-    public void setType(DataTypeMapping type) {
-        this.type = type;
-    }
+  @XmlAttribute()
+  public void setDistribution(int distribution) {
+    this.distribution = distribution;
+  }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+  public void setType(DataTypeMapping type) {
+    this.type = type;
+  }
 
-    public String getMinValue() {
-        return minValue;
-    }
+  public void setValue(String value) {
+    this.value = value;
+  }
 
-    public void setMinValue(String minValue) {
-        this.minValue = minValue;
-    }
+  public String getMinValue() {
+    return minValue;
+  }
 
-    public String getMaxValue() {
-        return maxValue;
-    }
+  public void setMinValue(String minValue) {
+    this.minValue = minValue;
+  }
 
-    public void setMaxValue(String maxValue) {
-        this.maxValue = maxValue;
-    }
+  public String getMaxValue() {
+    return maxValue;
+  }
 
-    public boolean getUseCurrentDate() {
-        return useCurrentDate;
-    }
+  public void setMaxValue(String maxValue) {
+    this.maxValue = maxValue;
+  }
 
-    public void setUseCurrentDate(boolean useCurrentDate) {
-        this.useCurrentDate = useCurrentDate;
-    }
+  public boolean getUseCurrentDate() {
+    return useCurrentDate;
+  }
+
+  public void setUseCurrentDate(boolean useCurrentDate) {
+    this.useCurrentDate = useCurrentDate;
+  }
 }

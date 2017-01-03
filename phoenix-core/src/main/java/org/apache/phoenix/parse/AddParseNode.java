@@ -21,33 +21,32 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-
-
 /**
- * 
+ *
  * Node representing addition in a SQL expression
  *
- * 
+ *
  * @since 0.1
  */
 public class AddParseNode extends ArithmeticParseNode {
-    public static final String OPERATOR = "+";
 
-    @Override
-    public String getOperator() {
-        return OPERATOR;
-    }
-    
-    AddParseNode(List<ParseNode> children) {
-        super(children);
-    }
+  public static final String OPERATOR = "+";
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  @Override
+  public String getOperator() {
+    return OPERATOR;
+  }
+
+  AddParseNode(List<ParseNode> children) {
+    super(children);
+  }
+
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
+    return visitor.visitLeave(this, l);
+  }
 }

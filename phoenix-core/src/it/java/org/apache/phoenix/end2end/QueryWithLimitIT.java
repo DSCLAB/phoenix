@@ -42,75 +42,74 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-
 public class QueryWithLimitIT extends BaseOwnClusterHBaseManagedTimeIT {
 
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(3);
-        // Must update config before starting server
-        props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(50));
-        props.put(QueryServices.QUEUE_SIZE_ATTRIB, Integer.toString(1));
-        props.put(QueryServices.DROP_METADATA_ATTRIB, Boolean.TRUE.toString());
-        props.put(QueryServices.SEQUENCE_SALT_BUCKETS_ATTRIB, Integer.toString(0)); // Prevents RejectedExecutionException when deleting sequences
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-    
-    @Test
-    public void testQueryWithLimitAndStats() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {
-            ensureTableCreated(getUrl(),KEYONLY_NAME);
-            initTableValues(conn, 100);
-            
-            String query = "SELECT i1 FROM KEYONLY LIMIT 1";
-            ResultSet rs = conn.createStatement().executeQuery(query);
-            assertTrue(rs.next());
-            assertEquals(0, rs.getInt(1));
-            assertFalse(rs.next());
-            
-            rs = conn.createStatement().executeQuery("EXPLAIN " + query);
-            assertEquals("CLIENT SERIAL 1-WAY FULL SCAN OVER KEYONLY\n" + 
-                    "    SERVER FILTER BY FIRST KEY ONLY\n" + 
-                    "    SERVER 1 ROW LIMIT\n" + 
-                    "CLIENT 1 ROW LIMIT", QueryUtil.getExplainPlan(rs));
-        } finally {
-            conn.close();
-        }
-    }
-    
-    @Test
-    public void testQueryWithoutLimitFails() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(3);
+    // Must update config before starting server
+    props.put(QueryServices.STATS_GUIDEPOST_WIDTH_BYTES_ATTRIB, Long.toString(50));
+    props.put(QueryServices.QUEUE_SIZE_ATTRIB, Integer.toString(1));
+    props.put(QueryServices.DROP_METADATA_ATTRIB, Boolean.TRUE.toString());
+    props.put(QueryServices.SEQUENCE_SALT_BUCKETS_ATTRIB, Integer.toString(0)); // Prevents RejectedExecutionException when deleting sequences
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 
-        ensureTableCreated(getUrl(),KEYONLY_NAME);
-        initTableValues(conn, 100);
-        conn.createStatement().execute("UPDATE STATISTICS " + KEYONLY_NAME);
-        
-        String query = "SELECT i1 FROM KEYONLY";
-        try {
-            ResultSet rs = conn.createStatement().executeQuery(query);
-            rs.next();
-            fail();
-        } catch (SQLException e) {
-            assertTrue(e.getCause() instanceof RejectedExecutionException);
-        }
-        conn.close();
+  @Test
+  public void testQueryWithLimitAndStats() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      ensureTableCreated(getUrl(), KEYONLY_NAME);
+      initTableValues(conn, 100);
+
+      String query = "SELECT i1 FROM KEYONLY LIMIT 1";
+      ResultSet rs = conn.createStatement().executeQuery(query);
+      assertTrue(rs.next());
+      assertEquals(0, rs.getInt(1));
+      assertFalse(rs.next());
+
+      rs = conn.createStatement().executeQuery("EXPLAIN " + query);
+      assertEquals("CLIENT SERIAL 1-WAY FULL SCAN OVER KEYONLY\n"
+              + "    SERVER FILTER BY FIRST KEY ONLY\n"
+              + "    SERVER 1 ROW LIMIT\n"
+              + "CLIENT 1 ROW LIMIT", QueryUtil.getExplainPlan(rs));
+    } finally {
+      conn.close();
     }
-    
-    protected static void initTableValues(Connection conn, int nRows) throws Exception {
-        PreparedStatement stmt = conn.prepareStatement(
-            "upsert into " +
-            "KEYONLY VALUES (?, ?)");
-        for (int i = 0; i < nRows; i++) {
-            stmt.setInt(1, i);
-            stmt.setInt(2, i+1);
-            stmt.execute();
-        }
-        
-        conn.commit();
+  }
+
+  @Test
+  public void testQueryWithoutLimitFails() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+
+    ensureTableCreated(getUrl(), KEYONLY_NAME);
+    initTableValues(conn, 100);
+    conn.createStatement().execute("UPDATE STATISTICS " + KEYONLY_NAME);
+
+    String query = "SELECT i1 FROM KEYONLY";
+    try {
+      ResultSet rs = conn.createStatement().executeQuery(query);
+      rs.next();
+      fail();
+    } catch (SQLException e) {
+      assertTrue(e.getCause() instanceof RejectedExecutionException);
     }
+    conn.close();
+  }
+
+  protected static void initTableValues(Connection conn, int nRows) throws Exception {
+    PreparedStatement stmt = conn.prepareStatement(
+            "upsert into "
+            + "KEYONLY VALUES (?, ?)");
+    for (int i = 0; i < nRows; i++) {
+      stmt.setInt(1, i);
+      stmt.setInt(2, i + 1);
+      stmt.execute();
+    }
+
+    conn.commit();
+  }
 
 }

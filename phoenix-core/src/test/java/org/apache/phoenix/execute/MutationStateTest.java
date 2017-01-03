@@ -25,38 +25,38 @@ import org.junit.Test;
 
 public class MutationStateTest {
 
-    @Test
-    public void testJoinIntArrays() {
-        // simple case
-        int[] a = new int[] {1};
-        int[] b = new int[] {2};
-        int[] result = joinSortedIntArrays(a, b);
-        
-        assertEquals(2, result.length);
-        assertArrayEquals(new int[] {1,2}, result);
-        
-        // empty arrays
-        a = new int[0];
-        b = new int[0];
-        result = joinSortedIntArrays(a, b);
-        
-        assertEquals(0, result.length);
-        assertArrayEquals(new int[] {}, result);
-        
-        // dupes between arrays
-        a = new int[] {1,2,3};
-        b = new int[] {1,2,4};
-        result = joinSortedIntArrays(a, b);
-        
-        assertEquals(4, result.length);
-        assertArrayEquals(new int[] {1,2,3,4}, result);
-        
-        // dupes within arrays
-        a = new int[] {1,2,2,3};
-        b = new int[] {1,2,4};
-        result = joinSortedIntArrays(a, b);
-        
-        assertEquals(4, result.length);
-        assertArrayEquals(new int[] {1,2,3,4}, result);
-    }
+  @Test
+  public void testJoinIntArrays() {
+    // simple case
+    int[] a = new int[]{1};
+    int[] b = new int[]{2};
+    int[] result = joinSortedIntArrays(a, b);
+
+    assertEquals(2, result.length);
+    assertArrayEquals(new int[]{1, 2}, result);
+
+    // empty arrays
+    a = new int[0];
+    b = new int[0];
+    result = joinSortedIntArrays(a, b);
+
+    assertEquals(0, result.length);
+    assertArrayEquals(new int[]{}, result);
+
+    // dupes between arrays
+    a = new int[]{1, 2, 3};
+    b = new int[]{1, 2, 4};
+    result = joinSortedIntArrays(a, b);
+
+    assertEquals(4, result.length);
+    assertArrayEquals(new int[]{1, 2, 3, 4}, result);
+
+    // dupes within arrays
+    a = new int[]{1, 2, 2, 3};
+    b = new int[]{1, 2, 4};
+    result = joinSortedIntArrays(a, b);
+
+    assertEquals(4, result.length);
+    assertArrayEquals(new int[]{1, 2, 3, 4}, result);
+  }
 }

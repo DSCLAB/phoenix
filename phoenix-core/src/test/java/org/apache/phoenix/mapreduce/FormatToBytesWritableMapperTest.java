@@ -35,68 +35,69 @@ import static org.junit.Assert.assertEquals;
 
 public class FormatToBytesWritableMapperTest {
 
-    @Test
-    public void testBuildColumnInfoList() {
-        List<ColumnInfo> columnInfoList = ImmutableList.of(
-                new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
-                new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
-                new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
+  @Test
+  public void testBuildColumnInfoList() {
+    List<ColumnInfo> columnInfoList = ImmutableList.of(
+            new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
+            new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
+            new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
 
-        Configuration conf = new Configuration();
-        FormatToBytesWritableMapper.configureColumnInfoList(conf, columnInfoList);
-        List<ColumnInfo> fromConfig = FormatToBytesWritableMapper.buildColumnInfoList(conf);
+    Configuration conf = new Configuration();
+    FormatToBytesWritableMapper.configureColumnInfoList(conf, columnInfoList);
+    List<ColumnInfo> fromConfig = FormatToBytesWritableMapper.buildColumnInfoList(conf);
 
-        assertEquals(columnInfoList, fromConfig);
+    assertEquals(columnInfoList, fromConfig);
+  }
+
+  @Test
+  public void testBuildColumnInfoList_ContainingNulls() {
+    // A null value in the column info list means "skip that column in the input"
+    List<ColumnInfo> columnInfoListWithNull = Lists.newArrayList(
+            new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
+            null,
+            new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
+            new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
+
+    Configuration conf = new Configuration();
+    FormatToBytesWritableMapper.configureColumnInfoList(conf, columnInfoListWithNull);
+    List<ColumnInfo> fromConfig = FormatToBytesWritableMapper.buildColumnInfoList(conf);
+
+    assertEquals(columnInfoListWithNull, fromConfig);
+  }
+
+  @Test
+  public void testLoadPreUpdateProcessor() {
+    Configuration conf = new Configuration();
+    conf.setClass(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, MockUpsertProcessor.class,
+            ImportPreUpsertKeyValueProcessor.class);
+
+    ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+    assertEquals(MockUpsertProcessor.class, processor.getClass());
+  }
+
+  @Test
+  public void testLoadPreUpdateProcessor_NotConfigured() {
+
+    Configuration conf = new Configuration();
+    ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+
+    assertEquals(FormatToBytesWritableMapper.DefaultImportPreUpsertKeyValueProcessor.class,
+            processor.getClass());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testLoadPreUpdateProcessor_ClassNotFound() {
+    Configuration conf = new Configuration();
+    conf.set(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, "MyUndefinedClass");
+
+    PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
+  }
+
+  static class MockUpsertProcessor implements ImportPreUpsertKeyValueProcessor {
+
+    @Override
+    public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
+      throw new UnsupportedOperationException("Not yet implemented");
     }
-
-    @Test
-    public void testBuildColumnInfoList_ContainingNulls() {
-        // A null value in the column info list means "skip that column in the input"
-        List<ColumnInfo> columnInfoListWithNull = Lists.newArrayList(
-                new ColumnInfo("idCol", PInteger.INSTANCE.getSqlType()),
-                null,
-                new ColumnInfo("unsignedIntCol", PUnsignedInt.INSTANCE.getSqlType()),
-                new ColumnInfo("stringArrayCol", PIntegerArray.INSTANCE.getSqlType()));
-
-        Configuration conf = new Configuration();
-        FormatToBytesWritableMapper.configureColumnInfoList(conf, columnInfoListWithNull);
-        List<ColumnInfo> fromConfig = FormatToBytesWritableMapper.buildColumnInfoList(conf);
-
-        assertEquals(columnInfoListWithNull, fromConfig);
-    }
-
-    @Test
-    public void testLoadPreUpdateProcessor() {
-        Configuration conf = new Configuration();
-        conf.setClass(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, MockUpsertProcessor.class,
-                ImportPreUpsertKeyValueProcessor.class);
-
-        ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-        assertEquals(MockUpsertProcessor.class, processor.getClass());
-    }
-
-    @Test
-    public void testLoadPreUpdateProcessor_NotConfigured() {
-
-        Configuration conf = new Configuration();
-        ImportPreUpsertKeyValueProcessor processor = PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-
-        assertEquals(FormatToBytesWritableMapper.DefaultImportPreUpsertKeyValueProcessor.class,
-                processor.getClass());
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void testLoadPreUpdateProcessor_ClassNotFound() {
-        Configuration conf = new Configuration();
-        conf.set(PhoenixConfigurationUtil.UPSERT_HOOK_CLASS_CONFKEY, "MyUndefinedClass");
-
-        PhoenixConfigurationUtil.loadPreUpsertProcessor(conf);
-    }
-
-    static class MockUpsertProcessor implements ImportPreUpsertKeyValueProcessor {
-        @Override
-        public List<KeyValue> preUpsert(byte[] rowKey, List<KeyValue> keyValues) {
-            throw new UnsupportedOperationException("Not yet implemented");
-        }
-    }
+  }
 }

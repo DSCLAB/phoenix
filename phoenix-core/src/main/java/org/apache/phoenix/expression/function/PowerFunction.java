@@ -26,26 +26,28 @@ import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDouble;
 
-@BuiltInFunction(name = PowerFunction.NAME, args = { @Argument(allowedTypes = { PDouble.class, PDecimal.class }),
-        @Argument(allowedTypes = { PDouble.class, PDecimal.class }) })
+@BuiltInFunction(name = PowerFunction.NAME, args = {
+  @Argument(allowedTypes = {PDouble.class, PDecimal.class})
+  ,
+        @Argument(allowedTypes = {PDouble.class, PDecimal.class})})
 public class PowerFunction extends JavaMathTwoArgumentFunction {
 
-    public static final String NAME = "POWER";
+  public static final String NAME = "POWER";
 
-    public PowerFunction() {
-    }
+  public PowerFunction() {
+  }
 
-    public PowerFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public PowerFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    protected double compute(double firstArg, double secondArg) {
-        return Math.pow(firstArg, secondArg);
-    }
+  @Override
+  protected double compute(double firstArg, double secondArg) {
+    return Math.pow(firstArg, secondArg);
+  }
 }

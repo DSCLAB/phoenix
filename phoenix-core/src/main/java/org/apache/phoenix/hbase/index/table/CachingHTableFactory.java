@@ -39,16 +39,20 @@ import org.apache.hadoop.hbase.util.Threads;
 import org.apache.phoenix.execute.DelegateHTable;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
-import com.google.common.annotations.VisibleForTesting;;
+import com.google.common.annotations.VisibleForTesting;
+
+;
 
 /**
- * A simple cache that just uses usual GC mechanisms to cleanup unused {@link HTableInterface}s.
- * When requesting an {@link HTableInterface} via {@link #getTable}, you may get the same table as
- * last time, or it may be a new table.
+ * A simple cache that just uses usual GC mechanisms to cleanup unused
+ * {@link HTableInterface}s. When requesting an {@link HTableInterface} via
+ * {@link #getTable}, you may get the same table as last time, or it may be a
+ * new table.
  * <p>
- * You <b>should not call {@link HTableInterface#close()} </b> that is handled when the table goes
- * out of scope. Along the same lines, you must ensure to not keep a reference to the table for
- * longer than necessary - this leak will ensure that the table never gets closed.
+ * You <b>should not call {@link HTableInterface#close()} </b> that is handled
+ * when the table goes out of scope. Along the same lines, you must ensure to
+ * not keep a reference to the table for longer than necessary - this leak will
+ * ensure that the table never gets closed.
  */
 public class CachingHTableFactory implements HTableFactory {
 
@@ -67,19 +71,19 @@ public class CachingHTableFactory implements HTableFactory {
       HTableInterface table = (HTableInterface) entry.getValue();
       if (LOG.isDebugEnabled()) {
         LOG.debug("Closing connection to table: " + Bytes.toString(table.getTableName())
-            + " because it was evicted from the cache.");
+                + " because it was evicted from the cache.");
       }
       try {
-         synchronized (this) { // the whole operation of closing and checking the count should be atomic
-                                    // and should not conflict with getTable()
-          if (((CachedHTableWrapper)table).getReferenceCount() <= 0) {
+        synchronized (this) { // the whole operation of closing and checking the count should be atomic
+          // and should not conflict with getTable()
+          if (((CachedHTableWrapper) table).getReferenceCount() <= 0) {
             table.close();
             return true;
           }
         }
       } catch (IOException e) {
         LOG.info("Failed to correctly close HTable: " + Bytes.toString(table.getTableName())
-            + " ignoring since being removed from queue.");
+                + " ignoring since being removed from queue.");
       }
       return false;
     }
@@ -106,13 +110,13 @@ public class CachingHTableFactory implements HTableFactory {
   public CachingHTableFactory(HTableFactory factory, int cacheSize, RegionCoprocessorEnvironment env) {
     this.delegate = factory;
     openTables = new HTableInterfaceLRUMap(cacheSize);
-        this.pool = new ThreadPoolExecutor(1,
-                env.getConfiguration().getInt(INDEX_WRITES_THREAD_MAX_PER_REGIONSERVER_KEY, Integer.MAX_VALUE),
-                env.getConfiguration().getInt(HTABLE_KEEP_ALIVE_KEY, 60), TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), Threads.newDaemonThreadFactory("CachedHtables"));
-        pool.allowCoreThreadTimeOut(true);
+    this.pool = new ThreadPoolExecutor(1,
+            env.getConfiguration().getInt(INDEX_WRITES_THREAD_MAX_PER_REGIONSERVER_KEY, Integer.MAX_VALUE),
+            env.getConfiguration().getInt(HTABLE_KEEP_ALIVE_KEY, 60), TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(), Threads.newDaemonThreadFactory("CachedHtables"));
+    pool.allowCoreThreadTimeOut(true);
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   public HTableInterface getTable(ImmutableBytesPtr tablename, ExecutorService pool) throws IOException {
@@ -129,56 +133,56 @@ public class CachingHTableFactory implements HTableFactory {
   }
 
   @Override
-    public void shutdown() {
-        this.delegate.shutdown();
-        this.pool.shutdown();
-        try {
-            boolean terminated = false;
-            do {
-                // wait until the pool has terminated
-                terminated = this.pool.awaitTermination(60, TimeUnit.SECONDS);
-            } while (!terminated);
-        } catch (InterruptedException e) {
-            this.pool.shutdownNow();
-            LOG.warn("waitForTermination interrupted");
-        }
+  public void shutdown() {
+    this.delegate.shutdown();
+    this.pool.shutdown();
+    try {
+      boolean terminated = false;
+      do {
+        // wait until the pool has terminated
+        terminated = this.pool.awaitTermination(60, TimeUnit.SECONDS);
+      } while (!terminated);
+    } catch (InterruptedException e) {
+      this.pool.shutdownNow();
+      LOG.warn("waitForTermination interrupted");
     }
+  }
 
-    public static class CachedHTableWrapper extends DelegateHTable {
+  public static class CachedHTableWrapper extends DelegateHTable {
 
-        private AtomicInteger referenceCount = new AtomicInteger();
+    private AtomicInteger referenceCount = new AtomicInteger();
 
-        public CachedHTableWrapper(HTableInterface table) {
-            super(table);
-        }
-
-        @Override
-        public synchronized void close() throws IOException {
-            if (getReferenceCount() > 0) {
-                this.referenceCount.decrementAndGet();
-            } else {
-                // During LRU eviction
-                super.close();
-            }
-        }
-
-        public void incrementReferenceCount() {
-            this.referenceCount.incrementAndGet();
-        }
-
-        public int getReferenceCount() {
-            return this.referenceCount.get();
-        }
-
+    public CachedHTableWrapper(HTableInterface table) {
+      super(table);
     }
 
     @Override
-    public HTableInterface getTable(ImmutableBytesPtr tablename) throws IOException {
-        return getTable(tablename, this.pool);
+    public synchronized void close() throws IOException {
+      if (getReferenceCount() > 0) {
+        this.referenceCount.decrementAndGet();
+      } else {
+        // During LRU eviction
+        super.close();
+      }
     }
-    
-    @VisibleForTesting
-    public ThreadPoolExecutor getPool(){
-        return this.pool;
+
+    public void incrementReferenceCount() {
+      this.referenceCount.incrementAndGet();
     }
+
+    public int getReferenceCount() {
+      return this.referenceCount.get();
+    }
+
+  }
+
+  @Override
+  public HTableInterface getTable(ImmutableBytesPtr tablename) throws IOException {
+    return getTable(tablename, this.pool);
+  }
+
+  @VisibleForTesting
+  public ThreadPoolExecutor getPool() {
+    return this.pool;
+  }
 }

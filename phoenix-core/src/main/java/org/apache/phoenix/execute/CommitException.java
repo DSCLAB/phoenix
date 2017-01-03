@@ -22,29 +22,33 @@ import java.sql.SQLException;
 import org.apache.phoenix.jdbc.PhoenixConnection;
 
 public class CommitException extends SQLException {
-    private static final long serialVersionUID = 2L;
-    private final int[] uncommittedStatementIndexes;
 
-    public CommitException(Exception e, int[] uncommittedStatementIndexes) {
-        super(e);
-        this.uncommittedStatementIndexes = uncommittedStatementIndexes;
-    }
+  private static final long serialVersionUID = 2L;
+  private final int[] uncommittedStatementIndexes;
 
-    /**
-     * Returns indexes of UPSERT and DELETE statements that have failed. Indexes returned
-     * correspond to each failed statement's order of creation within a {@link PhoenixConnection} up to
-     * commit/rollback.
-     * <p>
-     * Statements whose index is returned in this set correspond to one or more HBase mutations that have failed.
-     * <p>
-     * Statement indexes are maintained correctly for connections that mutate and query 
-     * <b>data</b> (DELETE, UPSERT and SELECT) only. Statement (and their subsequent failure) order
-     * is undefined for connections that execute metadata operations due to the fact that Phoenix rolls
-     * back connections after metadata mutations.
-     * 
-     * @see PhoenixConnection#getStatementExecutionCounter()
-     */
-    public int[] getUncommittedStatementIndexes() {
-    	return uncommittedStatementIndexes;
-    }
+  public CommitException(Exception e, int[] uncommittedStatementIndexes) {
+    super(e);
+    this.uncommittedStatementIndexes = uncommittedStatementIndexes;
+  }
+
+  /**
+   * Returns indexes of UPSERT and DELETE statements that have failed. Indexes
+   * returned correspond to each failed statement's order of creation within a
+   * {@link PhoenixConnection} up to commit/rollback.
+   * <p>
+   * Statements whose index is returned in this set correspond to one or more
+   * HBase mutations that have failed.
+   * <p>
+   * Statement indexes are maintained correctly for connections that mutate and
+   * query
+   * <b>data</b> (DELETE, UPSERT and SELECT) only. Statement (and their
+   * subsequent failure) order is undefined for connections that execute
+   * metadata operations due to the fact that Phoenix rolls back connections
+   * after metadata mutations.
+   *
+   * @see PhoenixConnection#getStatementExecutionCounter()
+   */
+  public int[] getUncommittedStatementIndexes() {
+    return uncommittedStatementIndexes;
+  }
 }

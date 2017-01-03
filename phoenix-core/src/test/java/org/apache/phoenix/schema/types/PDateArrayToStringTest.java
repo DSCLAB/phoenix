@@ -18,63 +18,64 @@ import java.util.TimeZone;
 import org.apache.phoenix.util.DateUtil;
 
 public class PDateArrayToStringTest extends BasePhoenixArrayToStringTest {
-    private static final String DATE1 = "2001-01-01 12:15:15.123";
-    private static final String DATE2 = "2002-02-02 14:30:30.456";
-    private static final String DATE3 = "2003-03-03 16:45:45.789";
 
-    @Override
-    protected PDataType getBaseType() {
-        return PDate.INSTANCE;
-    }
+  private static final String DATE1 = "2001-01-01 12:15:15.123";
+  private static final String DATE2 = "2002-02-02 14:30:30.456";
+  private static final String DATE3 = "2003-03-03 16:45:45.789";
 
-    @Override
-    protected boolean isPrimitive(PhoenixArray arr) {
-        // dates have codec like primitive times but date is not primitive/scalar && there's no
-        // primitive date array
-        return false;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PDate.INSTANCE;
+  }
 
-    @Override
-    protected Object getElement1() {
-        return parseDate(DATE1);
-    }
+  @Override
+  protected boolean isPrimitive(PhoenixArray arr) {
+    // dates have codec like primitive times but date is not primitive/scalar && there's no
+    // primitive date array
+    return false;
+  }
 
-    @Override
-    protected String getString1() {
-        return "'" + DATE1 + "'";
-    }
+  @Override
+  protected Object getElement1() {
+    return parseDate(DATE1);
+  }
 
-    @Override
-    protected Object getElement2() {
-        return parseDate(DATE2);
-    }
+  @Override
+  protected String getString1() {
+    return "'" + DATE1 + "'";
+  }
 
-    @Override
-    protected String getString2() {
-        return "'" + DATE2 + "'";
-    }
+  @Override
+  protected Object getElement2() {
+    return parseDate(DATE2);
+  }
 
-    @Override
-    protected Object getElement3() {
-        return parseDate(DATE3);
-    }
+  @Override
+  protected String getString2() {
+    return "'" + DATE2 + "'";
+  }
 
-    @Override
-    protected String getString3() {
-        return "'" + DATE3 + "'";
-    }
+  @Override
+  protected Object getElement3() {
+    return parseDate(DATE3);
+  }
 
-    private Object parseDate(String dateString) {
-        try {
-            java.util.Date date =
-                    new SimpleDateFormat(DateUtil.DEFAULT_DATE_FORMAT).parse(dateString);
-            Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(date.getTime());
-            cal.add(Calendar.MILLISECOND, TimeZone.getDefault().getOffset(date.getTime()));
-            return cal.getTime();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  protected String getString3() {
+    return "'" + DATE3 + "'";
+  }
+
+  private Object parseDate(String dateString) {
+    try {
+      java.util.Date date
+              = new SimpleDateFormat(DateUtil.DEFAULT_DATE_FORMAT).parse(dateString);
+      Calendar cal = Calendar.getInstance();
+      cal.setTimeInMillis(date.getTime());
+      cal.add(Calendar.MILLISECOND, TimeZone.getDefault().getOffset(date.getTime()));
+      return cal.getTime();
+    } catch (ParseException e) {
+      throw new RuntimeException(e);
     }
+  }
 
 }

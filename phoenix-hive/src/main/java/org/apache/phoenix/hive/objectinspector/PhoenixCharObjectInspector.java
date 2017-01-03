@@ -28,24 +28,24 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 public class PhoenixCharObjectInspector extends AbstractPhoenixObjectInspector<HiveCharWritable>
         implements HiveCharObjectInspector {
 
-    public PhoenixCharObjectInspector() {
-        super(TypeInfoFactory.charTypeInfo);
-    }
+  public PhoenixCharObjectInspector() {
+    super(TypeInfoFactory.charTypeInfo);
+  }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new String((String) o);
-    }
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new String((String) o);
+  }
 
-    @Override
-    public HiveCharWritable getPrimitiveWritableObject(Object o) {
-        return new HiveCharWritable(getPrimitiveJavaObject(o));
-    }
+  @Override
+  public HiveCharWritable getPrimitiveWritableObject(Object o) {
+    return new HiveCharWritable(getPrimitiveJavaObject(o));
+  }
 
-    @Override
-    public HiveChar getPrimitiveJavaObject(Object o) {
-        String value = (String) o;
-        return new HiveChar(value, value.length());
-    }
+  @Override
+  public HiveChar getPrimitiveJavaObject(Object o) {
+    String value = (String) o;
+    return new HiveChar(value, value.length());
+  }
 
 }

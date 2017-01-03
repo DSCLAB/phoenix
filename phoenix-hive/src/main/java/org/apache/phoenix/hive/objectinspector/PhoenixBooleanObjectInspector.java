@@ -24,27 +24,27 @@ import org.apache.hadoop.io.BooleanWritable;
 public class PhoenixBooleanObjectInspector extends AbstractPhoenixObjectInspector<BooleanWritable>
         implements BooleanObjectInspector {
 
-    public PhoenixBooleanObjectInspector() {
-        super(TypeInfoFactory.booleanTypeInfo);
+  public PhoenixBooleanObjectInspector() {
+    super(TypeInfoFactory.booleanTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new Boolean((Boolean) o);
+  }
+
+  @Override
+  public boolean get(Object o) {
+    Boolean value = null;
+
+    if (o != null) {
+      try {
+        value = (Boolean) o;
+      } catch (Exception e) {
+        logExceptionMessage(o, "BOOLEAN");
+      }
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new Boolean((Boolean) o);
-    }
-
-    @Override
-    public boolean get(Object o) {
-        Boolean value = null;
-
-        if (o != null) {
-            try {
-                value = (Boolean) o;
-            } catch (Exception e) {
-                logExceptionMessage(o, "BOOLEAN");
-            }
-        }
-
-        return value;
-    }
+    return value;
+  }
 }

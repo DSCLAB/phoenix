@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.workload;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -29,97 +28,101 @@ import java.util.Properties;
 import java.util.concurrent.*;
 
 public class WorkloadExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(WorkloadExecutor.class);
-    private final int poolSize;
-    private final boolean isPerformance;
 
-    // Jobs can be accessed by multiple threads
-    private final Map<Workload, Future> jobs = new ConcurrentHashMap<>();
+  private static final Logger logger = LoggerFactory.getLogger(WorkloadExecutor.class);
+  private final int poolSize;
+  private final boolean isPerformance;
 
-    private final ExecutorService pool;
+  // Jobs can be accessed by multiple threads
+  private final Map<Workload, Future> jobs = new ConcurrentHashMap<>();
 
-    public WorkloadExecutor() throws Exception {
-        this(PherfConstants.create().getProperties(PherfConstants.PHERF_PROPERTIES, false));
+  private final ExecutorService pool;
+
+  public WorkloadExecutor() throws Exception {
+    this(PherfConstants.create().getProperties(PherfConstants.PHERF_PROPERTIES, false));
+  }
+
+  public WorkloadExecutor(Properties properties) throws Exception {
+    this(properties, new ArrayList(), true);
+  }
+
+  public WorkloadExecutor(Properties properties, List<Workload> workloads, boolean isPerformance) throws Exception {
+    this.isPerformance = isPerformance;
+    this.poolSize
+            = (properties.getProperty("pherf.default.threadpool") == null)
+            ? PherfConstants.DEFAULT_THREAD_POOL_SIZE
+            : Integer.parseInt(properties.getProperty("pherf.default.threadpool"));
+
+    this.pool = Executors.newFixedThreadPool(this.poolSize);
+    init(workloads);
+  }
+
+  public void add(Workload workload) throws Exception {
+    this.jobs.put(workload, pool.submit(workload.execute()));
+  }
+
+  /**
+   * Blocks on waiting for all workloads to finish. If a
+   * {@link org.apache.phoenix.pherf.workload.Workload} Requires complete() to
+   * be called, it must be called prior to using this method. Otherwise it will
+   * block infinitely.
+   */
+  public void get() {
+    for (Workload workload : jobs.keySet()) {
+      get(workload);
     }
+  }
 
-    public WorkloadExecutor(Properties properties) throws Exception {
-        this(properties, new ArrayList(), true);
+  /**
+   * Calls the {@link java.util.concurrent.Future#get()} method pertaining to
+   * this workflow. Once the Future competes, the workflow is removed from the
+   * list.
+   *
+   * @param workload Key entry in the HashMap
+   */
+  public void get(Workload workload) {
+    try {
+      Future future = jobs.get(workload);
+      future.get();
+      jobs.remove(workload);
+    } catch (InterruptedException | ExecutionException e) {
+      logger.error("", e);
     }
+  }
 
-    public WorkloadExecutor(Properties properties, List<Workload> workloads, boolean isPerformance) throws Exception {
-        this.isPerformance = isPerformance;
-        this.poolSize =
-                (properties.getProperty("pherf.default.threadpool") == null) ?
-                        PherfConstants.DEFAULT_THREAD_POOL_SIZE :
-                        Integer.parseInt(properties.getProperty("pherf.default.threadpool"));
-
-        this.pool = Executors.newFixedThreadPool(this.poolSize);
-        init(workloads);
+  /**
+   * Complete all workloads in the list. Entries in the job Map will persist
+   * until {#link WorkloadExecutorNew#get()} is called
+   */
+  public void complete() {
+    for (Workload workload : jobs.keySet()) {
+      workload.complete();
     }
+  }
 
-    public void add(Workload workload) throws Exception {
-        this.jobs.put(workload, pool.submit(workload.execute()));
-    }
+  public void shutdown() {
+    // Make sure any Workloads still on pool have been properly shutdown
+    complete();
+    pool.shutdownNow();
+  }
 
-    /**
-     * Blocks on waiting for all workloads to finish. If a
-     * {@link org.apache.phoenix.pherf.workload.Workload} Requires complete() to be called, it must
-     * be called prior to using this method. Otherwise it will block infinitely.
-     */
-    public void get() {
-        for (Workload workload : jobs.keySet()) {
-            get(workload);
-        }
-    }
+  /**
+   * TODO This should be removed, Access to the pool should be restriced and
+   * callers should Workflows
+   *
+   * @return {@link ExecutorService} Exposes the underlying thread pool
+   */
+  public ExecutorService getPool() {
+    return pool;
+  }
 
-    /**
-     * Calls the {@link java.util.concurrent.Future#get()} method pertaining to this workflow.
-     * Once the Future competes, the workflow is removed from the list.
-     *
-     * @param workload Key entry in the HashMap
-     */
-    public void get(Workload workload) {
-        try {
-            Future future = jobs.get(workload);
-            future.get();
-            jobs.remove(workload);
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("", e);
-        }
-    }
+  public boolean isPerformance() {
+    return isPerformance;
+  }
 
-    /**
-     * Complete all workloads in the list.
-     * Entries in the job Map will persist until {#link WorkloadExecutorNew#get()} is called
-     */
-    public void complete() {
-        for (Workload workload : jobs.keySet()) {
-            workload.complete();
-        }
+  private void init(List<Workload> workloads) throws Exception {
+    for (Workload workload : workloads) {
+      this.jobs.put(workload, pool.submit(workload.execute()));
     }
-
-    public void shutdown() {
-        // Make sure any Workloads still on pool have been properly shutdown
-        complete();
-        pool.shutdownNow();
-    }
-
-    /**
-     * TODO This should be removed, Access to the pool should be restriced and callers should Workflows
-     *
-     * @return {@link ExecutorService} Exposes the underlying thread pool
-     */
-    public ExecutorService getPool() {
-        return pool;
-    }
-
-    public boolean isPerformance() {
-        return isPerformance;
-    }
-
-    private void init(List<Workload> workloads) throws Exception {
-        for (Workload workload : workloads) {
-            this.jobs.put(workload, pool.submit(workload.execute()));
-        }
-    }
+  }
 }

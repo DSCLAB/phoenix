@@ -23,49 +23,53 @@ import org.apache.phoenix.expression.BaseCompoundExpression;
 import org.apache.phoenix.expression.Expression;
 
 /**
- * 
+ *
  * Compiled representation of a built-in function
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class FunctionExpression extends BaseCompoundExpression {
-    public enum OrderPreserving {NO, YES_IF_LAST, YES};
-    public FunctionExpression() {
-    }
-    
-    public FunctionExpression(List<Expression> children) {
-        super(children);
-    }
-    
-    /**
-     * Determines whether or not the result of the function invocation
-     * will be ordered in the same way as the input to the function.
-     * Returning YES enables an optimization to occur when a
-     * GROUP BY contains function invocations using the leading PK
-     * column(s).
-     * @return YES if the function invocation will always preserve order for
-     * the inputs versus the outputs and false otherwise, YES_IF_LAST if the
-     * function preserves order, but any further column reference would not
-     * continue to preserve order, and NO if the function does not preserve
-     * order.
-     */
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.NO;
-    }
 
-    abstract public String getName();
-    
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder(getName() + "(");
-        if (children.size()==0)
-            return buf.append(")").toString();
-        for (int i = 0; i < children.size() - 1; i++) {
-            buf.append(children.get(i) + ", ");
-        }
-        buf.append(children.get(children.size()-1) + ")");
-        return buf.toString();
+  public enum OrderPreserving {
+    NO, YES_IF_LAST, YES
+  };
+
+  public FunctionExpression() {
+  }
+
+  public FunctionExpression(List<Expression> children) {
+    super(children);
+  }
+
+  /**
+   * Determines whether or not the result of the function invocation will be
+   * ordered in the same way as the input to the function. Returning YES enables
+   * an optimization to occur when a GROUP BY contains function invocations
+   * using the leading PK column(s).
+   *
+   * @return YES if the function invocation will always preserve order for the
+   * inputs versus the outputs and false otherwise, YES_IF_LAST if the function
+   * preserves order, but any further column reference would not continue to
+   * preserve order, and NO if the function does not preserve order.
+   */
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.NO;
+  }
+
+  abstract public String getName();
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder(getName() + "(");
+    if (children.size() == 0) {
+      return buf.append(")").toString();
     }
-    
+    for (int i = 0; i < children.size() - 1; i++) {
+      buf.append(children.get(i) + ", ");
+    }
+    buf.append(children.get(children.size() - 1) + ")");
+    return buf.toString();
+  }
+
 }

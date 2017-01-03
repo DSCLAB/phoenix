@@ -27,117 +27,115 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
  *
  */
 public class IndexSearchCondition {
-    private ExprNodeColumnDesc columnDesc;
-    private String comparisonOp;
-    private ExprNodeConstantDesc constantDesc;
-    private ExprNodeGenericFuncDesc comparisonExpr;
 
-    private String[] fields;
+  private ExprNodeColumnDesc columnDesc;
+  private String comparisonOp;
+  private ExprNodeConstantDesc constantDesc;
+  private ExprNodeGenericFuncDesc comparisonExpr;
 
-    // Support (Not) Between/(Not) In Operator
-    private ExprNodeConstantDesc[] multiConstants;
-    private boolean isNot;
+  private String[] fields;
 
-    public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
-                                ExprNodeConstantDesc[] multiConstants, ExprNodeGenericFuncDesc
-                                        comparisonExpr, boolean isNot) {
-        this(columnDesc, comparisonOp, multiConstants, comparisonExpr, null, isNot);
-    }
+  // Support (Not) Between/(Not) In Operator
+  private ExprNodeConstantDesc[] multiConstants;
+  private boolean isNot;
 
-    public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
-                                ExprNodeConstantDesc[] multiConstants, ExprNodeGenericFuncDesc
-                                        comparisonExpr, String[] fields, boolean isNot) {
-        this.columnDesc = columnDesc;
-        this.comparisonOp = comparisonOp;
-        this.multiConstants = multiConstants;
-        this.comparisonExpr = comparisonExpr;
-        this.fields = fields;
-        this.isNot = isNot;
-    }
+  public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
+          ExprNodeConstantDesc[] multiConstants, ExprNodeGenericFuncDesc comparisonExpr, boolean isNot) {
+    this(columnDesc, comparisonOp, multiConstants, comparisonExpr, null, isNot);
+  }
 
-    public ExprNodeConstantDesc[] getConstantDescs() {
-        return multiConstants;
-    }
+  public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
+          ExprNodeConstantDesc[] multiConstants, ExprNodeGenericFuncDesc comparisonExpr, String[] fields, boolean isNot) {
+    this.columnDesc = columnDesc;
+    this.comparisonOp = comparisonOp;
+    this.multiConstants = multiConstants;
+    this.comparisonExpr = comparisonExpr;
+    this.fields = fields;
+    this.isNot = isNot;
+  }
 
-    public ExprNodeConstantDesc getConstantDesc(int index) {
-        return multiConstants[index];
-    }
+  public ExprNodeConstantDesc[] getConstantDescs() {
+    return multiConstants;
+  }
 
-    public boolean isNot() {
-        return isNot;
-    }
-    //////////////////////////////////////////////////////////////////////////////
+  public ExprNodeConstantDesc getConstantDesc(int index) {
+    return multiConstants[index];
+  }
 
-    public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
-                                ExprNodeConstantDesc constantDesc, ExprNodeGenericFuncDesc
-                                        comparisonExpr) {
-        this(columnDesc, comparisonOp, constantDesc, comparisonExpr, null);
-    }
+  public boolean isNot() {
+    return isNot;
+  }
+  //////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Constructs a search condition, which takes the form
-     * <p>
-     * <pre>
-     * column-ref comparison-op constant-value
-     * </pre>
-     * <p>
-     * .
-     *
-     * @param columnDesc     column being compared
-     * @param comparisonOp   comparison operator, e.g. "=" (taken from
-     *                       GenericUDFBridge.getUdfName())
-     * @param constantDesc   constant value to search for
-     * @param comparisonExpr the original comparison expression
-     */
-    public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
-                                ExprNodeConstantDesc constantDesc, ExprNodeGenericFuncDesc
-                                        comparisonExpr, String[] fields) {
+  public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
+          ExprNodeConstantDesc constantDesc, ExprNodeGenericFuncDesc comparisonExpr) {
+    this(columnDesc, comparisonOp, constantDesc, comparisonExpr, null);
+  }
 
-        this.columnDesc = columnDesc;
-        this.comparisonOp = comparisonOp;
-        this.constantDesc = constantDesc;
-        this.comparisonExpr = comparisonExpr;
-        this.fields = fields;
-    }
+  /**
+   * Constructs a search condition, which takes the form
+   * <p>
+   * <
+   * pre>
+   * column-ref comparison-op constant-value
+   * </pre>
+   * <p>
+   * .
+   *
+   * @param columnDesc column being compared
+   * @param comparisonOp comparison operator, e.g. "=" (taken from
+   * GenericUDFBridge.getUdfName())
+   * @param constantDesc constant value to search for
+   * @param comparisonExpr the original comparison expression
+   */
+  public IndexSearchCondition(ExprNodeColumnDesc columnDesc, String comparisonOp,
+          ExprNodeConstantDesc constantDesc, ExprNodeGenericFuncDesc comparisonExpr, String[] fields) {
 
-    public void setColumnDesc(ExprNodeColumnDesc columnDesc) {
-        this.columnDesc = columnDesc;
-    }
+    this.columnDesc = columnDesc;
+    this.comparisonOp = comparisonOp;
+    this.constantDesc = constantDesc;
+    this.comparisonExpr = comparisonExpr;
+    this.fields = fields;
+  }
 
-    public ExprNodeColumnDesc getColumnDesc() {
-        return columnDesc;
-    }
+  public void setColumnDesc(ExprNodeColumnDesc columnDesc) {
+    this.columnDesc = columnDesc;
+  }
 
-    public void setComparisonOp(String comparisonOp) {
-        this.comparisonOp = comparisonOp;
-    }
+  public ExprNodeColumnDesc getColumnDesc() {
+    return columnDesc;
+  }
 
-    public String getComparisonOp() {
-        return comparisonOp;
-    }
+  public void setComparisonOp(String comparisonOp) {
+    this.comparisonOp = comparisonOp;
+  }
 
-    public void setConstantDesc(ExprNodeConstantDesc constantDesc) {
-        this.constantDesc = constantDesc;
-    }
+  public String getComparisonOp() {
+    return comparisonOp;
+  }
 
-    public ExprNodeConstantDesc getConstantDesc() {
-        return constantDesc;
-    }
+  public void setConstantDesc(ExprNodeConstantDesc constantDesc) {
+    this.constantDesc = constantDesc;
+  }
 
-    public void setComparisonExpr(ExprNodeGenericFuncDesc comparisonExpr) {
-        this.comparisonExpr = comparisonExpr;
-    }
+  public ExprNodeConstantDesc getConstantDesc() {
+    return constantDesc;
+  }
 
-    public ExprNodeGenericFuncDesc getComparisonExpr() {
-        return comparisonExpr;
-    }
+  public void setComparisonExpr(ExprNodeGenericFuncDesc comparisonExpr) {
+    this.comparisonExpr = comparisonExpr;
+  }
 
-    public String[] getFields() {
-        return fields;
-    }
+  public ExprNodeGenericFuncDesc getComparisonExpr() {
+    return comparisonExpr;
+  }
 
-    @Override
-    public String toString() {
-        return comparisonExpr.getExprString();
-    }
+  public String[] getFields() {
+    return fields;
+  }
+
+  @Override
+  public String toString() {
+    return comparisonExpr.getExprString();
+  }
 }

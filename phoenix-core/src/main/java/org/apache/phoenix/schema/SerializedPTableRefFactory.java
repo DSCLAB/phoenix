@@ -18,20 +18,21 @@
 package org.apache.phoenix.schema;
 
 class SerializedPTableRefFactory extends PTableRefFactory {
-    @Override
-    public PTableRef makePTableRef(PTable table, long lastAccessTime, long resolvedTime) {
-        byte[] serializedBytes = PTableImpl.toProto(table).toByteArray();
-        return new SerializedPTableRef(serializedBytes, lastAccessTime, resolvedTime, table.getEstimatedSize());
-    }
-    
-    @Override
-    public PTableRef makePTableRef(PTableRef tableRef) {
-        return new SerializedPTableRef(tableRef);
-    }
-    
-    private static final SerializedPTableRefFactory INSTANCE = new SerializedPTableRefFactory();
-    
-    public static PTableRefFactory getFactory() {
-        return INSTANCE;
-    }
+
+  @Override
+  public PTableRef makePTableRef(PTable table, long lastAccessTime, long resolvedTime) {
+    byte[] serializedBytes = PTableImpl.toProto(table).toByteArray();
+    return new SerializedPTableRef(serializedBytes, lastAccessTime, resolvedTime, table.getEstimatedSize());
+  }
+
+  @Override
+  public PTableRef makePTableRef(PTableRef tableRef) {
+    return new SerializedPTableRef(tableRef);
+  }
+
+  private static final SerializedPTableRefFactory INSTANCE = new SerializedPTableRefFactory();
+
+  public static PTableRefFactory getFactory() {
+    return INSTANCE;
+  }
 }

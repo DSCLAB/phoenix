@@ -32,74 +32,75 @@ import org.apache.phoenix.schema.types.PInteger;
 import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.util.ByteUtil;
 
-@BuiltInFunction(name=InstrFunction.NAME, args={
-        @Argument(allowedTypes={ PVarchar.class }),
-        @Argument(allowedTypes={ PVarchar.class })})
-public class InstrFunction extends ScalarFunction{
-    
-    public static final String NAME = "INSTR";
-    
-    private String strToSearch = null;
-    
-    public InstrFunction() { }
-    
-    public InstrFunction(List<Expression> children) {
-        super(children);
-        init();
-    }
-    
-    private void init() {
-        Expression strToSearchExpression = getChildren().get(1);
-        if (strToSearchExpression instanceof LiteralExpression) {
-            Object strToSearchValue = ((LiteralExpression) strToSearchExpression).getValue();
-            if (strToSearchValue != null) {
-                this.strToSearch = strToSearchValue.toString();
-            }
-        }
-    }
-        
-    
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression child = getChildren().get(0);
-        
-        if (!child.evaluate(tuple, ptr)) {
-            return false;
-        }
-        
-        if (ptr.getLength() == 0) {
-            ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
-            return true;
-        }
-        
-        int position;
-        //Logic for Empty string search
-        if (strToSearch == null){
-            position = 0;
-            ptr.set(PInteger.INSTANCE.toBytes(position));
-            return true;
-        }
-        
-        String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getChildren().get(0).getSortOrder());
+@BuiltInFunction(name = InstrFunction.NAME, args = {
+  @Argument(allowedTypes = {PVarchar.class})
+  ,
+        @Argument(allowedTypes = {PVarchar.class})})
+public class InstrFunction extends ScalarFunction {
 
-        position = sourceStr.indexOf(strToSearch) + 1;
-        ptr.set(PInteger.INSTANCE.toBytes(position));
-        return true;
+  public static final String NAME = "INSTR";
+
+  private String strToSearch = null;
+
+  public InstrFunction() {
+  }
+
+  public InstrFunction(List<Expression> children) {
+    super(children);
+    init();
+  }
+
+  private void init() {
+    Expression strToSearchExpression = getChildren().get(1);
+    if (strToSearchExpression instanceof LiteralExpression) {
+      Object strToSearchValue = ((LiteralExpression) strToSearchExpression).getValue();
+      if (strToSearchValue != null) {
+        this.strToSearch = strToSearchValue.toString();
+      }
+    }
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression child = getChildren().get(0);
+
+    if (!child.evaluate(tuple, ptr)) {
+      return false;
     }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+    if (ptr.getLength() == 0) {
+      ptr.set(ByteUtil.EMPTY_BYTE_ARRAY);
+      return true;
     }
 
-    @Override
-    public String getName() {
-        return NAME;
+    int position;
+    //Logic for Empty string search
+    if (strToSearch == null) {
+      position = 0;
+      ptr.set(PInteger.INSTANCE.toBytes(position));
+      return true;
     }
-    
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        super.readFields(input);
-        init();
-    }
+
+    String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getChildren().get(0).getSortOrder());
+
+    position = sourceStr.indexOf(strToSearch) + 1;
+    ptr.set(PInteger.INSTANCE.toBytes(position));
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    init();
+  }
 }

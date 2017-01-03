@@ -28,8 +28,9 @@ import com.google.common.collect.Iterators;
 /**
  * A collection whose elements are stored and returned sorted.
  * <p>
- * We can't just use something like a {@link PriorityQueue} because it doesn't return the
- * underlying values in sorted order.
+ * We can't just use something like a {@link PriorityQueue} because it doesn't
+ * return the underlying values in sorted order.
+ *
  * @param <T>
  */
 class SortedCollection<T> implements Collection<T>, Iterable<T> {
@@ -39,20 +40,21 @@ class SortedCollection<T> implements Collection<T>, Iterable<T> {
 
   /**
    * Use the given comparator to compare all keys for sorting
+   *
    * @param comparator
    */
   public SortedCollection(Comparator<T> comparator) {
     this.queue = new PriorityQueue<T>(1, comparator);
     this.comparator = comparator;
   }
-  
+
   /**
    * All passed elements are expected to be {@link Comparable}
    */
   public SortedCollection() {
     this.queue = new PriorityQueue<T>();
   }
-  
+
   @Override
   public int size() {
     return this.queue.size();
@@ -76,7 +78,8 @@ class SortedCollection<T> implements Collection<T>, Iterable<T> {
       Arrays.sort(array);
     } else {
       Arrays.sort(
-     array, this.comparator);}
+              array, this.comparator);
+    }
     return Iterators.forArray(array);
   }
 

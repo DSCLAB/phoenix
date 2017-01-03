@@ -39,82 +39,81 @@ import org.apache.phoenix.query.QueryConstants;
 import org.apache.phoenix.util.DateUtil;
 import org.junit.Test;
 
-
 public class TruncateFunctionIT extends BaseClientManagedTimeIT {
-    private static final String DS1 = "1970-01-10 00:58:01.587";
-    private static final String DS2 = "1970-01-20 01:02:45.906";
-    private static final String DS3 = "1970-01-30 01:30:24.353";
-    
-    private static Date toDate(String s) throws ParseException {
-        return DateUtil.parseDate(s);
+
+  private static final String DS1 = "1970-01-10 00:58:01.587";
+  private static final String DS2 = "1970-01-20 01:02:45.906";
+  private static final String DS3 = "1970-01-30 01:30:24.353";
+
+  private static Date toDate(String s) throws ParseException {
+    return DateUtil.parseDate(s);
+  }
+
+  private static Timestamp toTimestamp(String s) throws ParseException {
+    return DateUtil.parseTimestamp(s);
+  }
+
+  @Test
+  public void testTruncate() throws Exception {
+    long ts = nextTimestamp();
+    String tenantId = getOrganizationId();
+    ensureTableCreated(getUrl(), ATABLE_NAME, ts - 5);
+    Properties props = new Properties();
+    props.setProperty(CURRENT_SCN_ATTRIB, Long.toString(ts - 3));
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      PreparedStatement stmt = conn.prepareStatement(
+              "upsert into "
+              + "ATABLE("
+              + "    ORGANIZATION_ID, "
+              + "    ENTITY_ID, "
+              + "    A_DATE, "
+              + "    A_TIMESTAMP)"
+              + "VALUES (?, ?, ?, ?)");
+      stmt.setString(1, tenantId);
+      stmt.setString(2, ROW1);
+      stmt.setDate(3, toDate(DS1));
+      stmt.setTimestamp(4, toTimestamp(DS1));
+      stmt.execute();
+      stmt.setString(1, tenantId);
+      stmt.setString(2, ROW2);
+      stmt.setDate(3, toDate(DS2));
+      stmt.setTimestamp(4, toTimestamp(DS2));
+      stmt.execute();
+      stmt.setString(1, tenantId);
+      stmt.setString(2, ROW3);
+      stmt.setDate(3, toDate(DS3));
+      stmt.setTimestamp(4, toTimestamp(DS3));
+      stmt.execute();
+      conn.commit();
+      conn.close();
+
+      props.setProperty(CURRENT_SCN_ATTRIB, Long.toString(ts + 1));
+      conn = DriverManager.getConnection(getUrl(), props);
+      String query = "SELECT entity_id, trunc(a_date, 'day', 7), trunc(a_timestamp, 'second', 10) FROM ATABLE WHERE organization_id = ?";
+      PreparedStatement statement = conn.prepareStatement(query);
+      statement.setString(1, tenantId);
+      ResultSet rs = statement.executeQuery();
+
+      assertTrue(rs.next());
+      assertEquals(ROW1, rs.getString(1));
+      assertEquals(new Date((long) 7 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
+      assertEquals(toTimestamp("1970-01-10 00:58:00.000"), rs.getTimestamp(3));
+
+      assertTrue(rs.next());
+      assertEquals(ROW2, rs.getString(1));
+      assertEquals(new Date((long) 14 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
+      assertEquals(toTimestamp("1970-01-20 01:02:40.000"), rs.getTimestamp(3));
+
+      assertTrue(rs.next());
+      assertEquals(ROW3, rs.getString(1));
+      assertEquals(new Date((long) 28 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
+      assertEquals(toTimestamp("1970-01-30 01:30:20.000"), rs.getTimestamp(3));
+
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
-    
-    private static Timestamp toTimestamp(String s) throws ParseException {
-        return DateUtil.parseTimestamp(s);
-    }
-    
-    @Test
-    public void testTruncate() throws Exception {
-        long ts = nextTimestamp();
-        String tenantId = getOrganizationId();
-        ensureTableCreated(getUrl(), ATABLE_NAME, ts-5);
-        Properties props = new Properties();
-        props.setProperty(CURRENT_SCN_ATTRIB, Long.toString(ts-3));
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(
-                    "upsert into " +
-                    "ATABLE(" +
-                    "    ORGANIZATION_ID, " +
-                    "    ENTITY_ID, " +
-                    "    A_DATE, " +
-                    "    A_TIMESTAMP)" +
-                    "VALUES (?, ?, ?, ?)");
-            stmt.setString(1, tenantId);
-            stmt.setString(2, ROW1);
-            stmt.setDate(3, toDate(DS1));
-            stmt.setTimestamp(4, toTimestamp(DS1));
-            stmt.execute();
-            stmt.setString(1, tenantId);
-            stmt.setString(2, ROW2);
-            stmt.setDate(3, toDate(DS2));
-            stmt.setTimestamp(4, toTimestamp(DS2));
-            stmt.execute();
-            stmt.setString(1, tenantId);
-            stmt.setString(2, ROW3);
-            stmt.setDate(3, toDate(DS3));
-            stmt.setTimestamp(4, toTimestamp(DS3));
-            stmt.execute();
-            conn.commit();
-            conn.close();
-            
-            props.setProperty(CURRENT_SCN_ATTRIB, Long.toString(ts+1));
-            conn = DriverManager.getConnection(getUrl(), props);
-            String query = "SELECT entity_id, trunc(a_date, 'day', 7), trunc(a_timestamp, 'second', 10) FROM ATABLE WHERE organization_id = ?";
-            PreparedStatement statement = conn.prepareStatement(query);
-            statement.setString(1, tenantId);
-            ResultSet rs = statement.executeQuery();
-            
-            assertTrue (rs.next());
-            assertEquals(ROW1, rs.getString(1));
-            assertEquals(new Date((long) 7 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
-            assertEquals(toTimestamp("1970-01-10 00:58:00.000"), rs.getTimestamp(3));
-            
-            assertTrue (rs.next());
-            assertEquals(ROW2, rs.getString(1));
-            assertEquals(new Date((long) 14 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
-            assertEquals(toTimestamp("1970-01-20 01:02:40.000"), rs.getTimestamp(3));
-            
-            assertTrue (rs.next());
-            assertEquals(ROW3, rs.getString(1));
-            assertEquals(new Date((long) 28 * QueryConstants.MILLIS_IN_DAY), rs.getDate(2));
-            assertEquals(toTimestamp("1970-01-30 01:30:20.000"), rs.getTimestamp(3));
-            
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
-    }
+  }
 
 }
-

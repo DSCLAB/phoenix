@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -25,26 +24,27 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PVarbinary;
 
 public class RowKeyExpression extends BaseTerminalExpression {
-    public static final RowKeyExpression INSTANCE = new RowKeyExpression();
-    
-    private RowKeyExpression() {
-    }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        tuple.getKey(ptr);
-        return true;
-    }
+  public static final RowKeyExpression INSTANCE = new RowKeyExpression();
 
-    @Override
-    public PDataType getDataType() {
-        return PVarbinary.INSTANCE;
-    }
+  private RowKeyExpression() {
+  }
 
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    tuple.getKey(ptr);
+    return true;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PVarbinary.INSTANCE;
+  }
+
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }

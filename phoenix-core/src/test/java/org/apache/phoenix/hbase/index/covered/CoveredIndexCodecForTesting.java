@@ -27,44 +27,44 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.phoenix.hbase.index.builder.BaseIndexCodec;
 
 /**
- * An {@link IndexCodec} for testing that allow you to specify the index updates/deletes, regardless of the current
- * tables' state.
+ * An {@link IndexCodec} for testing that allow you to specify the index
+ * updates/deletes, regardless of the current tables' state.
  */
 public class CoveredIndexCodecForTesting extends BaseIndexCodec {
 
-    private List<IndexUpdate> deletes = new ArrayList<IndexUpdate>();
-    private List<IndexUpdate> updates = new ArrayList<IndexUpdate>();
+  private List<IndexUpdate> deletes = new ArrayList<IndexUpdate>();
+  private List<IndexUpdate> updates = new ArrayList<IndexUpdate>();
 
-    public void addIndexDelete(IndexUpdate... deletes) {
-        this.deletes.addAll(Arrays.asList(deletes));
-    }
+  public void addIndexDelete(IndexUpdate... deletes) {
+    this.deletes.addAll(Arrays.asList(deletes));
+  }
 
-    public void addIndexUpserts(IndexUpdate... updates) {
-        this.updates.addAll(Arrays.asList(updates));
-    }
+  public void addIndexUpserts(IndexUpdate... updates) {
+    this.updates.addAll(Arrays.asList(updates));
+  }
 
-    public void clear() {
-        this.deletes.clear();
-        this.updates.clear();
-    }
+  public void clear() {
+    this.deletes.clear();
+    this.updates.clear();
+  }
 
-    @Override
-    public Iterable<IndexUpdate> getIndexDeletes(TableState state, IndexMetaData context) {
-        return this.deletes;
-    }
+  @Override
+  public Iterable<IndexUpdate> getIndexDeletes(TableState state, IndexMetaData context) {
+    return this.deletes;
+  }
 
-    @Override
-    public Iterable<IndexUpdate> getIndexUpserts(TableState state, IndexMetaData context) {
-        return this.updates;
-    }
+  @Override
+  public Iterable<IndexUpdate> getIndexUpserts(TableState state, IndexMetaData context) {
+    return this.updates;
+  }
 
-    @Override
-    public void initialize(RegionCoprocessorEnvironment env) throws IOException {
-        // noop
-    }
+  @Override
+  public void initialize(RegionCoprocessorEnvironment env) throws IOException {
+    // noop
+  }
 
-    @Override
-    public boolean isEnabled(Mutation m) {
-        return true;
-    }
+  @Override
+  public boolean isEnabled(Mutation m) {
+    return true;
+  }
 }

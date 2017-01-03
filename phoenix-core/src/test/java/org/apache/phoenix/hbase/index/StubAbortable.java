@@ -25,6 +25,7 @@ import org.apache.hadoop.hbase.Abortable;
  * TEst helper to stub out an {@link Abortable} when needed.
  */
 public class StubAbortable implements Abortable {
+
   private static final Log LOG = LogFactory.getLog(StubAbortable.class);
   private boolean abort;
 

@@ -12,23 +12,23 @@ package org.apache.phoenix.schema.types;
 
 public class PrimitiveBytePhoenixArrayToStringTest extends BasePrimitiveIntPhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PTinyint.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PTinyint.INSTANCE;
+  }
 
-    @Override
-    protected Number getElement1() {
-        return (byte) 1;
-    }
+  @Override
+  protected Number getElement1() {
+    return (byte) 1;
+  }
 
-    @Override
-    protected Number getElement2() {
-        return (byte) 2;
-    }
+  @Override
+  protected Number getElement2() {
+    return (byte) 2;
+  }
 
-    @Override
-    protected Number getElement3() {
-        return (byte) 3;
-    }
+  @Override
+  protected Number getElement3() {
+    return (byte) 3;
+  }
 }

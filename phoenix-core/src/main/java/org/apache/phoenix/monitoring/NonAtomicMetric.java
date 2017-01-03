@@ -18,59 +18,62 @@
 package org.apache.phoenix.monitoring;
 
 /**
- * Version of {@link Metric} that can be used when the metric isn't getting concurrently modified/accessed by multiple
- * threads and the memory consistency effects of happen-before can be established. For example - phoenix client side
- * metrics are modified/accessed by only one thread at a time. Further, the actions of threads in the phoenix client
- * thread pool happen-before the actions of the thread that performs the aggregation of metrics. This makes
- * {@link NonAtomicMetric} a good fit for storing Phoenix's client side request level metrics.
+ * Version of {@link Metric} that can be used when the metric isn't getting
+ * concurrently modified/accessed by multiple threads and the memory consistency
+ * effects of happen-before can be established. For example - phoenix client
+ * side metrics are modified/accessed by only one thread at a time. Further, the
+ * actions of threads in the phoenix client thread pool happen-before the
+ * actions of the thread that performs the aggregation of metrics. This makes
+ * {@link NonAtomicMetric} a good fit for storing Phoenix's client side request
+ * level metrics.
  */
 class NonAtomicMetric implements Metric {
 
-    private final MetricType type;
-    private long value;
+  private final MetricType type;
+  private long value;
 
-    public NonAtomicMetric(MetricType type) {
-        this.type = type;
-    }
+  public NonAtomicMetric(MetricType type) {
+    this.type = type;
+  }
 
-    @Override
-    public String getName() {
-        return type.name();
-    }
+  @Override
+  public String getName() {
+    return type.name();
+  }
 
-    @Override
-    public String getDescription() {
-        return type.description();
-    }
+  @Override
+  public String getDescription() {
+    return type.description();
+  }
 
-    @Override
-    public long getValue() {
-        return value;
-    }
+  @Override
+  public long getValue() {
+    return value;
+  }
 
-    @Override
-    public void change(long delta) {
-        value += delta;
-    }
+  @Override
+  public void change(long delta) {
+    value += delta;
+  }
 
-    @Override
-    public void increment() {
-        value++;
-    }
+  @Override
+  public void increment() {
+    value++;
+  }
 
-    @Override
-    public String getCurrentMetricState() {
-        return getName() + ": " + value;
-    }
+  @Override
+  public String getCurrentMetricState() {
+    return getName() + ": " + value;
+  }
 
-    @Override
-    public void reset() {
-        value = 0;
-    }
+  @Override
+  public void reset() {
+    value = 0;
+  }
 
-    @Override
-    public void decrement() {
-        value--;
-    }
+  @Override
+  public void decrement() {
+    value--;
+  }
 
 }

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.cache;
 
 import java.io.Closeable;
@@ -28,23 +27,26 @@ import org.apache.tephra.Transaction;
 import org.apache.phoenix.index.IndexMaintainer;
 
 public interface IndexMetaDataCache extends Closeable {
-    public static final IndexMetaDataCache EMPTY_INDEX_META_DATA_CACHE = new IndexMetaDataCache() {
 
-        @Override
-        public void close() throws IOException {
-        }
+  public static final IndexMetaDataCache EMPTY_INDEX_META_DATA_CACHE = new IndexMetaDataCache() {
 
-        @Override
-        public List<IndexMaintainer> getIndexMaintainers() {
-            return Collections.emptyList();
-        }
+    @Override
+    public void close() throws IOException {
+    }
 
-        @Override
-        public Transaction getTransaction() {
-            return null;
-        }
-        
-    };
-    public List<IndexMaintainer> getIndexMaintainers();
-    public Transaction getTransaction();
+    @Override
+    public List<IndexMaintainer> getIndexMaintainers() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public Transaction getTransaction() {
+      return null;
+    }
+
+  };
+
+  public List<IndexMaintainer> getIndexMaintainers();
+
+  public Transaction getTransaction();
 }

@@ -60,157 +60,153 @@ import com.google.common.collect.Lists;
 public class PhoenixRecordReader<T extends DBWritable> implements
         RecordReader<WritableComparable, T> {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixRecordReader.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixRecordReader.class);
 
-    private final Configuration configuration;
-    private final QueryPlan queryPlan;
-    private WritableComparable key;
-    private T value = null;
-    private Class<T> inputClass;
-    private ResultIterator resultIterator = null;
-    private PhoenixResultSet resultSet;
-    private long readCount;
+  private final Configuration configuration;
+  private final QueryPlan queryPlan;
+  private WritableComparable key;
+  private T value = null;
+  private Class<T> inputClass;
+  private ResultIterator resultIterator = null;
+  private PhoenixResultSet resultSet;
+  private long readCount;
 
-    private boolean isTransactional;
+  private boolean isTransactional;
 
-    public PhoenixRecordReader(Class<T> inputClass, final Configuration configuration, final
-    QueryPlan queryPlan) throws IOException {
-        this.inputClass = inputClass;
-        this.configuration = configuration;
-        this.queryPlan = queryPlan;
+  public PhoenixRecordReader(Class<T> inputClass, final Configuration configuration, final QueryPlan queryPlan) throws IOException {
+    this.inputClass = inputClass;
+    this.configuration = configuration;
+    this.queryPlan = queryPlan;
 
-        isTransactional = PhoenixStorageHandlerUtil.isTransactionalTable(configuration);
+    isTransactional = PhoenixStorageHandlerUtil.isTransactionalTable(configuration);
+  }
+
+  public void initialize(InputSplit split) throws IOException {
+    final PhoenixInputSplit pSplit = (PhoenixInputSplit) split;
+    final List<Scan> scans = pSplit.getScans();
+
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Target table : " + queryPlan.getTableRef().getTable().getPhysicalName());
     }
 
-    public void initialize(InputSplit split) throws IOException {
-        final PhoenixInputSplit pSplit = (PhoenixInputSplit) split;
-        final List<Scan> scans = pSplit.getScans();
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Scan count[" + scans.size() + "] : " + Bytes.toStringBinary(scans.get(0)
+              .getStartRow()) + " ~ " + Bytes.toStringBinary(scans.get(scans.size() - 1)
+                      .getStopRow()));
+      LOG.debug("First scan : " + scans.get(0) + " scanAttribute : " + scans.get(0)
+              .getAttributesMap());
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Target table : " + queryPlan.getTableRef().getTable().getPhysicalName());
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Scan count[" + scans.size() + "] : " + Bytes.toStringBinary(scans.get(0)
-                    .getStartRow()) + " ~ " + Bytes.toStringBinary(scans.get(scans.size() - 1)
-                    .getStopRow()));
-            LOG.debug("First scan : " + scans.get(0) + " scanAttribute : " + scans.get(0)
-                    .getAttributesMap());
-
-            for (int i = 0, limit = scans.size(); i < limit; i++) {
-                LOG.debug("EXPECTED_UPPER_REGION_KEY[" + i + "] : " +
-                        Bytes.toStringBinary(scans.get(i).getAttribute(BaseScannerRegionObserver
-                                .EXPECTED_UPPER_REGION_KEY)));
-            }
-        }
-
-        try {
-            List<PeekingResultIterator> iterators = Lists.newArrayListWithExpectedSize(scans.size
-                    ());
-            StatementContext ctx = queryPlan.getContext();
-            ReadMetricQueue readMetrics = ctx.getReadMetricsQueue();
-            String tableName = queryPlan.getTableRef().getTable().getPhysicalName().getString();
-            long renewScannerLeaseThreshold = queryPlan.getContext().getConnection()
-                    .getQueryServices().getRenewLeaseThresholdMilliSeconds();
-            for (Scan scan : scans) {
-                scan.setAttribute(BaseScannerRegionObserver.SKIP_REGION_BOUNDARY_CHECK, Bytes
-                        .toBytes(true));
-                final TableResultIterator tableResultIterator = new TableResultIterator(queryPlan
-                        .getContext().getConnection().getMutationState(), scan,
-                        readMetrics.allotMetric(SCAN_BYTES, tableName), renewScannerLeaseThreshold, queryPlan, MapReduceParallelScanGrouper.getInstance()	);
-
-                PeekingResultIterator peekingResultIterator = LookAheadResultIterator.wrap
-                        (tableResultIterator);
-                iterators.add(peekingResultIterator);
-            }
-            ResultIterator iterator = queryPlan.useRoundRobinIterator()
-                    ? RoundRobinResultIterator.newIterator(iterators, queryPlan)
-                    : ConcatResultIterator.newIterator(iterators);
-            if (queryPlan.getContext().getSequenceManager().getSequenceCount() > 0) {
-                iterator = new SequenceResultIterator(iterator, queryPlan.getContext()
-                        .getSequenceManager());
-            }
-            this.resultIterator = iterator;
-            // Clone the row projector as it's not thread safe and would be used
-            // simultaneously by multiple threads otherwise.
-            this.resultSet = new PhoenixResultSet(this.resultIterator, queryPlan.getProjector()
-                    .cloneIfNecessary(),
-                    queryPlan.getContext());
-        } catch (SQLException e) {
-            LOG.error(String.format(" Error [%s] initializing PhoenixRecordReader. ", e
-                    .getMessage()));
-            Throwables.propagate(e);
-        }
+      for (int i = 0, limit = scans.size(); i < limit; i++) {
+        LOG.debug("EXPECTED_UPPER_REGION_KEY[" + i + "] : "
+                + Bytes.toStringBinary(scans.get(i).getAttribute(BaseScannerRegionObserver.EXPECTED_UPPER_REGION_KEY)));
+      }
     }
 
-    @Override
-    public boolean next(WritableComparable key, T value) throws IOException {
-        try {
-            if (!resultSet.next()) {
-                return false;
-            }
-            value.readFields(resultSet);
+    try {
+      List<PeekingResultIterator> iterators = Lists.newArrayListWithExpectedSize(scans.size());
+      StatementContext ctx = queryPlan.getContext();
+      ReadMetricQueue readMetrics = ctx.getReadMetricsQueue();
+      String tableName = queryPlan.getTableRef().getTable().getPhysicalName().getString();
+      long renewScannerLeaseThreshold = queryPlan.getContext().getConnection()
+              .getQueryServices().getRenewLeaseThresholdMilliSeconds();
+      for (Scan scan : scans) {
+        scan.setAttribute(BaseScannerRegionObserver.SKIP_REGION_BOUNDARY_CHECK, Bytes
+                .toBytes(true));
+        final TableResultIterator tableResultIterator = new TableResultIterator(queryPlan
+                .getContext().getConnection().getMutationState(), scan,
+                readMetrics.allotMetric(SCAN_BYTES, tableName), renewScannerLeaseThreshold, queryPlan, MapReduceParallelScanGrouper.getInstance());
 
-            if (isTransactional) {
-                ((PhoenixResultWritable) value).readPrimaryKey((PhoenixRowKey) key);
-            }
+        PeekingResultIterator peekingResultIterator = LookAheadResultIterator.wrap(tableResultIterator);
+        iterators.add(peekingResultIterator);
+      }
+      ResultIterator iterator = queryPlan.useRoundRobinIterator()
+              ? RoundRobinResultIterator.newIterator(iterators, queryPlan)
+              : ConcatResultIterator.newIterator(iterators);
+      if (queryPlan.getContext().getSequenceManager().getSequenceCount() > 0) {
+        iterator = new SequenceResultIterator(iterator, queryPlan.getContext()
+                .getSequenceManager());
+      }
+      this.resultIterator = iterator;
+      // Clone the row projector as it's not thread safe and would be used
+      // simultaneously by multiple threads otherwise.
+      this.resultSet = new PhoenixResultSet(this.resultIterator, queryPlan.getProjector()
+              .cloneIfNecessary(),
+              queryPlan.getContext());
+    } catch (SQLException e) {
+      LOG.error(String.format(" Error [%s] initializing PhoenixRecordReader. ", e
+              .getMessage()));
+      Throwables.propagate(e);
+    }
+  }
 
-            ++readCount;
+  @Override
+  public boolean next(WritableComparable key, T value) throws IOException {
+    try {
+      if (!resultSet.next()) {
+        return false;
+      }
+      value.readFields(resultSet);
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Result[" + readCount + "] : " + ((PhoenixResultWritable) value)
-                        .getResultMap());
-            }
+      if (isTransactional) {
+        ((PhoenixResultWritable) value).readPrimaryKey((PhoenixRowKey) key);
+      }
 
-            return true;
-        } catch (SQLException e) {
-            LOG.error(String.format(" Error [%s] occurred while iterating over the resultset. ",
-                    e.getMessage()));
-            throw new RuntimeException(e);
-        }
+      ++readCount;
+
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Result[" + readCount + "] : " + ((PhoenixResultWritable) value)
+                .getResultMap());
+      }
+
+      return true;
+    } catch (SQLException e) {
+      LOG.error(String.format(" Error [%s] occurred while iterating over the resultset. ",
+              e.getMessage()));
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public WritableComparable createKey() {
+    if (isTransactional) {
+      key = new PhoenixRowKey();
+    } else {
+      key = NullWritable.get();
     }
 
-    @Override
-    public WritableComparable createKey() {
-        if (isTransactional) {
-            key = new PhoenixRowKey();
-        } else {
-            key = NullWritable.get();
-        }
+    return key;
+  }
 
-        return key;
+  @Override
+  public T createValue() {
+    value = ReflectionUtils.newInstance(inputClass, this.configuration);
+    return value;
+  }
+
+  @Override
+  public long getPos() throws IOException {
+    return 0;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Read Count : " + readCount);
     }
 
-    @Override
-    public T createValue() {
-        value = ReflectionUtils.newInstance(inputClass, this.configuration);
-        return value;
+    if (resultIterator != null) {
+      try {
+        resultIterator.close();
+      } catch (SQLException e) {
+        LOG.error(" Error closing resultset.");
+        throw new RuntimeException(e);
+      }
     }
 
-    @Override
-    public long getPos() throws IOException {
-        return 0;
-    }
+  }
 
-    @Override
-    public void close() throws IOException {
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Read Count : " + readCount);
-        }
-
-        if (resultIterator != null) {
-            try {
-                resultIterator.close();
-            } catch (SQLException e) {
-                LOG.error(" Error closing resultset.");
-                throw new RuntimeException(e);
-            }
-        }
-
-    }
-
-    @Override
-    public float getProgress() throws IOException {
-        return 0;
-    }
+  @Override
+  public float getProgress() throws IOException {
+    return 0;
+  }
 }

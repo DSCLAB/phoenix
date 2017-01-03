@@ -27,37 +27,37 @@ import java.sql.SQLException;
 
 public class RenewLeaseOnlyTableIterator extends TableResultIterator {
 
-    private final int numberOfLeaseRenewals;
-    private final int thresholdNotReachedAt;
-    private final int doNotRenewLeaseAt;
-    private int counter = 0;
-    private RenewLeaseStatus lastRenewLeaseStatus;
+  private final int numberOfLeaseRenewals;
+  private final int thresholdNotReachedAt;
+  private final int doNotRenewLeaseAt;
+  private int counter = 0;
+  private RenewLeaseStatus lastRenewLeaseStatus;
 
-    public RenewLeaseOnlyTableIterator(int renewLeaseCount, int skipRenewLeaseAt, int doNotRenewLeaseAt) throws SQLException {
-        super();
-        checkArgument(renewLeaseCount >= skipRenewLeaseAt);
-        this.numberOfLeaseRenewals = renewLeaseCount;
-        this.thresholdNotReachedAt = skipRenewLeaseAt;
-        this.doNotRenewLeaseAt = doNotRenewLeaseAt;
-    }
+  public RenewLeaseOnlyTableIterator(int renewLeaseCount, int skipRenewLeaseAt, int doNotRenewLeaseAt) throws SQLException {
+    super();
+    checkArgument(renewLeaseCount >= skipRenewLeaseAt);
+    this.numberOfLeaseRenewals = renewLeaseCount;
+    this.thresholdNotReachedAt = skipRenewLeaseAt;
+    this.doNotRenewLeaseAt = doNotRenewLeaseAt;
+  }
 
-    @Override
-    public RenewLeaseStatus renewLease() {
-        counter++;
-        if (counter == thresholdNotReachedAt) {
-            lastRenewLeaseStatus = THRESHOLD_NOT_REACHED;
-        } else if (counter == doNotRenewLeaseAt) {
-            lastRenewLeaseStatus = NOT_RENEWED;
-        } else if (counter <= numberOfLeaseRenewals) {
-            lastRenewLeaseStatus = RENEWED;
-        } else {
-            lastRenewLeaseStatus = CLOSED;
-        }
-        return lastRenewLeaseStatus;
+  @Override
+  public RenewLeaseStatus renewLease() {
+    counter++;
+    if (counter == thresholdNotReachedAt) {
+      lastRenewLeaseStatus = THRESHOLD_NOT_REACHED;
+    } else if (counter == doNotRenewLeaseAt) {
+      lastRenewLeaseStatus = NOT_RENEWED;
+    } else if (counter <= numberOfLeaseRenewals) {
+      lastRenewLeaseStatus = RENEWED;
+    } else {
+      lastRenewLeaseStatus = CLOSED;
     }
+    return lastRenewLeaseStatus;
+  }
 
-    public RenewLeaseStatus getLastRenewLeaseStatus() {
-        return lastRenewLeaseStatus;
-    }
+  public RenewLeaseStatus getLastRenewLeaseStatus() {
+    return lastRenewLeaseStatus;
+  }
 
 }

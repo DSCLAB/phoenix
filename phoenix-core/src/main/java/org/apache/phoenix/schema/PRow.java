@@ -25,49 +25,50 @@ import org.apache.hadoop.hbase.client.Mutation;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * 
- * Provide a client API for updating rows. The updates are processed in
- * the calling order. Calling setValue after calling delete will cause the
- * delete to be canceled.  Conversely, calling delete after calling
- * setValue will cause all prior setValue calls to be canceled.
  *
- * 
+ * Provide a client API for updating rows. The updates are processed in the
+ * calling order. Calling setValue after calling delete will cause the delete to
+ * be canceled. Conversely, calling delete after calling setValue will cause all
+ * prior setValue calls to be canceled.
+ *
+ *
  * @since 0.1
  */
 public interface PRow {
-    Map<PColumn, byte[]> DELETE_MARKER = ImmutableMap.of();
 
-    /**
-     * Get the list of {@link org.apache.hadoop.hbase.client.Mutation} used to
-     * update an HTable after all mutations through calls to
-     * {@link #setValue(PColumn, Object)} or {@link #delete()}.
-     * @return the list of mutations representing all changes made to a row
-     * @throws ConstraintViolationException if row data violates schema
-     * constraint
-     */
-    public List<Mutation> toRowMutations();
-    
-    /**
-     * Set a column value in the row
-     * @param col the column for which the value is being set
-     * @param value the value
-     * @throws ConstraintViolationException if row data violates schema
-     * constraint
-     */
-    public void setValue(PColumn col, Object value);
-    
-    /**
-     * Set a column value in the row
-     * @param col the column for which the value is being set
-     * @param value the value
-     * @throws ConstraintViolationException if row data violates schema
-     * constraint
-     */
-    public void setValue(PColumn col, byte[] value);
-    
-    /**
-     * Delete the row. Note that a delete take precedence over any
-     * values that may have been set before or after the delete call.
-     */
-    public void delete();
+  Map<PColumn, byte[]> DELETE_MARKER = ImmutableMap.of();
+
+  /**
+   * Get the list of {@link org.apache.hadoop.hbase.client.Mutation} used to
+   * update an HTable after all mutations through calls to
+   * {@link #setValue(PColumn, Object)} or {@link #delete()}.
+   *
+   * @return the list of mutations representing all changes made to a row
+   * @throws ConstraintViolationException if row data violates schema constraint
+   */
+  public List<Mutation> toRowMutations();
+
+  /**
+   * Set a column value in the row
+   *
+   * @param col the column for which the value is being set
+   * @param value the value
+   * @throws ConstraintViolationException if row data violates schema constraint
+   */
+  public void setValue(PColumn col, Object value);
+
+  /**
+   * Set a column value in the row
+   *
+   * @param col the column for which the value is being set
+   * @param value the value
+   * @throws ConstraintViolationException if row data violates schema constraint
+   */
+  public void setValue(PColumn col, byte[] value);
+
+  /**
+   * Delete the row. Note that a delete take precedence over any values that may
+   * have been set before or after the delete call.
+   */
+  public void delete();
 }

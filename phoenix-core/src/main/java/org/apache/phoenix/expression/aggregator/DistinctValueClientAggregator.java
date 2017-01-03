@@ -25,38 +25,39 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 public class DistinctValueClientAggregator extends DistinctValueWithCountClientAggregator {
-    private final PDataType valueType;
-    private final PDataType resultType;
-    
-    public DistinctValueClientAggregator(SortOrder sortOrder, PDataType valueType, PDataType resultType) {
-        super(sortOrder);
-        this.valueType = valueType;
-        this.resultType = resultType;
-    }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (cachedResult == null) {            
-            Object[] values = new Object[valueVsCount.size()];
-            int i = 0;
-            for (ImmutableBytesPtr key : valueVsCount.keySet()) {
-                values[i++] = valueType.toObject(key, sortOrder);
-            }
-            cachedResult = PArrayDataType.instantiatePhoenixArray(valueType, values);
-        }
-        buffer = resultType.toBytes(cachedResult, sortOrder);
-        ptr.set(buffer);
-        return true;
-    }
+  private final PDataType valueType;
+  private final PDataType resultType;
 
-    @Override
-    protected PDataType getResultDataType() {
-        return resultType;
+  public DistinctValueClientAggregator(SortOrder sortOrder, PDataType valueType, PDataType resultType) {
+    super(sortOrder);
+    this.valueType = valueType;
+    this.resultType = resultType;
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (cachedResult == null) {
+      Object[] values = new Object[valueVsCount.size()];
+      int i = 0;
+      for (ImmutableBytesPtr key : valueVsCount.keySet()) {
+        values[i++] = valueType.toObject(key, sortOrder);
+      }
+      cachedResult = PArrayDataType.instantiatePhoenixArray(valueType, values);
     }
-    
-    @Override
-    protected int getBufferLength() {
-        return 0;
-    }
+    buffer = resultType.toBytes(cachedResult, sortOrder);
+    ptr.set(buffer);
+    return true;
+  }
+
+  @Override
+  protected PDataType getResultDataType() {
+    return resultType;
+  }
+
+  @Override
+  protected int getBufferLength() {
+    return 0;
+  }
 
 }

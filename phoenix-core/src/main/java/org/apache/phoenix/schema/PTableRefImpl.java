@@ -17,23 +17,22 @@
  */
 package org.apache.phoenix.schema;
 
-
 public class PTableRefImpl extends PTableRef {
-    
-    private final PTable table;
-    
-    public PTableRefImpl(PTable table, long lastAccessTime, long resolvedTime, int estimatedSize) {
-        super(lastAccessTime, resolvedTime, estimatedSize);
-        this.table = table;
-    }
 
-    public PTableRefImpl(PTableRef tableRef) {
-        super(tableRef.getLastAccessTime(), tableRef.getResolvedTimeStamp(), tableRef.getEstimatedSize());
-        this.table = tableRef.getTable();
-    }
+  private final PTable table;
 
-    @Override
-    public PTable getTable() {
-        return table;
-    }
+  public PTableRefImpl(PTable table, long lastAccessTime, long resolvedTime, int estimatedSize) {
+    super(lastAccessTime, resolvedTime, estimatedSize);
+    this.table = table;
+  }
+
+  public PTableRefImpl(PTableRef tableRef) {
+    super(tableRef.getLastAccessTime(), tableRef.getResolvedTimeStamp(), tableRef.getEstimatedSize());
+    this.table = tableRef.getTable();
+  }
+
+  @Override
+  public PTable getTable() {
+    return table;
+  }
 }

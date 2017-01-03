@@ -29,92 +29,92 @@ import org.apache.phoenix.schema.types.PDate;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.util.NumberUtil;
 
-
 /**
- * 
+ *
  * Subtract expression implementation
  *
- * 
+ *
  * @since 0.1
  */
 public class DecimalSubtractExpression extends SubtractExpression {
-    private Integer maxLength;
-    private Integer scale;
 
-    public DecimalSubtractExpression() {
+  private Integer maxLength;
+  private Integer scale;
+
+  public DecimalSubtractExpression() {
+  }
+
+  public DecimalSubtractExpression(List<Expression> children) {
+    super(children);
+    Expression firstChild = children.get(0);
+    maxLength = getPrecision(firstChild);
+    scale = getScale(firstChild);
+    for (int i = 1; i < children.size(); i++) {
+      Expression childExpr = children.get(i);
+      maxLength = getPrecision(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
+      scale = getScale(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
     }
+  }
 
-    public DecimalSubtractExpression(List<Expression> children) {
-        super(children);
-        Expression firstChild = children.get(0);
-        maxLength = getPrecision(firstChild);
-        scale = getScale(firstChild);
-        for (int i=1; i<children.size(); i++) {
-            Expression childExpr = children.get(i);
-            maxLength = getPrecision(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
-            scale = getScale(maxLength, getPrecision(childExpr), scale, getScale(childExpr));
-        }
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    BigDecimal result = null;
+    for (int i = 0; i < children.size(); i++) {
+      Expression childExpr = children.get(i);
+      if (!childExpr.evaluate(tuple, ptr)) {
+        return false;
+      }
+      if (ptr.getLength() == 0) {
+        return true;
+      }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        BigDecimal result = null;
-        for (int i=0; i<children.size(); i++) {
-            Expression childExpr = children.get(i);
-            if (!childExpr.evaluate(tuple, ptr)) { 
-                return false;
-            }
-            if (ptr.getLength() == 0) {
-                return true;
-            }
-            
-            PDataType childType = childExpr.getDataType();
-            boolean isDate = childType.isCoercibleTo(PDate.INSTANCE);
-            SortOrder childSortOrder = childExpr.getSortOrder();
-            BigDecimal bd = isDate ?
-                    BigDecimal.valueOf(childType.getCodec().decodeLong(ptr, childSortOrder)) :
-                    (BigDecimal) PDecimal.INSTANCE.toObject(ptr, childType, childSortOrder);
-            
-            if (result == null) {
-                result = bd;
-            } else {
-                result = result.subtract(bd);
-                /*
+      PDataType childType = childExpr.getDataType();
+      boolean isDate = childType.isCoercibleTo(PDate.INSTANCE);
+      SortOrder childSortOrder = childExpr.getSortOrder();
+      BigDecimal bd = isDate
+              ? BigDecimal.valueOf(childType.getCodec().decodeLong(ptr, childSortOrder))
+              : (BigDecimal) PDecimal.INSTANCE.toObject(ptr, childType, childSortOrder);
+
+      if (result == null) {
+        result = bd;
+      } else {
+        result = result.subtract(bd);
+        /*
                  * Special case for date subtraction - note that only first two expression may be dates.
                  * We need to convert the date to a unit of "days" because that's what sql expects.
-                 */
-                if (isDate) {
-                    result = result.divide(BD_MILLIS_IN_DAY, PDataType.DEFAULT_MATH_CONTEXT);
-                }
-            }
+         */
+        if (isDate) {
+          result = result.divide(BD_MILLIS_IN_DAY, PDataType.DEFAULT_MATH_CONTEXT);
         }
-        if (maxLength != null || scale != null) {
-            result = NumberUtil.setDecimalWidthAndScale(result, maxLength, scale);
-        }
-        if (result == null) {
-            throw new DataExceedsCapacityException(PDecimal.INSTANCE, maxLength, scale);
-        }
-        ptr.set(PDecimal.INSTANCE.toBytes(result));
-        return true;
+      }
     }
+    if (maxLength != null || scale != null) {
+      result = NumberUtil.setDecimalWidthAndScale(result, maxLength, scale);
+    }
+    if (result == null) {
+      throw new DataExceedsCapacityException(PDecimal.INSTANCE, maxLength, scale);
+    }
+    ptr.set(PDecimal.INSTANCE.toBytes(result));
+    return true;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PDecimal.INSTANCE;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PDecimal.INSTANCE;
+  }
 
-    @Override
-    public Integer getScale() {
-        return scale;
-    }
+  @Override
+  public Integer getScale() {
+    return scale;
+  }
 
-    @Override
-    public Integer getMaxLength() {
-        return maxLength;
-    }
+  @Override
+  public Integer getMaxLength() {
+    return maxLength;
+  }
 
-    @Override
-    public ArithmeticExpression clone(List<Expression> children) {
-        return new DecimalSubtractExpression(children);
-    }
+  @Override
+  public ArithmeticExpression clone(List<Expression> children) {
+    return new DecimalSubtractExpression(children);
+  }
 }

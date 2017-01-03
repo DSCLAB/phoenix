@@ -36,62 +36,62 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.ServerUtil;
 
 public class ScanningResultIterator implements ResultIterator {
-    private final ResultScanner scanner;
-    private final CombinableMetric scanMetrics;
 
-    public ScanningResultIterator(ResultScanner scanner, CombinableMetric scanMetrics) {
-        this.scanner = scanner;
-        this.scanMetrics = scanMetrics;
+  private final ResultScanner scanner;
+  private final CombinableMetric scanMetrics;
+
+  public ScanningResultIterator(ResultScanner scanner, CombinableMetric scanMetrics) {
+    this.scanner = scanner;
+    this.scanMetrics = scanMetrics;
+  }
+
+  @Override
+  public void close() throws SQLException {
+    scanner.close();
+  }
+
+  @Override
+  public Tuple next() throws SQLException {
+    try {
+      Result result = scanner.next();
+      if (result == null) {
+        close(); // Free up resources early
+        return null;
+      }
+      calculateScanSize(result);
+      // TODO: use ResultTuple.setResult(result)?
+      // Need to create a new one if holding on to it (i.e. OrderedResultIterator)
+      return new ResultTuple(result);
+    } catch (IOException e) {
+      throw ServerUtil.parseServerException(e);
     }
+  }
 
-    @Override
-    public void close() throws SQLException {
-        scanner.close();
-    }
+  @Override
+  public void explain(List<String> planSteps) {
+  }
 
-    @Override
-    public Tuple next() throws SQLException {
-        try {
-            Result result = scanner.next();
-            if (result == null) {
-                close(); // Free up resources early
-                return null;
-            }
-            calculateScanSize(result);
-            // TODO: use ResultTuple.setResult(result)?
-            // Need to create a new one if holding on to it (i.e. OrderedResultIterator)
-            return new ResultTuple(result);
-        } catch (IOException e) {
-            throw ServerUtil.parseServerException(e);
+  @Override
+  public String toString() {
+    return "ScanningResultIterator [scanner=" + scanner + "]";
+  }
+
+  private void calculateScanSize(Result result) {
+    if (GlobalClientMetrics.isMetricsEnabled() || scanMetrics != NoOpRequestMetric.INSTANCE) {
+      if (result != null) {
+        Cell[] cells = result.rawCells();
+        long scanResultSize = 0;
+        for (Cell cell : cells) {
+          KeyValue kv = KeyValueUtil.ensureKeyValue(cell);
+          scanResultSize += kv.heapSize();
         }
+        scanMetrics.change(scanResultSize);
+        GLOBAL_SCAN_BYTES.update(scanResultSize);
+      }
     }
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {
-    }
-
-    @Override
-    public String toString() {
-        return "ScanningResultIterator [scanner=" + scanner + "]";
-    }
-
-    private void calculateScanSize(Result result) {
-        if (GlobalClientMetrics.isMetricsEnabled() || scanMetrics != NoOpRequestMetric.INSTANCE) {
-            if (result != null) {
-                Cell[] cells = result.rawCells();
-                long scanResultSize = 0;
-                for (Cell cell : cells) {
-                    KeyValue kv = KeyValueUtil.ensureKeyValue(cell);
-                    scanResultSize += kv.heapSize();
-                }
-                scanMetrics.change(scanResultSize);
-                GLOBAL_SCAN_BYTES.update(scanResultSize);
-            }
-        }
-    }
-
-
-    public ResultScanner getScanner() {
-        return scanner;
-    }
+  public ResultScanner getScanner() {
+    return scanner;
+  }
 }

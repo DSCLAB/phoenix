@@ -26,38 +26,37 @@ import java.sql.Date;
 /**
  * ObjectInspector for date type
  */
-
 public class PhoenixDateObjectInspector extends AbstractPhoenixObjectInspector<DateWritable>
         implements DateObjectInspector {
 
-    public PhoenixDateObjectInspector() {
-        super(TypeInfoFactory.dateTypeInfo);
+  public PhoenixDateObjectInspector() {
+    super(TypeInfoFactory.dateTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new Date(((Date) o).getTime());
+  }
+
+  @Override
+  public DateWritable getPrimitiveWritableObject(Object o) {
+    DateWritable value = null;
+
+    if (o != null) {
+      try {
+        value = new DateWritable((Date) o);
+      } catch (Exception e) {
+        logExceptionMessage(o, "DATE");
+        value = new DateWritable();
+      }
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new Date(((Date) o).getTime());
-    }
+    return value;
+  }
 
-    @Override
-    public DateWritable getPrimitiveWritableObject(Object o) {
-        DateWritable value = null;
-
-        if (o != null) {
-            try {
-                value = new DateWritable((Date) o);
-            } catch (Exception e) {
-                logExceptionMessage(o, "DATE");
-                value = new DateWritable();
-            }
-        }
-
-        return value;
-    }
-
-    @Override
-    public Date getPrimitiveJavaObject(Object o) {
-        return (Date) o;
-    }
+  @Override
+  public Date getPrimitiveJavaObject(Object o) {
+    return (Date) o;
+  }
 
 }

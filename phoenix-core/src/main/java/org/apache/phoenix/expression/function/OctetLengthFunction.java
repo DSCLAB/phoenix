@@ -31,36 +31,39 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PInteger;
 import org.apache.phoenix.schema.types.PVarbinary;
 
-@BuiltInFunction(name = OctetLengthFunction.NAME, args = { @Argument(allowedTypes = {
-        PBinary.class, PVarbinary.class }), })
+@BuiltInFunction(name = OctetLengthFunction.NAME, args = {
+  @Argument(allowedTypes = {
+    PBinary.class, PVarbinary.class}),})
 public class OctetLengthFunction extends ScalarFunction {
 
-    public static final String NAME = "OCTET_LENGTH";
+  public static final String NAME = "OCTET_LENGTH";
 
-    public OctetLengthFunction() {
-    }
+  public OctetLengthFunction() {
+  }
 
-    public OctetLengthFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public OctetLengthFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        // get binary data parameter
-        Expression dataExpr = children.get(0);
-        if (!dataExpr.evaluate(tuple, ptr)) return false;
-        // set result
-        ((PBinaryBase) dataExpr.getDataType()).octetLength(ptr, dataExpr.getSortOrder(), ptr);
-        return true;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    // get binary data parameter
+    Expression dataExpr = children.get(0);
+    if (!dataExpr.evaluate(tuple, ptr)) {
+      return false;
     }
+    // set result
+    ((PBinaryBase) dataExpr.getDataType()).octetLength(ptr, dataExpr.getSortOrder(), ptr);
+    return true;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 }

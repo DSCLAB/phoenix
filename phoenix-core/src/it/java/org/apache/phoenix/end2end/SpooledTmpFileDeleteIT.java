@@ -36,116 +36,115 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
-
-
 public class SpooledTmpFileDeleteIT extends BaseHBaseManagedTimeIT {
-	
-    private Connection conn = null;
-    private Properties props = null;
-    private File spoolDir;
 
-    @BeforeClass
-    @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String, String> props = Maps.newHashMapWithExpectedSize(1);
-        // disable renewing leases. This will force spooling to happen.
-        props.put(QueryServices.RENEW_LEASE_ENABLED, Boolean.toString(false));
-        // Must update config before starting server
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  private Connection conn = null;
+  private Properties props = null;
+  private File spoolDir;
+
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseClientManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(1);
+    // disable renewing leases. This will force spooling to happen.
+    props.put(QueryServices.RENEW_LEASE_ENABLED, Boolean.toString(false));
+    // Must update config before starting server
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
+
+  @Before
+  public void setup() throws SQLException {
+    props = new Properties();
+    spoolDir = Files.createTempDir();
+    props.put(QueryServices.SPOOL_DIRECTORY, spoolDir.getPath());
+    props.setProperty(QueryServices.SPOOL_THRESHOLD_BYTES_ATTRIB, Integer.toString(1));
+    conn = DriverManager.getConnection(getUrl(), props);
+    Statement stmt = conn.createStatement();
+    stmt.execute("CREATE TABLE test (ID varchar NOT NULL PRIMARY KEY) SPLIT ON ('EA','EZ')");
+    stmt.execute("UPSERT INTO test VALUES ('AA')");
+    stmt.execute("UPSERT INTO test VALUES ('EB')");
+    stmt.execute("UPSERT INTO test VALUES ('FA')");
+    stmt.close();
+    conn.commit();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    if (spoolDir != null) {
+      spoolDir.delete();
     }
-	
-	@Before 
-	public void setup() throws SQLException {
-		props = new Properties();
-		spoolDir =  Files.createTempDir();
-		props.put(QueryServices.SPOOL_DIRECTORY, spoolDir.getPath());
-        props.setProperty(QueryServices.SPOOL_THRESHOLD_BYTES_ATTRIB, Integer.toString(1));
-        conn = DriverManager.getConnection(getUrl(), props);
-		Statement stmt = conn.createStatement();
-		stmt.execute("CREATE TABLE test (ID varchar NOT NULL PRIMARY KEY) SPLIT ON ('EA','EZ')");
-		stmt.execute("UPSERT INTO test VALUES ('AA')");
-		stmt.execute("UPSERT INTO test VALUES ('EB')");    
-		stmt.execute("UPSERT INTO test VALUES ('FA')");    
-		stmt.close();
-		conn.commit();
-	}
-	
-	@After
-	public void tearDown() throws Exception {
-	    if (spoolDir != null) {
-	        spoolDir.delete();
-	    }
-	}
+  }
 
-	@Test
-	public void testDeleteAllSpooledTmpFiles() throws SQLException, Throwable {
-		File dir = new File(spoolDir.getPath());
-		File[] files = null; 
+  @Test
+  public void testDeleteAllSpooledTmpFiles() throws SQLException, Throwable {
+    File dir = new File(spoolDir.getPath());
+    File[] files = null;
 
-		class FilenameFilter implements FileFilter {
-			@Override
-			public boolean accept(File dir) {
-				return dir.getName().toLowerCase().endsWith(".bin") && 
-						dir.getName().startsWith("ResultSpooler");
-			}
-		}
+    class FilenameFilter implements FileFilter {
 
-		FilenameFilter fnameFilter = new FilenameFilter();
+      @Override
+      public boolean accept(File dir) {
+        return dir.getName().toLowerCase().endsWith(".bin")
+                && dir.getName().startsWith("ResultSpooler");
+      }
+    }
 
-		// clean up first
-		files = dir.listFiles(fnameFilter);
-		for (File file : files) {
-			file.delete();
-		}
+    FilenameFilter fnameFilter = new FilenameFilter();
 
-		String query = "select * from TEST";
-		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery(query);
-		assertTrue(rs.next());
-		files = dir.listFiles(fnameFilter);
-		assertTrue(files.length > 0);
-		List<String> fileNames = new ArrayList<String>();
-		for (File file : files) {
-			fileNames.add(file.getName());
-		}
+    // clean up first
+    files = dir.listFiles(fnameFilter);
+    for (File file : files) {
+      file.delete();
+    }
 
-		String preparedQuery = "select * from test where id = ?";
-		PreparedStatement pstmt = conn.prepareStatement(preparedQuery);
-		pstmt.setString(1, "EB");
-		ResultSet prs = pstmt.executeQuery(preparedQuery);
-		assertTrue(prs.next());
-		files = dir.listFiles(fnameFilter);
-		assertTrue(files.length > 0);
-		for (File file : files) {
-			fileNames.add(file.getName());
-		}
+    String query = "select * from TEST";
+    Statement statement = conn.createStatement();
+    ResultSet rs = statement.executeQuery(query);
+    assertTrue(rs.next());
+    files = dir.listFiles(fnameFilter);
+    assertTrue(files.length > 0);
+    List<String> fileNames = new ArrayList<String>();
+    for (File file : files) {
+      fileNames.add(file.getName());
+    }
 
-		Connection conn2 = DriverManager.getConnection(getUrl(), props);
-		String query2 = "select * from TEST";
-		Statement statement2 = conn2.createStatement();
-		ResultSet rs2 = statement2.executeQuery(query2);
-		assertTrue(rs2.next());
-		files = dir.listFiles(fnameFilter);
-		assertTrue(files.length > 0);
+    String preparedQuery = "select * from test where id = ?";
+    PreparedStatement pstmt = conn.prepareStatement(preparedQuery);
+    pstmt.setString(1, "EB");
+    ResultSet prs = pstmt.executeQuery(preparedQuery);
+    assertTrue(prs.next());
+    files = dir.listFiles(fnameFilter);
+    assertTrue(files.length > 0);
+    for (File file : files) {
+      fileNames.add(file.getName());
+    }
 
-		String preparedQuery2 = "select * from test where id = ?";
-		PreparedStatement pstmt2 = conn2.prepareStatement(preparedQuery2);
-		pstmt2.setString(1, "EB");
-		ResultSet prs2 = pstmt2.executeQuery(preparedQuery2);
-		assertTrue(prs2.next());
-		files = dir.listFiles(fnameFilter);
-		assertTrue(files.length > 0);
+    Connection conn2 = DriverManager.getConnection(getUrl(), props);
+    String query2 = "select * from TEST";
+    Statement statement2 = conn2.createStatement();
+    ResultSet rs2 = statement2.executeQuery(query2);
+    assertTrue(rs2.next());
+    files = dir.listFiles(fnameFilter);
+    assertTrue(files.length > 0);
 
-		conn.close();
+    String preparedQuery2 = "select * from test where id = ?";
+    PreparedStatement pstmt2 = conn2.prepareStatement(preparedQuery2);
+    pstmt2.setString(1, "EB");
+    ResultSet prs2 = pstmt2.executeQuery(preparedQuery2);
+    assertTrue(prs2.next());
+    files = dir.listFiles(fnameFilter);
+    assertTrue(files.length > 0);
 
-		files = dir.listFiles(fnameFilter);
+    conn.close();
 
-		for (File file : files) {
-			assertFalse(fileNames.contains(file.getName()));
-		}
-		conn2.close();
-		files = dir.listFiles(fnameFilter);
-		assertTrue(files.length == 0);
-	}
+    files = dir.listFiles(fnameFilter);
+
+    for (File file : files) {
+      assertFalse(fileNames.contains(file.getName()));
+    }
+    conn2.close();
+    files = dir.listFiles(fnameFilter);
+    assertTrue(files.length == 0);
+  }
 
 }

@@ -27,45 +27,47 @@ import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 /**
  *
  * Filter that evaluates WHERE clause expression, used in the case where there
- * are references to multiple unique column qualifiers over one or more column families.
+ * are references to multiple unique column qualifiers over one or more column
+ * families.
  *
  */
 public class MultiCQKeyValueComparisonFilter extends MultiKeyValueComparisonFilter {
-    private ImmutableBytesPtr ptr = new ImmutableBytesPtr();
 
-    public MultiCQKeyValueComparisonFilter() {
-    }
+  private ImmutableBytesPtr ptr = new ImmutableBytesPtr();
 
-    public MultiCQKeyValueComparisonFilter(Expression expression) {
-        super(expression);
-    }
+  public MultiCQKeyValueComparisonFilter() {
+  }
 
-    @Override
-    protected Object setColumnKey(byte[] cf, int cfOffset, int cfLength, byte[] cq, int cqOffset,
-            int cqLength) {
-        ptr.set(cq, cqOffset, cqLength);
-        return ptr;
-    }
+  public MultiCQKeyValueComparisonFilter(Expression expression) {
+    super(expression);
+  }
 
-    @Override
-    protected Object newColumnKey(byte[] cf, int cfOffset, int cfLength, byte[] cq, int cqOffset,
-            int cqLength) {
-        byte[] cfKey;
-        if (cfOffset == 0 && cf.length == cfLength) {
-            cfKey = cf;
-        } else {
-            cfKey = new byte[cfLength];
-            System.arraycopy(cf, cfOffset, cfKey, 0, cfLength);
-        }
-        cfSet.add(cfKey);
-        return new ImmutableBytesPtr(cq, cqOffset, cqLength);
-    }
+  @Override
+  protected Object setColumnKey(byte[] cf, int cfOffset, int cfLength, byte[] cq, int cqOffset,
+          int cqLength) {
+    ptr.set(cq, cqOffset, cqLength);
+    return ptr;
+  }
 
-    public static MultiCQKeyValueComparisonFilter parseFrom(final byte [] pbBytes) throws DeserializationException {
-        try {
-            return (MultiCQKeyValueComparisonFilter)Writables.getWritable(pbBytes, new MultiCQKeyValueComparisonFilter());
-        } catch (IOException e) {
-            throw new DeserializationException(e);
-        }
+  @Override
+  protected Object newColumnKey(byte[] cf, int cfOffset, int cfLength, byte[] cq, int cqOffset,
+          int cqLength) {
+    byte[] cfKey;
+    if (cfOffset == 0 && cf.length == cfLength) {
+      cfKey = cf;
+    } else {
+      cfKey = new byte[cfLength];
+      System.arraycopy(cf, cfOffset, cfKey, 0, cfLength);
     }
+    cfSet.add(cfKey);
+    return new ImmutableBytesPtr(cq, cqOffset, cqLength);
+  }
+
+  public static MultiCQKeyValueComparisonFilter parseFrom(final byte[] pbBytes) throws DeserializationException {
+    try {
+      return (MultiCQKeyValueComparisonFilter) Writables.getWritable(pbBytes, new MultiCQKeyValueComparisonFilter());
+    } catch (IOException e) {
+      throw new DeserializationException(e);
+    }
+  }
 }

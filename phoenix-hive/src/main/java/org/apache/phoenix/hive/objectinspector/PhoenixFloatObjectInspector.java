@@ -24,32 +24,31 @@ import org.apache.hadoop.io.FloatWritable;
 /**
  * ObjectInspector for float type
  */
-
 public class PhoenixFloatObjectInspector extends AbstractPhoenixObjectInspector<FloatWritable>
         implements FloatObjectInspector {
 
-    public PhoenixFloatObjectInspector() {
-        super(TypeInfoFactory.floatTypeInfo);
+  public PhoenixFloatObjectInspector() {
+    super(TypeInfoFactory.floatTypeInfo);
+  }
+
+  @Override
+  public Object copyObject(Object o) {
+    return o == null ? null : new Float((Float) o);
+  }
+
+  @Override
+  public float get(Object o) {
+    Float value = null;
+
+    if (o != null) {
+      try {
+        value = ((Float) o).floatValue();
+      } catch (Exception e) {
+        logExceptionMessage(o, "LONG");
+      }
     }
 
-    @Override
-    public Object copyObject(Object o) {
-        return o == null ? null : new Float((Float) o);
-    }
-
-    @Override
-    public float get(Object o) {
-        Float value = null;
-
-        if (o != null) {
-            try {
-                value = ((Float) o).floatValue();
-            } catch (Exception e) {
-                logExceptionMessage(o, "LONG");
-            }
-        }
-
-        return value;
-    }
+    return value;
+  }
 
 }

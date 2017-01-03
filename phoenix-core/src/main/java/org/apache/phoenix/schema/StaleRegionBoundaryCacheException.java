@@ -24,23 +24,24 @@ import org.apache.phoenix.exception.SQLExceptionInfo;
 import org.apache.phoenix.util.SchemaUtil;
 
 public class StaleRegionBoundaryCacheException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode ERROR_CODE = SQLExceptionCode.STALE_REGION_BOUNDARY_CACHE;
 
-    public StaleRegionBoundaryCacheException() {
-        this(null, null);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode ERROR_CODE = SQLExceptionCode.STALE_REGION_BOUNDARY_CACHE;
 
-    public StaleRegionBoundaryCacheException(byte[] fullTableName) {
-        this(SchemaUtil.getSchemaNameFromFullName(fullTableName),SchemaUtil.getTableNameFromFullName(fullTableName));
-    }
+  public StaleRegionBoundaryCacheException() {
+    this(null, null);
+  }
 
-    public StaleRegionBoundaryCacheException(String fullTableName) {
-        this(SchemaUtil.getSchemaNameFromFullName(fullTableName),SchemaUtil.getTableNameFromFullName(fullTableName));
-    }
+  public StaleRegionBoundaryCacheException(byte[] fullTableName) {
+    this(SchemaUtil.getSchemaNameFromFullName(fullTableName), SchemaUtil.getTableNameFromFullName(fullTableName));
+  }
 
-    public StaleRegionBoundaryCacheException(String schemaName, String tableName) {
-        super(new SQLExceptionInfo.Builder(ERROR_CODE).setSchemaName(schemaName).setTableName(tableName).build().toString(),
+  public StaleRegionBoundaryCacheException(String fullTableName) {
+    this(SchemaUtil.getSchemaNameFromFullName(fullTableName), SchemaUtil.getTableNameFromFullName(fullTableName));
+  }
+
+  public StaleRegionBoundaryCacheException(String schemaName, String tableName) {
+    super(new SQLExceptionInfo.Builder(ERROR_CODE).setSchemaName(schemaName).setTableName(tableName).build().toString(),
             ERROR_CODE.getSQLState(), ERROR_CODE.getErrorCode(), null);
-    }
+  }
 }

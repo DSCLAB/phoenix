@@ -24,7 +24,7 @@ import org.apache.phoenix.expression.Expression;
 
 public class CloneNonDeterministicExpressionVisitor extends CloneExpressionVisitor {
 
-    public boolean isCloneNode(Expression node, List<Expression> children) {
-        return Determinism.PER_INVOCATION.compareTo(node.getDeterminism()) <= 0;
-    }
+  public boolean isCloneNode(Expression node, List<Expression> children) {
+    return Determinism.PER_INVOCATION.compareTo(node.getDeterminism()) <= 0;
+  }
 }

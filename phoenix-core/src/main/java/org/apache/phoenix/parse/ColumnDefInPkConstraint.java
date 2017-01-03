@@ -20,25 +20,26 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.schema.SortOrder;
 
 public class ColumnDefInPkConstraint {
-    private final ColumnName columnDefName;
-    private final SortOrder sortOrder;
-    private final boolean isRowTimestamp;
-    
-    public ColumnDefInPkConstraint(ColumnName columnDefName, SortOrder sortOrder, boolean isRowTimestamp) {
-        this.columnDefName = columnDefName;
-        this.sortOrder = sortOrder;
-        this.isRowTimestamp = isRowTimestamp;
-    }
 
-    public ColumnName getColumnName() {
-        return columnDefName;
-    }
+  private final ColumnName columnDefName;
+  private final SortOrder sortOrder;
+  private final boolean isRowTimestamp;
 
-    public SortOrder getSortOrder() {
-        return sortOrder;
-    }
+  public ColumnDefInPkConstraint(ColumnName columnDefName, SortOrder sortOrder, boolean isRowTimestamp) {
+    this.columnDefName = columnDefName;
+    this.sortOrder = sortOrder;
+    this.isRowTimestamp = isRowTimestamp;
+  }
 
-    public boolean isRowTimestamp() {
-        return isRowTimestamp;
-    }
+  public ColumnName getColumnName() {
+    return columnDefName;
+  }
+
+  public SortOrder getSortOrder() {
+    return sortOrder;
+  }
+
+  public boolean isRowTimestamp() {
+    return isRowTimestamp;
+  }
 }

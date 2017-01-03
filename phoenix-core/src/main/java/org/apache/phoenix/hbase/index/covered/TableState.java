@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.covered;
 
 import java.io.IOException;
@@ -32,15 +31,17 @@ import org.apache.phoenix.hbase.index.covered.update.ColumnReference;
 import org.apache.phoenix.hbase.index.covered.update.IndexedColumnGroup;
 
 /**
- * Interface for the current state of the table. This is generally going to be as of a timestamp - a
- * view on the current state of the HBase table - so you don't have to worry about exposing too much
- * information.
+ * Interface for the current state of the table. This is generally going to be
+ * as of a timestamp - a view on the current state of the HBase table - so you
+ * don't have to worry about exposing too much information.
  */
 public interface TableState {
 
   // use this to get batch ids/ptable stuff
   /**
-   * WARNING: messing with this can affect the indexing plumbing. Use with caution :)
+   * WARNING: messing with this can affect the indexing plumbing. Use with
+   * caution :)
+   *
    * @return get the current environment in which this table lives.
    */
   public RegionCoprocessorEnvironment getEnvironment();
@@ -51,36 +52,44 @@ public interface TableState {
   public long getCurrentTimestamp();
 
   /**
-   * @return the attributes attached to the current update (e.g. {@link Mutation}).
+   * @return the attributes attached to the current update (e.g.
+   * {@link Mutation}).
    */
   public Map<String, byte[]> getUpdateAttributes();
 
   /**
    * Get a getter interface for the state of the index row
+   *
    * @param indexedColumns list of indexed columns.
-   * @param ignoreNewerMutations ignore mutations newer than m when determining current state. Useful
-   *        when replaying mutation state for partial index rebuild where writes succeeded to the data
-   *        table, but not to the index table.
+   * @param ignoreNewerMutations ignore mutations newer than m when determining
+   * current state. Useful when replaying mutation state for partial index
+   * rebuild where writes succeeded to the data table, but not to the index
+   * table.
    */
   Pair<ValueGetter, IndexUpdate> getIndexUpdateState(
-      Collection<? extends ColumnReference> indexedColumns, boolean ignoreNewerMutations) throws IOException;
+          Collection<? extends ColumnReference> indexedColumns, boolean ignoreNewerMutations) throws IOException;
 
   /**
-   * @return the row key for the current row for which we are building an index update.
+   * @return the row key for the current row for which we are building an index
+   * update.
    */
   byte[] getCurrentRowKey();
 
   /**
-   * Get the 'hint' for the columns that were indexed last time for the same set of keyvalues.
-   * Generally, this will only be used when fixing up a 'back in time' put or delete as we need to
-   * fix up all the indexes that reference the changed columns.
-   * @return the hint the index columns that were queried on the last iteration for the changed
-   *         column
+   * Get the 'hint' for the columns that were indexed last time for the same set
+   * of keyvalues. Generally, this will only be used when fixing up a 'back in
+   * time' put or delete as we need to fix up all the indexes that reference the
+   * changed columns.
+   *
+   * @return the hint the index columns that were queried on the last iteration
+   * for the changed column
    */
   List<? extends IndexedColumnGroup> getIndexColumnHints();
 
   /**
-   * Can be used to help the codec to determine which columns it should attempt to index.
+   * Can be used to help the codec to determine which columns it should attempt
+   * to index.
+   *
    * @return the keyvalues in the pending update to the table.
    */
   Collection<KeyValue> getPendingUpdate();

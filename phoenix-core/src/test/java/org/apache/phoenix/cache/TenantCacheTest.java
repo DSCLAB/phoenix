@@ -38,63 +38,64 @@ import com.google.common.base.Ticker;
 
 public class TenantCacheTest {
 
-    @Test
-    public void testInvalidateClosesMemoryChunk() throws SQLException {
-        int maxServerCacheTimeToLive = 10000;
-        long maxBytes = 1000;
-        int maxWaitMs = 1000;
-        GlobalMemoryManager memoryManager = new GlobalMemoryManager(maxBytes, maxWaitMs);
-        TenantCacheImpl newTenantCache = new TenantCacheImpl(memoryManager, maxServerCacheTimeToLive);
-        ImmutableBytesPtr cacheId = new ImmutableBytesPtr(Bytes.toBytes("a"));
-        ImmutableBytesWritable cachePtr = new ImmutableBytesWritable(Bytes.toBytes("a"));
-        newTenantCache.addServerCache(cacheId, cachePtr, ByteUtil.EMPTY_BYTE_ARRAY, cacheFactory);
-        assertEquals(maxBytes-1, memoryManager.getAvailableMemory());
-        newTenantCache.removeServerCache(cacheId);
-        assertEquals(maxBytes, memoryManager.getAvailableMemory());
-    }
-    
-    @Test
-    public void testTimeoutClosesMemoryChunk() throws Exception {
-        int maxServerCacheTimeToLive = 10;
-        long maxBytes = 1000;
-        int maxWaitMs = 10;
-        GlobalMemoryManager memoryManager = new GlobalMemoryManager(maxBytes, maxWaitMs);
-        ManualTicker ticker = new ManualTicker();
-        TenantCacheImpl cache = new TenantCacheImpl(memoryManager, maxServerCacheTimeToLive, ticker);
-        ImmutableBytesPtr cacheId1 = new ImmutableBytesPtr(Bytes.toBytes("a"));
-        ImmutableBytesWritable cachePtr = new ImmutableBytesWritable(Bytes.toBytes("a"));
-        cache.addServerCache(cacheId1, cachePtr, ByteUtil.EMPTY_BYTE_ARRAY, cacheFactory);
-        assertEquals(maxBytes-1, memoryManager.getAvailableMemory());
-        ticker.time += (maxServerCacheTimeToLive + 1) * 1000000;
-        cache.cleanUp();
-        assertEquals(maxBytes, memoryManager.getAvailableMemory());
-    }
-    
-    public static class ManualTicker extends Ticker {
-        public long time = 0;
-        
-        @Override
-        public long read() {
-            return time;
-        }
-        
-    }
-    
-    public static ServerCacheFactory cacheFactory = new ServerCacheFactory() {
+  @Test
+  public void testInvalidateClosesMemoryChunk() throws SQLException {
+    int maxServerCacheTimeToLive = 10000;
+    long maxBytes = 1000;
+    int maxWaitMs = 1000;
+    GlobalMemoryManager memoryManager = new GlobalMemoryManager(maxBytes, maxWaitMs);
+    TenantCacheImpl newTenantCache = new TenantCacheImpl(memoryManager, maxServerCacheTimeToLive);
+    ImmutableBytesPtr cacheId = new ImmutableBytesPtr(Bytes.toBytes("a"));
+    ImmutableBytesWritable cachePtr = new ImmutableBytesWritable(Bytes.toBytes("a"));
+    newTenantCache.addServerCache(cacheId, cachePtr, ByteUtil.EMPTY_BYTE_ARRAY, cacheFactory);
+    assertEquals(maxBytes - 1, memoryManager.getAvailableMemory());
+    newTenantCache.removeServerCache(cacheId);
+    assertEquals(maxBytes, memoryManager.getAvailableMemory());
+  }
 
-        @Override
-        public void readFields(DataInput arg0) throws IOException {
-        }
+  @Test
+  public void testTimeoutClosesMemoryChunk() throws Exception {
+    int maxServerCacheTimeToLive = 10;
+    long maxBytes = 1000;
+    int maxWaitMs = 10;
+    GlobalMemoryManager memoryManager = new GlobalMemoryManager(maxBytes, maxWaitMs);
+    ManualTicker ticker = new ManualTicker();
+    TenantCacheImpl cache = new TenantCacheImpl(memoryManager, maxServerCacheTimeToLive, ticker);
+    ImmutableBytesPtr cacheId1 = new ImmutableBytesPtr(Bytes.toBytes("a"));
+    ImmutableBytesWritable cachePtr = new ImmutableBytesWritable(Bytes.toBytes("a"));
+    cache.addServerCache(cacheId1, cachePtr, ByteUtil.EMPTY_BYTE_ARRAY, cacheFactory);
+    assertEquals(maxBytes - 1, memoryManager.getAvailableMemory());
+    ticker.time += (maxServerCacheTimeToLive + 1) * 1000000;
+    cache.cleanUp();
+    assertEquals(maxBytes, memoryManager.getAvailableMemory());
+  }
 
-        @Override
-        public void write(DataOutput arg0) throws IOException {
-        }
+  public static class ManualTicker extends Ticker {
 
-        @Override
-        public Closeable newCache(ImmutableBytesWritable cachePtr, byte[] txState, MemoryChunk chunk)
-                throws SQLException {
-            return chunk;
-        }
-        
-    };
+    public long time = 0;
+
+    @Override
+    public long read() {
+      return time;
+    }
+
+  }
+
+  public static ServerCacheFactory cacheFactory = new ServerCacheFactory() {
+
+    @Override
+    public void readFields(DataInput arg0) throws IOException {
+    }
+
+    @Override
+    public void write(DataOutput arg0) throws IOException {
+    }
+
+    @Override
+    public Closeable newCache(ImmutableBytesWritable cachePtr, byte[] txState, MemoryChunk chunk)
+            throws SQLException {
+      return chunk;
+    }
+
+  };
 }

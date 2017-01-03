@@ -19,9 +19,9 @@ package org.apache.phoenix.schema.types;
 
 public class PrimitiveIntPhoenixArrayToStringTest extends BasePrimitiveIntPhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PInteger.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PInteger.INSTANCE;
+  }
 
 }

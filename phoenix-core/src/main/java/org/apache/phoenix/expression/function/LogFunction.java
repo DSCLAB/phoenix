@@ -26,31 +26,33 @@ import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDouble;
 
-@BuiltInFunction(name = LogFunction.NAME, args = { @Argument(allowedTypes = { PDouble.class, PDecimal.class }),
-        @Argument(allowedTypes = { PDouble.class, PDecimal.class }, defaultValue = "1e1") })
+@BuiltInFunction(name = LogFunction.NAME, args = {
+  @Argument(allowedTypes = {PDouble.class, PDecimal.class})
+  ,
+        @Argument(allowedTypes = {PDouble.class, PDecimal.class}, defaultValue = "1e1")})
 public class LogFunction extends JavaMathTwoArgumentFunction {
 
-    public static final String NAME = "LOG";
+  public static final String NAME = "LOG";
 
-    public LogFunction() {
-    }
+  public LogFunction() {
+  }
 
-    public LogFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public LogFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    protected double compute(double firstArg, double secondArg) {
-        return Math.log(firstArg) / Math.log(secondArg);
-    }
+  @Override
+  protected double compute(double firstArg, double secondArg) {
+    return Math.log(firstArg) / Math.log(secondArg);
+  }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES;
+  }
 }

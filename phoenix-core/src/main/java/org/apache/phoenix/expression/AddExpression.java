@@ -21,34 +21,34 @@ import java.util.List;
 
 import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 
-
 /**
- * 
+ *
  * Subtract expression implementation
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class AddExpression extends BaseAddSubtractExpression {
-    public AddExpression() {
-    }
 
-    public AddExpression(List<Expression> children) {
-        super(children);
-    }
+  public AddExpression() {
+  }
 
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
-    }
+  public AddExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public String getOperatorString() {
-        return " + ";
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
     }
+    return t;
+  }
+
+  @Override
+  public String getOperatorString() {
+    return " + ";
+  }
 }

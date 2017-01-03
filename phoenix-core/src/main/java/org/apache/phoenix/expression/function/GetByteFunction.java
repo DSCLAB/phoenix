@@ -33,64 +33,75 @@ import org.apache.phoenix.schema.types.PInteger;
 import org.apache.phoenix.schema.types.PVarbinary;
 
 @BuiltInFunction(name = GetByteFunction.NAME, args = {
-        @Argument(allowedTypes = { PBinary.class, PVarbinary.class }),
-        @Argument(allowedTypes = { PInteger.class }) })
+  @Argument(allowedTypes = {PBinary.class, PVarbinary.class})
+  ,
+        @Argument(allowedTypes = {PInteger.class})})
 public class GetByteFunction extends PrefixFunction {
 
-    public static final String NAME = "GET_BYTE";
+  public static final String NAME = "GET_BYTE";
 
-    private Integer offsetPreCompute;
+  private Integer offsetPreCompute;
 
-    public GetByteFunction() {
+  public GetByteFunction() {
+  }
+
+  public GetByteFunction(List<Expression> children) throws SQLException {
+    super(children);
+    init();
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    // get offset parameter
+    int offset;
+    if (offsetPreCompute == null) {
+      Expression offsetExpr = children.get(1);
+      if (!offsetExpr.evaluate(tuple, ptr)) {
+        return false;
+      }
+      offset = (Integer) PInteger.INSTANCE.toObject(ptr, offsetExpr.getSortOrder());
+    } else {
+      offset = offsetPreCompute;
     }
-
-    public GetByteFunction(List<Expression> children) throws SQLException {
-        super(children);
-        init();
+    // get binary data parameter
+    Expression dataExpr = children.get(0);
+    if (!dataExpr.evaluate(tuple, ptr)) {
+      return false;
     }
-
-    @Override
-    public String getName() {
-        return NAME;
+    if (ptr.getLength() == 0) {
+      return true;
     }
+    int len = ptr.getLength();
+    offset = (offset % len + len) % len;
+    // set result
+    ((PBinaryBase) dataExpr.getDataType()).getByte(ptr, dataExpr.getSortOrder(), offset, ptr);
+    return true;
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        // get offset parameter
-        int offset;
-        if (offsetPreCompute == null) {
-            Expression offsetExpr = children.get(1);
-            if (!offsetExpr.evaluate(tuple, ptr)) return false;
-            offset = (Integer) PInteger.INSTANCE.toObject(ptr, offsetExpr.getSortOrder());
-        } else offset = offsetPreCompute;
-        // get binary data parameter
-        Expression dataExpr = children.get(0);
-        if (!dataExpr.evaluate(tuple, ptr)) return false;
-        if (ptr.getLength() == 0) return true;
-        int len = ptr.getLength();
-        offset = (offset % len + len) % len;
-        // set result
-        ((PBinaryBase) dataExpr.getDataType()).getByte(ptr, dataExpr.getSortOrder(), offset, ptr);
-        return true;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  private void init() {
+    Expression offsetExpr = children.get(1);
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    if (offsetExpr.isStateless() && offsetExpr.getDeterminism() == Determinism.ALWAYS
+            && offsetExpr.evaluate(null, ptr)) {
+      offsetPreCompute = (Integer) PInteger.INSTANCE.toObject(ptr, offsetExpr.getSortOrder());
+    } else {
+      offsetPreCompute = null;
     }
+  }
 
-    private void init() {
-        Expression offsetExpr = children.get(1);
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        if (offsetExpr.isStateless() && offsetExpr.getDeterminism() == Determinism.ALWAYS
-                && offsetExpr.evaluate(null, ptr)) {
-            offsetPreCompute = (Integer) PInteger.INSTANCE.toObject(ptr, offsetExpr.getSortOrder());
-        } else offsetPreCompute = null;
-    }
-
-    @Override
-    public OrderPreserving preservesOrder() {
-        return (offsetPreCompute != null && offsetPreCompute == 0) ? OrderPreserving.YES_IF_LAST
-                : OrderPreserving.NO;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return (offsetPreCompute != null && offsetPreCompute == 0) ? OrderPreserving.YES_IF_LAST
+            : OrderPreserving.NO;
+  }
 }

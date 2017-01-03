@@ -15,58 +15,58 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.configuration;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
 public class WriteParams {
-    private int writerThreadCount;
-    private long threadSleepDuration;
-    private long batchSize;
-    private long executionDurationInMs;
 
-    public WriteParams() {
-        this.batchSize = Long.MIN_VALUE;
-        this.writerThreadCount = Integer.MIN_VALUE;
-        this.threadSleepDuration = Long.MIN_VALUE;
-        this.executionDurationInMs = Long.MAX_VALUE;
-    }
+  private int writerThreadCount;
+  private long threadSleepDuration;
+  private long batchSize;
+  private long executionDurationInMs;
 
-    public long getThreadSleepDuration() {
-        return threadSleepDuration;
-    }
+  public WriteParams() {
+    this.batchSize = Long.MIN_VALUE;
+    this.writerThreadCount = Integer.MIN_VALUE;
+    this.threadSleepDuration = Long.MIN_VALUE;
+    this.executionDurationInMs = Long.MAX_VALUE;
+  }
 
-    @SuppressWarnings("unused")
-    public void setThreadSleepDuration(long threadSleepDuration) {
-        this.threadSleepDuration = threadSleepDuration;
-    }
+  public long getThreadSleepDuration() {
+    return threadSleepDuration;
+  }
 
-    public long getBatchSize() {
-        return batchSize;
-    }
+  @SuppressWarnings("unused")
+  public void setThreadSleepDuration(long threadSleepDuration) {
+    this.threadSleepDuration = threadSleepDuration;
+  }
 
-    @SuppressWarnings("unused")
-    public void setBatchSize(long batchSize) {
-        this.batchSize = batchSize;
-    }
+  public long getBatchSize() {
+    return batchSize;
+  }
 
-    public int getWriterThreadCount() {
-        return writerThreadCount;
-    }
+  @SuppressWarnings("unused")
+  public void setBatchSize(long batchSize) {
+    this.batchSize = batchSize;
+  }
 
-    @SuppressWarnings("unused")
-    public void setWriterThreadCount(int writerThreadCount) {
-        this.writerThreadCount = writerThreadCount;
-    }
+  public int getWriterThreadCount() {
+    return writerThreadCount;
+  }
 
-    @XmlAttribute()
-    public long getExecutionDurationInMs() {
-        return executionDurationInMs;
-    }
+  @SuppressWarnings("unused")
+  public void setWriterThreadCount(int writerThreadCount) {
+    this.writerThreadCount = writerThreadCount;
+  }
 
-    @SuppressWarnings("unused")
-    public void setExecutionDurationInMs(long executionDurationInMs) {
-        this.executionDurationInMs = executionDurationInMs;
-    }
+  @XmlAttribute()
+  public long getExecutionDurationInMs() {
+    return executionDurationInMs;
+  }
+
+  @SuppressWarnings("unused")
+  public void setExecutionDurationInMs(long executionDurationInMs) {
+    this.executionDurationInMs = executionDurationInMs;
+  }
 }

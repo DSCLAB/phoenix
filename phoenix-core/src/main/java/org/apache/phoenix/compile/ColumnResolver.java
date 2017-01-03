@@ -29,62 +29,63 @@ import org.apache.phoenix.schema.ColumnNotFoundException;
 import org.apache.phoenix.schema.ColumnRef;
 import org.apache.phoenix.schema.TableRef;
 
-
-
 /**
- * 
- * Interface used to resolve column references occurring
- * in the select statement.
  *
- * 
+ * Interface used to resolve column references occurring in the select
+ * statement.
+ *
+ *
  * @since 0.1
  */
 public interface ColumnResolver {
-    
-    /**
-     * Returns the collection of resolved tables in the FROM clause.
-     */
-    public List<TableRef> getTables();
-    
-    /**
-     * Returns the collection of resolved functions.
-     */
-    public List<PFunction> getFunctions();
 
-    /**
-     * Resolves table using name or alias.
-     * @param schemaName the schema name
-     * @param tableName the table name or table alias
-     * @return the resolved TableRef
-     * @throws TableNotFoundException if the table could not be resolved
-     * @throws AmbiguousTableException if the table name is ambiguous
-     */
-    public TableRef resolveTable(String schemaName, String tableName) throws SQLException;
-    
-    /**
-     * Resolves column using name and alias.
-     * @param schemaName TODO
-     * @param tableName TODO
-     * @param colName TODO
-     * @return the resolved ColumnRef
-     * @throws ColumnNotFoundException if the column could not be resolved
-     * @throws AmbiguousColumnException if the column name is ambiguous
-     */
-    public ColumnRef resolveColumn(String schemaName, String tableName, String colName) throws SQLException;
-        
-    /**
-     * Resolves function using functionName.
-     * @param functionName 
-     * @return the resolved PFunction
-     * @throws ColumnNotFoundException if the column could not be resolved
-     * @throws AmbiguousColumnException if the column name is ambiguous
-     */
-    public PFunction resolveFunction(String functionName) throws SQLException;
+  /**
+   * Returns the collection of resolved tables in the FROM clause.
+   */
+  public List<TableRef> getTables();
 
-    public boolean hasUDFs();
+  /**
+   * Returns the collection of resolved functions.
+   */
+  public List<PFunction> getFunctions();
 
-    public PSchema resolveSchema(String schemaName) throws SQLException;
+  /**
+   * Resolves table using name or alias.
+   *
+   * @param schemaName the schema name
+   * @param tableName the table name or table alias
+   * @return the resolved TableRef
+   * @throws TableNotFoundException if the table could not be resolved
+   * @throws AmbiguousTableException if the table name is ambiguous
+   */
+  public TableRef resolveTable(String schemaName, String tableName) throws SQLException;
 
-    public List<PSchema> getSchemas();
+  /**
+   * Resolves column using name and alias.
+   *
+   * @param schemaName TODO
+   * @param tableName TODO
+   * @param colName TODO
+   * @return the resolved ColumnRef
+   * @throws ColumnNotFoundException if the column could not be resolved
+   * @throws AmbiguousColumnException if the column name is ambiguous
+   */
+  public ColumnRef resolveColumn(String schemaName, String tableName, String colName) throws SQLException;
+
+  /**
+   * Resolves function using functionName.
+   *
+   * @param functionName
+   * @return the resolved PFunction
+   * @throws ColumnNotFoundException if the column could not be resolved
+   * @throws AmbiguousColumnException if the column name is ambiguous
+   */
+  public PFunction resolveFunction(String functionName) throws SQLException;
+
+  public boolean hasUDFs();
+
+  public PSchema resolveSchema(String schemaName) throws SQLException;
+
+  public List<PSchema> getSchemas();
 
 }

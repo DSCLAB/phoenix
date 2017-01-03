@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.covered.example;
 
 import java.io.IOException;
@@ -42,21 +41,23 @@ import org.apache.phoenix.hbase.index.covered.NonTxIndexBuilder;
 import org.apache.phoenix.hbase.index.covered.update.IndexUpdateManager;
 
 /**
- * Index maintainer that maintains multiple indexes based on '{@link ColumnGroup}s'. Each group is a
- * fully covered within itself and stores the fully 'pre-joined' version of that values for that
- * group of columns.
+ * Index maintainer that maintains multiple indexes based on
+ * '{@link ColumnGroup}s'. Each group is a fully covered within itself and
+ * stores the fully 'pre-joined' version of that values for that group of
+ * columns.
  * <p>
- * <h2>Index Layout</h2> The row key for a given index entry is the current state of the all the
- * values of the columns in a column group, followed by the primary key (row key) of the original
- * row, and then the length of each value and then finally the total number of values. This is then
- * enough information to completely rebuild the latest value of row for each column in the group.
+ * <h2>Index Layout</h2> The row key for a given index entry is the current
+ * state of the all the values of the columns in a column group, followed by the
+ * primary key (row key) of the original row, and then the length of each value
+ * and then finally the total number of values. This is then enough information
+ * to completely rebuild the latest value of row for each column in the group.
  * <p>
  * The family is always {@link CoveredColumnIndexCodec#INDEX_ROW_COLUMN_FAMILY}
  * <p>
- * The qualifier is prepended with the integer index (serialized with {@link Bytes#toBytes(int)}) of
- * the column in the group. This index corresponds the index of the value for the group in the row
- * key.
- * 
+ * The qualifier is prepended with the integer index (serialized with
+ * {@link Bytes#toBytes(int)}) of the column in the group. This index
+ * corresponds the index of the value for the group in the row key.
+ *
  * <pre>
  *         ROW                            ||   FAMILY     ||    QUALIFIER     ||   VALUE
  * (v1)(v2)...(vN)(pk)(L1)(L2)...(Ln)(#V) || INDEX_FAMILY ||     1Cf1:Cq1     ||  null
@@ -64,38 +65,44 @@ import org.apache.phoenix.hbase.index.covered.update.IndexUpdateManager;
  * ...
  * (v1)(v2)...(vN)(pk)(L1)(L2)...(Ln)(#V) || INDEX_FAMILY ||     NCfN:CqN     ||  null
  * </pre>
- * 
+ *
  * <h2>Index Maintenance</h2>
  * <p>
- * When making an insertion into the table, we also attempt to cleanup the index. This means that we
- * need to remove the previous entry from the index. Generally, this is completed by inserting a
- * delete at the previous value of the previous row.
+ * When making an insertion into the table, we also attempt to cleanup the
+ * index. This means that we need to remove the previous entry from the index.
+ * Generally, this is completed by inserting a delete at the previous value of
+ * the previous row.
  * <p>
- * The main caveat here is when dealing with custom timestamps. If there is no special timestamp
- * specified, we can just insert the proper {@link Delete} at the current timestamp and move on.
- * However, when the client specifies a timestamp, we could see updates out of order. In that case,
- * we can do an insert using the specified timestamp, but a delete is different...
+ * The main caveat here is when dealing with custom timestamps. If there is no
+ * special timestamp specified, we can just insert the proper {@link Delete} at
+ * the current timestamp and move on. However, when the client specifies a
+ * timestamp, we could see updates out of order. In that case, we can do an
+ * insert using the specified timestamp, but a delete is different...
  * <p>
- * Taking the simple case, assume we do a single column in a group. Then if we get an out of order
- * update, we need to check the current state of that column in the current row. If the current row
- * is older, we can issue a delete as normal. If the current row is newer, however, we then have to
- * issue a delete for the index update at the time of the current row. This ensures that the index
- * update made for the 'future' time still covers the existing row.
+ * Taking the simple case, assume we do a single column in a group. Then if we
+ * get an out of order update, we need to check the current state of that column
+ * in the current row. If the current row is older, we can issue a delete as
+ * normal. If the current row is newer, however, we then have to issue a delete
+ * for the index update at the time of the current row. This ensures that the
+ * index update made for the 'future' time still covers the existing row.
  * <p>
- * <b>ASSUMPTION:</b> all key-values in a single {@link Delete}/{@link Put} have the same timestamp.
- * This dramatically simplifies the logic needed to manage updating the index for out-of-order
- * {@link Put}s as we don't need to manage multiple levels of timestamps across multiple columns.
+ * <b>ASSUMPTION:</b> all key-values in a single {@link Delete}/{@link Put} have
+ * the same timestamp. This dramatically simplifies the logic needed to manage
+ * updating the index for out-of-order {@link Put}s as we don't need to manage
+ * multiple levels of timestamps across multiple columns.
  * <p>
- * We can extend this to multiple columns by picking the latest update of any column in group as the
- * delete point.
+ * We can extend this to multiple columns by picking the latest update of any
+ * column in group as the delete point.
  * <p>
- * <b>NOTE:</b> this means that we need to do a lookup (point {@link Get}) of the entire row
+ * <b>NOTE:</b> this means that we need to do a lookup (point {@link Get}) of
+ * the entire row
  * <i>every time there is a write to the table</i>.
  */
 public class CoveredColumnIndexer extends NonTxIndexBuilder {
 
   /**
    * Create the specified index table with the necessary columns
+   *
    * @param admin {@link HBaseAdmin} to use when creating the table
    * @param indexTable name of the index table.
    * @throws IOException
@@ -109,8 +116,8 @@ public class CoveredColumnIndexer extends NonTxIndexBuilder {
    * @param index descriptor to update before creating table
    */
   public static void createIndexTable(HBaseAdmin admin, HTableDescriptor index) throws IOException {
-    HColumnDescriptor col =
-        new HColumnDescriptor(CoveredColumnIndexCodec.INDEX_ROW_COLUMN_FAMILY);
+    HColumnDescriptor col
+            = new HColumnDescriptor(CoveredColumnIndexCodec.INDEX_ROW_COLUMN_FAMILY);
     // ensure that we can 'see past' delete markers when doing scans
     col.setKeepDeletedCells(true);
     index.addFamily(col);
@@ -119,7 +126,7 @@ public class CoveredColumnIndexer extends NonTxIndexBuilder {
 
   @Override
   public Collection<Pair<Mutation, byte[]>> getIndexUpdateForFilteredRows(
-      Collection<KeyValue> filtered, IndexMetaData indexMetaData) throws IOException {
+          Collection<KeyValue> filtered, IndexMetaData indexMetaData) throws IOException {
     // stores all the return values
     IndexUpdateManager updateMap = new IndexUpdateManager();
     // batch the updates by row to make life easier and ordered
@@ -152,11 +159,10 @@ public class CoveredColumnIndexer extends NonTxIndexBuilder {
     return updateMap.toMap();
   }
 
-
   /**
    * @param filtered
    */
-  private Collection<Batch>  batchByRow(Collection<KeyValue> filtered) {
+  private Collection<Batch> batchByRow(Collection<KeyValue> filtered) {
     Map<Long, Batch> batches = new HashMap<Long, Batch>();
     createTimestampBatchesFromKeyValues(filtered, batches);
     return batches.values();

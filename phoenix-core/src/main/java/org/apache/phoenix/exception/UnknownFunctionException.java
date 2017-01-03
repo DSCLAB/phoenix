@@ -18,18 +18,20 @@
 package org.apache.phoenix.exception;
 
 /**
- * Thrown by ParseNodeFactory when it could not identify a node as a valid function.
+ * Thrown by ParseNodeFactory when it could not identify a node as a valid
+ * function.
  */
 public class UnknownFunctionException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-    private final String funcName;
 
-    public UnknownFunctionException(String funcName) {
-        super();
-        this.funcName = funcName;
-    }
+  private static final long serialVersionUID = 1L;
+  private final String funcName;
 
-    public String getFuncName() {
-        return funcName;
-    }
+  public UnknownFunctionException(String funcName) {
+    super();
+    this.funcName = funcName;
+  }
+
+  public String getFuncName() {
+    return funcName;
+  }
 }

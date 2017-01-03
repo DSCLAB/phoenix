@@ -26,58 +26,61 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.schema.types.PBoolean;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
- * Result scanner that filters out rows based on the results of a boolean
- * expression (i.e. filters out if {@link org.apache.phoenix.expression.Expression#evaluate(Tuple, ImmutableBytesWritable)}
- * returns false or the ptr contains a FALSE value}). May not be used where
- * the delegate provided is an {@link org.apache.phoenix.iterate.AggregatingResultIterator}.
- * For these, the {@link org.apache.phoenix.iterate.FilterAggregatingResultIterator} should be used.
  *
- * 
+ * Result scanner that filters out rows based on the results of a boolean
+ * expression (i.e. filters out if
+ * {@link org.apache.phoenix.expression.Expression#evaluate(Tuple, ImmutableBytesWritable)}
+ * returns false or the ptr contains a FALSE value}). May not be used where the
+ * delegate provided is an
+ * {@link org.apache.phoenix.iterate.AggregatingResultIterator}. For these, the
+ * {@link org.apache.phoenix.iterate.FilterAggregatingResultIterator} should be
+ * used.
+ *
+ *
  * @since 0.1
  */
-public class FilterResultIterator  extends LookAheadResultIterator {
-    private final ResultIterator delegate;
-    private final Expression expression;
-    private final ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-    
-    public FilterResultIterator(ResultIterator delegate, Expression expression) {
-        if (delegate instanceof AggregatingResultIterator) {
-            throw new IllegalArgumentException("FilterResultScanner may not be used with an aggregate delegate. Use phoenix.iterate.FilterAggregateResultScanner instead");
-        }
-        this.delegate = delegate;
-        this.expression = expression;
-        if (expression.getDataType() != PBoolean.INSTANCE) {
-            throw new IllegalArgumentException("FilterResultIterator requires a boolean expression, but got " + expression);
-        }
-    }
+public class FilterResultIterator extends LookAheadResultIterator {
 
-    @Override
-    protected Tuple advance() throws SQLException {
-        Tuple next;
-        do {
-            next = delegate.next();
-            expression.reset();
-        } while (next != null && (!expression.evaluate(next, ptr) || Boolean.FALSE.equals(expression.getDataType().toObject(ptr))));
-        return next;
-    }
-    
-    @Override
-    public void close() throws SQLException {
-        delegate.close();
-    }
+  private final ResultIterator delegate;
+  private final Expression expression;
+  private final ImmutableBytesWritable ptr = new ImmutableBytesWritable();
 
-    @Override
-    public void explain(List<String> planSteps) {
-        delegate.explain(planSteps);
-        planSteps.add("CLIENT FILTER BY " + expression.toString());
+  public FilterResultIterator(ResultIterator delegate, Expression expression) {
+    if (delegate instanceof AggregatingResultIterator) {
+      throw new IllegalArgumentException("FilterResultScanner may not be used with an aggregate delegate. Use phoenix.iterate.FilterAggregateResultScanner instead");
     }
+    this.delegate = delegate;
+    this.expression = expression;
+    if (expression.getDataType() != PBoolean.INSTANCE) {
+      throw new IllegalArgumentException("FilterResultIterator requires a boolean expression, but got " + expression);
+    }
+  }
 
-	@Override
-	public String toString() {
-		return "FilterResultIterator [delegate=" + delegate + ", expression="
-				+ expression + ", ptr=" + ptr + "]";
-	}
+  @Override
+  protected Tuple advance() throws SQLException {
+    Tuple next;
+    do {
+      next = delegate.next();
+      expression.reset();
+    } while (next != null && (!expression.evaluate(next, ptr) || Boolean.FALSE.equals(expression.getDataType().toObject(ptr))));
+    return next;
+  }
+
+  @Override
+  public void close() throws SQLException {
+    delegate.close();
+  }
+
+  @Override
+  public void explain(List<String> planSteps) {
+    delegate.explain(planSteps);
+    planSteps.add("CLIENT FILTER BY " + expression.toString());
+  }
+
+  @Override
+  public String toString() {
+    return "FilterResultIterator [delegate=" + delegate + ", expression="
+            + expression + ", ptr=" + ptr + "]";
+  }
 }

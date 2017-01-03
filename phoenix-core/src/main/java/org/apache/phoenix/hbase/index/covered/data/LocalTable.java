@@ -36,11 +36,12 @@ import org.apache.phoenix.hbase.index.util.IndexManagementUtil;
 /**
  * Wrapper around a lazily instantiated, local HTable.
  * <p>
- * Previously, we had used various row and batch caches. However, this ends up being very
- * complicated when attempting manage updating and invalidating the cache with no real gain as any
- * row accessed multiple times will likely be in HBase's block cache, invalidating any extra caching
- * we are doing here. In the end, its simpler and about as efficient to just get the current state
- * of the row from HBase and let HBase manage caching the row from disk on its own.
+ * Previously, we had used various row and batch caches. However, this ends up
+ * being very complicated when attempting manage updating and invalidating the
+ * cache with no real gain as any row accessed multiple times will likely be in
+ * HBase's block cache, invalidating any extra caching we are doing here. In the
+ * end, its simpler and about as efficient to just get the current state of the
+ * row from HBase and let HBase manage caching the row from disk on its own.
  */
 public class LocalTable implements LocalHBaseState {
 
@@ -52,17 +53,17 @@ public class LocalTable implements LocalHBaseState {
 
   @Override
   public Result getCurrentRowState(Mutation m, Collection<? extends ColumnReference> columns, boolean ignoreNewerMutations)
-      throws IOException {
+          throws IOException {
     byte[] row = m.getRow();
     // need to use a scan here so we can get raw state, which Get doesn't provide.
     Scan s = IndexManagementUtil.newLocalStateScan(Collections.singletonList(columns));
     s.setStartRow(row);
     s.setStopRow(row);
     if (ignoreNewerMutations) {
-        // Provides a means of client indicating that newer cells should not be considered,
-        // enabling mutations to be replayed to partially rebuild the index when a write fails.
-        long ts = m.getFamilyCellMap().firstEntry().getValue().get(0).getTimestamp();
-        s.setTimeRange(0,ts);
+      // Provides a means of client indicating that newer cells should not be considered,
+      // enabling mutations to be replayed to partially rebuild the index when a write fails.
+      long ts = m.getFamilyCellMap().firstEntry().getValue().get(0).getTimestamp();
+      s.setTimeRange(0, ts);
     }
     Region region = this.env.getRegion();
     RegionScanner scanner = region.getScanner(s);

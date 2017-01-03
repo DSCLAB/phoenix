@@ -21,13 +21,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
 /**
- * Simple POJO for tracking a bunch of column references and the next-newest timestamp for those
- * columns
+ * Simple POJO for tracking a bunch of column references and the next-newest
+ * timestamp for those columns
  * <p>
- * Two {@link ColumnTracker}s are considered equal if they track the same columns, even if their
- * timestamps are different.
+ * Two {@link ColumnTracker}s are considered equal if they track the same
+ * columns, even if their timestamps are different.
  */
 public class ColumnTracker implements IndexedColumnGroup {
 
@@ -38,8 +37,8 @@ public class ColumnTracker implements IndexedColumnGroup {
   private final int hashCode;
 
   private static int calcHashCode(List<ColumnReference> columns) {
-      return columns.hashCode();
-    }
+    return columns.hashCode();
+  }
 
   public ColumnTracker(Collection<? extends ColumnReference> columns) {
     this.columns = new ArrayList<ColumnReference>(columns);
@@ -49,8 +48,9 @@ public class ColumnTracker implements IndexedColumnGroup {
   }
 
   /**
-   * Set the current timestamp, only if the passed timestamp is strictly less than the currently
-   * stored timestamp
+   * Set the current timestamp, only if the passed timestamp is strictly less
+   * than the currently stored timestamp
+   *
    * @param ts the timestmap to potentially store.
    * @return the currently stored timestamp.
    */
@@ -69,13 +69,13 @@ public class ColumnTracker implements IndexedColumnGroup {
   }
 
   @Override
-  public boolean equals(Object o){
-    if(!(o instanceof ColumnTracker)){
+  public boolean equals(Object o) {
+    if (!(o instanceof ColumnTracker)) {
       return false;
     }
-    ColumnTracker other = (ColumnTracker)o;
+    ColumnTracker other = (ColumnTracker) o;
     if (hashCode != other.hashCode) {
-        return false;
+      return false;
     }
     if (other.columns.size() != columns.size()) {
       return false;
@@ -97,8 +97,8 @@ public class ColumnTracker implements IndexedColumnGroup {
   }
 
   /**
-   * @return <tt>true</tt> if this set of columns has seen a column with a timestamp newer than the
-   *         requested timestamp, <tt>false</tt> otherwise.
+   * @return <tt>true</tt> if this set of columns has seen a column with a
+   * timestamp newer than the requested timestamp, <tt>false</tt> otherwise.
    */
   public boolean hasNewerTimestamps() {
     return !isNewestTime(this.ts);
@@ -106,7 +106,8 @@ public class ColumnTracker implements IndexedColumnGroup {
 
   /**
    * @param ts timestamp to check
-   * @return <tt>true</tt> if the timestamp is at the most recent timestamp for a column
+   * @return <tt>true</tt> if the timestamp is at the most recent timestamp for
+   * a column
    */
   public static boolean isNewestTime(long ts) {
     return ts == NO_NEWER_PRIMARY_TABLE_ENTRY_TIMESTAMP;

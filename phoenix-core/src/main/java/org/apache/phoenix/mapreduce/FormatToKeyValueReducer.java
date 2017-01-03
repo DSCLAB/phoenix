@@ -51,117 +51,116 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Reducer class for the bulkload jobs.
- * Performs similar functionality to {@link KeyValueSortReducer}
+ * Reducer class for the bulkload jobs. Performs similar functionality to
+ * {@link KeyValueSortReducer}
  */
 public class FormatToKeyValueReducer
         extends Reducer<TableRowkeyPair, ImmutableBytesWritable, TableRowkeyPair, KeyValue> {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(FormatToKeyValueReducer.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(FormatToKeyValueReducer.class);
 
+  protected List<String> tableNames;
+  protected List<String> logicalNames;
+  protected KeyValueBuilder builder;
+  private Map<Integer, Pair<byte[], byte[]>> columnIndexes;
 
-    protected List<String> tableNames;
-    protected List<String> logicalNames;
-    protected KeyValueBuilder builder;
-    private Map<Integer, Pair<byte[], byte[]>> columnIndexes;
+  @Override
+  protected void setup(Context context) throws IOException, InterruptedException {
+    Configuration conf = context.getConfiguration();
 
-
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        Configuration conf = context.getConfiguration();
-
-        // pass client configuration into driver
-        Properties clientInfos = new Properties();
-        for (Map.Entry<String, String> entry : conf) {
-            clientInfos.setProperty(entry.getKey(), entry.getValue());
-        }
-        try {
-            PhoenixConnection conn = (PhoenixConnection) QueryUtil.getConnectionOnServer(clientInfos, conf);
-            builder = conn.getKeyValueBuilder();
-            final String tableNamesConf = conf.get(FormatToBytesWritableMapper.TABLE_NAMES_CONFKEY);
-            final String logicalNamesConf = conf.get(FormatToBytesWritableMapper.LOGICAL_NAMES_CONFKEY);
-            tableNames = TargetTableRefFunctions.NAMES_FROM_JSON.apply(tableNamesConf);
-            logicalNames = TargetTableRefFunctions.NAMES_FROM_JSON.apply(logicalNamesConf);
-            initColumnsMap(conn);
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    // pass client configuration into driver
+    Properties clientInfos = new Properties();
+    for (Map.Entry<String, String> entry : conf) {
+      clientInfos.setProperty(entry.getKey(), entry.getValue());
     }
-
-    private void initColumnsMap(PhoenixConnection conn) throws SQLException {
-        Map<byte[], Integer> indexMap = new TreeMap(Bytes.BYTES_COMPARATOR);
-        columnIndexes = new HashMap<>();
-        int columnIndex = 0;
-        for (int index = 0; index < logicalNames.size(); index++) {
-            PTable table = PhoenixRuntime.getTable(conn, logicalNames.get(index));
-            List<PColumn> cls = table.getColumns();
-            for (int i = 0; i < cls.size(); i++) {
-                PColumn c = cls.get(i);
-                byte[] family = new byte[0];
-                if (c.getFamilyName() != null) {
-                    family = c.getFamilyName().getBytes();
-                }
-                byte[] name = c.getName().getBytes();
-                byte[] cfn = Bytes.add(family, QueryConstants.NAMESPACE_SEPARATOR_BYTES, name);
-                Pair<byte[], byte[]> pair = new Pair(family, name);
-                if (!indexMap.containsKey(cfn)) {
-                    indexMap.put(cfn, new Integer(columnIndex));
-                    columnIndexes.put(new Integer(columnIndex), pair);
-                    columnIndex++;
-                }
-            }
-            byte[] emptyColumnFamily = SchemaUtil.getEmptyColumnFamily(table);
-            Pair<byte[], byte[]> pair = new Pair(emptyColumnFamily, QueryConstants
-                    .EMPTY_COLUMN_BYTES);
-            columnIndexes.put(new Integer(columnIndex), pair);
-            columnIndex++;
-        }
+    try {
+      PhoenixConnection conn = (PhoenixConnection) QueryUtil.getConnectionOnServer(clientInfos, conf);
+      builder = conn.getKeyValueBuilder();
+      final String tableNamesConf = conf.get(FormatToBytesWritableMapper.TABLE_NAMES_CONFKEY);
+      final String logicalNamesConf = conf.get(FormatToBytesWritableMapper.LOGICAL_NAMES_CONFKEY);
+      tableNames = TargetTableRefFunctions.NAMES_FROM_JSON.apply(tableNamesConf);
+      logicalNames = TargetTableRefFunctions.NAMES_FROM_JSON.apply(logicalNamesConf);
+      initColumnsMap(conn);
+    } catch (SQLException | ClassNotFoundException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    protected void reduce(TableRowkeyPair key, Iterable<ImmutableBytesWritable> values,
-                          Reducer<TableRowkeyPair, ImmutableBytesWritable, TableRowkeyPair, KeyValue>.Context context)
-            throws IOException, InterruptedException {
-        TreeSet<KeyValue> map = new TreeSet<KeyValue>(KeyValue.COMPARATOR);
-        ImmutableBytesWritable rowKey = key.getRowkey();
-        for (ImmutableBytesWritable aggregatedArray : values) {
-            DataInputStream input = new DataInputStream(new ByteArrayInputStream(aggregatedArray.get()));
-            while (input.available() != 0) {
-                byte type = input.readByte();
-                int index = WritableUtils.readVInt(input);
-                ImmutableBytesWritable family;
-                ImmutableBytesWritable name;
-                ImmutableBytesWritable value = QueryConstants.EMPTY_COLUMN_VALUE_BYTES_PTR;
-                Pair<byte[], byte[]> pair = columnIndexes.get(index);
-                family = new ImmutableBytesWritable(pair.getFirst());
-                name = new ImmutableBytesWritable(pair.getSecond());
-                int len = WritableUtils.readVInt(input);
-                if (len > 0) {
-                    byte[] array = new byte[len];
-                    input.read(array);
-                    value = new ImmutableBytesWritable(array);
-                }
-                KeyValue kv;
-                KeyValue.Type kvType = KeyValue.Type.codeToType(type);
-                switch (kvType) {
-                    case Put: // not null value
-                        kv = builder.buildPut(key.getRowkey(), family, name, value);
-                        break;
-                    case DeleteColumn: // null value
-                        kv = builder.buildDeleteColumns(key.getRowkey(), family, name);
-                        break;
-                    default:
-                        throw new IOException("Unsupported KeyValue type " + kvType);
-                }
-                map.add(kv);
-            }
-            Closeables.closeQuietly(input);
+  private void initColumnsMap(PhoenixConnection conn) throws SQLException {
+    Map<byte[], Integer> indexMap = new TreeMap(Bytes.BYTES_COMPARATOR);
+    columnIndexes = new HashMap<>();
+    int columnIndex = 0;
+    for (int index = 0; index < logicalNames.size(); index++) {
+      PTable table = PhoenixRuntime.getTable(conn, logicalNames.get(index));
+      List<PColumn> cls = table.getColumns();
+      for (int i = 0; i < cls.size(); i++) {
+        PColumn c = cls.get(i);
+        byte[] family = new byte[0];
+        if (c.getFamilyName() != null) {
+          family = c.getFamilyName().getBytes();
         }
-        context.setStatus("Read " + map.getClass());
-        int index = 0;
-        for (KeyValue kv : map) {
-            context.write(key, kv);
-            if (++index % 100 == 0) context.setStatus("Wrote " + index);
+        byte[] name = c.getName().getBytes();
+        byte[] cfn = Bytes.add(family, QueryConstants.NAMESPACE_SEPARATOR_BYTES, name);
+        Pair<byte[], byte[]> pair = new Pair(family, name);
+        if (!indexMap.containsKey(cfn)) {
+          indexMap.put(cfn, new Integer(columnIndex));
+          columnIndexes.put(new Integer(columnIndex), pair);
+          columnIndex++;
         }
+      }
+      byte[] emptyColumnFamily = SchemaUtil.getEmptyColumnFamily(table);
+      Pair<byte[], byte[]> pair = new Pair(emptyColumnFamily, QueryConstants.EMPTY_COLUMN_BYTES);
+      columnIndexes.put(new Integer(columnIndex), pair);
+      columnIndex++;
     }
+  }
+
+  @Override
+  protected void reduce(TableRowkeyPair key, Iterable<ImmutableBytesWritable> values,
+          Reducer<TableRowkeyPair, ImmutableBytesWritable, TableRowkeyPair, KeyValue>.Context context)
+          throws IOException, InterruptedException {
+    TreeSet<KeyValue> map = new TreeSet<KeyValue>(KeyValue.COMPARATOR);
+    ImmutableBytesWritable rowKey = key.getRowkey();
+    for (ImmutableBytesWritable aggregatedArray : values) {
+      DataInputStream input = new DataInputStream(new ByteArrayInputStream(aggregatedArray.get()));
+      while (input.available() != 0) {
+        byte type = input.readByte();
+        int index = WritableUtils.readVInt(input);
+        ImmutableBytesWritable family;
+        ImmutableBytesWritable name;
+        ImmutableBytesWritable value = QueryConstants.EMPTY_COLUMN_VALUE_BYTES_PTR;
+        Pair<byte[], byte[]> pair = columnIndexes.get(index);
+        family = new ImmutableBytesWritable(pair.getFirst());
+        name = new ImmutableBytesWritable(pair.getSecond());
+        int len = WritableUtils.readVInt(input);
+        if (len > 0) {
+          byte[] array = new byte[len];
+          input.read(array);
+          value = new ImmutableBytesWritable(array);
+        }
+        KeyValue kv;
+        KeyValue.Type kvType = KeyValue.Type.codeToType(type);
+        switch (kvType) {
+          case Put: // not null value
+            kv = builder.buildPut(key.getRowkey(), family, name, value);
+            break;
+          case DeleteColumn: // null value
+            kv = builder.buildDeleteColumns(key.getRowkey(), family, name);
+            break;
+          default:
+            throw new IOException("Unsupported KeyValue type " + kvType);
+        }
+        map.add(kv);
+      }
+      Closeables.closeQuietly(input);
+    }
+    context.setStatus("Read " + map.getClass());
+    int index = 0;
+    for (KeyValue kv : map) {
+      context.write(key, kv);
+      if (++index % 100 == 0) {
+        context.setStatus("Wrote " + index);
+      }
+    }
+  }
 }

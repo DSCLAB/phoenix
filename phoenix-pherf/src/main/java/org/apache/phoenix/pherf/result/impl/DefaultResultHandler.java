@@ -22,46 +22,47 @@ import org.apache.phoenix.pherf.result.ResultHandler;
 import org.apache.phoenix.pherf.result.ResultUtil;
 import org.apache.phoenix.pherf.result.file.ResultFileDetails;
 
-public abstract class DefaultResultHandler implements ResultHandler{
-    protected String resultFileName;
-    protected ResultFileDetails resultFileDetails;
-    protected final String resultDir;
-    protected final ResultUtil util;
+public abstract class DefaultResultHandler implements ResultHandler {
 
-    public DefaultResultHandler() {
-        util = new ResultUtil();
-        PherfConstants constants = PherfConstants.create();
-        this.resultDir = constants.getProperty("pherf.default.results.dir");
-    }
+  protected String resultFileName;
+  protected ResultFileDetails resultFileDetails;
+  protected final String resultDir;
+  protected final ResultUtil util;
 
-    /**
-     * {@link DefaultResultHandler#setResultFileDetails(ResultFileDetails)} Must be called prior to
-     * setting the file name. Otherwise you will get a NPE.
-     *
-     * TODO Change this so NPE is not possible. Needs a bit of refactoring here
-     *
-     * @param resultFileName Base name of file
-     */
-    @Override
-    public void setResultFileName(String resultFileName) {
-        this.resultFileName =
-                resultDir + PherfConstants.PATH_SEPARATOR + PherfConstants.RESULT_PREFIX
-                        + resultFileName + util.getSuffix() + getResultFileDetails()
-                        .getExtension().toString();
-    }
+  public DefaultResultHandler() {
+    util = new ResultUtil();
+    PherfConstants constants = PherfConstants.create();
+    this.resultDir = constants.getProperty("pherf.default.results.dir");
+  }
 
-    @Override
-    public void setResultFileDetails(ResultFileDetails details) {
-        this.resultFileDetails = details;
-    }
+  /**
+   * {@link DefaultResultHandler#setResultFileDetails(ResultFileDetails)} Must
+   * be called prior to setting the file name. Otherwise you will get a NPE.
+   *
+   * TODO Change this so NPE is not possible. Needs a bit of refactoring here
+   *
+   * @param resultFileName Base name of file
+   */
+  @Override
+  public void setResultFileName(String resultFileName) {
+    this.resultFileName
+            = resultDir + PherfConstants.PATH_SEPARATOR + PherfConstants.RESULT_PREFIX
+            + resultFileName + util.getSuffix() + getResultFileDetails()
+            .getExtension().toString();
+  }
 
-    @Override
-    public String getResultFileName() {
-        return resultFileName;
-    }
+  @Override
+  public void setResultFileDetails(ResultFileDetails details) {
+    this.resultFileDetails = details;
+  }
 
-    @Override
-    public ResultFileDetails getResultFileDetails() {
-        return resultFileDetails;
-    }
+  @Override
+  public String getResultFileName() {
+    return resultFileName;
+  }
+
+  @Override
+  public ResultFileDetails getResultFileDetails() {
+    return resultFileDetails;
+  }
 }

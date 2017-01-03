@@ -41,52 +41,52 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 /**
- * 
+ *
  * Tests on PhoenixPigSchemaUtil
  */
 public class PhoenixPigSchemaUtilTest {
-    private static final ColumnInfo ID_COLUMN = new ColumnInfo("ID", Types.BIGINT);
-    private static final ColumnInfo NAME_COLUMN = new ColumnInfo("NAME", Types.VARCHAR);
-    private static final ColumnInfo LOCATION_COLUMN = new ColumnInfo("LOCATION", Types.ARRAY);
-    
-    
-    @Test
-    public void testSchema() throws SQLException, IOException {
-        
-        final Configuration configuration = mock(Configuration.class);
-        when(configuration.get(PhoenixConfigurationUtil.SCHEMA_TYPE)).thenReturn(SchemaType.TABLE.name());
-		final ResourceSchema actual = PhoenixPigSchemaUtil.getResourceSchema(
-				configuration, new Dependencies() {
-					List<ColumnInfo> getSelectColumnMetadataList(
-							Configuration configuration) throws SQLException {
-						return Lists.newArrayList(ID_COLUMN, NAME_COLUMN);
-					}
-				});        
-        // expected schema.
-        final ResourceFieldSchema[] fields = new ResourceFieldSchema[2];
-        fields[0] = new ResourceFieldSchema().setName("ID")
-                                                .setType(DataType.LONG);
 
-        fields[1] = new ResourceFieldSchema().setName("NAME")
-                                                .setType(DataType.CHARARRAY);
-        final ResourceSchema expected = new ResourceSchema().setFields(fields);
-        
-        assertEquals(expected.toString(), actual.toString());
-        
-    }
-    
-    @Test(expected=IllegalDataException.class)
-    public void testUnSupportedTypes() throws SQLException, IOException {
-        
-        final Configuration configuration = mock(Configuration.class);
-        when(configuration.get(PhoenixConfigurationUtil.SCHEMA_TYPE)).thenReturn(SchemaType.TABLE.name());
-		PhoenixPigSchemaUtil.getResourceSchema(
-				configuration, new Dependencies() {
-					List<ColumnInfo> getSelectColumnMetadataList(
-							Configuration configuration) throws SQLException {
-						return Lists.newArrayList(ID_COLUMN, LOCATION_COLUMN);
-					}
-				});  
-        fail("We currently don't support Array type yet. WIP!!");
-    }
+  private static final ColumnInfo ID_COLUMN = new ColumnInfo("ID", Types.BIGINT);
+  private static final ColumnInfo NAME_COLUMN = new ColumnInfo("NAME", Types.VARCHAR);
+  private static final ColumnInfo LOCATION_COLUMN = new ColumnInfo("LOCATION", Types.ARRAY);
+
+  @Test
+  public void testSchema() throws SQLException, IOException {
+
+    final Configuration configuration = mock(Configuration.class);
+    when(configuration.get(PhoenixConfigurationUtil.SCHEMA_TYPE)).thenReturn(SchemaType.TABLE.name());
+    final ResourceSchema actual = PhoenixPigSchemaUtil.getResourceSchema(
+            configuration, new Dependencies() {
+      List<ColumnInfo> getSelectColumnMetadataList(
+              Configuration configuration) throws SQLException {
+        return Lists.newArrayList(ID_COLUMN, NAME_COLUMN);
+      }
+    });
+    // expected schema.
+    final ResourceFieldSchema[] fields = new ResourceFieldSchema[2];
+    fields[0] = new ResourceFieldSchema().setName("ID")
+            .setType(DataType.LONG);
+
+    fields[1] = new ResourceFieldSchema().setName("NAME")
+            .setType(DataType.CHARARRAY);
+    final ResourceSchema expected = new ResourceSchema().setFields(fields);
+
+    assertEquals(expected.toString(), actual.toString());
+
+  }
+
+  @Test(expected = IllegalDataException.class)
+  public void testUnSupportedTypes() throws SQLException, IOException {
+
+    final Configuration configuration = mock(Configuration.class);
+    when(configuration.get(PhoenixConfigurationUtil.SCHEMA_TYPE)).thenReturn(SchemaType.TABLE.name());
+    PhoenixPigSchemaUtil.getResourceSchema(
+            configuration, new Dependencies() {
+      List<ColumnInfo> getSelectColumnMetadataList(
+              Configuration configuration) throws SQLException {
+        return Lists.newArrayList(ID_COLUMN, LOCATION_COLUMN);
+      }
+    });
+    fail("We currently don't support Array type yet. WIP!!");
+  }
 }

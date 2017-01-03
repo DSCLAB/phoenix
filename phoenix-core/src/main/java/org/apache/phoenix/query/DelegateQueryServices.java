@@ -24,49 +24,47 @@ import org.apache.phoenix.memory.MemoryManager;
 import org.apache.phoenix.optimize.QueryOptimizer;
 import org.apache.phoenix.util.ReadOnlyProps;
 
-
-
 /**
- * 
- * Class that delegates QueryService calls through to
- * a parent QueryService.
  *
- * 
+ * Class that delegates QueryService calls through to a parent QueryService.
+ *
+ *
  * @since 0.1
  */
 public class DelegateQueryServices implements QueryServices {
-    private final QueryServices parent;
-    
-    public DelegateQueryServices(QueryServices queryServices) {
-        parent = queryServices;
-    }
-    
-    protected QueryServices getDelegate() {
-        return parent;
-    }
-    
-    @Override
-    public ThreadPoolExecutor getExecutor() {
-        return parent.getExecutor();
-    }
 
-    @Override
-    public MemoryManager getMemoryManager() {
-        return parent.getMemoryManager();
-    }
+  private final QueryServices parent;
 
-    @Override
-    public void close() throws SQLException {
-        parent.close();
-    }
+  public DelegateQueryServices(QueryServices queryServices) {
+    parent = queryServices;
+  }
 
-    @Override
-    public ReadOnlyProps getProps() {
-        return parent.getProps();
-    }
+  protected QueryServices getDelegate() {
+    return parent;
+  }
 
-    @Override
-    public QueryOptimizer getOptimizer() {
-        return parent.getOptimizer();
-    }
+  @Override
+  public ThreadPoolExecutor getExecutor() {
+    return parent.getExecutor();
+  }
+
+  @Override
+  public MemoryManager getMemoryManager() {
+    return parent.getMemoryManager();
+  }
+
+  @Override
+  public void close() throws SQLException {
+    parent.close();
+  }
+
+  @Override
+  public ReadOnlyProps getProps() {
+    return parent.getProps();
+  }
+
+  @Override
+  public QueryOptimizer getOptimizer() {
+    return parent.getOptimizer();
+  }
 }

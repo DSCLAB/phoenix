@@ -32,82 +32,88 @@ import org.apache.phoenix.hbase.index.util.KeyValueBuilder;
 import com.google.common.collect.Lists;
 
 /**
- * Phoenix-based {@link IndexCodec}. Manages all the logic of how to cleanup an index (
- * {@link #getIndexDeletes(TableState, IndexMetaData)}) as well as what the new index state should be (
+ * Phoenix-based {@link IndexCodec}. Manages all the logic of how to cleanup an
+ * index ( {@link #getIndexDeletes(TableState, IndexMetaData)}) as well as what
+ * the new index state should be (
  * {@link #getIndexUpserts(TableState, IndexMetaData)}).
  */
 public class PhoenixIndexCodec extends BaseIndexCodec {
-    public static final String INDEX_MD = "IdxMD";
-    public static final String INDEX_UUID = "IdxUUID";
-    public static final String INDEX_MAINTAINERS = "IndexMaintainers";
-    private static KeyValueBuilder KV_BUILDER = GenericKeyValueBuilder.INSTANCE;
 
-    private RegionCoprocessorEnvironment env;
+  public static final String INDEX_MD = "IdxMD";
+  public static final String INDEX_UUID = "IdxUUID";
+  public static final String INDEX_MAINTAINERS = "IndexMaintainers";
+  private static KeyValueBuilder KV_BUILDER = GenericKeyValueBuilder.INSTANCE;
 
-    @Override
-    public void initialize(RegionCoprocessorEnvironment env) throws IOException {
-        super.initialize(env);
-        this.env = env;
+  private RegionCoprocessorEnvironment env;
+
+  @Override
+  public void initialize(RegionCoprocessorEnvironment env) throws IOException {
+    super.initialize(env);
+    this.env = env;
+  }
+
+  boolean hasIndexMaintainers(Map<String, byte[]> attributes) {
+    if (attributes == null) {
+      return false;
     }
-
-    boolean hasIndexMaintainers(Map<String, byte[]> attributes) {
-        if (attributes == null) { return false; }
-        byte[] uuid = attributes.get(INDEX_UUID);
-        if (uuid == null) { return false; }
-        return true;
+    byte[] uuid = attributes.get(INDEX_UUID);
+    if (uuid == null) {
+      return false;
     }
+    return true;
+  }
 
-    @Override
-    public Iterable<IndexUpdate> getIndexUpserts(TableState state, IndexMetaData context) throws IOException {
-        PhoenixIndexMetaData metaData = (PhoenixIndexMetaData)context;
-        List<IndexMaintainer> indexMaintainers = metaData.getIndexMaintainers();
-        if (indexMaintainers.get(0).isRowDeleted(state.getPendingUpdate())) {
-            return Collections.emptyList();
-        }
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        ptr.set(state.getCurrentRowKey());
-        List<IndexUpdate> indexUpdates = Lists.newArrayList();
-        for (IndexMaintainer maintainer : indexMaintainers) {
-            Pair<ValueGetter, IndexUpdate> statePair = state.getIndexUpdateState(maintainer.getAllColumns(), metaData.ignoreNewerMutations());
-            ValueGetter valueGetter = statePair.getFirst();
-            IndexUpdate indexUpdate = statePair.getSecond();
-            indexUpdate.setTable(maintainer.isLocalIndex() ? state.getEnvironment().getRegion()
-                    .getTableDesc().getName() : maintainer.getIndexTableName());
-            Put put = maintainer.buildUpdateMutation(KV_BUILDER, valueGetter, ptr, state.getCurrentTimestamp(), env
-                    .getRegion().getRegionInfo().getStartKey(), env.getRegion().getRegionInfo().getEndKey());
-            indexUpdate.setUpdate(put);
-            indexUpdates.add(indexUpdate);
-        }
-        return indexUpdates;
+  @Override
+  public Iterable<IndexUpdate> getIndexUpserts(TableState state, IndexMetaData context) throws IOException {
+    PhoenixIndexMetaData metaData = (PhoenixIndexMetaData) context;
+    List<IndexMaintainer> indexMaintainers = metaData.getIndexMaintainers();
+    if (indexMaintainers.get(0).isRowDeleted(state.getPendingUpdate())) {
+      return Collections.emptyList();
     }
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    ptr.set(state.getCurrentRowKey());
+    List<IndexUpdate> indexUpdates = Lists.newArrayList();
+    for (IndexMaintainer maintainer : indexMaintainers) {
+      Pair<ValueGetter, IndexUpdate> statePair = state.getIndexUpdateState(maintainer.getAllColumns(), metaData.ignoreNewerMutations());
+      ValueGetter valueGetter = statePair.getFirst();
+      IndexUpdate indexUpdate = statePair.getSecond();
+      indexUpdate.setTable(maintainer.isLocalIndex() ? state.getEnvironment().getRegion()
+              .getTableDesc().getName() : maintainer.getIndexTableName());
+      Put put = maintainer.buildUpdateMutation(KV_BUILDER, valueGetter, ptr, state.getCurrentTimestamp(), env
+              .getRegion().getRegionInfo().getStartKey(), env.getRegion().getRegionInfo().getEndKey());
+      indexUpdate.setUpdate(put);
+      indexUpdates.add(indexUpdate);
+    }
+    return indexUpdates;
+  }
 
-    @Override
-    public Iterable<IndexUpdate> getIndexDeletes(TableState state, IndexMetaData context) throws IOException {
-        PhoenixIndexMetaData metaData = (PhoenixIndexMetaData)context;
-        List<IndexMaintainer> indexMaintainers = metaData.getIndexMaintainers();
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        ptr.set(state.getCurrentRowKey());
-        List<IndexUpdate> indexUpdates = Lists.newArrayList();
-        for (IndexMaintainer maintainer : indexMaintainers) {
-            // For transactional tables, we use an index maintainer
-            // to aid in rollback if there's a KeyValue column in the index. The alternative would be
-            // to hold on to all uncommitted index row keys (even ones already sent to HBase) on the
-            // client side.
-            Pair<ValueGetter, IndexUpdate> statePair = state.getIndexUpdateState(maintainer.getAllColumns(), metaData.ignoreNewerMutations());
-            ValueGetter valueGetter = statePair.getFirst();
-            IndexUpdate indexUpdate = statePair.getSecond();
-            indexUpdate.setTable(maintainer.isLocalIndex() ? state.getEnvironment().getRegion()
-                    .getTableDesc().getName() : maintainer.getIndexTableName());
-            Delete delete = maintainer.buildDeleteMutation(KV_BUILDER, valueGetter, ptr, state.getPendingUpdate(),
-                    state.getCurrentTimestamp(), env.getRegion().getRegionInfo().getStartKey(), env.getRegion().getRegionInfo().getEndKey());
-            indexUpdate.setUpdate(delete);
-            indexUpdates.add(indexUpdate);
-        }
-        return indexUpdates;
+  @Override
+  public Iterable<IndexUpdate> getIndexDeletes(TableState state, IndexMetaData context) throws IOException {
+    PhoenixIndexMetaData metaData = (PhoenixIndexMetaData) context;
+    List<IndexMaintainer> indexMaintainers = metaData.getIndexMaintainers();
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    ptr.set(state.getCurrentRowKey());
+    List<IndexUpdate> indexUpdates = Lists.newArrayList();
+    for (IndexMaintainer maintainer : indexMaintainers) {
+      // For transactional tables, we use an index maintainer
+      // to aid in rollback if there's a KeyValue column in the index. The alternative would be
+      // to hold on to all uncommitted index row keys (even ones already sent to HBase) on the
+      // client side.
+      Pair<ValueGetter, IndexUpdate> statePair = state.getIndexUpdateState(maintainer.getAllColumns(), metaData.ignoreNewerMutations());
+      ValueGetter valueGetter = statePair.getFirst();
+      IndexUpdate indexUpdate = statePair.getSecond();
+      indexUpdate.setTable(maintainer.isLocalIndex() ? state.getEnvironment().getRegion()
+              .getTableDesc().getName() : maintainer.getIndexTableName());
+      Delete delete = maintainer.buildDeleteMutation(KV_BUILDER, valueGetter, ptr, state.getPendingUpdate(),
+              state.getCurrentTimestamp(), env.getRegion().getRegionInfo().getStartKey(), env.getRegion().getRegionInfo().getEndKey());
+      indexUpdate.setUpdate(delete);
+      indexUpdates.add(indexUpdate);
     }
+    return indexUpdates;
+  }
 
-    @Override
-    public boolean isEnabled(Mutation m) throws IOException {
-        return hasIndexMaintainers(m.getAttributesMap());
-    }
+  @Override
+  public boolean isEnabled(Mutation m) throws IOException {
+    return hasIndexMaintainers(m.getAttributesMap());
+  }
 }

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.scanner;
 
 import java.io.IOException;
@@ -51,7 +50,6 @@ public class ScannerBuilder {
   private KeyValueStore memstore;
   private Mutation update;
 
-
   public ScannerBuilder(KeyValueStore memstore, Mutation update) {
     this.memstore = memstore;
     this.update = update;
@@ -76,23 +74,23 @@ public class ScannerBuilder {
 
   /**
    * @param columns columns to filter
-   * @return filter that will skip any {@link KeyValue} that doesn't match one of the passed columns
-   *         and the
+   * @return filter that will skip any {@link KeyValue} that doesn't match one
+   * of the passed columns and the
    */
   private Filter
-      getColumnFilters(Collection<? extends ColumnReference> columns) {
+          getColumnFilters(Collection<? extends ColumnReference> columns) {
     // each column needs to be added as an OR, so we need to separate them out
     FilterList columnFilters = new FilterList(FilterList.Operator.MUST_PASS_ONE);
 
     // create a filter that matches each column reference
     for (ColumnReference ref : columns) {
-      Filter columnFilter =
-          new FamilyFilter(CompareOp.EQUAL, new BinaryComparator(ref.getFamily()));
+      Filter columnFilter
+              = new FamilyFilter(CompareOp.EQUAL, new BinaryComparator(ref.getFamily()));
       // combine with a match for the qualifier, if the qualifier is a specific qualifier
       if (!Bytes.equals(ColumnReference.ALL_QUALIFIERS, ref.getQualifier())) {
-        columnFilter =
-            new FilterList(columnFilter, new QualifierFilter(CompareOp.EQUAL, new BinaryComparator(
-                ref.getQualifier())));
+        columnFilter
+                = new FilterList(columnFilter, new QualifierFilter(CompareOp.EQUAL, new BinaryComparator(
+                        ref.getQualifier())));
       }
       columnFilters.addFilter(columnFilter);
     }
@@ -100,7 +98,7 @@ public class ScannerBuilder {
   }
 
   private Set<ImmutableBytesPtr>
-      getAllFamilies(Collection<? extends ColumnReference> columns) {
+          getAllFamilies(Collection<? extends ColumnReference> columns) {
     Set<ImmutableBytesPtr> families = new HashSet<ImmutableBytesPtr>();
     for (ColumnReference ref : columns) {
       families.add(ref.getFamilyWritable());
@@ -120,7 +118,7 @@ public class ScannerBuilder {
     } catch (IOException e) {
       // This should never happen - everything should explode if so.
       throw new RuntimeException(
-          "Failed to seek to first key from update on the memstore scanner!", e);
+              "Failed to seek to first key from update on the memstore scanner!", e);
     }
 
     // we have some info in the scanner, so wrap it in an iterator and return.

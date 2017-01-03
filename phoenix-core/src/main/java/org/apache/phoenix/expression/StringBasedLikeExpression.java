@@ -26,24 +26,24 @@ import org.apache.phoenix.parse.LikeParseNode.LikeType;
 
 public class StringBasedLikeExpression extends LikeExpression {
 
-    public StringBasedLikeExpression() {
-    }
+  public StringBasedLikeExpression() {
+  }
 
-    public StringBasedLikeExpression(List<Expression> children) {
-        super(children);
-    }
+  public StringBasedLikeExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JavaPattern(value, Pattern.DOTALL);
-    }
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JavaPattern(value, Pattern.DOTALL);
+  }
 
-    public static LikeExpression create(List<Expression> children, LikeType likeType) {
-        return new StringBasedLikeExpression(addLikeTypeChild(children, likeType));
-    }
+  public static LikeExpression create(List<Expression> children, LikeType likeType) {
+    return new StringBasedLikeExpression(addLikeTypeChild(children, likeType));
+  }
 
-    @Override
-    public LikeExpression clone(List<Expression> children) {
-        return new StringBasedLikeExpression(children);
-    }
+  @Override
+  public LikeExpression clone(List<Expression> children) {
+    return new StringBasedLikeExpression(children);
+  }
 }

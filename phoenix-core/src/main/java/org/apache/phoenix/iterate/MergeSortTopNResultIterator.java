@@ -26,92 +26,97 @@ import org.apache.phoenix.expression.OrderByExpression;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * 
+ *
  * ResultIterator that does a merge sort on the list of iterators provided,
- * returning the rows ordered by the OrderByExpression. The input
- * iterators must be ordered by the OrderByExpression.
+ * returning the rows ordered by the OrderByExpression. The input iterators must
+ * be ordered by the OrderByExpression.
  *
  */
 public class MergeSortTopNResultIterator extends MergeSortResultIterator {
 
-    private final int limit;
-    private int count = 0;
-    private int offsetCount = 0;
-    private final List<OrderByExpression> orderByColumns;
-    private final ImmutableBytesWritable ptr1 = new ImmutableBytesWritable();
-    private final ImmutableBytesWritable ptr2 = new ImmutableBytesWritable();
-    private final int offset;
-    
-    public MergeSortTopNResultIterator(ResultIterators iterators, Integer limit, Integer offset,
-            List<OrderByExpression> orderByColumns) {
-        super(iterators);
-        this.limit = limit == null ? -1 : limit;
-        this.offset = offset == null ? -1 : offset;
-        this.orderByColumns = orderByColumns;
+  private final int limit;
+  private int count = 0;
+  private int offsetCount = 0;
+  private final List<OrderByExpression> orderByColumns;
+  private final ImmutableBytesWritable ptr1 = new ImmutableBytesWritable();
+  private final ImmutableBytesWritable ptr2 = new ImmutableBytesWritable();
+  private final int offset;
+
+  public MergeSortTopNResultIterator(ResultIterators iterators, Integer limit, Integer offset,
+          List<OrderByExpression> orderByColumns) {
+    super(iterators);
+    this.limit = limit == null ? -1 : limit;
+    this.offset = offset == null ? -1 : offset;
+    this.orderByColumns = orderByColumns;
+  }
+
+  @Override
+  protected int compare(Tuple t1, Tuple t2) {
+    for (int i = 0; i < orderByColumns.size(); i++) {
+      OrderByExpression order = orderByColumns.get(i);
+      Expression orderExpr = order.getExpression();
+      boolean isNull1 = !orderExpr.evaluate(t1, ptr1) || ptr1.getLength() == 0;
+      boolean isNull2 = !orderExpr.evaluate(t2, ptr2) || ptr2.getLength() == 0;
+      if (isNull1 && isNull2) {
+        continue;
+      } else if (isNull1) {
+        return order.isNullsLast() ? 1 : -1;
+      } else if (isNull2) {
+        return order.isNullsLast() ? -1 : 1;
+      }
+      int cmp = ptr1.compareTo(ptr2);
+      if (cmp == 0) {
+        continue;
+      }
+      return order.isAscending() ? cmp : -cmp;
     }
+    return 0;
+  }
 
-    @Override
-    protected int compare(Tuple t1, Tuple t2) {
-        for (int i = 0; i < orderByColumns.size(); i++) {
-            OrderByExpression order = orderByColumns.get(i);
-            Expression orderExpr = order.getExpression();
-            boolean isNull1 = !orderExpr.evaluate(t1, ptr1) || ptr1.getLength() == 0;
-            boolean isNull2 = !orderExpr.evaluate(t2, ptr2) || ptr2.getLength() == 0;
-            if (isNull1 && isNull2) {
-                continue;
-            } else if (isNull1) {
-                return order.isNullsLast() ? 1 : -1;
-            } else if (isNull2) {
-                return order.isNullsLast() ? -1 : 1;
-            }
-            int cmp = ptr1.compareTo(ptr2);
-            if (cmp == 0) {
-                continue;
-            }
-            return order.isAscending() ? cmp : -cmp;
-        }
-        return 0;
+  @Override
+  public Tuple peek() throws SQLException {
+    while (offsetCount < offset) {
+      if (super.next() == null) {
+        return null;
+      }
+      offsetCount++;
     }
-
-    @Override
-    public Tuple peek() throws SQLException {
-        while (offsetCount < offset) {
-            if (super.next() == null) { return null; }
-            offsetCount++;
-        }
-        if (limit >= 0 && count >= limit) {
-            return null;
-        }
-        return super.peek();
+    if (limit >= 0 && count >= limit) {
+      return null;
     }
+    return super.peek();
+  }
 
-    @Override
-    public Tuple next() throws SQLException {
-        while (offsetCount < offset) {
-            if (super.next() == null) { return null; }
-            offsetCount++;
-        }
-        if (limit >= 0 && count++ >= limit) { return null; }
-        return super.next();
+  @Override
+  public Tuple next() throws SQLException {
+    while (offsetCount < offset) {
+      if (super.next() == null) {
+        return null;
+      }
+      offsetCount++;
     }
-
-
-    @Override
-    public void explain(List<String> planSteps) {
-        resultIterators.explain(planSteps);
-        planSteps.add("CLIENT MERGE SORT");
-        if (offset > 0) {
-            planSteps.add("CLIENT OFFSET " + offset);
-        }
-        if (limit > 0) {
-            planSteps.add("CLIENT LIMIT " + limit);
-        }
+    if (limit >= 0 && count++ >= limit) {
+      return null;
     }
+    return super.next();
+  }
 
-	@Override
-	public String toString() {
-		return "MergeSortTopNResultIterator [limit=" + limit + ", count="
-				+ count + ", orderByColumns=" + orderByColumns + ", ptr1="
-				+ ptr1 + ", ptr2=" + ptr2 + ",offset=" + offset + "]";
-	}
+  @Override
+  public void explain(List<String> planSteps) {
+    resultIterators.explain(planSteps);
+    planSteps.add("CLIENT MERGE SORT");
+    if (offset > 0) {
+      planSteps.add("CLIENT OFFSET " + offset);
+    }
+    if (limit > 0) {
+      planSteps.add("CLIENT LIMIT " + limit);
+    }
+  }
+
+  @Override
+  public String toString() {
+    return "MergeSortTopNResultIterator [limit=" + limit + ", count="
+            + count + ", orderByColumns=" + orderByColumns + ", ptr1="
+            + ptr1 + ", ptr2=" + ptr2 + ",offset=" + offset + "]";
+  }
 }

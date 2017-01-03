@@ -17,27 +17,26 @@
  */
 package org.apache.phoenix.monitoring;
 
-
 /**
- * Class that encapsulates the various metrics associated with the spooling done by phoenix as part of servicing a
- * request.
+ * Class that encapsulates the various metrics associated with the spooling done
+ * by phoenix as part of servicing a request.
  */
 public class SpoolingMetricsHolder {
 
-    private final CombinableMetric spoolFileSizeMetric;
-    private final CombinableMetric numSpoolFileMetric;
-    public static final SpoolingMetricsHolder NO_OP_INSTANCE = new SpoolingMetricsHolder(new ReadMetricQueue(false), "");
+  private final CombinableMetric spoolFileSizeMetric;
+  private final CombinableMetric numSpoolFileMetric;
+  public static final SpoolingMetricsHolder NO_OP_INSTANCE = new SpoolingMetricsHolder(new ReadMetricQueue(false), "");
 
-    public SpoolingMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
-        this.spoolFileSizeMetric = readMetrics.allotMetric(MetricType.SPOOL_FILE_SIZE, tableName);
-        this.numSpoolFileMetric = readMetrics.allotMetric(MetricType.SPOOL_FILE_COUNTER, tableName);
-    }
+  public SpoolingMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
+    this.spoolFileSizeMetric = readMetrics.allotMetric(MetricType.SPOOL_FILE_SIZE, tableName);
+    this.numSpoolFileMetric = readMetrics.allotMetric(MetricType.SPOOL_FILE_COUNTER, tableName);
+  }
 
-    public CombinableMetric getSpoolFileSizeMetric() {
-        return spoolFileSizeMetric;
-    }
+  public CombinableMetric getSpoolFileSizeMetric() {
+    return spoolFileSizeMetric;
+  }
 
-    public CombinableMetric getNumSpoolFileMetric() {
-        return numSpoolFileMetric;
-    }
+  public CombinableMetric getNumSpoolFileMetric() {
+    return numSpoolFileMetric;
+  }
 }

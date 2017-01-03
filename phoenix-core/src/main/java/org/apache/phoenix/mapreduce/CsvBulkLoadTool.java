@@ -31,74 +31,73 @@ import org.apache.phoenix.util.ColumnInfo;
 
 public class CsvBulkLoadTool extends AbstractBulkLoadTool {
 
-    static final Option DELIMITER_OPT = new Option("d", "delimiter", true, "Input delimiter, defaults to comma");
-    static final Option QUOTE_OPT = new Option("q", "quote", true, "Supply a custom phrase delimiter, defaults to double quote character");
-    static final Option ESCAPE_OPT = new Option("e", "escape", true, "Supply a custom escape character, default is a backslash");
-    static final Option ARRAY_DELIMITER_OPT = new Option("a", "array-delimiter", true, "Array element delimiter (optional)");
+  static final Option DELIMITER_OPT = new Option("d", "delimiter", true, "Input delimiter, defaults to comma");
+  static final Option QUOTE_OPT = new Option("q", "quote", true, "Supply a custom phrase delimiter, defaults to double quote character");
+  static final Option ESCAPE_OPT = new Option("e", "escape", true, "Supply a custom escape character, default is a backslash");
+  static final Option ARRAY_DELIMITER_OPT = new Option("a", "array-delimiter", true, "Array element delimiter (optional)");
 
-    @Override
-    protected Options getOptions() {
-        Options options = super.getOptions();
-        options.addOption(DELIMITER_OPT);
-        options.addOption(QUOTE_OPT);
-        options.addOption(ESCAPE_OPT);
-        options.addOption(ARRAY_DELIMITER_OPT);
-        return options;
+  @Override
+  protected Options getOptions() {
+    Options options = super.getOptions();
+    options.addOption(DELIMITER_OPT);
+    options.addOption(QUOTE_OPT);
+    options.addOption(ESCAPE_OPT);
+    options.addOption(ARRAY_DELIMITER_OPT);
+    return options;
+  }
+
+  @Override
+  protected void configureOptions(CommandLine cmdLine, List<ColumnInfo> importColumns,
+          Configuration conf) throws SQLException {
+
+    // we don't parse ZK_QUORUM_OPT here because we need it in order to
+    // create the connection we need to build importColumns.
+    char delimiterChar = ',';
+    if (cmdLine.hasOption(DELIMITER_OPT.getOpt())) {
+      String delimString = StringEscapeUtils.unescapeJava(cmdLine.getOptionValue(DELIMITER_OPT.getOpt()));
+      if (delimString.length() != 1) {
+        throw new IllegalArgumentException("Illegal delimiter character: " + delimString);
+      }
+      delimiterChar = delimString.charAt(0);
     }
 
-    @Override
-    protected void configureOptions(CommandLine cmdLine, List<ColumnInfo> importColumns,
-                                         Configuration conf) throws SQLException {
-
-        // we don't parse ZK_QUORUM_OPT here because we need it in order to
-        // create the connection we need to build importColumns.
-
-        char delimiterChar = ',';
-        if (cmdLine.hasOption(DELIMITER_OPT.getOpt())) {
-            String delimString = StringEscapeUtils.unescapeJava(cmdLine.getOptionValue(DELIMITER_OPT.getOpt()));
-            if (delimString.length() != 1) {
-                throw new IllegalArgumentException("Illegal delimiter character: " + delimString);
-            }
-            delimiterChar = delimString.charAt(0);
-        }
-
-        char quoteChar = '"';
-        if (cmdLine.hasOption(QUOTE_OPT.getOpt())) {
-            String quoteString = cmdLine.getOptionValue(QUOTE_OPT.getOpt());
-            if (quoteString.length() != 1) {
-                throw new IllegalArgumentException("Illegal quote character: " + quoteString);
-            }
-            quoteChar = quoteString.charAt(0);
-        }
-
-        char escapeChar = '\\';
-        if (cmdLine.hasOption(ESCAPE_OPT.getOpt())) {
-            String escapeString = cmdLine.getOptionValue(ESCAPE_OPT.getOpt());
-            if (escapeString.length() != 1) {
-                throw new IllegalArgumentException("Illegal escape character: " + escapeString);
-            }
-            escapeChar = escapeString.charAt(0);
-        }
-
-        CsvBulkImportUtil.initCsvImportJob(
-                conf,
-                delimiterChar,
-                quoteChar,
-                escapeChar,
-                cmdLine.getOptionValue(ARRAY_DELIMITER_OPT.getOpt()));
+    char quoteChar = '"';
+    if (cmdLine.hasOption(QUOTE_OPT.getOpt())) {
+      String quoteString = cmdLine.getOptionValue(QUOTE_OPT.getOpt());
+      if (quoteString.length() != 1) {
+        throw new IllegalArgumentException("Illegal quote character: " + quoteString);
+      }
+      quoteChar = quoteString.charAt(0);
     }
 
-    @Override
-    protected void setupJob(Job job) {
-        // Allow overriding the job jar setting by using a -D system property at startup
-        if (job.getJar() == null) {
-            job.setJarByClass(CsvToKeyValueMapper.class);
-        }
-        job.setMapperClass(CsvToKeyValueMapper.class);
+    char escapeChar = '\\';
+    if (cmdLine.hasOption(ESCAPE_OPT.getOpt())) {
+      String escapeString = cmdLine.getOptionValue(ESCAPE_OPT.getOpt());
+      if (escapeString.length() != 1) {
+        throw new IllegalArgumentException("Illegal escape character: " + escapeString);
+      }
+      escapeChar = escapeString.charAt(0);
     }
 
-    public static void main(String[] args) throws Exception {
-        int exitStatus = ToolRunner.run(new CsvBulkLoadTool(), args);
-        System.exit(exitStatus);
+    CsvBulkImportUtil.initCsvImportJob(
+            conf,
+            delimiterChar,
+            quoteChar,
+            escapeChar,
+            cmdLine.getOptionValue(ARRAY_DELIMITER_OPT.getOpt()));
+  }
+
+  @Override
+  protected void setupJob(Job job) {
+    // Allow overriding the job jar setting by using a -D system property at startup
+    if (job.getJar() == null) {
+      job.setJarByClass(CsvToKeyValueMapper.class);
     }
+    job.setMapperClass(CsvToKeyValueMapper.class);
+  }
+
+  public static void main(String[] args) throws Exception {
+    int exitStatus = ToolRunner.run(new CsvBulkLoadTool(), args);
+    System.exit(exitStatus);
+  }
 }

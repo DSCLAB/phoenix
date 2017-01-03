@@ -77,28 +77,29 @@ public final class QueryServer extends Configured implements Tool, Runnable {
     // Print out vm stats before starting up.
     RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
     if (runtime != null) {
-      LOG.info("vmName=" + runtime.getVmName() + ", vmVendor=" +
-              runtime.getVmVendor() + ", vmVersion=" + runtime.getVmVersion());
+      LOG.info("vmName=" + runtime.getVmName() + ", vmVendor="
+              + runtime.getVmVendor() + ", vmVersion=" + runtime.getVmVersion());
       LOG.info("vmInputArguments=" + runtime.getInputArguments());
     }
   }
 
   /**
-   * Logs information about the currently running JVM process including
-   * the environment variables. Logging of env vars can be disabled by
-   * setting {@code "phoenix.envvars.logging.disabled"} to {@code "true"}.
-   * <p>If enabled, you can also exclude environment variables containing
-   * certain substrings by setting {@code "phoenix.envvars.logging.skipwords"}
-   * to comma separated list of such substrings.
+   * Logs information about the currently running JVM process including the
+   * environment variables. Logging of env vars can be disabled by setting
+   * {@code "phoenix.envvars.logging.disabled"} to {@code "true"}.
+   * <p>
+   * If enabled, you can also exclude environment variables containing certain
+   * substrings by setting {@code "phoenix.envvars.logging.skipwords"} to comma
+   * separated list of such substrings.
    */
   public static void logProcessInfo(Configuration conf) {
     // log environment variables unless asked not to
     if (conf == null || !conf.getBoolean(QueryServices.QUERY_SERVER_ENV_LOGGING_ATTRIB, false)) {
       Set<String> skipWords = new HashSet<String>(
-          QueryServicesOptions.DEFAULT_QUERY_SERVER_SKIP_WORDS);
+              QueryServicesOptions.DEFAULT_QUERY_SERVER_SKIP_WORDS);
       if (conf != null) {
         String[] confSkipWords = conf.getStrings(
-            QueryServices.QUERY_SERVER_ENV_LOGGING_SKIPWORDS_ATTRIB);
+                QueryServices.QUERY_SERVER_ENV_LOGGING_SKIPWORDS_ATTRIB);
         if (confSkipWords != null) {
           skipWords.addAll(Arrays.asList(confSkipWords));
         }
@@ -109,34 +110,42 @@ public final class QueryServer extends Configured implements Tool, Runnable {
         String key = entry.getKey().toLowerCase();
         String value = entry.getValue().toLowerCase();
         // exclude variables which may contain skip words
-        for(String skipWord : skipWords) {
-          if (key.contains(skipWord) || value.contains(skipWord))
+        for (String skipWord : skipWords) {
+          if (key.contains(skipWord) || value.contains(skipWord)) {
             continue nextEnv;
+          }
         }
-        LOG.info("env:"+entry);
+        LOG.info("env:" + entry);
       }
     }
     // and JVM info
     logJVMInfo();
   }
 
-  /** Constructor for use from {@link org.apache.hadoop.util.ToolRunner}. */
+  /**
+   * Constructor for use from {@link org.apache.hadoop.util.ToolRunner}.
+   */
   public QueryServer() {
     this(null, null);
   }
 
-  /** Constructor for use as {@link java.lang.Runnable}. */
+  /**
+   * Constructor for use as {@link java.lang.Runnable}.
+   */
   public QueryServer(String[] argv, Configuration conf) {
     this.argv = argv;
     setConf(conf);
   }
 
   /**
-   * @return the port number this instance is bound to, or {@code -1} if the server is not running.
+   * @return the port number this instance is bound to, or {@code -1} if the
+   * server is not running.
    */
   @VisibleForTesting
   public int getPort() {
-    if (server == null) return -1;
+    if (server == null) {
+      return -1;
+    }
     return server.getPort();
   }
 
@@ -156,12 +165,16 @@ public final class QueryServer extends Configured implements Tool, Runnable {
     return t;
   }
 
-  /** Calling thread waits until the server is running. */
+  /**
+   * Calling thread waits until the server is running.
+   */
   public void awaitRunning() throws InterruptedException {
     runningLatch.await();
   }
 
-  /** Calling thread waits until the server is running. */
+  /**
+   * Calling thread waits until the server is running.
+   */
   public void awaitRunning(long timeout, TimeUnit unit) throws InterruptedException {
     runningLatch.await(timeout, unit);
   }
@@ -171,38 +184,38 @@ public final class QueryServer extends Configured implements Tool, Runnable {
     logProcessInfo(getConf());
     try {
       final boolean isKerberos = "kerberos".equalsIgnoreCase(getConf().get(
-          QueryServices.QUERY_SERVER_HBASE_SECURITY_CONF_ATTRIB));
+              QueryServices.QUERY_SERVER_HBASE_SECURITY_CONF_ATTRIB));
 
       // handle secure cluster credentials
       if (isKerberos) {
         String hostname = Strings.domainNamePointerToHostName(DNS.getDefaultHost(
-            getConf().get(QueryServices.QUERY_SERVER_DNS_INTERFACE_ATTRIB, "default"),
-            getConf().get(QueryServices.QUERY_SERVER_DNS_NAMESERVER_ATTRIB, "default")));
+                getConf().get(QueryServices.QUERY_SERVER_DNS_INTERFACE_ATTRIB, "default"),
+                getConf().get(QueryServices.QUERY_SERVER_DNS_NAMESERVER_ATTRIB, "default")));
         if (LOG.isDebugEnabled()) {
           LOG.debug("Login to " + hostname + " using " + getConf().get(
-              QueryServices.QUERY_SERVER_KEYTAB_FILENAME_ATTRIB)
-              + " and principal " + getConf().get(
-                  QueryServices.QUERY_SERVER_KERBEROS_PRINCIPAL_ATTRIB) + ".");
+                  QueryServices.QUERY_SERVER_KEYTAB_FILENAME_ATTRIB)
+                  + " and principal " + getConf().get(
+                          QueryServices.QUERY_SERVER_KERBEROS_PRINCIPAL_ATTRIB) + ".");
         }
         SecurityUtil.login(getConf(), QueryServices.QUERY_SERVER_KEYTAB_FILENAME_ATTRIB,
-            QueryServices.QUERY_SERVER_KERBEROS_PRINCIPAL_ATTRIB, hostname);
+                QueryServices.QUERY_SERVER_KERBEROS_PRINCIPAL_ATTRIB, hostname);
         LOG.info("Login successful.");
       }
 
       Class<? extends PhoenixMetaFactory> factoryClass = getConf().getClass(
-          QueryServices.QUERY_SERVER_META_FACTORY_ATTRIB, PhoenixMetaFactoryImpl.class,
-          PhoenixMetaFactory.class);
+              QueryServices.QUERY_SERVER_META_FACTORY_ATTRIB, PhoenixMetaFactoryImpl.class,
+              PhoenixMetaFactory.class);
       int port = getConf().getInt(QueryServices.QUERY_SERVER_HTTP_PORT_ATTRIB,
-          QueryServicesOptions.DEFAULT_QUERY_SERVER_HTTP_PORT);
+              QueryServicesOptions.DEFAULT_QUERY_SERVER_HTTP_PORT);
       LOG.debug("Listening on port " + port);
-      PhoenixMetaFactory factory =
-          factoryClass.getDeclaredConstructor(Configuration.class).newInstance(getConf());
+      PhoenixMetaFactory factory
+              = factoryClass.getDeclaredConstructor(Configuration.class).newInstance(getConf());
       Meta meta = factory.create(Arrays.asList(args));
       Service service = new LocalService(meta);
 
       // Start building the Avatica HttpServer
       final HttpServer.Builder builder = new HttpServer.Builder().withPort(port)
-          .withHandler(service, getSerialization(getConf()));
+              .withHandler(service, getSerialization(getConf()));
 
       // Enable SPNEGO and Impersonation when using Kerberos
       if (isKerberos) {
@@ -216,8 +229,8 @@ public final class QueryServer extends Configured implements Tool, Runnable {
 
         // Enable SPNEGO and impersonation (through standard Hadoop configuration means)
         builder.withSpnego(ugi.getUserName())
-            .withAutomaticLogin(keytab)
-            .withImpersonation(new PhoenixDoAsCallback(ugi, getConf()));
+                .withAutomaticLogin(keytab)
+                .withImpersonation(new PhoenixDoAsCallback(ugi, getConf()));
       }
 
       // Build and start the HttpServer
@@ -241,7 +254,7 @@ public final class QueryServer extends Configured implements Tool, Runnable {
    */
   Driver.Serialization getSerialization(Configuration conf) {
     String serializationName = conf.get(QueryServices.QUERY_SERVER_SERIALIZATION_ATTRIB,
-        QueryServicesOptions.DEFAULT_QUERY_SERVER_SERIALIZATION);
+            QueryServicesOptions.DEFAULT_QUERY_SERVER_SERIALIZATION);
 
     Driver.Serialization serialization;
     // Otherwise, use what was provided in the configuration
@@ -255,7 +268,8 @@ public final class QueryServer extends Configured implements Tool, Runnable {
     return serialization;
   }
 
-  @Override public void run() {
+  @Override
+  public void run() {
     try {
       retCode = run(argv);
     } catch (Exception e) {
@@ -264,27 +278,29 @@ public final class QueryServer extends Configured implements Tool, Runnable {
   }
 
   /**
-   * Callback to run the Avatica server action as the remote (proxy) user instead of the server.
+   * Callback to run the Avatica server action as the remote (proxy) user
+   * instead of the server.
    */
   static class PhoenixDoAsCallback implements DoAsRemoteUserCallback {
+
     private final UserGroupInformation serverUgi;
-    private final LoadingCache<String,UserGroupInformation> ugiCache;
+    private final LoadingCache<String, UserGroupInformation> ugiCache;
 
     public PhoenixDoAsCallback(UserGroupInformation serverUgi, Configuration conf) {
       this.serverUgi = Objects.requireNonNull(serverUgi);
       this.ugiCache = CacheBuilder.newBuilder()
-          .initialCapacity(conf.getInt(QueryServices.QUERY_SERVER_UGI_CACHE_INITIAL_SIZE,
-                  QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_INITIAL_SIZE))
-          .concurrencyLevel(conf.getInt(QueryServices.QUERY_SERVER_UGI_CACHE_CONCURRENCY,
-                  QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_CONCURRENCY))
-          .maximumSize(conf.getLong(QueryServices.QUERY_SERVER_UGI_CACHE_MAX_SIZE,
-                  QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_MAX_SIZE))
-          .build(new UgiCacheLoader(this.serverUgi));
+              .initialCapacity(conf.getInt(QueryServices.QUERY_SERVER_UGI_CACHE_INITIAL_SIZE,
+                      QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_INITIAL_SIZE))
+              .concurrencyLevel(conf.getInt(QueryServices.QUERY_SERVER_UGI_CACHE_CONCURRENCY,
+                      QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_CONCURRENCY))
+              .maximumSize(conf.getLong(QueryServices.QUERY_SERVER_UGI_CACHE_MAX_SIZE,
+                      QueryServicesOptions.DEFAULT_QUERY_SERVER_UGI_CACHE_MAX_SIZE))
+              .build(new UgiCacheLoader(this.serverUgi));
     }
 
     @Override
     public <T> T doAsRemoteUser(String remoteUserName, String remoteAddress,
-        final Callable<T> action) throws Exception {
+            final Callable<T> action) throws Exception {
       // We are guaranteed by Avatica that the `remoteUserName` is properly authenticated by the
       // time this method is called. We don't have to verify the wire credentials, we can assume the
       // user provided valid credentials for who it claimed it was.
@@ -302,35 +318,37 @@ public final class QueryServer extends Configured implements Tool, Runnable {
       });
     }
 
-      @VisibleForTesting
-      UserGroupInformation createProxyUser(String remoteUserName) throws ExecutionException {
-          // PHOENIX-3164 UGI's hashCode and equals methods rely on reference checks, not
-          // value-based checks. We need to make sure we return the same UGI instance for a remote
-          // user, otherwise downstream code in Phoenix and HBase may not treat two of the same
-          // calls from one user as equivalent.
-          return ugiCache.get(remoteUserName);
-      }
+    @VisibleForTesting
+    UserGroupInformation createProxyUser(String remoteUserName) throws ExecutionException {
+      // PHOENIX-3164 UGI's hashCode and equals methods rely on reference checks, not
+      // value-based checks. We need to make sure we return the same UGI instance for a remote
+      // user, otherwise downstream code in Phoenix and HBase may not treat two of the same
+      // calls from one user as equivalent.
+      return ugiCache.get(remoteUserName);
+    }
 
-      @VisibleForTesting
-      LoadingCache<String,UserGroupInformation> getCache() {
-          return ugiCache;
-      }
+    @VisibleForTesting
+    LoadingCache<String, UserGroupInformation> getCache() {
+      return ugiCache;
+    }
   }
 
   /**
-   * CacheLoader implementation which creates a "proxy" UGI instance for the given user name.
+   * CacheLoader implementation which creates a "proxy" UGI instance for the
+   * given user name.
    */
-  static class UgiCacheLoader extends CacheLoader<String,UserGroupInformation> {
-      private final UserGroupInformation serverUgi;
+  static class UgiCacheLoader extends CacheLoader<String, UserGroupInformation> {
 
-      public UgiCacheLoader(UserGroupInformation serverUgi) {
-          this.serverUgi = Objects.requireNonNull(serverUgi);
-      }
+    private final UserGroupInformation serverUgi;
 
-      @Override
-      public UserGroupInformation load(String remoteUserName) throws Exception {
-          return UserGroupInformation.createProxyUser(remoteUserName, serverUgi);
-      }
+    public UgiCacheLoader(UserGroupInformation serverUgi) {
+      this.serverUgi = Objects.requireNonNull(serverUgi);
+    }
+
+    @Override
+    public UserGroupInformation load(String remoteUserName) throws Exception {
+      return UserGroupInformation.createProxyUser(remoteUserName, serverUgi);
+    }
   }
 
   public static void main(String[] argv) throws Exception {

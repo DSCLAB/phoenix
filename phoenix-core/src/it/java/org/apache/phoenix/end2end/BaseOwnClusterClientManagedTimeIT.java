@@ -19,11 +19,11 @@ package org.apache.phoenix.end2end;
 
 import org.junit.After;
 
-
 public class BaseOwnClusterClientManagedTimeIT extends BaseOwnClusterIT {
-    @After
-    public void cleanUpAfterTest() throws Exception {
-        long ts = nextTimestamp();
-        deletePriorMetaData(ts - 1, getUrl());
-    }    
+
+  @After
+  public void cleanUpAfterTest() throws Exception {
+    long ts = nextTimestamp();
+    deletePriorMetaData(ts - 1, getUrl());
+  }
 }

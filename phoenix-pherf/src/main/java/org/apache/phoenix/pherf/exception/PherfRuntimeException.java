@@ -15,16 +15,15 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.exception;
 
 public class PherfRuntimeException extends RuntimeException {
-    public PherfRuntimeException(String message) throws Exception{
-        super(message);
-    }
 
-    public PherfRuntimeException(String message, Exception e) {
-        super(message, e);
-    }
+  public PherfRuntimeException(String message) throws Exception {
+    super(message);
+  }
+
+  public PherfRuntimeException(String message, Exception e) {
+    super(message, e);
+  }
 }
-

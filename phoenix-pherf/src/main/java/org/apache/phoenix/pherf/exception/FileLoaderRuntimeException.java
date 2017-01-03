@@ -15,15 +15,16 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.exception;
 
 public class FileLoaderRuntimeException extends PherfRuntimeException {
-    @SuppressWarnings("unused")
-    public FileLoaderRuntimeException(String message) throws Exception {
-        super(message);
-    }
-    public FileLoaderRuntimeException(String message, Exception e) {
-        super(message, e);
-    }
+
+  @SuppressWarnings("unused")
+  public FileLoaderRuntimeException(String message) throws Exception {
+    super(message);
+  }
+
+  public FileLoaderRuntimeException(String message, Exception e) {
+    super(message, e);
+  }
 }

@@ -25,62 +25,67 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import com.google.common.collect.Maps;
 
 public class RuntimeContextImpl implements RuntimeContext {
-    Map<String, VariableEntry> correlateVariables;
 
-    public RuntimeContextImpl() {
-        this.correlateVariables = Maps.newHashMap();
-    }
-    
-    @Override
-    public void defineCorrelateVariable(String variableId, TableRef def) {
-        this.correlateVariables.put(variableId, new VariableEntry(def));
-    }
-    
-    @Override
-    public TableRef getCorrelateVariableDef(String variableId) {
-        VariableEntry entry = this.correlateVariables.get(variableId);
-        if (entry == null)
-            throw new RuntimeException("Variable '" + variableId + "' undefined.");
-        
-        return entry.getDef();
-    }
-    
-    @Override
-    public void setCorrelateVariableValue(String variableId, Tuple value) {
-        VariableEntry entry = this.correlateVariables.get(variableId);
-        if (entry == null)
-            throw new RuntimeException("Variable '" + variableId + "' undefined.");
-        
-        entry.setValue(value);
+  Map<String, VariableEntry> correlateVariables;
+
+  public RuntimeContextImpl() {
+    this.correlateVariables = Maps.newHashMap();
+  }
+
+  @Override
+  public void defineCorrelateVariable(String variableId, TableRef def) {
+    this.correlateVariables.put(variableId, new VariableEntry(def));
+  }
+
+  @Override
+  public TableRef getCorrelateVariableDef(String variableId) {
+    VariableEntry entry = this.correlateVariables.get(variableId);
+    if (entry == null) {
+      throw new RuntimeException("Variable '" + variableId + "' undefined.");
     }
 
-    @Override
-    public Tuple getCorrelateVariableValue(String variableId) {
-        VariableEntry entry = this.correlateVariables.get(variableId);
-        if (entry == null)
-            throw new RuntimeException("Variable '" + variableId + "' undefined.");
-        
-        return entry.getValue();
+    return entry.getDef();
+  }
+
+  @Override
+  public void setCorrelateVariableValue(String variableId, Tuple value) {
+    VariableEntry entry = this.correlateVariables.get(variableId);
+    if (entry == null) {
+      throw new RuntimeException("Variable '" + variableId + "' undefined.");
     }
-    
-    private static class VariableEntry {
-        private final TableRef def;
-        private Tuple value;
-        
-        VariableEntry(TableRef def) {
-            this.def = def;
-        }
-        
-        TableRef getDef() {
-            return def;
-        }
-        
-        Tuple getValue() {
-            return value;
-        }
-        
-        void setValue(Tuple value) {
-            this.value = value;
-        }
+
+    entry.setValue(value);
+  }
+
+  @Override
+  public Tuple getCorrelateVariableValue(String variableId) {
+    VariableEntry entry = this.correlateVariables.get(variableId);
+    if (entry == null) {
+      throw new RuntimeException("Variable '" + variableId + "' undefined.");
     }
+
+    return entry.getValue();
+  }
+
+  private static class VariableEntry {
+
+    private final TableRef def;
+    private Tuple value;
+
+    VariableEntry(TableRef def) {
+      this.def = def;
+    }
+
+    TableRef getDef() {
+      return def;
+    }
+
+    Tuple getValue() {
+      return value;
+    }
+
+    void setValue(Tuple value) {
+      this.value = value;
+    }
+  }
 }

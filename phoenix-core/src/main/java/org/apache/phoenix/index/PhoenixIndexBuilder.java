@@ -27,30 +27,31 @@ import org.apache.phoenix.hbase.index.covered.NonTxIndexBuilder;
 import org.apache.phoenix.hbase.index.write.IndexWriter;
 
 /**
- * Index builder for covered-columns index that ties into phoenix for faster use.
+ * Index builder for covered-columns index that ties into phoenix for faster
+ * use.
  */
 public class PhoenixIndexBuilder extends NonTxIndexBuilder {
 
-    @Override
-    public IndexMetaData getIndexMetaData(MiniBatchOperationInProgress<Mutation> miniBatchOp) throws IOException {
-        return new PhoenixIndexMetaData(env, miniBatchOp.getOperation(0).getAttributesMap());
-    }
+  @Override
+  public IndexMetaData getIndexMetaData(MiniBatchOperationInProgress<Mutation> miniBatchOp) throws IOException {
+    return new PhoenixIndexMetaData(env, miniBatchOp.getOperation(0).getAttributesMap());
+  }
 
-    protected PhoenixIndexCodec getCodec() {
-        return (PhoenixIndexCodec)codec;
-    }
+  protected PhoenixIndexCodec getCodec() {
+    return (PhoenixIndexCodec) codec;
+  }
 
-    @Override
-    public void setup(RegionCoprocessorEnvironment env) throws IOException {
-        super.setup(env);
-        Configuration conf = env.getConfiguration();
-        // Install handler that will attempt to disable the index first before killing the region
-        // server
-        conf.setIfUnset(IndexWriter.INDEX_FAILURE_POLICY_CONF_KEY,
+  @Override
+  public void setup(RegionCoprocessorEnvironment env) throws IOException {
+    super.setup(env);
+    Configuration conf = env.getConfiguration();
+    // Install handler that will attempt to disable the index first before killing the region
+    // server
+    conf.setIfUnset(IndexWriter.INDEX_FAILURE_POLICY_CONF_KEY,
             PhoenixIndexFailurePolicy.class.getName());
-    }
+  }
 
-    @Override
-    public void batchStarted(MiniBatchOperationInProgress<Mutation> miniBatchOp, IndexMetaData context) throws IOException {
-    }
+  @Override
+  public void batchStarted(MiniBatchOperationInProgress<Mutation> miniBatchOp, IndexMetaData context) throws IOException {
+  }
 }

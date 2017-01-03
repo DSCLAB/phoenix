@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
@@ -26,19 +25,19 @@ import java.util.List;
 
 public class GarbageCollectorElapsedTimeMonitor implements Monitor {
 
-    @Override
-    public Stat getStat() {
-        List<GarbageCollectorMXBean> beans = ManagementFactory.getGarbageCollectorMXBeans();
-        long average = 0;
-        Stat<Long> stat = null;
-        if (beans.size() > 0) {
-            for (GarbageCollectorMXBean bean : beans) {
-                average += bean.getCollectionTime();
-            }
-            stat = new Stat(average / beans.size());
-        } else {
-            stat = new Stat(0);
-        }
-        return stat;
+  @Override
+  public Stat getStat() {
+    List<GarbageCollectorMXBean> beans = ManagementFactory.getGarbageCollectorMXBeans();
+    long average = 0;
+    Stat<Long> stat = null;
+    if (beans.size() > 0) {
+      for (GarbageCollectorMXBean bean : beans) {
+        average += bean.getCollectionTime();
+      }
+      stat = new Stat(average / beans.size());
+    } else {
+      stat = new Stat(0);
     }
+    return stat;
+  }
 }

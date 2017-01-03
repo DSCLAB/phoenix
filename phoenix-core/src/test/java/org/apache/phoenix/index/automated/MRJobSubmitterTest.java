@@ -34,104 +34,104 @@ import org.junit.Test;
 
 public class MRJobSubmitterTest {
 
-    private Map<String, PhoenixAsyncIndex> candidateJobs =
-            new LinkedHashMap<String, PhoenixAsyncIndex>();
-    private Set<String> submittedJobs = new HashSet<String>();
+  private Map<String, PhoenixAsyncIndex> candidateJobs
+          = new LinkedHashMap<String, PhoenixAsyncIndex>();
+  private Set<String> submittedJobs = new HashSet<String>();
 
-    @Before
-    public void prepare() {
-        PhoenixAsyncIndex index1 = new PhoenixAsyncIndex();
-        index1.setDataTableName("DT1");
-        index1.setTableName("IT1");
-        index1.setIndexType(IndexType.LOCAL);
+  @Before
+  public void prepare() {
+    PhoenixAsyncIndex index1 = new PhoenixAsyncIndex();
+    index1.setDataTableName("DT1");
+    index1.setTableName("IT1");
+    index1.setIndexType(IndexType.LOCAL);
 
-        candidateJobs.put(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    candidateJobs.put(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             index1.getDataTableName(), index1.getTableName()), index1);
 
-        PhoenixAsyncIndex index2 = new PhoenixAsyncIndex();
-        index2.setDataTableName("DT2");
-        index2.setTableName("IT2");
-        index2.setIndexType(IndexType.LOCAL);
+    PhoenixAsyncIndex index2 = new PhoenixAsyncIndex();
+    index2.setDataTableName("DT2");
+    index2.setTableName("IT2");
+    index2.setIndexType(IndexType.LOCAL);
 
-        candidateJobs.put(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    candidateJobs.put(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             index2.getDataTableName(), index2.getTableName()), index2);
+  }
+
+  @Test
+  public void testLocalIndexJobsSubmission() throws IOException {
+
+    // Set the index type to LOCAL
+    for (String jobId : candidateJobs.keySet()) {
+      candidateJobs.get(jobId).setIndexType(IndexType.LOCAL);
     }
+    PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
+    Set<PhoenixAsyncIndex> jobsToSubmit
+            = submitter.getJobsToSubmit(candidateJobs, submittedJobs);
+    assertEquals(2, jobsToSubmit.size());
+  }
 
-    @Test
-    public void testLocalIndexJobsSubmission() throws IOException {
+  @Test
+  public void testGlobalIndexJobsForSubmission() throws IOException {
 
-        // Set the index type to LOCAL
-        for (String jobId : candidateJobs.keySet()) {
-            candidateJobs.get(jobId).setIndexType(IndexType.LOCAL);
-        }
-        PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
-        Set<PhoenixAsyncIndex> jobsToSubmit =
-                submitter.getJobsToSubmit(candidateJobs, submittedJobs);
-        assertEquals(2, jobsToSubmit.size());
+    // Set the index type to GLOBAL
+    for (String jobId : candidateJobs.keySet()) {
+      candidateJobs.get(jobId).setIndexType(IndexType.GLOBAL);
     }
+    PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
+    Set<PhoenixAsyncIndex> jobsToSubmit
+            = submitter.getJobsToSubmit(candidateJobs, submittedJobs);
+    assertEquals(2, jobsToSubmit.size());
+    assertEquals(true, jobsToSubmit.containsAll(candidateJobs.values()));
+  }
 
-    @Test
-    public void testGlobalIndexJobsForSubmission() throws IOException {
+  @Test
+  public void testSkipSubmittedJob() throws IOException {
+    PhoenixAsyncIndex[] jobs = new PhoenixAsyncIndex[candidateJobs.size()];
+    candidateJobs.values().toArray(jobs);
 
-        // Set the index type to GLOBAL
-        for (String jobId : candidateJobs.keySet()) {
-            candidateJobs.get(jobId).setIndexType(IndexType.GLOBAL);
-        }
-        PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
-        Set<PhoenixAsyncIndex> jobsToSubmit =
-                submitter.getJobsToSubmit(candidateJobs, submittedJobs);
-        assertEquals(2, jobsToSubmit.size());
-        assertEquals(true, jobsToSubmit.containsAll(candidateJobs.values()));
-    }
-
-    @Test
-    public void testSkipSubmittedJob() throws IOException {
-        PhoenixAsyncIndex[] jobs = new PhoenixAsyncIndex[candidateJobs.size()];
-        candidateJobs.values().toArray(jobs);
-        
-        // Mark one job as running
-        submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    // Mark one job as running
+    submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             jobs[0].getDataTableName(), jobs[0].getTableName()));
 
-        PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
-        Set<PhoenixAsyncIndex> jobsToSubmit =
-                submitter.getJobsToSubmit(candidateJobs, submittedJobs);
-        
-        // Should not contain the running job
-        assertEquals(1, jobsToSubmit.size());
-        assertEquals(false, jobsToSubmit.containsAll(candidateJobs.values()));
-        assertEquals(true, jobsToSubmit.contains(jobs[1]));
-    }
+    PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
+    Set<PhoenixAsyncIndex> jobsToSubmit
+            = submitter.getJobsToSubmit(candidateJobs, submittedJobs);
 
-    @Test
-    public void testSkipAllSubmittedJobs() throws IOException {
-        PhoenixAsyncIndex[] jobs = new PhoenixAsyncIndex[candidateJobs.size()];
-        candidateJobs.values().toArray(jobs);
-        
-        // Mark all the candidate jobs as running/in-progress
-        submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    // Should not contain the running job
+    assertEquals(1, jobsToSubmit.size());
+    assertEquals(false, jobsToSubmit.containsAll(candidateJobs.values()));
+    assertEquals(true, jobsToSubmit.contains(jobs[1]));
+  }
+
+  @Test
+  public void testSkipAllSubmittedJobs() throws IOException {
+    PhoenixAsyncIndex[] jobs = new PhoenixAsyncIndex[candidateJobs.size()];
+    candidateJobs.values().toArray(jobs);
+
+    // Mark all the candidate jobs as running/in-progress
+    submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             jobs[0].getDataTableName(), jobs[0].getTableName()));
-        submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             jobs[1].getDataTableName(), jobs[1].getTableName()));
 
-        PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
-        Set<PhoenixAsyncIndex> jobsToSubmit =
-                submitter.getJobsToSubmit(candidateJobs, submittedJobs);
-        assertEquals(0, jobsToSubmit.size());
-    }
-    
-    @Test
-    public void testNoJobsToSubmit() throws IOException {
-        // Clear candidate jobs
-        candidateJobs.clear();
-        // Add some dummy running jobs to the submitted list
-        submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
+    Set<PhoenixAsyncIndex> jobsToSubmit
+            = submitter.getJobsToSubmit(candidateJobs, submittedJobs);
+    assertEquals(0, jobsToSubmit.size());
+  }
+
+  @Test
+  public void testNoJobsToSubmit() throws IOException {
+    // Clear candidate jobs
+    candidateJobs.clear();
+    // Add some dummy running jobs to the submitted list
+    submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             "d1", "i1"));
-        submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
+    submittedJobs.add(String.format(IndexTool.INDEX_JOB_NAME_TEMPLATE,
             "d2", "i2"));
-        PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
-        Set<PhoenixAsyncIndex> jobsToSubmit =
-                submitter.getJobsToSubmit(candidateJobs, submittedJobs);
-        assertEquals(0, jobsToSubmit.size());
-    }
+    PhoenixMRJobSubmitter submitter = new PhoenixMRJobSubmitter();
+    Set<PhoenixAsyncIndex> jobsToSubmit
+            = submitter.getJobsToSubmit(candidateJobs, submittedJobs);
+    assertEquals(0, jobsToSubmit.size());
+  }
 }

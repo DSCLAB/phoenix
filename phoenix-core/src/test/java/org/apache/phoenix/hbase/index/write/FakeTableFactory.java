@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.write;
 
 import java.io.IOException;
@@ -27,8 +26,9 @@ import org.apache.phoenix.hbase.index.table.HTableFactory;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * Simple table factory that just looks up the tables based on name. Useful for mocking up
- * {@link HTableInterface}s without having to mock up the factory too.
+ * Simple table factory that just looks up the tables based on name. Useful for
+ * mocking up {@link HTableInterface}s without having to mock up the factory
+ * too.
  */
 class FakeTableFactory implements HTableFactory {
 
@@ -49,8 +49,8 @@ class FakeTableFactory implements HTableFactory {
     shutdown = true;
   }
 
-    @Override
-    public HTableInterface getTable(ImmutableBytesPtr tablename, ExecutorService pool) throws IOException {
-        return this.tables.get(tablename);
-    }
+  @Override
+  public HTableInterface getTable(ImmutableBytesPtr tablename, ExecutorService pool) throws IOException {
+    return this.tables.get(tablename);
+  }
 }

@@ -38,158 +38,163 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PInteger;
 
 public class UnnestArrayPlan extends DelegateQueryPlan {
-    private final Expression arrayExpression;
-    private final boolean withOrdinality;
 
-    public UnnestArrayPlan(QueryPlan delegate, Expression arrayExpression, boolean withOrdinality) {
-        super(delegate);
-        this.arrayExpression = arrayExpression;
-        this.withOrdinality = withOrdinality;
+  private final Expression arrayExpression;
+  private final boolean withOrdinality;
+
+  public UnnestArrayPlan(QueryPlan delegate, Expression arrayExpression, boolean withOrdinality) {
+    super(delegate);
+    this.arrayExpression = arrayExpression;
+    this.withOrdinality = withOrdinality;
+  }
+
+  @Override
+  public ResultIterator iterator() throws SQLException {
+    return iterator(DefaultParallelScanGrouper.getInstance());
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
+    return new UnnestArrayResultIterator(delegate.iterator(scanGrouper, delegate.getContext().getScan()));
+  }
+
+  @Override
+  public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
+    return new UnnestArrayResultIterator(delegate.iterator(scanGrouper, scan));
+  }
+
+  @Override
+  public ExplainPlan getExplainPlan() throws SQLException {
+    List<String> planSteps = delegate.getExplainPlan().getPlanSteps();
+    planSteps.add("UNNEST");
+    return new ExplainPlan(planSteps);
+  }
+
+  @Override
+  public Integer getLimit() {
+    return null;
+  }
+
+  public class UnnestArrayResultIterator extends DelegateResultIterator {
+
+    private final UnnestArrayElemRefExpression elemRefExpression;
+    private final UnnestArrayElemIndexExpression elemIndexExpression;
+    private final TupleProjector projector;
+    private Tuple current;
+    private ImmutableBytesWritable arrayPtr;
+    private int length;
+    private int index;
+    private boolean closed;
+
+    public UnnestArrayResultIterator(ResultIterator iterator) {
+      super(iterator);
+      this.elemRefExpression = new UnnestArrayElemRefExpression(arrayExpression);
+      this.elemIndexExpression = withOrdinality ? new UnnestArrayElemIndexExpression() : null;
+      this.projector = new TupleProjector(withOrdinality ? new Expression[]{elemRefExpression, elemIndexExpression} : new Expression[]{elemRefExpression});
+      this.arrayPtr = new ImmutableBytesWritable();
+      this.length = 0;
+      this.index = 0;
+      this.closed = false;
     }
 
     @Override
-    public ResultIterator iterator() throws SQLException {
-        return iterator(DefaultParallelScanGrouper.getInstance());
-    }
-
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper) throws SQLException {
-        return new UnnestArrayResultIterator(delegate.iterator(scanGrouper, delegate.getContext().getScan()));
-    }
-
-    @Override
-    public ResultIterator iterator(ParallelScanGrouper scanGrouper, Scan scan) throws SQLException {
-        return new UnnestArrayResultIterator(delegate.iterator(scanGrouper, scan));
-    }
-
-    @Override
-    public ExplainPlan getExplainPlan() throws SQLException {
-        List<String> planSteps = delegate.getExplainPlan().getPlanSteps();
-        planSteps.add("UNNEST");
-        return new ExplainPlan(planSteps);
-    }
-    
-    @Override
-    public Integer getLimit() {
+    public Tuple next() throws SQLException {
+      if (closed) {
         return null;
+      }
+
+      while (index >= length) {
+        this.current = super.next();
+        if (current == null) {
+          this.closed = true;
+          return null;
+        }
+        if (arrayExpression.evaluate(current, arrayPtr)) {
+          this.length = PArrayDataType.getArrayLength(arrayPtr, elemRefExpression.getDataType(), arrayExpression.getMaxLength());
+          this.index = 0;
+          this.elemRefExpression.setArrayPtr(arrayPtr);
+        }
+      }
+      elemRefExpression.setIndex(index);
+      if (elemIndexExpression != null) {
+        elemIndexExpression.setIndex(index);
+      }
+      index++;
+      return projector.projectResults(current);
     }
 
-    public class UnnestArrayResultIterator extends DelegateResultIterator {
-        private final UnnestArrayElemRefExpression elemRefExpression;
-        private final UnnestArrayElemIndexExpression elemIndexExpression;
-        private final TupleProjector projector;
-        private Tuple current;
-        private ImmutableBytesWritable arrayPtr;
-        private int length;
-        private int index;
-        private boolean closed;
-
-        public UnnestArrayResultIterator(ResultIterator iterator) {
-            super(iterator);
-            this.elemRefExpression = new UnnestArrayElemRefExpression(arrayExpression);
-            this.elemIndexExpression = withOrdinality ? new UnnestArrayElemIndexExpression() : null;
-            this.projector = new TupleProjector(withOrdinality ? new Expression[] {elemRefExpression, elemIndexExpression} : new Expression[] {elemRefExpression});
-            this.arrayPtr = new ImmutableBytesWritable();
-            this.length = 0;
-            this.index = 0;
-            this.closed = false;
-        }
-
-        @Override
-        public Tuple next() throws SQLException {
-            if (closed)
-                return null;
-            
-            while (index >= length) {
-                this.current = super.next();
-                if (current == null) {
-                    this.closed = true;
-                    return null;
-                }
-                if (arrayExpression.evaluate(current, arrayPtr)) {
-                    this.length = PArrayDataType.getArrayLength(arrayPtr, elemRefExpression.getDataType(), arrayExpression.getMaxLength());
-                    this.index = 0;
-                    this.elemRefExpression.setArrayPtr(arrayPtr);
-                }
-            }
-            elemRefExpression.setIndex(index);
-            if (elemIndexExpression != null) {
-                elemIndexExpression.setIndex(index);
-            }
-            index++;
-            return projector.projectResults(current);
-        }
-
-        @Override
-        public void close() throws SQLException {
-            super.close();
-            closed = true;
-        }
+    @Override
+    public void close() throws SQLException {
+      super.close();
+      closed = true;
     }
-    
-    @SuppressWarnings("rawtypes")
-    private static class UnnestArrayElemRefExpression extends BaseSingleExpression {
-        private final PDataType type;
-        private int index = 0;
-        private ImmutableBytesWritable arrayPtr = new ImmutableBytesWritable();
-        
-        public UnnestArrayElemRefExpression(Expression arrayExpression) {
-            super(arrayExpression);
-            this.type = PDataType.fromTypeId(arrayExpression.getDataType().getSqlType() - PDataType.ARRAY_TYPE_BASE);
-        }
-        
-        public void setIndex(int index) {
-            this.index = index;
-        }
-        
-        public void setArrayPtr(ImmutableBytesWritable arrayPtr) {
-            this.arrayPtr.set(arrayPtr.get(), arrayPtr.getOffset(), arrayPtr.getLength());
-        }
-        
-        @Override
-        public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-            ptr.set(arrayPtr.get(), arrayPtr.getOffset(), arrayPtr.getLength());
-            PArrayDataType.positionAtArrayElement(ptr, index++, getDataType(), getMaxLength());
-            return true;
-        }
+  }
 
-        @Override
-        public <T> T accept(ExpressionVisitor<T> visitor) {
-            // This Expression class is only used at runtime.
-            return null;
-        }
+  @SuppressWarnings("rawtypes")
+  private static class UnnestArrayElemRefExpression extends BaseSingleExpression {
 
-        @Override
-        public PDataType getDataType() {
-            return type;
-        }
+    private final PDataType type;
+    private int index = 0;
+    private ImmutableBytesWritable arrayPtr = new ImmutableBytesWritable();
+
+    public UnnestArrayElemRefExpression(Expression arrayExpression) {
+      super(arrayExpression);
+      this.type = PDataType.fromTypeId(arrayExpression.getDataType().getSqlType() - PDataType.ARRAY_TYPE_BASE);
     }
-    
-    @SuppressWarnings("rawtypes")
-    private static class UnnestArrayElemIndexExpression extends BaseTerminalExpression {
-        private int index = 0;
-        
-        public void setIndex(int index) {
-            this.index = index;
-        }
 
-        @Override
-        public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-            byte[] lengthBuf = new byte[PInteger.INSTANCE.getByteSize()];
-            PInteger.INSTANCE.getCodec().encodeInt(index + 1, lengthBuf, 0);
-            ptr.set(lengthBuf);
-            return true;
-        }
-
-        @Override
-        public <T> T accept(ExpressionVisitor<T> visitor) {
-            // This Expression class is only used at runtime.
-            return null;
-        }
-
-        @Override
-        public PDataType getDataType() {
-            return PInteger.INSTANCE;
-        }
+    public void setIndex(int index) {
+      this.index = index;
     }
+
+    public void setArrayPtr(ImmutableBytesWritable arrayPtr) {
+      this.arrayPtr.set(arrayPtr.get(), arrayPtr.getOffset(), arrayPtr.getLength());
+    }
+
+    @Override
+    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+      ptr.set(arrayPtr.get(), arrayPtr.getOffset(), arrayPtr.getLength());
+      PArrayDataType.positionAtArrayElement(ptr, index++, getDataType(), getMaxLength());
+      return true;
+    }
+
+    @Override
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      // This Expression class is only used at runtime.
+      return null;
+    }
+
+    @Override
+    public PDataType getDataType() {
+      return type;
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static class UnnestArrayElemIndexExpression extends BaseTerminalExpression {
+
+    private int index = 0;
+
+    public void setIndex(int index) {
+      this.index = index;
+    }
+
+    @Override
+    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+      byte[] lengthBuf = new byte[PInteger.INSTANCE.getByteSize()];
+      PInteger.INSTANCE.getCodec().encodeInt(index + 1, lengthBuf, 0);
+      ptr.set(lengthBuf);
+      return true;
+    }
+
+    @Override
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      // This Expression class is only used at runtime.
+      return null;
+    }
+
+    @Override
+    public PDataType getDataType() {
+      return PInteger.INSTANCE;
+    }
+  }
 }

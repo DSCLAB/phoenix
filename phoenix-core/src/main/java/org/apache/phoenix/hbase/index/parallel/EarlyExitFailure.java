@@ -20,7 +20,8 @@ package org.apache.phoenix.hbase.index.parallel;
 import java.io.IOException;
 
 /**
- * Exception denoting a need to early-exit a task (or group of tasks) due to external notification
+ * Exception denoting a need to early-exit a task (or group of tasks) due to
+ * external notification
  */
 @SuppressWarnings("serial")
 public class EarlyExitFailure extends IOException {

@@ -100,21 +100,21 @@ public class PTinyint extends PWholeNumber<Byte> {
     long l = (Long) o;
     if (l < Byte.MIN_VALUE || l > Byte.MAX_VALUE) {
       throw newIllegalDataException(
-          actualType + " value " + l + " cannot be cast to Byte without changing its value");
+              actualType + " value " + l + " cannot be cast to Byte without changing its value");
     }
     return (byte) l;
   }
 
   @Override
   public Byte toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     if (l == 0) {
       return null;
     }
     if (equalsAny(actualType, PDouble.INSTANCE, PUnsignedDouble.INSTANCE, PFloat.INSTANCE,
-        PUnsignedFloat.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE, PInteger.INSTANCE,
-        PUnsignedInt.INSTANCE, PSmallint.INSTANCE, PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE,
-        PUnsignedTinyint.INSTANCE)) {
+            PUnsignedFloat.INSTANCE, PLong.INSTANCE, PUnsignedLong.INSTANCE, PInteger.INSTANCE,
+            PUnsignedInt.INSTANCE, PSmallint.INSTANCE, PUnsignedSmallint.INSTANCE, PTinyint.INSTANCE,
+            PUnsignedTinyint.INSTANCE)) {
       return actualType.getCodec().decodeByte(b, o, sortOrder);
     } else if (actualType == PDecimal.INSTANCE) {
       BigDecimal bd = (BigDecimal) actualType.toObject(b, o, l, actualType, sortOrder);
@@ -128,8 +128,8 @@ public class PTinyint extends PWholeNumber<Byte> {
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     if (value != null) {
       if (equalsAny(targetType, PUnsignedDouble.INSTANCE, PUnsignedFloat.INSTANCE,
-          PUnsignedLong.INSTANCE, PUnsignedInt.INSTANCE, PUnsignedSmallint.INSTANCE,
-          PUnsignedTinyint.INSTANCE)) {
+              PUnsignedLong.INSTANCE, PUnsignedInt.INSTANCE, PUnsignedSmallint.INSTANCE,
+              PUnsignedTinyint.INSTANCE)) {
         byte i = (Byte) value;
         return i >= 0;
       }
@@ -145,7 +145,7 @@ public class PTinyint extends PWholeNumber<Byte> {
   @Override
   public Object getSampleValue(Integer maxLength, Integer arrayLength) {
     return ((Integer) PInteger.INSTANCE.getSampleValue(maxLength, arrayLength))
-        .byteValue();
+            .byteValue();
   }
 
   static class ByteCodec extends BaseCodec {
@@ -183,7 +183,7 @@ public class PTinyint extends PWholeNumber<Byte> {
       checkForSufficientLength(b, o, Bytes.SIZEOF_BYTE);
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Byte without changing its value");
+                "Value " + v + " cannot be encoded as an Byte without changing its value");
       }
       return encodeByte((byte) v, b, o);
     }
@@ -192,7 +192,7 @@ public class PTinyint extends PWholeNumber<Byte> {
     public int encodeLong(long v, byte[] b, int o) {
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Byte without changing its value");
+                "Value " + v + " cannot be encoded as an Byte without changing its value");
       }
       return encodeByte((byte) v, b, o);
     }
@@ -201,7 +201,7 @@ public class PTinyint extends PWholeNumber<Byte> {
     public int encodeInt(int v, byte[] b, int o) {
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Byte without changing its value");
+                "Value " + v + " cannot be encoded as an Byte without changing its value");
       }
       return encodeByte((byte) v, b, o);
     }
@@ -227,7 +227,7 @@ public class PTinyint extends PWholeNumber<Byte> {
     public int encodeFloat(float v, byte[] b, int o) {
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Byte without changing its value");
+                "Value " + v + " cannot be encoded as an Byte without changing its value");
       }
       return encodeByte((byte) v, b, o);
     }
@@ -236,7 +236,7 @@ public class PTinyint extends PWholeNumber<Byte> {
     public int encodeDouble(double v, byte[] b, int o) {
       if (v < Byte.MIN_VALUE || v > Byte.MAX_VALUE) {
         throw newIllegalDataException(
-            "Value " + v + " cannot be encoded as an Byte without changing its value");
+                "Value " + v + " cannot be encoded as an Byte without changing its value");
       }
       return encodeByte((byte) v, b, o);
     }

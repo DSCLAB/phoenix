@@ -35,42 +35,42 @@ import org.junit.Test;
  */
 public class OctetLengthFunctionEnd2EndIT extends BaseHBaseManagedTimeTableReuseIT {
 
-    private static final String KEY = "key";
-    private static final String TABLE_NAME = generateRandomString();
+  private static final String KEY = "key";
+  private static final String TABLE_NAME = generateRandomString();
 
-    @Before
-    public void initTable() throws Exception {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DriverManager.getConnection(getUrl());
-            String ddl;
-            ddl = "CREATE TABLE " + TABLE_NAME
-                + " (k VARCHAR NOT NULL PRIMARY KEY, b BINARY(4), vb VARBINARY)";
-            conn.createStatement().execute(ddl);
-            conn.commit();
-        } finally {
-            closeStmtAndConn(stmt, conn);
-        }
+  @Before
+  public void initTable() throws Exception {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+      conn = DriverManager.getConnection(getUrl());
+      String ddl;
+      ddl = "CREATE TABLE " + TABLE_NAME
+              + " (k VARCHAR NOT NULL PRIMARY KEY, b BINARY(4), vb VARBINARY)";
+      conn.createStatement().execute(ddl);
+      conn.commit();
+    } finally {
+      closeStmtAndConn(stmt, conn);
     }
+  }
 
-    @Test
-    public void test() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl());
-        PreparedStatement stmt = conn.prepareStatement(
+  @Test
+  public void test() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl());
+    PreparedStatement stmt = conn.prepareStatement(
             "UPSERT INTO " + TABLE_NAME + " VALUES (?, ?, ?)");
-        stmt.setString(1, KEY);
-        stmt.setBytes(2, new byte[] { 1, 2, 3, 4 });
-        stmt.setBytes(3, new byte[] { 1, 2, 3, 4 });
-        stmt.executeUpdate();
-        conn.commit();
-        ResultSet rs =
-                conn.createStatement()
-                        .executeQuery("SELECT OCTET_LENGTH(vb), OCTET_LENGTH(b) FROM " + TABLE_NAME
+    stmt.setString(1, KEY);
+    stmt.setBytes(2, new byte[]{1, 2, 3, 4});
+    stmt.setBytes(3, new byte[]{1, 2, 3, 4});
+    stmt.executeUpdate();
+    conn.commit();
+    ResultSet rs
+            = conn.createStatement()
+                    .executeQuery("SELECT OCTET_LENGTH(vb), OCTET_LENGTH(b) FROM " + TABLE_NAME
                             + " WHERE OCTET_LENGTH(vb)=4 and OCTET_LENGTH(b)=4");
-        assertTrue(rs.next());
-        assertEquals(4, rs.getInt(1));
-        assertEquals(4, rs.getInt(2));
-        assertTrue(!rs.next());
-    }
+    assertTrue(rs.next());
+    assertEquals(4, rs.getInt(1));
+    assertEquals(4, rs.getInt(2));
+    assertTrue(!rs.next());
+  }
 }

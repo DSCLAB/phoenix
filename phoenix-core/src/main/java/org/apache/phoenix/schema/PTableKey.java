@@ -22,48 +22,61 @@ import org.apache.phoenix.query.QueryConstants;
 import com.google.common.base.Preconditions;
 
 public class PTableKey {
-    private final PName tenantId;
-    private final String name;
-    
-    public PTableKey(PName tenantId, String name) {
-        Preconditions.checkNotNull(name);
-        this.tenantId = tenantId;
-        this.name = name;
-    }
 
-    public PName getTenantId() {
-        return tenantId;
-    }
+  private final PName tenantId;
+  private final String name;
 
-    public String getName() {
-        return name;
-    }
-    
-    @Override
-    public String toString() {
-        return name + (tenantId == null ? "" : " for " + tenantId.getString());
-    }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((tenantId == null) ? 0 : tenantId.hashCode());
-        result = prime * result + name.hashCode();
-        return result;
-    }
+  public PTableKey(PName tenantId, String name) {
+    Preconditions.checkNotNull(name);
+    this.tenantId = tenantId;
+    this.name = name;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        PTableKey other = (PTableKey)obj;
-        if (!name.equals(other.name)) return false;
-        if (tenantId == null) {
-            if (other.tenantId != null) return false;
-        } else if (!tenantId.equals(other.tenantId)) return false;
-        return true;
+  public PName getTenantId() {
+    return tenantId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return name + (tenantId == null ? "" : " for " + tenantId.getString());
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((tenantId == null) ? 0 : tenantId.hashCode());
+    result = prime * result + name.hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    PTableKey other = (PTableKey) obj;
+    if (!name.equals(other.name)) {
+      return false;
+    }
+    if (tenantId == null) {
+      if (other.tenantId != null) {
+        return false;
+      }
+    } else if (!tenantId.equals(other.tenantId)) {
+      return false;
+    }
+    return true;
+  }
 
 }

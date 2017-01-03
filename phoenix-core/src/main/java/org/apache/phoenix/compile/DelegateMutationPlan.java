@@ -26,45 +26,46 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 import org.apache.phoenix.schema.TableRef;
 
 public class DelegateMutationPlan implements MutationPlan {
-    @Override
-    public MutationState execute() throws SQLException {
-        return plan.execute();
-    }
 
-    @Override
-    public StatementContext getContext() {
-        return plan.getContext();
-    }
+  @Override
+  public MutationState execute() throws SQLException {
+    return plan.execute();
+  }
 
-    @Override
-    public TableRef getTargetRef() {
-        return plan.getTargetRef();
-    }
+  @Override
+  public StatementContext getContext() {
+    return plan.getContext();
+  }
 
-    @Override
-    public ParameterMetaData getParameterMetaData() {
-        return plan.getParameterMetaData();
-    }
+  @Override
+  public TableRef getTargetRef() {
+    return plan.getTargetRef();
+  }
 
-    @Override
-    public ExplainPlan getExplainPlan() throws SQLException {
-        return plan.getExplainPlan();
-    }
+  @Override
+  public ParameterMetaData getParameterMetaData() {
+    return plan.getParameterMetaData();
+  }
 
-    @Override
-    public Set<TableRef> getSourceRefs() {
-        return plan.getSourceRefs();
-    }
+  @Override
+  public ExplainPlan getExplainPlan() throws SQLException {
+    return plan.getExplainPlan();
+  }
 
-    @Override
-    public Operation getOperation() {
-        return plan.getOperation();
-    }
+  @Override
+  public Set<TableRef> getSourceRefs() {
+    return plan.getSourceRefs();
+  }
 
-    private final MutationPlan plan;
-    
-    public DelegateMutationPlan(MutationPlan plan) {
-        this.plan = plan;
-    }
+  @Override
+  public Operation getOperation() {
+    return plan.getOperation();
+  }
+
+  private final MutationPlan plan;
+
+  public DelegateMutationPlan(MutationPlan plan) {
+    this.plan = plan;
+  }
 
 }

@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.workload;
 
 import java.io.BufferedReader;
@@ -43,130 +42,136 @@ import difflib.DiffUtils;
 import difflib.Patch;
 
 public class QueryVerifier {
-    private PhoenixUtil pUtil = PhoenixUtil.create();
-    private static final Logger logger = LoggerFactory.getLogger(QueryVerifier.class);
-    private boolean useTemporaryOutput;
-    private String directoryLocation;
 
-    public QueryVerifier(boolean useTemporaryOutput) {
-        this.useTemporaryOutput = useTemporaryOutput;
-        this.directoryLocation =
-                this.useTemporaryOutput ? PherfConstants.EXPORT_TMP : PherfConstants.EXPORT_DIR;
+  private PhoenixUtil pUtil = PhoenixUtil.create();
+  private static final Logger logger = LoggerFactory.getLogger(QueryVerifier.class);
+  private boolean useTemporaryOutput;
+  private String directoryLocation;
 
-        ensureBaseDirExists();
-    }
+  public QueryVerifier(boolean useTemporaryOutput) {
+    this.useTemporaryOutput = useTemporaryOutput;
+    this.directoryLocation
+            = this.useTemporaryOutput ? PherfConstants.EXPORT_TMP : PherfConstants.EXPORT_DIR;
 
-    /**
-     * Export query resultSet to CSV file
-     *
-     * @param query
-     * @throws Exception
-     */
-    public String exportCSV(Query query) throws Exception {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        String fileName = getFileName(query);
-        FileOutputStream fos = new FileOutputStream(fileName);
-        try {
-            conn = pUtil.getConnection(query.getTenantId());
-            statement = conn.prepareStatement(query.getStatement());
-            boolean isQuery = statement.execute();
-            if (isQuery) {
-                rs = statement.executeQuery();
-                int columnCount = rs.getMetaData().getColumnCount();
-                while (rs.next()) {
-                    for (int columnNum = 1; columnNum <= columnCount; columnNum++) {
-                        fos.write((rs.getString(columnNum) + PherfConstants.RESULT_FILE_DELIMETER)
-                                .getBytes());
-                    }
-                    fos.write(PherfConstants.NEW_LINE.getBytes());
-                }
-            } else {
-                conn.commit();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) rs.close();
-            if (statement != null) statement.close();
-            if (conn != null) conn.close();
-            fos.flush();
-            fos.close();
+    ensureBaseDirExists();
+  }
+
+  /**
+   * Export query resultSet to CSV file
+   *
+   * @param query
+   * @throws Exception
+   */
+  public String exportCSV(Query query) throws Exception {
+    Connection conn = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    String fileName = getFileName(query);
+    FileOutputStream fos = new FileOutputStream(fileName);
+    try {
+      conn = pUtil.getConnection(query.getTenantId());
+      statement = conn.prepareStatement(query.getStatement());
+      boolean isQuery = statement.execute();
+      if (isQuery) {
+        rs = statement.executeQuery();
+        int columnCount = rs.getMetaData().getColumnCount();
+        while (rs.next()) {
+          for (int columnNum = 1; columnNum <= columnCount; columnNum++) {
+            fos.write((rs.getString(columnNum) + PherfConstants.RESULT_FILE_DELIMETER)
+                    .getBytes());
+          }
+          fos.write(PherfConstants.NEW_LINE.getBytes());
         }
-        return fileName;
+      } else {
+        conn.commit();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      if (rs != null) {
+        rs.close();
+      }
+      if (statement != null) {
+        statement.close();
+      }
+      if (conn != null) {
+        conn.close();
+      }
+      fos.flush();
+      fos.close();
+    }
+    return fileName;
+  }
+
+  /**
+   * Do a diff between exported query results and temporary CSV file
+   *
+   * @param query
+   * @param newCSV
+   * @return
+   */
+  public boolean doDiff(Query query, String newCSV) {
+    List<String> original = fileToLines(getCSVName(query, PherfConstants.EXPORT_DIR, ""));
+    List<String> newLines = fileToLines(newCSV);
+
+    Patch patch = DiffUtils.diff(original, newLines);
+    if (patch.getDeltas().isEmpty()) {
+      logger.info("Match: " + query.getId() + " with " + newCSV);
+      return true;
+    } else {
+      logger.error("DIFF FAILED: " + query.getId() + " with " + newCSV);
+      return false;
+    }
+  }
+
+  /**
+   * Helper method to load file
+   *
+   * @param filename
+   * @return
+   */
+  private static List<String> fileToLines(String filename) {
+    List<String> lines = new LinkedList<String>();
+    String line = "";
+    try {
+      BufferedReader in = new BufferedReader(new FileReader(filename));
+      while ((line = in.readLine()) != null) {
+        lines.add(line);
+      }
+      in.close();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    /**
-     * Do a diff between exported query results and temporary CSV file
-     *
-     * @param query
-     * @param newCSV
-     * @return
-     */
-    public boolean doDiff(Query query, String newCSV) {
-        List<String> original = fileToLines(getCSVName(query, PherfConstants.EXPORT_DIR, ""));
-        List<String> newLines = fileToLines(newCSV);
+    return lines;
+  }
 
-        Patch patch = DiffUtils.diff(original, newLines);
-        if (patch.getDeltas().isEmpty()) {
-            logger.info("Match: " + query.getId() + " with " + newCSV);
-            return true;
-        } else {
-            logger.error("DIFF FAILED: " + query.getId() + " with " + newCSV);
-            return false;
-        }
+  /**
+   * Helper method to generate CSV file name
+   *
+   * @param query
+   * @return
+   * @throws FileNotFoundException
+   */
+  private String getFileName(Query query) throws FileNotFoundException {
+    String tempExt = "";
+    if (this.useTemporaryOutput) {
+      tempExt = "_" + java.util.UUID.randomUUID().toString();
     }
+    return getCSVName(query, this.directoryLocation, tempExt);
+  }
 
-    /**
-     * Helper method to load file
-     *
-     * @param filename
-     * @return
-     */
-    private static List<String> fileToLines(String filename) {
-        List<String> lines = new LinkedList<String>();
-        String line = "";
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(filename));
-            while ((line = in.readLine()) != null) {
-                lines.add(line);
-            }
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+  private String getCSVName(Query query, String directory, String tempExt) {
+    String csvFile
+            = directory + PherfConstants.PATH_SEPARATOR + query.getId() + tempExt + Extension.CSV
+            .toString();
+    return csvFile;
+  }
 
-        return lines;
+  private void ensureBaseDirExists() {
+    File baseDir = new File(this.directoryLocation);
+    if (!baseDir.exists()) {
+      baseDir.mkdir();
     }
-
-    /**
-     * Helper method to generate CSV file name
-     *
-     * @param query
-     * @return
-     * @throws FileNotFoundException
-     */
-    private String getFileName(Query query) throws FileNotFoundException {
-        String tempExt = "";
-        if (this.useTemporaryOutput) {
-            tempExt = "_" + java.util.UUID.randomUUID().toString();
-        }
-        return getCSVName(query, this.directoryLocation, tempExt);
-    }
-
-    private String getCSVName(Query query, String directory, String tempExt) {
-        String
-                csvFile =
-                directory + PherfConstants.PATH_SEPARATOR + query.getId() + tempExt + Extension.CSV
-                        .toString();
-        return csvFile;
-    }
-
-    private void ensureBaseDirExists() {
-        File baseDir = new File(this.directoryLocation);
-        if (!baseDir.exists()) {
-            baseDir.mkdir();
-        }
-    }
+  }
 }

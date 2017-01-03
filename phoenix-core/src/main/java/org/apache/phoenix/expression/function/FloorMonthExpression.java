@@ -23,22 +23,22 @@ import org.apache.phoenix.expression.Expression;
 import org.joda.time.DateTime;
 
 /**
- * 
- * Floor function that rounds up the {@link DateTime} to start of month. 
+ *
+ * Floor function that rounds up the {@link DateTime} to start of month.
  */
 public class FloorMonthExpression extends RoundJodaDateExpression {
 
-    public FloorMonthExpression() {
-        super();
-    }
+  public FloorMonthExpression() {
+    super();
+  }
 
-    public FloorMonthExpression(List<Expression> children) {
-        super(children);
-    }
+  public FloorMonthExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public long roundDateTime(DateTime datetime) {
-        return datetime.monthOfYear().roundFloorCopy().getMillis();
-    }
+  @Override
+  public long roundDateTime(DateTime datetime) {
+    return datetime.monthOfYear().roundFloorCopy().getMillis();
+  }
 
 }

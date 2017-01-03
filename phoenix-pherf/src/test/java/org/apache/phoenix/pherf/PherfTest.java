@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.junit.Rule;
@@ -23,21 +22,22 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 public class PherfTest {
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
-    @Test
-    public void testListArgument() {
-        String[] args = {"-listFiles"};
-        Pherf.main(args);
-    }
+  @Rule
+  public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
-    @Test
-    public void testUnknownOption() {
-        String[] args = {"-drop", "all", "-q", "-m","-bsOption"};
+  @Test
+  public void testListArgument() {
+    String[] args = {"-listFiles"};
+    Pherf.main(args);
+  }
 
-        // Makes sure that System.exit(1) is called.
-        exit.expectSystemExitWithStatus(1);
-        Pherf.main(args);
-    }
+  @Test
+  public void testUnknownOption() {
+    String[] args = {"-drop", "all", "-q", "-m", "-bsOption"};
+
+    // Makes sure that System.exit(1) is called.
+    exit.expectSystemExitWithStatus(1);
+    Pherf.main(args);
+  }
 }

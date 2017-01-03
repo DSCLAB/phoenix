@@ -48,33 +48,35 @@ public class TestIndexUpdateManager {
     // lexigraphically earlier should sort earlier
     Put p1 = new Put(Bytes.toBytes("ro"), 10);
     assertTrue("lexigraphically later sorting first, should be earlier first.",
-      comparator.compare(p, p1) > 0);
+            comparator.compare(p, p1) > 0);
     p1 = new Put(Bytes.toBytes("row1"), 10);
     assertTrue("lexigraphically later sorting first, should be earlier first.",
-      comparator.compare(p1, p) > 0);
+            comparator.compare(p1, p) > 0);
 
     // larger ts sorts before smaller, for the same row
     p1 = new Put(row, 11);
     assertTrue("Smaller timestamp sorting first, should be larger first.",
-      comparator.compare(p, p1) > 0);
+            comparator.compare(p, p1) > 0);
     // still true, even for deletes
     Delete d = new Delete(row, 11);
     assertTrue("Smaller timestamp sorting first, should be larger first.",
-      comparator.compare(p, d) > 0);
+            comparator.compare(p, d) > 0);
 
     // for the same row, t1, the delete should sort earlier
     d = new Delete(row, 10);
     assertTrue("Delete doesn't sort before put, for the same row and ts",
-      comparator.compare(p, d) > 0);
+            comparator.compare(p, d) > 0);
 
     // but for different rows, we still respect the row sorting.
     d = new Delete(Bytes.toBytes("row1"), 10);
     assertTrue("Delete doesn't sort before put, for the same row and ts",
-      comparator.compare(p, d) < 0);
+            comparator.compare(p, d) < 0);
   }
 
   /**
-   * When making updates we need to cancel out {@link Delete} and {@link Put}s for the same row.
+   * When making updates we need to cancel out {@link Delete} and {@link Put}s
+   * for the same row.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -109,7 +111,7 @@ public class TestIndexUpdateManager {
     manager = new IndexUpdateManager();
     manager.addIndexUpdate(table, d2);
     manager.addIndexUpdate(table, p);
-    validate(manager, Collections.<Mutation> emptyList());
+    validate(manager, Collections.<Mutation>emptyList());
 
     // different row insertions can be tricky too, if you don't get the base cases right
     manager = new IndexUpdateManager();
@@ -132,8 +134,8 @@ public class TestIndexUpdateManager {
       Mutation m = pending.remove(0);
       // test with == to match the exact entries, Mutation.equals just checks the row
       assertTrue(
-        "Didn't get the expected mutation! Expected: " + m + ", but got: " + entry.getFirst(),
-        m == entry.getFirst());
+              "Didn't get the expected mutation! Expected: " + m + ", but got: " + entry.getFirst(),
+              m == entry.getFirst());
     }
     assertTrue("Missing pending updates: " + pending, pending.isEmpty());
   }

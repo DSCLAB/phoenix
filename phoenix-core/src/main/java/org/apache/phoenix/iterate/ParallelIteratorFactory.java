@@ -24,12 +24,14 @@ import org.apache.phoenix.compile.QueryPlan;
 import org.apache.phoenix.compile.StatementContext;
 
 public interface ParallelIteratorFactory {
-    public static ParallelIteratorFactory NOOP_FACTORY = new ParallelIteratorFactory() {
-        @Override
-        public PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan, String physicalTableName, QueryPlan plan)
-                throws SQLException {
-            return LookAheadResultIterator.wrap(scanner);
-        }
-    };
-    PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan, String physicalTableName, QueryPlan plan) throws SQLException;
+
+  public static ParallelIteratorFactory NOOP_FACTORY = new ParallelIteratorFactory() {
+    @Override
+    public PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan, String physicalTableName, QueryPlan plan)
+            throws SQLException {
+      return LookAheadResultIterator.wrap(scanner);
+    }
+  };
+
+  PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan, String physicalTableName, QueryPlan plan) throws SQLException;
 }

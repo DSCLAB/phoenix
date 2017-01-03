@@ -36,43 +36,45 @@ import com.google.common.base.Preconditions;
  */
 public class IndexToolUtil {
 
-	private static final String ALTER_INDEX_QUERY_TEMPLATE = "ALTER INDEX IF EXISTS %s ON %s %s";  
-    
-	private static final Logger LOG = LoggerFactory.getLogger(IndexToolUtil.class);
-	
-	/**
-	 * Updates the index state.
-	 * @param configuration
-	 * @param state
-	 * @throws SQLException 
-	 */
-	public static void updateIndexState(Configuration configuration,PIndexState state) throws SQLException {
-		final String masterTable = PhoenixConfigurationUtil.getInputTableName(configuration);
-		final String indexTable = PhoenixConfigurationUtil.getOutputTableName(configuration);
-		final Properties overrideProps = new Properties();
-		final Connection connection = ConnectionUtil.getOutputConnection(configuration, overrideProps);
-		try {
-			updateIndexState(connection, masterTable, indexTable , state);
-		} finally {
-			if(connection != null) {
-				connection.close();
-			}
-		}
-	}
-	
-	/**
-     * Updates the index state.
-     * @param connection
-     * @param masterTable
-     * @param indexTable
-     * @param state
-     * @throws SQLException
-     */
-    public static void updateIndexState(Connection connection, final String masterTable , final String indexTable, PIndexState state) throws SQLException {
-        Preconditions.checkNotNull(connection);
-        final String alterQuery = String.format(ALTER_INDEX_QUERY_TEMPLATE,indexTable,masterTable,state.name());
-        connection.createStatement().execute(alterQuery);
-        LOG.info(" Updated the status of the index {} to {} " , indexTable , state.name());
+  private static final String ALTER_INDEX_QUERY_TEMPLATE = "ALTER INDEX IF EXISTS %s ON %s %s";
+
+  private static final Logger LOG = LoggerFactory.getLogger(IndexToolUtil.class);
+
+  /**
+   * Updates the index state.
+   *
+   * @param configuration
+   * @param state
+   * @throws SQLException
+   */
+  public static void updateIndexState(Configuration configuration, PIndexState state) throws SQLException {
+    final String masterTable = PhoenixConfigurationUtil.getInputTableName(configuration);
+    final String indexTable = PhoenixConfigurationUtil.getOutputTableName(configuration);
+    final Properties overrideProps = new Properties();
+    final Connection connection = ConnectionUtil.getOutputConnection(configuration, overrideProps);
+    try {
+      updateIndexState(connection, masterTable, indexTable, state);
+    } finally {
+      if (connection != null) {
+        connection.close();
+      }
     }
-	
+  }
+
+  /**
+   * Updates the index state.
+   *
+   * @param connection
+   * @param masterTable
+   * @param indexTable
+   * @param state
+   * @throws SQLException
+   */
+  public static void updateIndexState(Connection connection, final String masterTable, final String indexTable, PIndexState state) throws SQLException {
+    Preconditions.checkNotNull(connection);
+    final String alterQuery = String.format(ALTER_INDEX_QUERY_TEMPLATE, indexTable, masterTable, state.name());
+    connection.createStatement().execute(alterQuery);
+    LOG.info(" Updated the status of the index {} to {} ", indexTable, state.name());
+  }
+
 }

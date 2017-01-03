@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx.monitors;
 
 import org.apache.phoenix.pherf.jmx.Stat;
@@ -25,6 +24,6 @@ import javax.management.MXBean;
 @MXBean
 public interface Monitor {
 
-    public Stat getStat();
+  public Stat getStat();
 
 }

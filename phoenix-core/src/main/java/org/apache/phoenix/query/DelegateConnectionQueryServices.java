@@ -48,301 +48,298 @@ import org.apache.phoenix.schema.SequenceKey;
 import org.apache.phoenix.schema.stats.PTableStats;
 import org.apache.tephra.TransactionSystemClient;
 
-
 public class DelegateConnectionQueryServices extends DelegateQueryServices implements ConnectionQueryServices {
 
-    public DelegateConnectionQueryServices(ConnectionQueryServices delegate) {
-        super(delegate);
-    }
-    
-    @Override
-    protected ConnectionQueryServices getDelegate() {
-        return (ConnectionQueryServices)super.getDelegate();
-    }
-    
-    @Override
-    public ConnectionQueryServices getChildQueryServices(ImmutableBytesWritable tenantId) {
-        return getDelegate().getChildQueryServices(tenantId);
-    }
+  public DelegateConnectionQueryServices(ConnectionQueryServices delegate) {
+    super(delegate);
+  }
 
-    @Override
-    public HTableInterface getTable(byte[] tableName) throws SQLException {
-        return getDelegate().getTable(tableName);
-    }
+  @Override
+  protected ConnectionQueryServices getDelegate() {
+    return (ConnectionQueryServices) super.getDelegate();
+  }
 
-    @Override
-    public List<HRegionLocation> getAllTableRegions(byte[] tableName) throws SQLException {
-        return getDelegate().getAllTableRegions(tableName);
-    }
+  @Override
+  public ConnectionQueryServices getChildQueryServices(ImmutableBytesWritable tenantId) {
+    return getDelegate().getChildQueryServices(tenantId);
+  }
 
-    @Override
-    public void addTable(PTable table, long resolvedTime) throws SQLException {
-        getDelegate().addTable(table, resolvedTime);
-    }
-    
-    @Override
-    public void updateResolvedTimestamp(PTable table, long resolvedTimestamp) throws SQLException {
-        getDelegate().updateResolvedTimestamp(table, resolvedTimestamp);
-    }
+  @Override
+  public HTableInterface getTable(byte[] tableName) throws SQLException {
+    return getDelegate().getTable(tableName);
+  }
 
-    @Override
-    public void addColumn(PName tenantId, String tableName, List<PColumn> columns, long tableTimeStamp,
-            long tableSeqNum, boolean isImmutableRows, boolean isWalDisabled, boolean isMultitenant, boolean storeNulls,
-            boolean isTransactional, long updateCacheFrequency, boolean isNamespaceMapped, long resolvedTime)
-                    throws SQLException {
-        getDelegate().addColumn(tenantId, tableName, columns, tableTimeStamp, tableSeqNum, isImmutableRows,
-                isWalDisabled, isMultitenant, storeNulls, isTransactional, updateCacheFrequency, isNamespaceMapped,
-                resolvedTime);
-    }
+  @Override
+  public List<HRegionLocation> getAllTableRegions(byte[] tableName) throws SQLException {
+    return getDelegate().getAllTableRegions(tableName);
+  }
 
-    @Override
-    public void removeTable(PName tenantId, String tableName, String parentTableName, long tableTimeStamp)
-            throws SQLException {
-        getDelegate().removeTable(tenantId, tableName, parentTableName, tableTimeStamp);
-    }
+  @Override
+  public void addTable(PTable table, long resolvedTime) throws SQLException {
+    getDelegate().addTable(table, resolvedTime);
+  }
 
-    @Override
-    public void removeColumn(PName tenantId, String tableName, List<PColumn> columnsToRemove, long tableTimeStamp,
-            long tableSeqNum, long resolvedTime) throws SQLException {
-        getDelegate().removeColumn(tenantId, tableName, columnsToRemove, tableTimeStamp, tableSeqNum, resolvedTime);
-    }
+  @Override
+  public void updateResolvedTimestamp(PTable table, long resolvedTimestamp) throws SQLException {
+    getDelegate().updateResolvedTimestamp(table, resolvedTimestamp);
+  }
 
-    @Override
-    public PhoenixConnection connect(String url, Properties info) throws SQLException {
-        return getDelegate().connect(url, info);
-    }
+  @Override
+  public void addColumn(PName tenantId, String tableName, List<PColumn> columns, long tableTimeStamp,
+          long tableSeqNum, boolean isImmutableRows, boolean isWalDisabled, boolean isMultitenant, boolean storeNulls,
+          boolean isTransactional, long updateCacheFrequency, boolean isNamespaceMapped, long resolvedTime)
+          throws SQLException {
+    getDelegate().addColumn(tenantId, tableName, columns, tableTimeStamp, tableSeqNum, isImmutableRows,
+            isWalDisabled, isMultitenant, storeNulls, isTransactional, updateCacheFrequency, isNamespaceMapped,
+            resolvedTime);
+  }
 
-    @Override
-    public MetaDataMutationResult getTable(PName tenantId, byte[] schemaBytes, byte[] tableBytes, long tableTimestamp, long clientTimestamp) throws SQLException {
-        return getDelegate().getTable(tenantId, schemaBytes, tableBytes, tableTimestamp, clientTimestamp);
-    }
+  @Override
+  public void removeTable(PName tenantId, String tableName, String parentTableName, long tableTimeStamp)
+          throws SQLException {
+    getDelegate().removeTable(tenantId, tableName, parentTableName, tableTimeStamp);
+  }
 
-    @Override
-    public MetaDataMutationResult createTable(List<Mutation> tableMetaData, byte[] physicalName, PTableType tableType,
-            Map<String, Object> tableProps, List<Pair<byte[], Map<String, Object>>> families, byte[][] splits,
-            boolean isNamespaceMapped) throws SQLException {
-        return getDelegate().createTable(tableMetaData, physicalName, tableType, tableProps, families, splits,
-                isNamespaceMapped);
-    }
+  @Override
+  public void removeColumn(PName tenantId, String tableName, List<PColumn> columnsToRemove, long tableTimeStamp,
+          long tableSeqNum, long resolvedTime) throws SQLException {
+    getDelegate().removeColumn(tenantId, tableName, columnsToRemove, tableTimeStamp, tableSeqNum, resolvedTime);
+  }
 
-    @Override
-    public MetaDataMutationResult dropTable(List<Mutation> tabeMetaData, PTableType tableType, boolean cascade) throws SQLException {
-        return getDelegate().dropTable(tabeMetaData, tableType, cascade);
-    }
+  @Override
+  public PhoenixConnection connect(String url, Properties info) throws SQLException {
+    return getDelegate().connect(url, info);
+  }
 
-    @Override
-    public MetaDataMutationResult addColumn(List<Mutation> tableMetaData, PTable table, Map<String, List<Pair<String,Object>>> properties, Set<String> colFamiliesForPColumnsToBeAdded) throws SQLException {
-        return getDelegate().addColumn(tableMetaData, table, properties, colFamiliesForPColumnsToBeAdded);
-    }
+  @Override
+  public MetaDataMutationResult getTable(PName tenantId, byte[] schemaBytes, byte[] tableBytes, long tableTimestamp, long clientTimestamp) throws SQLException {
+    return getDelegate().getTable(tenantId, schemaBytes, tableBytes, tableTimestamp, clientTimestamp);
+  }
 
+  @Override
+  public MetaDataMutationResult createTable(List<Mutation> tableMetaData, byte[] physicalName, PTableType tableType,
+          Map<String, Object> tableProps, List<Pair<byte[], Map<String, Object>>> families, byte[][] splits,
+          boolean isNamespaceMapped) throws SQLException {
+    return getDelegate().createTable(tableMetaData, physicalName, tableType, tableProps, families, splits,
+            isNamespaceMapped);
+  }
 
-    @Override
-    public MetaDataMutationResult dropColumn(List<Mutation> tabeMetaData, PTableType tableType) throws SQLException {
-        return getDelegate().dropColumn(tabeMetaData, tableType);
-    }
+  @Override
+  public MetaDataMutationResult dropTable(List<Mutation> tabeMetaData, PTableType tableType, boolean cascade) throws SQLException {
+    return getDelegate().dropTable(tabeMetaData, tableType, cascade);
+  }
 
-    @Override
-    public MetaDataMutationResult updateIndexState(List<Mutation> tableMetadata, String parentTableName) throws SQLException {
-        return getDelegate().updateIndexState(tableMetadata, parentTableName);
-    }
-    
-    @Override
-    public void init(String url, Properties props) throws SQLException {
-        getDelegate().init(url, props);
-    }
+  @Override
+  public MetaDataMutationResult addColumn(List<Mutation> tableMetaData, PTable table, Map<String, List<Pair<String, Object>>> properties, Set<String> colFamiliesForPColumnsToBeAdded) throws SQLException {
+    return getDelegate().addColumn(tableMetaData, table, properties, colFamiliesForPColumnsToBeAdded);
+  }
 
-    @Override
-    public MutationState updateData(MutationPlan plan) throws SQLException {
-        return getDelegate().updateData(plan);
-    }
+  @Override
+  public MetaDataMutationResult dropColumn(List<Mutation> tabeMetaData, PTableType tableType) throws SQLException {
+    return getDelegate().dropColumn(tabeMetaData, tableType);
+  }
 
-    @Override
-    public int getLowestClusterHBaseVersion() {
-        return getDelegate().getLowestClusterHBaseVersion();
-    }
+  @Override
+  public MetaDataMutationResult updateIndexState(List<Mutation> tableMetadata, String parentTableName) throws SQLException {
+    return getDelegate().updateIndexState(tableMetadata, parentTableName);
+  }
 
-    @Override
-    public HBaseAdmin getAdmin() throws SQLException {
-        return getDelegate().getAdmin();
-    }
+  @Override
+  public void init(String url, Properties props) throws SQLException {
+    getDelegate().init(url, props);
+  }
 
-    @Override
-    public HTableDescriptor getTableDescriptor(byte[] tableName) throws SQLException {
-        return getDelegate().getTableDescriptor(tableName);
-    }
+  @Override
+  public MutationState updateData(MutationPlan plan) throws SQLException {
+    return getDelegate().updateData(plan);
+  }
 
-    @Override
-    public void clearTableRegionCache(byte[] tableName) throws SQLException {
-        getDelegate().clearTableRegionCache(tableName);
-    }
+  @Override
+  public int getLowestClusterHBaseVersion() {
+    return getDelegate().getLowestClusterHBaseVersion();
+  }
 
-    @Override
-    public boolean hasIndexWALCodec() {
-        return getDelegate().hasIndexWALCodec();
-    }
+  @Override
+  public HBaseAdmin getAdmin() throws SQLException {
+    return getDelegate().getAdmin();
+  }
 
-    @Override
-    public long createSequence(String tenantId, String schemaName, String sequenceName,
-            long startWith, long incrementBy, long cacheSize, long minValue, long maxValue,
-            boolean cycle, long timestamp) throws SQLException {
-        return getDelegate().createSequence(tenantId, schemaName, sequenceName, startWith,
+  @Override
+  public HTableDescriptor getTableDescriptor(byte[] tableName) throws SQLException {
+    return getDelegate().getTableDescriptor(tableName);
+  }
+
+  @Override
+  public void clearTableRegionCache(byte[] tableName) throws SQLException {
+    getDelegate().clearTableRegionCache(tableName);
+  }
+
+  @Override
+  public boolean hasIndexWALCodec() {
+    return getDelegate().hasIndexWALCodec();
+  }
+
+  @Override
+  public long createSequence(String tenantId, String schemaName, String sequenceName,
+          long startWith, long incrementBy, long cacheSize, long minValue, long maxValue,
+          boolean cycle, long timestamp) throws SQLException {
+    return getDelegate().createSequence(tenantId, schemaName, sequenceName, startWith,
             incrementBy, cacheSize, minValue, maxValue, cycle, timestamp);
-    }
+  }
 
-    @Override
-    public long dropSequence(String tenantId, String schemaName, String sequenceName, long timestamp)
-            throws SQLException {
-        return getDelegate().dropSequence(tenantId, schemaName, sequenceName, timestamp);
-    }
+  @Override
+  public long dropSequence(String tenantId, String schemaName, String sequenceName, long timestamp)
+          throws SQLException {
+    return getDelegate().dropSequence(tenantId, schemaName, sequenceName, timestamp);
+  }
 
-    @Override
-    public void validateSequences(List<SequenceAllocation> sequenceAllocations, long timestamp,
-            long[] values, SQLException[] exceptions, Sequence.ValueOp action) throws SQLException {
-        getDelegate().validateSequences(sequenceAllocations, timestamp, values, exceptions, action);
-    }
+  @Override
+  public void validateSequences(List<SequenceAllocation> sequenceAllocations, long timestamp,
+          long[] values, SQLException[] exceptions, Sequence.ValueOp action) throws SQLException {
+    getDelegate().validateSequences(sequenceAllocations, timestamp, values, exceptions, action);
+  }
 
-    @Override
-    public void incrementSequences(List<SequenceAllocation> sequenceAllocations, long timestamp,
-            long[] values, SQLException[] exceptions) throws SQLException {
-        getDelegate().incrementSequences(sequenceAllocations, timestamp, values, exceptions);
-    }
+  @Override
+  public void incrementSequences(List<SequenceAllocation> sequenceAllocations, long timestamp,
+          long[] values, SQLException[] exceptions) throws SQLException {
+    getDelegate().incrementSequences(sequenceAllocations, timestamp, values, exceptions);
+  }
 
-    @Override
-    public long currentSequenceValue(SequenceKey sequenceKey, long timestamp) throws SQLException {
-        return getDelegate().currentSequenceValue(sequenceKey, timestamp);
-    }
+  @Override
+  public long currentSequenceValue(SequenceKey sequenceKey, long timestamp) throws SQLException {
+    return getDelegate().currentSequenceValue(sequenceKey, timestamp);
+  }
 
-    @Override
-    public void returnSequences(List<SequenceKey> sequenceKeys, long timestamp, SQLException[] exceptions)
-            throws SQLException {
-        getDelegate().returnSequences(sequenceKeys, timestamp, exceptions);
-    }
+  @Override
+  public void returnSequences(List<SequenceKey> sequenceKeys, long timestamp, SQLException[] exceptions)
+          throws SQLException {
+    getDelegate().returnSequences(sequenceKeys, timestamp, exceptions);
+  }
 
-    @Override
-    public void addConnection(PhoenixConnection connection) throws SQLException {
-        getDelegate().addConnection(connection);
-    }
+  @Override
+  public void addConnection(PhoenixConnection connection) throws SQLException {
+    getDelegate().addConnection(connection);
+  }
 
-    @Override
-    public void removeConnection(PhoenixConnection connection) throws SQLException {
-        getDelegate().removeConnection(connection);
-    }
+  @Override
+  public void removeConnection(PhoenixConnection connection) throws SQLException {
+    getDelegate().removeConnection(connection);
+  }
 
-    @Override
-    public KeyValueBuilder getKeyValueBuilder() {
-        return getDelegate().getKeyValueBuilder();
-    }
+  @Override
+  public KeyValueBuilder getKeyValueBuilder() {
+    return getDelegate().getKeyValueBuilder();
+  }
 
-    @Override
-    public boolean supportsFeature(Feature feature) {
-        return getDelegate().supportsFeature(feature);
-    }
+  @Override
+  public boolean supportsFeature(Feature feature) {
+    return getDelegate().supportsFeature(feature);
+  }
 
-    @Override
-    public String getUserName() {
-        return getDelegate().getUserName();
-    }
-    
-    @Override
-    public void clearTableFromCache(byte[] tenantId, byte[] schemaName, byte[] tableName, long clientTS)
-            throws SQLException {
-        getDelegate().clearTableFromCache(tenantId, schemaName, tableName, clientTS);
-    }
+  @Override
+  public String getUserName() {
+    return getDelegate().getUserName();
+  }
 
-    @Override
-    public PTableStats getTableStats(byte[] physicalName, long clientTimeStamp) throws SQLException {
-        return getDelegate().getTableStats(physicalName, clientTimeStamp);
-    }
+  @Override
+  public void clearTableFromCache(byte[] tenantId, byte[] schemaName, byte[] tableName, long clientTS)
+          throws SQLException {
+    getDelegate().clearTableFromCache(tenantId, schemaName, tableName, clientTS);
+  }
 
+  @Override
+  public PTableStats getTableStats(byte[] physicalName, long clientTimeStamp) throws SQLException {
+    return getDelegate().getTableStats(physicalName, clientTimeStamp);
+  }
 
-    @Override
-    public long clearCache() throws SQLException {
-        return getDelegate().clearCache();
-    }
+  @Override
+  public long clearCache() throws SQLException {
+    return getDelegate().clearCache();
+  }
 
-    @Override
-    public int getSequenceSaltBuckets() {
-        return getDelegate().getSequenceSaltBuckets();
-    }
+  @Override
+  public int getSequenceSaltBuckets() {
+    return getDelegate().getSequenceSaltBuckets();
+  }
 
-    @Override
-    public TransactionSystemClient getTransactionSystemClient() {
-        return getDelegate().getTransactionSystemClient();
-    }
+  @Override
+  public TransactionSystemClient getTransactionSystemClient() {
+    return getDelegate().getTransactionSystemClient();
+  }
 
-    @Override
-    public MetaDataMutationResult createFunction(List<Mutation> functionData, PFunction function, boolean temporary)
-            throws SQLException {
-        return getDelegate().createFunction(functionData, function, temporary);
-    }
+  @Override
+  public MetaDataMutationResult createFunction(List<Mutation> functionData, PFunction function, boolean temporary)
+          throws SQLException {
+    return getDelegate().createFunction(functionData, function, temporary);
+  }
 
-    @Override
-    public void addFunction(PFunction function) throws SQLException {
-        getDelegate().addFunction(function);
-    }
+  @Override
+  public void addFunction(PFunction function) throws SQLException {
+    getDelegate().addFunction(function);
+  }
 
-    @Override
-    public void removeFunction(PName tenantId, String function, long functionTimeStamp)
-            throws SQLException {
-        getDelegate().removeFunction(tenantId, function, functionTimeStamp);
-    }
+  @Override
+  public void removeFunction(PName tenantId, String function, long functionTimeStamp)
+          throws SQLException {
+    getDelegate().removeFunction(tenantId, function, functionTimeStamp);
+  }
 
-    @Override
-    public MetaDataMutationResult getFunctions(PName tenantId,
-            List<Pair<byte[], Long>> functionNameAndTimeStampPairs, long clientTimestamp)
-            throws SQLException {
-        return getDelegate().getFunctions(tenantId, functionNameAndTimeStampPairs, clientTimestamp);
-    }
+  @Override
+  public MetaDataMutationResult getFunctions(PName tenantId,
+          List<Pair<byte[], Long>> functionNameAndTimeStampPairs, long clientTimestamp)
+          throws SQLException {
+    return getDelegate().getFunctions(tenantId, functionNameAndTimeStampPairs, clientTimestamp);
+  }
 
-    @Override
-    public MetaDataMutationResult dropFunction(List<Mutation> tableMetadata, boolean ifExists)
-            throws SQLException {
-        return getDelegate().dropFunction(tableMetadata, ifExists);
-    }
+  @Override
+  public MetaDataMutationResult dropFunction(List<Mutation> tableMetadata, boolean ifExists)
+          throws SQLException {
+    return getDelegate().dropFunction(tableMetadata, ifExists);
+  }
 
-    @Override
-    public long getRenewLeaseThresholdMilliSeconds() {
-        return getDelegate().getRenewLeaseThresholdMilliSeconds();
-    }
+  @Override
+  public long getRenewLeaseThresholdMilliSeconds() {
+    return getDelegate().getRenewLeaseThresholdMilliSeconds();
+  }
 
-    @Override
-    public boolean isRenewingLeasesEnabled() {
-        return getDelegate().isRenewingLeasesEnabled();
-    }
+  @Override
+  public boolean isRenewingLeasesEnabled() {
+    return getDelegate().isRenewingLeasesEnabled();
+  }
 
-    @Override
-    public HRegionLocation getTableRegionLocation(byte[] tableName, byte[] row)
-            throws SQLException {
-        return getDelegate().getTableRegionLocation(tableName, row);
-    }
+  @Override
+  public HRegionLocation getTableRegionLocation(byte[] tableName, byte[] row)
+          throws SQLException {
+    return getDelegate().getTableRegionLocation(tableName, row);
+  }
 
-    @Override
-    public void addSchema(PSchema schema) throws SQLException {
-        getDelegate().addSchema(schema);
-    }
+  @Override
+  public void addSchema(PSchema schema) throws SQLException {
+    getDelegate().addSchema(schema);
+  }
 
-    @Override
-    public MetaDataMutationResult createSchema(List<Mutation> schemaMutations, String schemaName) throws SQLException {
-        return getDelegate().createSchema(schemaMutations, schemaName);
-    }
+  @Override
+  public MetaDataMutationResult createSchema(List<Mutation> schemaMutations, String schemaName) throws SQLException {
+    return getDelegate().createSchema(schemaMutations, schemaName);
+  }
 
-    @Override
-    public MetaDataMutationResult getSchema(String schemaName, long clientTimestamp) throws SQLException {
-        return getDelegate().getSchema(schemaName, clientTimestamp);
-    }
+  @Override
+  public MetaDataMutationResult getSchema(String schemaName, long clientTimestamp) throws SQLException {
+    return getDelegate().getSchema(schemaName, clientTimestamp);
+  }
 
-    @Override
-    public void removeSchema(PSchema schema, long schemaTimeStamp) {
-        getDelegate().removeSchema(schema, schemaTimeStamp);
-    }
+  @Override
+  public void removeSchema(PSchema schema, long schemaTimeStamp) {
+    getDelegate().removeSchema(schema, schemaTimeStamp);
+  }
 
-    @Override
-    public MetaDataMutationResult dropSchema(List<Mutation> schemaMetaData, String schemaName) throws SQLException {
-        return getDelegate().dropSchema(schemaMetaData, schemaName);
-    }
+  @Override
+  public MetaDataMutationResult dropSchema(List<Mutation> schemaMetaData, String schemaName) throws SQLException {
+    return getDelegate().dropSchema(schemaMetaData, schemaName);
+  }
 
-    @Override
-    public void invalidateStats(ImmutableBytesPtr tableName) {
-        getDelegate().invalidateStats(tableName);
-    }
+  @Override
+  public void invalidateStats(ImmutableBytesPtr tableName) {
+    getDelegate().invalidateStats(tableName);
+  }
 }

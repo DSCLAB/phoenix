@@ -25,18 +25,22 @@ import org.apache.phoenix.coprocessor.ServerCachingProtocol.ServerCacheFactory;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 import org.apache.phoenix.memory.MemoryManager;
 
-
 /**
- * 
+ *
  * Inteface to set and set cached values for a tenant
  *
- * 
+ *
  * @since 0.1
  */
 public interface TenantCache {
-    MemoryManager getMemoryManager();
-    Closeable getServerCache(ImmutableBytesPtr cacheId);
-    Closeable addServerCache(ImmutableBytesPtr cacheId, ImmutableBytesWritable cachePtr, byte[] txState, ServerCacheFactory cacheFactory) throws SQLException;
-    void removeServerCache(ImmutableBytesPtr cacheId);
-    void removeAllServerCache();
+
+  MemoryManager getMemoryManager();
+
+  Closeable getServerCache(ImmutableBytesPtr cacheId);
+
+  Closeable addServerCache(ImmutableBytesPtr cacheId, ImmutableBytesWritable cachePtr, byte[] txState, ServerCacheFactory cacheFactory) throws SQLException;
+
+  void removeServerCache(ImmutableBytesPtr cacheId);
+
+  void removeAllServerCache();
 }

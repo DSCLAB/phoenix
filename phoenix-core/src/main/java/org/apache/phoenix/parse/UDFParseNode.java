@@ -21,7 +21,7 @@ import java.util.List;
 
 public class UDFParseNode extends FunctionParseNode {
 
-    public UDFParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  public UDFParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 }

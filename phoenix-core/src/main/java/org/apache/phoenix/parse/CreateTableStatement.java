@@ -29,70 +29,71 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class CreateTableStatement extends MutableStatement {
-    private final TableName tableName;
-    private final PTableType tableType;
-    private final List<ColumnDef> columns;
-    private final PrimaryKeyConstraint pkConstraint;
-    private final List<ParseNode> splitNodes;
-    private final int bindCount;
-    private final ListMultimap<String,Pair<String,Object>> props;
-    private final boolean ifNotExists;
-    private final TableName baseTableName;
-    private final ParseNode whereClause;
-    
-    protected CreateTableStatement(TableName tableName, ListMultimap<String,Pair<String,Object>> props, List<ColumnDef> columns, PrimaryKeyConstraint pkConstraint,
-            List<ParseNode> splitNodes, PTableType tableType, boolean ifNotExists, 
-            TableName baseTableName, ParseNode whereClause, int bindCount) {
-        this.tableName = tableName;
-        this.props = props == null ? ImmutableListMultimap.<String,Pair<String,Object>>of() : props;
-        this.tableType = PhoenixDatabaseMetaData.SYSTEM_CATALOG_SCHEMA.equals(tableName.getSchemaName()) ? PTableType.SYSTEM : tableType;
-        this.columns = columns == null ? ImmutableList.<ColumnDef>of() : ImmutableList.<ColumnDef>copyOf(columns);
-        this.pkConstraint = pkConstraint == null ? PrimaryKeyConstraint.EMPTY : pkConstraint;
-        this.splitNodes = splitNodes == null ? Collections.<ParseNode>emptyList() : ImmutableList.copyOf(splitNodes);
-        this.bindCount = bindCount;
-        this.ifNotExists = ifNotExists;
-        this.baseTableName = baseTableName;
-        this.whereClause = whereClause;
-    }
-    
-    public ParseNode getWhereClause() {
-        return whereClause;
-    }
-    
-    @Override
-    public int getBindCount() {
-        return bindCount;
-    }
 
-    public TableName getTableName() {
-        return tableName;
-    }
+  private final TableName tableName;
+  private final PTableType tableType;
+  private final List<ColumnDef> columns;
+  private final PrimaryKeyConstraint pkConstraint;
+  private final List<ParseNode> splitNodes;
+  private final int bindCount;
+  private final ListMultimap<String, Pair<String, Object>> props;
+  private final boolean ifNotExists;
+  private final TableName baseTableName;
+  private final ParseNode whereClause;
 
-    public TableName getBaseTableName() {
-        return baseTableName;
-    }
+  protected CreateTableStatement(TableName tableName, ListMultimap<String, Pair<String, Object>> props, List<ColumnDef> columns, PrimaryKeyConstraint pkConstraint,
+          List<ParseNode> splitNodes, PTableType tableType, boolean ifNotExists,
+          TableName baseTableName, ParseNode whereClause, int bindCount) {
+    this.tableName = tableName;
+    this.props = props == null ? ImmutableListMultimap.<String, Pair<String, Object>>of() : props;
+    this.tableType = PhoenixDatabaseMetaData.SYSTEM_CATALOG_SCHEMA.equals(tableName.getSchemaName()) ? PTableType.SYSTEM : tableType;
+    this.columns = columns == null ? ImmutableList.<ColumnDef>of() : ImmutableList.<ColumnDef>copyOf(columns);
+    this.pkConstraint = pkConstraint == null ? PrimaryKeyConstraint.EMPTY : pkConstraint;
+    this.splitNodes = splitNodes == null ? Collections.<ParseNode>emptyList() : ImmutableList.copyOf(splitNodes);
+    this.bindCount = bindCount;
+    this.ifNotExists = ifNotExists;
+    this.baseTableName = baseTableName;
+    this.whereClause = whereClause;
+  }
 
-    public List<ColumnDef> getColumnDefs() {
-        return columns;
-    }
+  public ParseNode getWhereClause() {
+    return whereClause;
+  }
 
-    public List<ParseNode> getSplitNodes() {
-        return splitNodes;
-    }
+  @Override
+  public int getBindCount() {
+    return bindCount;
+  }
 
-    public PTableType getTableType() {
-        return tableType;
-    }
+  public TableName getTableName() {
+    return tableName;
+  }
 
-    public ListMultimap<String,Pair<String,Object>> getProps() {
-        return props;
-    }
+  public TableName getBaseTableName() {
+    return baseTableName;
+  }
 
-    public boolean ifNotExists() {
-        return ifNotExists;
-    }
+  public List<ColumnDef> getColumnDefs() {
+    return columns;
+  }
 
-    public PrimaryKeyConstraint getPrimaryKeyConstraint() {
-        return pkConstraint;
-    }
+  public List<ParseNode> getSplitNodes() {
+    return splitNodes;
+  }
+
+  public PTableType getTableType() {
+    return tableType;
+  }
+
+  public ListMultimap<String, Pair<String, Object>> getProps() {
+    return props;
+  }
+
+  public boolean ifNotExists() {
+    return ifNotExists;
+  }
+
+  public PrimaryKeyConstraint getPrimaryKeyConstraint() {
+    return pkConstraint;
+  }
 }

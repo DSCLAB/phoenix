@@ -21,25 +21,26 @@ import org.apache.phoenix.memory.ChildMemoryManager;
 import org.apache.phoenix.memory.MemoryManager;
 
 /**
- * 
- * Child QueryServices that delegates through to global QueryService.
- * Used to track memory used by each org to allow a max percentage threshold.
  *
- * 
+ * Child QueryServices that delegates through to global QueryService. Used to
+ * track memory used by each org to allow a max percentage threshold.
+ *
+ *
  * @since 0.1
  */
 public class ChildQueryServices extends DelegateConnectionQueryServices {
-    private final MemoryManager memoryManager;
-    private static final int DEFAULT_MAX_ORG_MEMORY_PERC = 30;
-    
-    public ChildQueryServices(ConnectionQueryServices services) {
-        super(services);
-        int maxOrgMemPerc = getProps().getInt(MAX_TENANT_MEMORY_PERC_ATTRIB, DEFAULT_MAX_ORG_MEMORY_PERC);
-        this.memoryManager = new ChildMemoryManager(services.getMemoryManager(), maxOrgMemPerc);
-    }
 
-    @Override
-    public MemoryManager getMemoryManager() {
-        return memoryManager;
-    }
+  private final MemoryManager memoryManager;
+  private static final int DEFAULT_MAX_ORG_MEMORY_PERC = 30;
+
+  public ChildQueryServices(ConnectionQueryServices services) {
+    super(services);
+    int maxOrgMemPerc = getProps().getInt(MAX_TENANT_MEMORY_PERC_ATTRIB, DEFAULT_MAX_ORG_MEMORY_PERC);
+    this.memoryManager = new ChildMemoryManager(services.getMemoryManager(), maxOrgMemPerc);
+  }
+
+  @Override
+  public MemoryManager getMemoryManager() {
+    return memoryManager;
+  }
 }

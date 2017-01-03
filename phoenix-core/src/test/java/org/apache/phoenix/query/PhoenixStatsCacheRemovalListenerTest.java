@@ -29,17 +29,17 @@ import com.google.common.cache.RemovalCause;
  */
 public class PhoenixStatsCacheRemovalListenerTest {
 
-    @Test
-    public void nonEvictionsAreIgnored() {
-        // We don't care so much about cases where we trigger a removal or update of the stats
-        // for a table in the cache, but we would want to know about updates happening automatically
-        PhoenixStatsCacheRemovalListener listener = new PhoenixStatsCacheRemovalListener();
-        // User-driven removals or updates
-        assertFalse(listener.wasEvicted(RemovalCause.EXPLICIT));
-        assertFalse(listener.wasEvicted(RemovalCause.REPLACED));
-        // Automatic removals by the cache itself (per configuration)
-        assertTrue(listener.wasEvicted(RemovalCause.COLLECTED));
-        assertTrue(listener.wasEvicted(RemovalCause.EXPIRED));
-        assertTrue(listener.wasEvicted(RemovalCause.SIZE));
-    }
+  @Test
+  public void nonEvictionsAreIgnored() {
+    // We don't care so much about cases where we trigger a removal or update of the stats
+    // for a table in the cache, but we would want to know about updates happening automatically
+    PhoenixStatsCacheRemovalListener listener = new PhoenixStatsCacheRemovalListener();
+    // User-driven removals or updates
+    assertFalse(listener.wasEvicted(RemovalCause.EXPLICIT));
+    assertFalse(listener.wasEvicted(RemovalCause.REPLACED));
+    // Automatic removals by the cache itself (per configuration)
+    assertTrue(listener.wasEvicted(RemovalCause.COLLECTED));
+    assertTrue(listener.wasEvicted(RemovalCause.EXPIRED));
+    assertTrue(listener.wasEvicted(RemovalCause.SIZE));
+  }
 }

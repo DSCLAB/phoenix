@@ -23,73 +23,73 @@ import org.apache.phoenix.schema.SortOrder;
 
 public class PTimestampArray extends PArrayDataType<Timestamp[]> {
 
-    public static final PTimestampArray INSTANCE = new PTimestampArray();
+  public static final PTimestampArray INSTANCE = new PTimestampArray();
 
-    private PTimestampArray() {
-        super("TIMESTAMP ARRAY", PDataType.ARRAY_TYPE_BASE + PTimestamp.INSTANCE.getSqlType(),
-                PhoenixArray.class, null, 36);
+  private PTimestampArray() {
+    super("TIMESTAMP ARRAY", PDataType.ARRAY_TYPE_BASE + PTimestamp.INSTANCE.getSqlType(),
+            PhoenixArray.class, null, 36);
+  }
+
+  @Override
+  public boolean isArrayType() {
+    return true;
+  }
+
+  @Override
+  public boolean isFixedWidth() {
+    return false;
+  }
+
+  @Override
+  public int compareTo(Object lhs, Object rhs, PDataType rhsType) {
+    return compareTo(lhs, rhs);
+  }
+
+  @Override
+  public Integer getByteSize() {
+    return null;
+  }
+
+  @Override
+  public byte[] toBytes(Object object) {
+    return toBytes(object, SortOrder.ASC);
+  }
+
+  @Override
+  public byte[] toBytes(Object object, SortOrder sortOrder) {
+    return toBytes(object, PTimestamp.INSTANCE, sortOrder);
+  }
+
+  @Override
+  public Object toObject(byte[] bytes, int offset, int length,
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
+    return toObject(bytes, offset, length, PTimestamp.INSTANCE, sortOrder, maxLength, scale,
+            PTimestamp.INSTANCE);
+  }
+
+  @Override
+  public boolean isCoercibleTo(PDataType targetType) {
+    return isCoercibleTo(targetType, this);
+  }
+
+  @Override
+  public boolean isCoercibleTo(PDataType targetType, Object value) {
+    if (value == null) {
+      return true;
     }
-
-    @Override
-    public boolean isArrayType() {
-        return true;
-    }
-
-    @Override
-    public boolean isFixedWidth() {
+    PhoenixArray pArr = (PhoenixArray) value;
+    Object[] timeStampArr = (Object[]) pArr.array;
+    for (Object i : timeStampArr) {
+      if (!super.isCoercibleTo(PTimestamp.INSTANCE, i)) {
         return false;
+      }
     }
+    return true;
+  }
 
-    @Override
-    public int compareTo(Object lhs, Object rhs, PDataType rhsType) {
-        return compareTo(lhs, rhs);
-    }
-
-    @Override
-    public Integer getByteSize() {
-        return null;
-    }
-
-    @Override
-    public byte[] toBytes(Object object) {
-        return toBytes(object, SortOrder.ASC);
-    }
-
-    @Override
-    public byte[] toBytes(Object object, SortOrder sortOrder) {
-        return toBytes(object, PTimestamp.INSTANCE, sortOrder);
-    }
-
-    @Override
-    public Object toObject(byte[] bytes, int offset, int length,
-            PDataType actualType, SortOrder sortOrder, Integer maxLength,
-            Integer scale) {
-        return toObject(bytes, offset, length, PTimestamp.INSTANCE, sortOrder, maxLength, scale,
-                PTimestamp.INSTANCE);
-    }
-
-    @Override
-    public boolean isCoercibleTo(PDataType targetType) {
-        return isCoercibleTo(targetType, this);
-    }
-
-    @Override
-    public boolean isCoercibleTo(PDataType targetType, Object value) {
-        if (value == null) {
-            return true;
-        }
-        PhoenixArray pArr = (PhoenixArray) value;
-        Object[] timeStampArr = (Object[]) pArr.array;
-        for (Object i : timeStampArr) {
-            if (!super.isCoercibleTo(PTimestamp.INSTANCE, i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public Object getSampleValue(Integer maxLength, Integer arrayLength) {
-        return getSampleValue(PTimestamp.INSTANCE, arrayLength, maxLength);
-    }
+  @Override
+  public Object getSampleValue(Integer maxLength, Integer arrayLength) {
+    return getSampleValue(PTimestamp.INSTANCE, arrayLength, maxLength);
+  }
 }

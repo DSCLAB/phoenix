@@ -35,70 +35,71 @@ import org.apache.tephra.TxConstants;
 import org.apache.tephra.hbase.TransactionAwareHTable;
 
 public class TransactionUtil {
-    private TransactionUtil() {
-    }
-    
-    public static boolean isDelete(Cell cell) {
-        return (CellUtil.matchingValue(cell, HConstants.EMPTY_BYTE_ARRAY));
-    }
-    
-    public static long convertToNanoseconds(long serverTimeStamp) {
-        return serverTimeStamp * TxConstants.MAX_TX_PER_MS;
-    }
-    
-    public static long convertToMilliseconds(long serverTimeStamp) {
-        return serverTimeStamp / TxConstants.MAX_TX_PER_MS;
-    }
-    
-    public static SQLException getTransactionFailureException(TransactionFailureException e) {
-        if (e instanceof TransactionConflictException) { 
-            return new SQLExceptionInfo.Builder(SQLExceptionCode.TRANSACTION_CONFLICT_EXCEPTION)
-                .setMessage(e.getMessage())
-                .setRootCause(e)
-                .build().buildException();
 
-        }
-        return new SQLExceptionInfo.Builder(SQLExceptionCode.TRANSACTION_FAILED)
+  private TransactionUtil() {
+  }
+
+  public static boolean isDelete(Cell cell) {
+    return (CellUtil.matchingValue(cell, HConstants.EMPTY_BYTE_ARRAY));
+  }
+
+  public static long convertToNanoseconds(long serverTimeStamp) {
+    return serverTimeStamp * TxConstants.MAX_TX_PER_MS;
+  }
+
+  public static long convertToMilliseconds(long serverTimeStamp) {
+    return serverTimeStamp / TxConstants.MAX_TX_PER_MS;
+  }
+
+  public static SQLException getTransactionFailureException(TransactionFailureException e) {
+    if (e instanceof TransactionConflictException) {
+      return new SQLExceptionInfo.Builder(SQLExceptionCode.TRANSACTION_CONFLICT_EXCEPTION)
+              .setMessage(e.getMessage())
+              .setRootCause(e)
+              .build().buildException();
+
+    }
+    return new SQLExceptionInfo.Builder(SQLExceptionCode.TRANSACTION_FAILED)
             .setMessage(e.getMessage())
             .setRootCause(e)
             .build().buildException();
+  }
+
+  public static TransactionAwareHTable getTransactionAwareHTable(HTableInterface htable, boolean isImmutableRows) {
+    // Conflict detection is not needed for tables with write-once/append-only data
+    return new TransactionAwareHTable(htable, isImmutableRows ? TxConstants.ConflictDetection.NONE : TxConstants.ConflictDetection.ROW);
+  }
+
+  // we resolve transactional tables at the txn read pointer
+  public static long getResolvedTimestamp(PhoenixConnection connection, boolean isTransactional, long defaultResolvedTimestamp) {
+    MutationState mutationState = connection.getMutationState();
+    Long scn = connection.getSCN();
+    return scn != null ? scn : (isTransactional && mutationState.isTransactionStarted()) ? convertToMilliseconds(mutationState.getInitialWritePointer()) : defaultResolvedTimestamp;
+  }
+
+  public static long getResolvedTime(PhoenixConnection connection, MetaDataMutationResult result) {
+    PTable table = result.getTable();
+    boolean isTransactional = table != null && table.isTransactional();
+    return getResolvedTimestamp(connection, isTransactional, result.getMutationTime());
+  }
+
+  public static long getResolvedTimestamp(PhoenixConnection connection, MetaDataMutationResult result) {
+    PTable table = result.getTable();
+    MutationState mutationState = connection.getMutationState();
+    boolean txInProgress = table != null && table.isTransactional() && mutationState.isTransactionStarted();
+    return txInProgress ? convertToMilliseconds(mutationState.getInitialWritePointer()) : result.getMutationTime();
+  }
+
+  public static Long getTableTimestamp(PhoenixConnection connection, boolean transactional) throws SQLException {
+    Long timestamp = null;
+    if (!transactional) {
+      return timestamp;
     }
-    
-    public static TransactionAwareHTable getTransactionAwareHTable(HTableInterface htable, boolean isImmutableRows) {
-    	// Conflict detection is not needed for tables with write-once/append-only data
-    	return new TransactionAwareHTable(htable, isImmutableRows ? TxConstants.ConflictDetection.NONE : TxConstants.ConflictDetection.ROW);
+    MutationState mutationState = connection.getMutationState();
+    if (!mutationState.isTransactionStarted()) {
+      mutationState.startTransaction();
     }
-    
-    // we resolve transactional tables at the txn read pointer
-	public static long getResolvedTimestamp(PhoenixConnection connection, boolean isTransactional, long defaultResolvedTimestamp) {
-		MutationState mutationState = connection.getMutationState();
-		Long scn = connection.getSCN();
-	    return scn != null ?  scn : (isTransactional && mutationState.isTransactionStarted()) ? convertToMilliseconds(mutationState.getInitialWritePointer()) : defaultResolvedTimestamp;
-	}
-
-	public static long getResolvedTime(PhoenixConnection connection, MetaDataMutationResult result) {
-		PTable table = result.getTable();
-		boolean isTransactional = table!=null && table.isTransactional();
-		return getResolvedTimestamp(connection, isTransactional, result.getMutationTime());
-	}
-
-	public static long getResolvedTimestamp(PhoenixConnection connection, MetaDataMutationResult result) {
-		PTable table = result.getTable();
-		MutationState mutationState = connection.getMutationState();
-		boolean txInProgress = table != null && table.isTransactional() && mutationState.isTransactionStarted();
-		return  txInProgress ? convertToMilliseconds(mutationState.getInitialWritePointer()) : result.getMutationTime();
-	}
-
-	public static Long getTableTimestamp(PhoenixConnection connection, boolean transactional) throws SQLException {
-		Long timestamp = null;
-		if (!transactional) {
-			return timestamp;
-		}
-		MutationState mutationState = connection.getMutationState();
-		if (!mutationState.isTransactionStarted()) {
-			mutationState.startTransaction();
-		}
-		timestamp = convertToMilliseconds(mutationState.getInitialWritePointer());
-		return timestamp;
-	}
+    timestamp = convertToMilliseconds(mutationState.getInitialWritePointer());
+    return timestamp;
+  }
 }

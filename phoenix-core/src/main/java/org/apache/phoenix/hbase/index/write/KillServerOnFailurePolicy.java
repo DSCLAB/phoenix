@@ -60,18 +60,18 @@ public class KillServerOnFailurePolicy implements IndexFailurePolicy {
 
   @Override
   public void
-      handleFailure(Multimap<HTableInterfaceReference, Mutation> attempted, Exception cause) throws IOException{
+          handleFailure(Multimap<HTableInterfaceReference, Mutation> attempted, Exception cause) throws IOException {
     // cleanup resources
     this.stop("Killing ourselves because of an error:" + cause);
     // notify the regionserver of the failure
-    String msg =
-        "Could not update the index table, killing server region because couldn't write to an index table";
+    String msg
+            = "Could not update the index table, killing server region because couldn't write to an index table";
     LOG.error(msg, cause);
     try {
       this.abortable.abort(msg, cause);
     } catch (Exception e) {
       LOG.fatal("Couldn't abort this server to preserve index writes, "
-          + "attempting to hard kill the server");
+              + "attempting to hard kill the server");
       System.exit(1);
     }
 

@@ -20,23 +20,24 @@ package org.apache.phoenix.parse;
 import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class ExplainStatement implements BindableStatement {
-    private final BindableStatement statement;
-    
-    public ExplainStatement(BindableStatement statement) {
-        this.statement = statement;
-    }
 
-    public BindableStatement getStatement() {
-        return statement;
-    }
+  private final BindableStatement statement;
 
-    @Override
-    public int getBindCount() {
-        return statement.getBindCount();
-    }
+  public ExplainStatement(BindableStatement statement) {
+    this.statement = statement;
+  }
 
-    @Override
-    public Operation getOperation() {
-        return Operation.QUERY;
-    }
+  public BindableStatement getStatement() {
+    return statement;
+  }
+
+  @Override
+  public int getBindCount() {
+    return statement.getBindCount();
+  }
+
+  @Override
+  public Operation getOperation() {
+    return Operation.QUERY;
+  }
 }

@@ -31,19 +31,21 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * A {@link java.util.Set} of {@link KeyValue}s implemented on top of a
- * {@link java.util.concurrent.ConcurrentSkipListMap}.  Works like a
- * {@link java.util.concurrent.ConcurrentSkipListSet} in all but one regard:
- * An add will overwrite if already an entry for the added key.  In other words,
+ * {@link java.util.concurrent.ConcurrentSkipListMap}. Works like a
+ * {@link java.util.concurrent.ConcurrentSkipListSet} in all but one regard: An
+ * add will overwrite if already an entry for the added key. In other words,
  * where CSLS does "Adds the specified element to this set if it is not already
  * present.", this implementation "Adds the specified element to this set EVEN
- * if it is already present overwriting what was there previous".  The call to
+ * if it is already present overwriting what was there previous". The call to
  * add returns true if no value in the backing map or false if there was an
  * entry with same key (though value may be different).
- * <p>Otherwise,
- * has same attributes as ConcurrentSkipListSet: e.g. tolerant of concurrent
- * get and set and won't throw ConcurrentModificationException when iterating.
+ * <p>
+ * Otherwise, has same attributes as ConcurrentSkipListSet: e.g. tolerant of
+ * concurrent get and set and won't throw ConcurrentModificationException when
+ * iterating.
  */
 public class KeyValueSkipListSet implements NavigableSet<KeyValue> {
+
   private final ConcurrentNavigableMap<KeyValue, KeyValue> delegatee;
 
   KeyValueSkipListSet(final KeyValue.KVComparator c) {
@@ -75,7 +77,7 @@ public class KeyValueSkipListSet implements NavigableSet<KeyValue> {
   }
 
   public NavigableSet<KeyValue> headSet(final KeyValue toElement,
-      boolean inclusive) {
+          boolean inclusive) {
     return new KeyValueSkipListSet(this.delegatee.headMap(toElement, inclusive));
   }
 
@@ -104,7 +106,7 @@ public class KeyValueSkipListSet implements NavigableSet<KeyValue> {
   }
 
   public NavigableSet<KeyValue> subSet(KeyValue fromElement,
-      boolean fromInclusive, KeyValue toElement, boolean toInclusive) {
+          boolean fromInclusive, KeyValue toElement, boolean toInclusive) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

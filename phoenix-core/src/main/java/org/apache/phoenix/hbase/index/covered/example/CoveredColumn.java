@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.covered.example;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -23,8 +22,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.hbase.index.covered.update.ColumnReference;
 
 /**
- * A single Column (either a Column Family or a full Family:Qualifier pair) in a {@link ColumnGroup}
- * . If no column qualifier is specified (null), matches all known qualifiers of the family.
+ * A single Column (either a Column Family or a full Family:Qualifier pair) in a
+ * {@link ColumnGroup} . If no column qualifier is specified (null), matches all
+ * known qualifiers of the family.
  */
 public class CoveredColumn extends ColumnReference {
 
@@ -32,7 +32,7 @@ public class CoveredColumn extends ColumnReference {
   String familyString;
   private final int hashCode;
 
-  public CoveredColumn(byte[] family, byte[] qualifier){
+  public CoveredColumn(byte[] family, byte[] qualifier) {
     this(Bytes.toString(family), qualifier);
   }
 
@@ -67,7 +67,8 @@ public class CoveredColumn extends ColumnReference {
 
   /**
    * @param family2 to check
-   * @return <tt>true</tt> if the passed family matches the family this column covers
+   * @return <tt>true</tt> if the passed family matches the family this column
+   * covers
    */
   public boolean matchesFamily(String family2) {
     return this.familyString.equals(family2);
@@ -90,12 +91,22 @@ public class CoveredColumn extends ColumnReference {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!super.equals(obj)) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
     CoveredColumn other = (CoveredColumn) obj;
-    if (hashCode != other.hashCode) return false;
-    if (!familyString.equals(other.familyString)) return false;
+    if (hashCode != other.hashCode) {
+      return false;
+    }
+    if (!familyString.equals(other.familyString)) {
+      return false;
+    }
     return Bytes.equals(getQualifier(), other.getQualifier());
   }
 

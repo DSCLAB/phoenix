@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -39,156 +38,159 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * This class starts JMX stats for the configured monitors.
- * Monitors should be configured in MonitorDetails Enum.
- * Each stat implements {@link org.apache.phoenix.pherf.jmx.monitors.Monitor}.
- * For the duration of any Pherf run, when the configured
- * {@link org.apache.phoenix.pherf.PherfConstants#MONITOR_FREQUENCY} is reached a snapshot of
- * each monitor is taken and dumped out to a log file.
+ * This class starts JMX stats for the configured monitors. Monitors should be
+ * configured in MonitorDetails Enum. Each stat implements
+ * {@link org.apache.phoenix.pherf.jmx.monitors.Monitor}. For the duration of
+ * any Pherf run, when the configured
+ * {@link org.apache.phoenix.pherf.PherfConstants#MONITOR_FREQUENCY} is reached
+ * a snapshot of each monitor is taken and dumped out to a log file.
  */
 public class MonitorManager implements Workload {
-    // List of MonitorDetails for all the running monitors.
-    // TODO Move this out to config. Possible use Guice and use IOC to inject it in.
-    private static final List<MonitorDetails>
-            MONITOR_DETAILS_LIST =
-            Arrays.asList(MonitorDetails.values());
-    private final ResultHandler resultHandler;
-    private final AtomicLong monitorFrequency;
-    private final AtomicLong rowCount;
-    private final AtomicBoolean shouldStop = new AtomicBoolean(false);
-    private final AtomicBoolean isRunning = new AtomicBoolean(false);
+  // List of MonitorDetails for all the running monitors.
+  // TODO Move this out to config. Possible use Guice and use IOC to inject it in.
 
-    @SuppressWarnings("unused") public MonitorManager() throws Exception {
-        this(PherfConstants.MONITOR_FREQUENCY);
+  private static final List<MonitorDetails> MONITOR_DETAILS_LIST
+          = Arrays.asList(MonitorDetails.values());
+  private final ResultHandler resultHandler;
+  private final AtomicLong monitorFrequency;
+  private final AtomicLong rowCount;
+  private final AtomicBoolean shouldStop = new AtomicBoolean(false);
+  private final AtomicBoolean isRunning = new AtomicBoolean(false);
+
+  @SuppressWarnings("unused")
+  public MonitorManager() throws Exception {
+    this(PherfConstants.MONITOR_FREQUENCY);
+  }
+
+  /**
+   * @param monitorFrequency Frequency at which monitor stats are written to a
+   * log file.
+   * @throws Exception
+   */
+  public MonitorManager(long monitorFrequency) throws Exception {
+    this.monitorFrequency = new AtomicLong(monitorFrequency);
+    MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+    // Register all the monitors to JMX
+    for (MonitorDetails monitorDetails : MONITOR_DETAILS_LIST) {
+      StandardMBean bean = new StandardMBean(monitorDetails.getMonitor(), Monitor.class);
+      ObjectName monitorThreadStatName = new ObjectName(monitorDetails.toString());
+      try {
+        mbs.registerMBean(bean, monitorThreadStatName);
+      } catch (InstanceAlreadyExistsException e) {
+        mbs.unregisterMBean(monitorThreadStatName);
+        mbs.registerMBean(bean, monitorThreadStatName);
+      }
     }
+    rowCount = new AtomicLong(0);
+    this.resultHandler = new CSVFileResultHandler();
+    this.resultHandler.setResultFileDetails(ResultFileDetails.CSV);
+    this.resultHandler.setResultFileName(PherfConstants.MONITOR_FILE_NAME);
+  }
 
-    /**
-     * @param monitorFrequency Frequency at which monitor stats are written to a log file.
-     * @throws Exception
-     */
-    public MonitorManager(long monitorFrequency) throws Exception {
-        this.monitorFrequency = new AtomicLong(monitorFrequency);
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+  @Override
+  public synchronized void complete() {
+    this.shouldStop.set(true);
+  }
 
-        // Register all the monitors to JMX
-        for (MonitorDetails monitorDetails : MONITOR_DETAILS_LIST) {
-            StandardMBean bean = new StandardMBean(monitorDetails.getMonitor(), Monitor.class);
-            ObjectName monitorThreadStatName = new ObjectName(monitorDetails.toString());
-            try {
-                mbs.registerMBean(bean, monitorThreadStatName);
-            } catch (InstanceAlreadyExistsException e) {
-                mbs.unregisterMBean(monitorThreadStatName);
-                mbs.registerMBean(bean, monitorThreadStatName);
-            }
-        }
-        rowCount = new AtomicLong(0);
-        this.resultHandler = new CSVFileResultHandler();
-        this.resultHandler.setResultFileDetails(ResultFileDetails.CSV);
-        this.resultHandler.setResultFileName(PherfConstants.MONITOR_FILE_NAME);
-    }
-
-    @Override public synchronized void complete() {
-        this.shouldStop.set(true);
-    }
-
-    @Override public Runnable execute() {
-        return new Runnable() {
-            @Override public void run() {
-                try {
-                    while (!shouldStop()) {
-                        isRunning.set(true);
-                        List rowValues = new ArrayList<String>();
-                        synchronized (resultHandler) {
-                            for (MonitorDetails monitorDetails : MONITOR_DETAILS_LIST) {
-                                rowValues.clear();
-                                try {
-                                    StandardMBean
-                                            bean =
-                                            new StandardMBean(monitorDetails.getMonitor(),
-                                                    Monitor.class);
-
-                                    Calendar calendar = new GregorianCalendar();
-                                    rowValues.add(monitorDetails);
-
-                                    rowValues.add(((Monitor) bean.getImplementation()).getStat());
-                                    rowValues.add(DateUtil.DEFAULT_MS_DATE_FORMATTER
-                                            .format(calendar.getTime()));
-                                    Result
-                                            result =
-                                            new Result(ResultFileDetails.CSV,
-                                                    ResultFileDetails.CSV_MONITOR.getHeader()
-                                                            .toString(), rowValues);
-                                    resultHandler.write(result);
-                                } catch (Exception e) {
-                                    throw new FileLoaderRuntimeException(
-                                            "Could not log monitor result.", e);
-                                }
-                                rowCount.getAndIncrement();
-                            }
-                            try {
-                                resultHandler.flush();
-                                Thread.sleep(getMonitorFrequency());
-                            } catch (Exception e) {
-                                Thread.currentThread().interrupt();
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                } finally {
-                    try {
-                        isRunning.set(false);
-                        if (resultHandler != null) {
-                            resultHandler.close();
-                        }
-                    } catch (Exception e) {
-                        throw new FileLoaderRuntimeException("Could not close monitor results.", e);
-                    }
-                }
-            }
-        };
-    }
-
-    public long getMonitorFrequency() {
-        return monitorFrequency.get();
-    }
-
-    public boolean shouldStop() {
-        return shouldStop.get();
-    }
-
-    // Convenience method for testing.
-    @SuppressWarnings("unused")
-    public long getRowCount() {
-        return rowCount.get();
-    }
-
-    public boolean isRunning() {
-        return isRunning.get();
-    }
-
-    /**
-     * This method should really only be used for testing
-     *
-     * @return List < {@link org.apache.phoenix.pherf.result.Result} >
-     * @throws IOException
-     */
-    public synchronized List<Result> readResults() throws Exception {
-        ResultHandler handler = null;
+  @Override
+  public Runnable execute() {
+    return new Runnable() {
+      @Override
+      public void run() {
         try {
-            if (resultHandler.isClosed()) {
-                handler = new CSVFileResultHandler();
-                handler.setResultFileDetails(ResultFileDetails.CSV);
-                handler.setResultFileName(PherfConstants.MONITOR_FILE_NAME);
-                return handler.read();
-            } else {
-                return resultHandler.read();
+          while (!shouldStop()) {
+            isRunning.set(true);
+            List rowValues = new ArrayList<String>();
+            synchronized (resultHandler) {
+              for (MonitorDetails monitorDetails : MONITOR_DETAILS_LIST) {
+                rowValues.clear();
+                try {
+                  StandardMBean bean
+                          = new StandardMBean(monitorDetails.getMonitor(),
+                                  Monitor.class);
+
+                  Calendar calendar = new GregorianCalendar();
+                  rowValues.add(monitorDetails);
+
+                  rowValues.add(((Monitor) bean.getImplementation()).getStat());
+                  rowValues.add(DateUtil.DEFAULT_MS_DATE_FORMATTER
+                          .format(calendar.getTime()));
+                  Result result
+                          = new Result(ResultFileDetails.CSV,
+                                  ResultFileDetails.CSV_MONITOR.getHeader()
+                                          .toString(), rowValues);
+                  resultHandler.write(result);
+                } catch (Exception e) {
+                  throw new FileLoaderRuntimeException(
+                          "Could not log monitor result.", e);
+                }
+                rowCount.getAndIncrement();
+              }
+              try {
+                resultHandler.flush();
+                Thread.sleep(getMonitorFrequency());
+              } catch (Exception e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
+              }
             }
-        } catch (Exception e) {
-            throw new FileLoaderRuntimeException("Could not close monitor results.", e);
+          }
         } finally {
-            if (handler != null) {
-                handler.close();
+          try {
+            isRunning.set(false);
+            if (resultHandler != null) {
+              resultHandler.close();
             }
+          } catch (Exception e) {
+            throw new FileLoaderRuntimeException("Could not close monitor results.", e);
+          }
         }
+      }
+    };
+  }
+
+  public long getMonitorFrequency() {
+    return monitorFrequency.get();
+  }
+
+  public boolean shouldStop() {
+    return shouldStop.get();
+  }
+
+  // Convenience method for testing.
+  @SuppressWarnings("unused")
+  public long getRowCount() {
+    return rowCount.get();
+  }
+
+  public boolean isRunning() {
+    return isRunning.get();
+  }
+
+  /**
+   * This method should really only be used for testing
+   *
+   * @return List < {@link org.apache.phoenix.pherf.result.Result} >
+   * @throws IOException
+   */
+  public synchronized List<Result> readResults() throws Exception {
+    ResultHandler handler = null;
+    try {
+      if (resultHandler.isClosed()) {
+        handler = new CSVFileResultHandler();
+        handler.setResultFileDetails(ResultFileDetails.CSV);
+        handler.setResultFileName(PherfConstants.MONITOR_FILE_NAME);
+        return handler.read();
+      } else {
+        return resultHandler.read();
+      }
+    } catch (Exception e) {
+      throw new FileLoaderRuntimeException("Could not close monitor results.", e);
+    } finally {
+      if (handler != null) {
+        handler.close();
+      }
     }
+  }
 }

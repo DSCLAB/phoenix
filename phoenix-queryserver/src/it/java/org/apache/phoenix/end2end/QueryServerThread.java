@@ -20,7 +20,9 @@ package org.apache.phoenix.end2end;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.phoenix.queryserver.server.QueryServer;
 
-/** Wraps up the query server for tests. */
+/**
+ * Wraps up the query server for tests.
+ */
 public class QueryServerThread extends Thread {
 
   private final QueryServer main;

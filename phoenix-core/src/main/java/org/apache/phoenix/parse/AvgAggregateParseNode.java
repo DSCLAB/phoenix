@@ -24,23 +24,22 @@ import org.apache.phoenix.compile.StatementContext;
 import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.*;
 
-
 public class AvgAggregateParseNode extends AggregateFunctionParseNode {
 
-    public AvgAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
+  public AvgAggregateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
+
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    SumAggregateFunction sumFunc;
+    CountAggregateFunction countFunc = (CountAggregateFunction) context.getExpressionManager().addIfAbsent(new CountAggregateFunction(children));
+    if (!countFunc.isConstantExpression()) {
+      sumFunc = (SumAggregateFunction) context.getExpressionManager().addIfAbsent(new SumAggregateFunction(countFunc.getChildren(), null));
+    } else {
+      sumFunc = null;
     }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        SumAggregateFunction sumFunc;
-        CountAggregateFunction countFunc = (CountAggregateFunction)context.getExpressionManager().addIfAbsent(new CountAggregateFunction(children));
-        if (!countFunc.isConstantExpression()) {
-            sumFunc = (SumAggregateFunction)context.getExpressionManager().addIfAbsent(new SumAggregateFunction(countFunc.getChildren(),null));
-        } else {
-            sumFunc = null;
-        }
-
-        return new AvgAggregateFunction(children, countFunc, sumFunc);
-    }
+    return new AvgAggregateFunction(children, countFunc, sumFunc);
+  }
 }

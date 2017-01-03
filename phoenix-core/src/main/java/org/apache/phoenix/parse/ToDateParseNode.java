@@ -26,23 +26,22 @@ import org.apache.phoenix.expression.LiteralExpression;
 import org.apache.phoenix.expression.function.FunctionExpression;
 import org.apache.phoenix.expression.function.ToDateFunction;
 
-
 public class ToDateParseNode extends FunctionParseNode {
 
-    public ToDateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
-        super(name, children, info);
-    }
+  public ToDateParseNode(String name, List<ParseNode> children, BuiltInFunctionInfo info) {
+    super(name, children, info);
+  }
 
-    @Override
-    public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
-        String dateFormat = (String) ((LiteralExpression) children.get(1)).getValue();
-        String timeZoneId = (String) ((LiteralExpression) children.get(2)).getValue();
-        if (dateFormat == null) {
-            dateFormat = context.getDateFormat();
-        }
-        if (timeZoneId == null) {
-            timeZoneId = context.getDateFormatTimeZone().getID();
-        }
-        return new ToDateFunction(children, dateFormat, timeZoneId);
+  @Override
+  public FunctionExpression create(List<Expression> children, StatementContext context) throws SQLException {
+    String dateFormat = (String) ((LiteralExpression) children.get(1)).getValue();
+    String timeZoneId = (String) ((LiteralExpression) children.get(2)).getValue();
+    if (dateFormat == null) {
+      dateFormat = context.getDateFormat();
     }
+    if (timeZoneId == null) {
+      timeZoneId = context.getDateFormatTimeZone().getID();
+    }
+    return new ToDateFunction(children, dateFormat, timeZoneId);
+  }
 }

@@ -23,20 +23,21 @@ import org.apache.phoenix.expression.Expression;
 import org.joda.time.DateTime;
 
 /**
- * 
+ *
  * Rounds off the given {@link DateTime} to year.
  */
 public class RoundYearExpression extends RoundJodaDateExpression {
 
-    public RoundYearExpression(){}
-    
-    public RoundYearExpression(List<Expression> children) {
-       super(children);
-    }
-    
-    @Override
-    public long roundDateTime(DateTime dateTime) {
-        return dateTime.year().roundHalfEvenCopy().getMillis();
-    }
+  public RoundYearExpression() {
+  }
+
+  public RoundYearExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public long roundDateTime(DateTime dateTime) {
+    return dateTime.year().roundHalfEvenCopy().getMillis();
+  }
 
 }

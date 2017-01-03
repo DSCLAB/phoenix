@@ -31,58 +31,58 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
 public abstract class BaseStddevAggregator extends DistinctValueWithCountClientAggregator {
 
-    protected Expression stdDevColExp;
+  protected Expression stdDevColExp;
 
-    public BaseStddevAggregator(List<Expression> exps, SortOrder sortOrder) {
-        super(sortOrder);
-        this.stdDevColExp = exps.get(0);
-    }
+  public BaseStddevAggregator(List<Expression> exps, SortOrder sortOrder) {
+    super(sortOrder);
+    this.stdDevColExp = exps.get(0);
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (cachedResult == null) {
-            double ssd = sumSquaredDeviation();
-            double result = Math.sqrt(ssd / getDataPointsCount());
-            cachedResult = new BigDecimal(result);
-        }
-        if (buffer == null) {
-            initBuffer();
-        }
-        buffer = PDecimal.INSTANCE.toBytes(cachedResult);
-        ptr.set(buffer);
-        return true;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (cachedResult == null) {
+      double ssd = sumSquaredDeviation();
+      double result = Math.sqrt(ssd / getDataPointsCount());
+      cachedResult = new BigDecimal(result);
     }
-    
-    protected abstract long getDataPointsCount();
-    
-    private double sumSquaredDeviation() {
-        double m = mean();
-        double result = 0.0;
-        for (Entry<ImmutableBytesPtr, Integer> entry : valueVsCount.entrySet()) {
-            double colValue = (Double) PDouble.INSTANCE.toObject(entry.getKey(), this.stdDevColExp.getDataType());
-            double delta = colValue - m;
-            result += (delta * delta) * entry.getValue();
-        }
-        return result;
+    if (buffer == null) {
+      initBuffer();
     }
+    buffer = PDecimal.INSTANCE.toBytes(cachedResult);
+    ptr.set(buffer);
+    return true;
+  }
 
-    private double mean() {
-        double sum = 0.0;
-        for (Entry<ImmutableBytesPtr, Integer> entry : valueVsCount.entrySet()) {
-            double colValue = (Double) PDouble.INSTANCE.toObject(entry.getKey(), this.stdDevColExp.getDataType());
-            sum += colValue * entry.getValue();
-        }
-        return sum / totalCount;
+  protected abstract long getDataPointsCount();
+
+  private double sumSquaredDeviation() {
+    double m = mean();
+    double result = 0.0;
+    for (Entry<ImmutableBytesPtr, Integer> entry : valueVsCount.entrySet()) {
+      double colValue = (Double) PDouble.INSTANCE.toObject(entry.getKey(), this.stdDevColExp.getDataType());
+      double delta = colValue - m;
+      result += (delta * delta) * entry.getValue();
     }
-    
-    @Override
-    protected PDataType getResultDataType() {
-        return PDecimal.INSTANCE;
+    return result;
+  }
+
+  private double mean() {
+    double sum = 0.0;
+    for (Entry<ImmutableBytesPtr, Integer> entry : valueVsCount.entrySet()) {
+      double colValue = (Double) PDouble.INSTANCE.toObject(entry.getKey(), this.stdDevColExp.getDataType());
+      sum += colValue * entry.getValue();
     }
+    return sum / totalCount;
+  }
+
+  @Override
+  protected PDataType getResultDataType() {
+    return PDecimal.INSTANCE;
+  }
 }

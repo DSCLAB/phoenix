@@ -15,18 +15,18 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.jmx;
 
-public class Stat <T>{
-    private final T stat;
+public class Stat<T> {
 
-    public Stat(T stat) {
-        this.stat = stat;
-    }
+  private final T stat;
 
-    @Override
-    public String toString() {
-        return stat.toString();
-    }
+  public Stat(T stat) {
+    this.stat = stat;
+  }
+
+  @Override
+  public String toString() {
+    return stat.toString();
+  }
 }

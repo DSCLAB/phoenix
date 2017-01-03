@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression.function;
 
 import java.util.List;
@@ -27,28 +26,29 @@ import org.apache.phoenix.schema.TypeMismatchException;
 import org.apache.phoenix.schema.types.*;
 
 @FunctionParseNode.BuiltInFunction(name = ArrayPrependFunction.NAME, args = {
-        @FunctionParseNode.Argument(allowedTypes = {PVarbinary.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PVarbinary.class})
+  ,
         @FunctionParseNode.Argument(allowedTypes = {PBinaryArray.class, PVarbinaryArray.class})})
 public class ArrayPrependFunction extends ArrayModifierFunction {
 
-    public static final String NAME = "ARRAY_PREPEND";
+  public static final String NAME = "ARRAY_PREPEND";
 
-    public ArrayPrependFunction() {
-    }
+  public ArrayPrependFunction() {
+  }
 
-    public ArrayPrependFunction(List<Expression> children) throws TypeMismatchException {
-        super(children);
-    }
+  public ArrayPrependFunction(List<Expression> children) throws TypeMismatchException {
+    super(children);
+  }
 
-    @Override
-    protected boolean modifierFunction(ImmutableBytesWritable ptr, int len, int offset,
-                                       byte[] arrayBytes, PDataType baseDataType, int arrayLength, Integer maxLength,
-                                       Expression arrayExp) {
-        return PArrayDataType.prependItemToArray(ptr, len, offset, arrayBytes, baseDataType, arrayLength, getMaxLength(), arrayExp.getSortOrder());
-    }
+  @Override
+  protected boolean modifierFunction(ImmutableBytesWritable ptr, int len, int offset,
+          byte[] arrayBytes, PDataType baseDataType, int arrayLength, Integer maxLength,
+          Expression arrayExp) {
+    return PArrayDataType.prependItemToArray(ptr, len, offset, arrayBytes, baseDataType, arrayLength, getMaxLength(), arrayExp.getSortOrder());
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

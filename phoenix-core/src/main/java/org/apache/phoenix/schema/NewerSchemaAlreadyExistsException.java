@@ -18,9 +18,10 @@
 package org.apache.phoenix.schema;
 
 public class NewerSchemaAlreadyExistsException extends SchemaAlreadyExistsException {
-    private static final long serialVersionUID = 1L;
 
-    public NewerSchemaAlreadyExistsException(String schemaName) {
-        super(schemaName);
-    }
+  private static final long serialVersionUID = 1L;
+
+  public NewerSchemaAlreadyExistsException(String schemaName) {
+    super(schemaName);
+  }
 }

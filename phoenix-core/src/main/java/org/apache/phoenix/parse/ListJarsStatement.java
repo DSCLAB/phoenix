@@ -21,14 +21,14 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class ListJarsStatement implements BindableStatement {
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    @Override
-    public Operation getOperation() {
-        return Operation.QUERY;
-    }
+  @Override
+  public Operation getOperation() {
+    return Operation.QUERY;
+  }
 
 }

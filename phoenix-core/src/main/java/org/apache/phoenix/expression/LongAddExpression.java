@@ -24,42 +24,41 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PLong;
 
-
 public class LongAddExpression extends AddExpression {
 
-    public LongAddExpression() {
-    }
+  public LongAddExpression() {
+  }
 
-    public LongAddExpression(List<Expression> children) {
-        super(children);
-    }
+  public LongAddExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        long finalResult=0;
-        
-        for(int i=0;i<children.size();i++) {
-            Expression child = children.get(i);
-            if (!child.evaluate(tuple, ptr) || ptr.getLength() == 0) {
-                return false;
-            }
-            long childvalue = child.getDataType().getCodec().decodeLong(ptr, child.getSortOrder());
-            finalResult += childvalue;
-        }
-        byte[] resultPtr=new byte[PLong.INSTANCE.getByteSize()];
-        getDataType().getCodec().encodeLong(finalResult, resultPtr, 0);
-        ptr.set(resultPtr);
-        return true;
-    }
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    long finalResult = 0;
 
-    @Override
-    public final PDataType getDataType() {
-        return PLong.INSTANCE;
+    for (int i = 0; i < children.size(); i++) {
+      Expression child = children.get(i);
+      if (!child.evaluate(tuple, ptr) || ptr.getLength() == 0) {
+        return false;
+      }
+      long childvalue = child.getDataType().getCodec().decodeLong(ptr, child.getSortOrder());
+      finalResult += childvalue;
     }
+    byte[] resultPtr = new byte[PLong.INSTANCE.getByteSize()];
+    getDataType().getCodec().encodeLong(finalResult, resultPtr, 0);
+    ptr.set(resultPtr);
+    return true;
+  }
 
-    @Override
-    public ArithmeticExpression clone(List<Expression> children) {
-        return new LongAddExpression(children);
-    }
+  @Override
+  public final PDataType getDataType() {
+    return PLong.INSTANCE;
+  }
+
+  @Override
+  public ArithmeticExpression clone(List<Expression> children) {
+    return new LongAddExpression(children);
+  }
 
 }

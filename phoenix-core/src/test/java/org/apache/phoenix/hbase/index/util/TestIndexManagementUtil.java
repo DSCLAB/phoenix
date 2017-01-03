@@ -40,6 +40,7 @@ public class TestIndexManagementUtil {
 
   /**
    * Compressed WALs are supported when we have the WALEditCodec installed
+   *
    * @throws Exception
    */
   @Test
@@ -53,6 +54,7 @@ public class TestIndexManagementUtil {
 
   /**
    * We cannot support WAL Compression with the IndexedHLogReader
+   *
    * @throws Exception
    */
   @Test(expected = IllegalStateException.class)

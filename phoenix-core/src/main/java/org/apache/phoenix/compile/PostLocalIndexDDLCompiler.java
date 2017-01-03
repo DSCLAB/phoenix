@@ -46,68 +46,69 @@ import com.google.common.collect.Lists;
  * rows as we scan
  */
 public class PostLocalIndexDDLCompiler {
-	private final PhoenixConnection connection;
-    private final String tableName;
-    
-    public PostLocalIndexDDLCompiler(PhoenixConnection connection, String tableName) {
-        this.connection = connection;
-        this.tableName = tableName;
-    }
 
-	public MutationPlan compile(PTable index) throws SQLException {
-		try (final PhoenixStatement statement = new PhoenixStatement(connection)) {
-            String query = "SELECT count(*) FROM " + tableName;
-            final QueryPlan plan = statement.compileQuery(query);
-            TableRef tableRef = plan.getTableRef();
-            Scan scan = plan.getContext().getScan();
-            ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-            final PTable dataTable = tableRef.getTable();
-            List<PTable> indexes = Lists.newArrayListWithExpectedSize(1);
-            for (PTable indexTable : dataTable.getIndexes()) {
-                if (indexTable.getKey().equals(index.getKey())) {
-                    index = indexTable;
-                    break;
-                }
-            }
-            // Only build newly created index.
-            indexes.add(index);
-            IndexMaintainer.serialize(dataTable, ptr, indexes, plan.getContext().getConnection());
-            // Set attribute on scan that UngroupedAggregateRegionObserver will switch on.
-            // We'll detect that this attribute was set the server-side and write the index
-            // rows per region as a result. The value of the attribute will be our persisted
-            // index maintainers.
-            // Define the LOCAL_INDEX_BUILD as a new static in BaseScannerRegionObserver
-            scan.setAttribute(BaseScannerRegionObserver.LOCAL_INDEX_BUILD, ByteUtil.copyKeyBytesIfNecessary(ptr));
-            // By default, we'd use a FirstKeyOnly filter as nothing else needs to be projected for count(*).
-            // However, in this case, we need to project all of the data columns that contribute to the index.
-            IndexMaintainer indexMaintainer = index.getIndexMaintainer(dataTable, connection);
-            for (ColumnReference columnRef : indexMaintainer.getAllColumns()) {
-                scan.addColumn(columnRef.getFamily(), columnRef.getQualifier());
-            }
+  private final PhoenixConnection connection;
+  private final String tableName;
 
-            // Go through MutationPlan abstraction so that we can create local indexes
-            // with a connectionless connection (which makes testing easier).
-            return new BaseMutationPlan(plan.getContext(), Operation.UPSERT) {
+  public PostLocalIndexDDLCompiler(PhoenixConnection connection, String tableName) {
+    this.connection = connection;
+    this.tableName = tableName;
+  }
 
-                @Override
-                public MutationState execute() throws SQLException {
-                    connection.getMutationState().commitDDLFence(dataTable);
-                    Tuple tuple = plan.iterator().next();
-                    long rowCount = 0;
-                    if (tuple != null) {
-                        Cell kv = tuple.getValue(0);
-                        ImmutableBytesWritable tmpPtr = new ImmutableBytesWritable(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
-                        // A single Cell will be returned with the count(*) - we decode that here
-                        rowCount = PLong.INSTANCE.getCodec().decodeLong(tmpPtr, SortOrder.getDefault());
-                    }
-                    // The contract is to return a MutationState that contains the number of rows modified. In this
-                    // case, it's the number of rows in the data table which corresponds to the number of index
-                    // rows that were added.
-                    return new MutationState(0, connection, rowCount);
-                }
-
-            };
+  public MutationPlan compile(PTable index) throws SQLException {
+    try (final PhoenixStatement statement = new PhoenixStatement(connection)) {
+      String query = "SELECT count(*) FROM " + tableName;
+      final QueryPlan plan = statement.compileQuery(query);
+      TableRef tableRef = plan.getTableRef();
+      Scan scan = plan.getContext().getScan();
+      ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+      final PTable dataTable = tableRef.getTable();
+      List<PTable> indexes = Lists.newArrayListWithExpectedSize(1);
+      for (PTable indexTable : dataTable.getIndexes()) {
+        if (indexTable.getKey().equals(index.getKey())) {
+          index = indexTable;
+          break;
         }
-	}
-	
+      }
+      // Only build newly created index.
+      indexes.add(index);
+      IndexMaintainer.serialize(dataTable, ptr, indexes, plan.getContext().getConnection());
+      // Set attribute on scan that UngroupedAggregateRegionObserver will switch on.
+      // We'll detect that this attribute was set the server-side and write the index
+      // rows per region as a result. The value of the attribute will be our persisted
+      // index maintainers.
+      // Define the LOCAL_INDEX_BUILD as a new static in BaseScannerRegionObserver
+      scan.setAttribute(BaseScannerRegionObserver.LOCAL_INDEX_BUILD, ByteUtil.copyKeyBytesIfNecessary(ptr));
+      // By default, we'd use a FirstKeyOnly filter as nothing else needs to be projected for count(*).
+      // However, in this case, we need to project all of the data columns that contribute to the index.
+      IndexMaintainer indexMaintainer = index.getIndexMaintainer(dataTable, connection);
+      for (ColumnReference columnRef : indexMaintainer.getAllColumns()) {
+        scan.addColumn(columnRef.getFamily(), columnRef.getQualifier());
+      }
+
+      // Go through MutationPlan abstraction so that we can create local indexes
+      // with a connectionless connection (which makes testing easier).
+      return new BaseMutationPlan(plan.getContext(), Operation.UPSERT) {
+
+        @Override
+        public MutationState execute() throws SQLException {
+          connection.getMutationState().commitDDLFence(dataTable);
+          Tuple tuple = plan.iterator().next();
+          long rowCount = 0;
+          if (tuple != null) {
+            Cell kv = tuple.getValue(0);
+            ImmutableBytesWritable tmpPtr = new ImmutableBytesWritable(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
+            // A single Cell will be returned with the count(*) - we decode that here
+            rowCount = PLong.INSTANCE.getCodec().decodeLong(tmpPtr, SortOrder.getDefault());
+          }
+          // The contract is to return a MutationState that contains the number of rows modified. In this
+          // case, it's the number of rows in the data table which corresponds to the number of index
+          // rows that were added.
+          return new MutationState(0, connection, rowCount);
+        }
+
+      };
+    }
+  }
+
 }

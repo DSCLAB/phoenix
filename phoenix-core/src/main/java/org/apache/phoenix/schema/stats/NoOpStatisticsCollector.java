@@ -31,42 +31,44 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * A drop-in statistics collector that does nothing. An instance of this class is used for tables
- * or environments where statistics collection is disabled.
+ * A drop-in statistics collector that does nothing. An instance of this class
+ * is used for tables or environments where statistics collection is disabled.
  */
 public class NoOpStatisticsCollector implements StatisticsCollector {
 
-    @Override
-    public long getMaxTimeStamp() {
-        return NO_TIMESTAMP;
-    }
+  @Override
+  public long getMaxTimeStamp() {
+    return NO_TIMESTAMP;
+  }
 
-    @Override
-    public void close() throws IOException {
-        // No-op
-    }
+  @Override
+  public void close() throws IOException {
+    // No-op
+  }
 
-    @Override
-    public void updateStatistic(Region region) {
-        // No-op
-    }
+  @Override
+  public void updateStatistic(Region region) {
+    // No-op
+  }
 
-    @Override
-    public void collectStatistics(List<Cell> results) {
-        // No-op
-    }
+  @Override
+  public void collectStatistics(List<Cell> results) {
+    // No-op
+  }
 
-    @Override
-    public InternalScanner createCompactionScanner(RegionCoprocessorEnvironment env, Store store,
-            InternalScanner delegate) throws IOException {
-        return delegate;
-    }
+  @Override
+  public InternalScanner createCompactionScanner(RegionCoprocessorEnvironment env, Store store,
+          InternalScanner delegate) throws IOException {
+    return delegate;
+  }
 
-    @Override public void clear() {
-        // No-op
-    }
+  @Override
+  public void clear() {
+    // No-op
+  }
 
-    @Override public GuidePostsInfo getGuidePosts(ImmutableBytesPtr fam) {
-        return null;
-    }
+  @Override
+  public GuidePostsInfo getGuidePosts(ImmutableBytesPtr fam) {
+    return null;
+  }
 }

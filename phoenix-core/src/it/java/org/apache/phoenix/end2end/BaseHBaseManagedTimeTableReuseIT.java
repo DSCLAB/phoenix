@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.end2end;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -28,18 +27,16 @@ import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 
 /**
- * Base class for tests that let HBase set timestamps.
- * We need to separate these from tests that rely on clients
- * to set timestamps, because we create/destroy the Phoenix tables
- * between tests and only allow a table time stamp to increase.
- * Without this separation table deletion/creation would fail.
+ * Base class for tests that let HBase set timestamps. We need to separate these
+ * from tests that rely on clients to set timestamps, because we create/destroy
+ * the Phoenix tables between tests and only allow a table time stamp to
+ * increase. Without this separation table deletion/creation would fail.
  *
- * All tests extending this class use the mini cluster that is
- * shared by all classes extending this class
+ * All tests extending this class use the mini cluster that is shared by all
+ * classes extending this class
  *
- * Remember to use BaseTest.generateRandomString() to generate table
- * names for your tests otherwise there might be naming collisions between
- * other tests.
+ * Remember to use BaseTest.generateRandomString() to generate table names for
+ * your tests otherwise there might be naming collisions between other tests.
  * {@link BaseClientManagedTimeIT}.
  *
  * @since 0.1
@@ -48,21 +45,21 @@ import org.junit.experimental.categories.Category;
 @Category(HBaseManagedTimeTableReuseTest.class)
 public class BaseHBaseManagedTimeTableReuseIT extends BaseTest {
 
-    @BeforeClass
-    public static void doSetup() throws Exception {
-        setUpTestDriver(ReadOnlyProps.EMPTY_PROPS);
-    }
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    setUpTestDriver(ReadOnlyProps.EMPTY_PROPS);
+  }
 
-    @AfterClass
-    public static void doTeardown() throws Exception {
-        // no teardown since we are creating unique table names
-        // just destroy our test driver
-        destroyDriver();
-    }
+  @AfterClass
+  public static void doTeardown() throws Exception {
+    // no teardown since we are creating unique table names
+    // just destroy our test driver
+    destroyDriver();
+  }
 
-    @After
-    public void cleanUpAfterTest() throws Exception {
-        // no cleanup since we are using unique table names
-    }
+  @After
+  public void cleanUpAfterTest() throws Exception {
+    // no cleanup since we are using unique table names
+  }
 
 }

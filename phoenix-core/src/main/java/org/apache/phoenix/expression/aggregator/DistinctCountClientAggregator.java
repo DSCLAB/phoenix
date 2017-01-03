@@ -26,32 +26,32 @@ import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
  * Client side Aggregator for DISTINCT COUNT aggregations
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
 public class DistinctCountClientAggregator extends DistinctValueWithCountClientAggregator {
 
-    public DistinctCountClientAggregator(SortOrder sortOrder) {
-        super(sortOrder);
-    }
+  public DistinctCountClientAggregator(SortOrder sortOrder) {
+    super(sortOrder);
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (buffer == null) {
-            initBuffer();
-        }
-        if (cachedResult != null) {
-            buffer = PLong.INSTANCE.toBytes(cachedResult);
-        } else {
-            buffer = PLong.INSTANCE.toBytes(this.valueVsCount.size());
-        }
-        ptr.set(buffer);
-        return true;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (buffer == null) {
+      initBuffer();
     }
+    if (cachedResult != null) {
+      buffer = PLong.INSTANCE.toBytes(cachedResult);
+    } else {
+      buffer = PLong.INSTANCE.toBytes(this.valueVsCount.size());
+    }
+    ptr.set(buffer);
+    return true;
+  }
 
-    @Override
-    protected PDataType getResultDataType() {
-        return PLong.INSTANCE;
-    }
+  @Override
+  protected PDataType getResultDataType() {
+    return PLong.INSTANCE;
+  }
 }

@@ -37,41 +37,43 @@ import org.apache.phoenix.util.DateUtil;
  */
 class StringToArrayConverter {
 
-    private final Splitter splitter;
-    private final Connection conn;
-    private final PDataType elementDataType;
-    private final CsvUpsertExecutor.SimpleDatatypeConversionFunction elementConvertFunction;
+  private final Splitter splitter;
+  private final Connection conn;
+  private final PDataType elementDataType;
+  private final CsvUpsertExecutor.SimpleDatatypeConversionFunction elementConvertFunction;
 
-    /**
-     * Instantiate with the array value separator and data type.
-     *
-     * @param conn Phoenix connection to target database
-     * @param separatorString string used to separate incoming array values in strings
-     * @param elementDataType datatype of the elements of arrays to be created
-     */
-    public StringToArrayConverter(Connection conn, String separatorString,
-            PDataType elementDataType) {
-        this.conn = conn;
-        this.splitter = Splitter.on(separatorString);
-        this.elementDataType = elementDataType;
-        this.elementConvertFunction = new CsvUpsertExecutor.SimpleDatatypeConversionFunction(elementDataType, this.conn);
-    }
+  /**
+   * Instantiate with the array value separator and data type.
+   *
+   * @param conn Phoenix connection to target database
+   * @param separatorString string used to separate incoming array values in
+   * strings
+   * @param elementDataType datatype of the elements of arrays to be created
+   */
+  public StringToArrayConverter(Connection conn, String separatorString,
+          PDataType elementDataType) {
+    this.conn = conn;
+    this.splitter = Splitter.on(separatorString);
+    this.elementDataType = elementDataType;
+    this.elementConvertFunction = new CsvUpsertExecutor.SimpleDatatypeConversionFunction(elementDataType, this.conn);
+  }
 
-    /**
-     * Convert an input delimited string into a phoenix array of the configured type.
-     *
-     * @param input string containing delimited array values
-     * @return the array containing the values represented in the input string
-     */
-    public Array toArray(String input) throws SQLException {
-        if (input == null || input.isEmpty()) {
-            return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
-        }
-        return conn.createArrayOf(
-                elementDataType.getSqlTypeName(),
-                Lists.newArrayList(
-                        Iterables.transform(
-                                splitter.split(input),
-                                elementConvertFunction)).toArray());
+  /**
+   * Convert an input delimited string into a phoenix array of the configured
+   * type.
+   *
+   * @param input string containing delimited array values
+   * @return the array containing the values represented in the input string
+   */
+  public Array toArray(String input) throws SQLException {
+    if (input == null || input.isEmpty()) {
+      return conn.createArrayOf(elementDataType.getSqlTypeName(), new Object[0]);
     }
+    return conn.createArrayOf(
+            elementDataType.getSqlTypeName(),
+            Lists.newArrayList(
+                    Iterables.transform(
+                            splitter.split(input),
+                            elementConvertFunction)).toArray());
+  }
 }

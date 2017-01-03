@@ -19,18 +19,16 @@ package org.apache.phoenix.expression.visitor;
 
 import org.apache.phoenix.expression.KeyValueColumnExpression;
 
-
-
-
 /**
- * 
- * Implementation of ExpressionVisitor where only KeyValueDataAccessor
- * is being visited
  *
- * 
+ * Implementation of ExpressionVisitor where only KeyValueDataAccessor is being
+ * visited
+ *
+ *
  * @since 0.1
  */
 public abstract class KeyValueExpressionVisitor extends StatelessTraverseAllExpressionVisitor<Void> {
-    @Override
-    abstract public Void visit(KeyValueColumnExpression node);
+
+  @Override
+  abstract public Void visit(KeyValueColumnExpression node);
 }

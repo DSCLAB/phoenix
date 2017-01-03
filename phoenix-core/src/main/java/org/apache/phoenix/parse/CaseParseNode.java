@@ -23,45 +23,42 @@ import java.util.List;
 
 import org.apache.phoenix.compile.ColumnResolver;
 
-
-
 /**
- * 
+ *
  * Node representing a CASE in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public class CaseParseNode extends CompoundParseNode {
 
-    CaseParseNode(List<ParseNode> children) {
-        super(children);
-    }
+  CaseParseNode(List<ParseNode> children) {
+    super(children);
+  }
 
-    @Override
-    public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
-        List<T> l = Collections.emptyList();
-        if (visitor.visitEnter(this)) {
-            l = acceptChildren(visitor);
-        }
-        return visitor.visitLeave(this, l);
+  @Override
+  public <T> T accept(ParseNodeVisitor<T> visitor) throws SQLException {
+    List<T> l = Collections.emptyList();
+    if (visitor.visitEnter(this)) {
+      l = acceptChildren(visitor);
     }
+    return visitor.visitLeave(this, l);
+  }
 
-    
-    @Override
-    public void toSQL(ColumnResolver resolver, StringBuilder buf) {
-        buf.append("CASE ");
-        List<ParseNode> children = getChildren();
-        for (int i = 0; i < children.size() - 1; i+=2) {
-            buf.append("WHEN ");
-            children.get(i+1).toSQL(resolver, buf);
-            buf.append(" THEN ");
-            children.get(i).toSQL(resolver, buf);
-        }
-        if (children.size() % 2 != 0) { // has ELSE
-            buf.append(" ELSE ");
-            children.get(children.size()-1).toSQL(resolver, buf);
-        }
-        buf.append(" END ");
+  @Override
+  public void toSQL(ColumnResolver resolver, StringBuilder buf) {
+    buf.append("CASE ");
+    List<ParseNode> children = getChildren();
+    for (int i = 0; i < children.size() - 1; i += 2) {
+      buf.append("WHEN ");
+      children.get(i + 1).toSQL(resolver, buf);
+      buf.append(" THEN ");
+      children.get(i).toSQL(resolver, buf);
     }
+    if (children.size() % 2 != 0) { // has ELSE
+      buf.append(" ELSE ");
+      children.get(children.size() - 1).toSQL(resolver, buf);
+    }
+    buf.append(" END ");
+  }
 }

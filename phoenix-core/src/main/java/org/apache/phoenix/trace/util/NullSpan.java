@@ -26,7 +26,8 @@ import org.apache.htrace.TimelineAnnotation;
 import org.apache.phoenix.util.StringUtil;
 
 /**
- * Fake {@link Span} that doesn't save any state, in place of <tt>null</tt> return values, to avoid
+ * Fake {@link Span} that doesn't save any state, in place of <tt>null</tt>
+ * return values, to avoid
  * <tt>null</tt> check.
  */
 public class NullSpan implements Span {

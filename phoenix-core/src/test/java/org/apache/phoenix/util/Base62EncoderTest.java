@@ -22,24 +22,24 @@ import org.junit.Test;
 
 public class Base62EncoderTest {
 
-    @Test
-    public final void testPowersBase62() {
-        // add 1 since pow62 doesn't contain it
-        long[] pow62 = new long[Base62Encoder.pow62.length + 1];
-        pow62[0] = 1;
-        System.arraycopy(Base62Encoder.pow62, 0, pow62, 1, Base62Encoder.pow62.length);
-        long input = 0l;
-        // test 0
-        assertEquals("Base 62 encoded value for " + input + "  is incorrect ", "0", Base62Encoder.toString(input));
-        StringBuilder expectedValBuilder = new StringBuilder("1");
-        for (int i = 0; i < pow62.length; ++i) {
-            input = pow62[i];
-            assertEquals("Base 62 encoded value for " + input + "  is incorrect ", expectedValBuilder.toString(),
-                Base62Encoder.toString(input));
-            assertEquals("Base 62 encoded value for " + input + "  is incorrect ", "-" + expectedValBuilder.toString(),
-                Base62Encoder.toString(-input));
-            expectedValBuilder.append("0");
-        }
+  @Test
+  public final void testPowersBase62() {
+    // add 1 since pow62 doesn't contain it
+    long[] pow62 = new long[Base62Encoder.pow62.length + 1];
+    pow62[0] = 1;
+    System.arraycopy(Base62Encoder.pow62, 0, pow62, 1, Base62Encoder.pow62.length);
+    long input = 0l;
+    // test 0
+    assertEquals("Base 62 encoded value for " + input + "  is incorrect ", "0", Base62Encoder.toString(input));
+    StringBuilder expectedValBuilder = new StringBuilder("1");
+    for (int i = 0; i < pow62.length; ++i) {
+      input = pow62[i];
+      assertEquals("Base 62 encoded value for " + input + "  is incorrect ", expectedValBuilder.toString(),
+              Base62Encoder.toString(input));
+      assertEquals("Base 62 encoded value for " + input + "  is incorrect ", "-" + expectedValBuilder.toString(),
+              Base62Encoder.toString(-input));
+      expectedValBuilder.append("0");
     }
+  }
 
 }

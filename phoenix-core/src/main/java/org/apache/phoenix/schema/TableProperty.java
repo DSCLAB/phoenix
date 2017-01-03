@@ -36,117 +36,106 @@ import org.apache.phoenix.util.SchemaUtil;
 
 public enum TableProperty {
 
-	IMMUTABLE_ROWS(PhoenixDatabaseMetaData.IMMUTABLE_ROWS, true, true),
-
-	MULTI_TENANT(PhoenixDatabaseMetaData.MULTI_TENANT, true, false),
-
-	DISABLE_WAL(PhoenixDatabaseMetaData.DISABLE_WAL, true, false),
-
-	SALT_BUCKETS(PhoenixDatabaseMetaData.SALT_BUCKETS, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, SALT_ONLY_ON_CREATE_TABLE, false),
-
-	DEFAULT_COLUMN_FAMILY(DEFAULT_COLUMN_FAMILY_NAME, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, DEFAULT_COLUMN_FAMILY_ONLY_ON_CREATE_TABLE, false),
-
-	TTL(HColumnDescriptor.TTL, COLUMN_FAMILY_NOT_ALLOWED_FOR_TTL, true, CANNOT_ALTER_PROPERTY, false),
-
-    STORE_NULLS(PhoenixDatabaseMetaData.STORE_NULLS, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, false),
-    
-    TRANSACTIONAL(PhoenixDatabaseMetaData.TRANSACTIONAL, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, false),
-
-    UPDATE_CACHE_FREQUENCY(PhoenixDatabaseMetaData.UPDATE_CACHE_FREQUENCY, true, true) {
-	    @Override
-        public Object getValue(Object value) {
-	        if (value instanceof String) {
-	            String strValue = (String) value;
-	            if ("ALWAYS".equalsIgnoreCase(strValue)) {
-	                return 0L;
-	            } else if ("NEVER".equalsIgnoreCase(strValue)) {
-	                return Long.MAX_VALUE;
-	            }
-	        } else {
-	            return value == null ? null : ((Number) value).longValue();
-	        }
-	        return value;
-	    }	    
-	},
-	
-	AUTO_PARTITION_SEQ(PhoenixDatabaseMetaData.AUTO_PARTITION_SEQ, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, false) {
-        @Override
-        public Object getValue(Object value) {
-            return value == null ? null : SchemaUtil.normalizeIdentifier(value.toString());
-        }  
-	},
-	
-	APPEND_ONLY_SCHEMA(PhoenixDatabaseMetaData.APPEND_ONLY_SCHEMA, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, true),
-    ;
-
-	private final String propertyName;
-	private final SQLExceptionCode colFamSpecifiedException;
-	private final boolean isMutable; // whether or not a property can be changed through statements like ALTER TABLE.
-	private final SQLExceptionCode mutatingImmutablePropException;
-	private final boolean isValidOnView;
-
-	private TableProperty(String propertyName, boolean isMutable, boolean isValidOnView) {
-		this(propertyName, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, isMutable, CANNOT_ALTER_PROPERTY, isValidOnView);
-	}
-
-	private TableProperty(String propertyName, SQLExceptionCode colFamilySpecifiedException, boolean isMutable, boolean isValidOnView) {
-		this(propertyName, colFamilySpecifiedException, isMutable, CANNOT_ALTER_PROPERTY, isValidOnView);
-	}
-
-	private TableProperty(String propertyName, boolean isMutable, boolean isValidOnView, SQLExceptionCode isMutatingException) {
-		this(propertyName, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, isMutable, isMutatingException, isValidOnView);
-	}
-
-	private TableProperty(String propertyName, SQLExceptionCode colFamSpecifiedException, boolean isMutable, SQLExceptionCode mutatingException, boolean isValidOnView) {
-		this.propertyName = propertyName;
-		this.colFamSpecifiedException = colFamSpecifiedException;
-		this.isMutable = isMutable;
-		this.mutatingImmutablePropException = mutatingException;
-		this.isValidOnView = isValidOnView;
-	}
-
-	public static boolean isPhoenixTableProperty(String property) {
-		try {
-			TableProperty.valueOf(property);
-		} catch (IllegalArgumentException e) {
-			return false;
-		}
-		return true;
-	}
-
-	public Object getValue(Object value) {
-	    return value;
-	}
-	
-    public Object getValue(Map<String, Object> props) {
-        return getValue(props.get(this.toString()));
+  IMMUTABLE_ROWS(PhoenixDatabaseMetaData.IMMUTABLE_ROWS, true, true),
+  MULTI_TENANT(PhoenixDatabaseMetaData.MULTI_TENANT, true, false),
+  DISABLE_WAL(PhoenixDatabaseMetaData.DISABLE_WAL, true, false),
+  SALT_BUCKETS(PhoenixDatabaseMetaData.SALT_BUCKETS, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, SALT_ONLY_ON_CREATE_TABLE, false),
+  DEFAULT_COLUMN_FAMILY(DEFAULT_COLUMN_FAMILY_NAME, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, DEFAULT_COLUMN_FAMILY_ONLY_ON_CREATE_TABLE, false),
+  TTL(HColumnDescriptor.TTL, COLUMN_FAMILY_NOT_ALLOWED_FOR_TTL, true, CANNOT_ALTER_PROPERTY, false),
+  STORE_NULLS(PhoenixDatabaseMetaData.STORE_NULLS, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, false),
+  TRANSACTIONAL(PhoenixDatabaseMetaData.TRANSACTIONAL, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, false),
+  UPDATE_CACHE_FREQUENCY(PhoenixDatabaseMetaData.UPDATE_CACHE_FREQUENCY, true, true) {
+    @Override
+    public Object getValue(Object value) {
+      if (value instanceof String) {
+        String strValue = (String) value;
+        if ("ALWAYS".equalsIgnoreCase(strValue)) {
+          return 0L;
+        } else if ("NEVER".equalsIgnoreCase(strValue)) {
+          return Long.MAX_VALUE;
+        }
+      } else {
+        return value == null ? null : ((Number) value).longValue();
+      }
+      return value;
     }
-    
-	// isQualified is true if column family name is specified in property name
-	public void validate(boolean isMutating, boolean isQualified, PTableType tableType) throws SQLException {
-		checkForColumnFamily(isQualified);
-		checkForMutability(isMutating);
-		checkIfApplicableForView(tableType);
-	}
+  },
+  AUTO_PARTITION_SEQ(PhoenixDatabaseMetaData.AUTO_PARTITION_SEQ, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, false, false) {
+    @Override
+    public Object getValue(Object value) {
+      return value == null ? null : SchemaUtil.normalizeIdentifier(value.toString());
+    }
+  },
+  APPEND_ONLY_SCHEMA(PhoenixDatabaseMetaData.APPEND_ONLY_SCHEMA, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, true, true),;
 
-	private void checkForColumnFamily(boolean isQualified) throws SQLException {
-		if (isQualified) {
-			throw new SQLExceptionInfo.Builder(colFamSpecifiedException).setMessage(". Property: " + propertyName).build().buildException();
-		}
-	}
+  private final String propertyName;
+  private final SQLExceptionCode colFamSpecifiedException;
+  private final boolean isMutable; // whether or not a property can be changed through statements like ALTER TABLE.
+  private final SQLExceptionCode mutatingImmutablePropException;
+  private final boolean isValidOnView;
 
-	private void checkForMutability(boolean isMutating) throws SQLException {
-		if (isMutating && !isMutable) {
-			throw new SQLExceptionInfo.Builder(mutatingImmutablePropException).setMessage(". Property: " + propertyName).build().buildException();
-		}
-	}
+  private TableProperty(String propertyName, boolean isMutable, boolean isValidOnView) {
+    this(propertyName, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, isMutable, CANNOT_ALTER_PROPERTY, isValidOnView);
+  }
 
-	private void checkIfApplicableForView(PTableType tableType)
-			throws SQLException {
-		if (tableType == PTableType.VIEW && !isValidOnView) {
-			throw new SQLExceptionInfo.Builder(
-					VIEW_WITH_PROPERTIES).setMessage("Property: " + propertyName).build().buildException();
-		}
-	}
+  private TableProperty(String propertyName, SQLExceptionCode colFamilySpecifiedException, boolean isMutable, boolean isValidOnView) {
+    this(propertyName, colFamilySpecifiedException, isMutable, CANNOT_ALTER_PROPERTY, isValidOnView);
+  }
+
+  private TableProperty(String propertyName, boolean isMutable, boolean isValidOnView, SQLExceptionCode isMutatingException) {
+    this(propertyName, COLUMN_FAMILY_NOT_ALLOWED_TABLE_PROPERTY, isMutable, isMutatingException, isValidOnView);
+  }
+
+  private TableProperty(String propertyName, SQLExceptionCode colFamSpecifiedException, boolean isMutable, SQLExceptionCode mutatingException, boolean isValidOnView) {
+    this.propertyName = propertyName;
+    this.colFamSpecifiedException = colFamSpecifiedException;
+    this.isMutable = isMutable;
+    this.mutatingImmutablePropException = mutatingException;
+    this.isValidOnView = isValidOnView;
+  }
+
+  public static boolean isPhoenixTableProperty(String property) {
+    try {
+      TableProperty.valueOf(property);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+    return true;
+  }
+
+  public Object getValue(Object value) {
+    return value;
+  }
+
+  public Object getValue(Map<String, Object> props) {
+    return getValue(props.get(this.toString()));
+  }
+
+  // isQualified is true if column family name is specified in property name
+  public void validate(boolean isMutating, boolean isQualified, PTableType tableType) throws SQLException {
+    checkForColumnFamily(isQualified);
+    checkForMutability(isMutating);
+    checkIfApplicableForView(tableType);
+  }
+
+  private void checkForColumnFamily(boolean isQualified) throws SQLException {
+    if (isQualified) {
+      throw new SQLExceptionInfo.Builder(colFamSpecifiedException).setMessage(". Property: " + propertyName).build().buildException();
+    }
+  }
+
+  private void checkForMutability(boolean isMutating) throws SQLException {
+    if (isMutating && !isMutable) {
+      throw new SQLExceptionInfo.Builder(mutatingImmutablePropException).setMessage(". Property: " + propertyName).build().buildException();
+    }
+  }
+
+  private void checkIfApplicableForView(PTableType tableType)
+          throws SQLException {
+    if (tableType == PTableType.VIEW && !isValidOnView) {
+      throw new SQLExceptionInfo.Builder(
+              VIEW_WITH_PROPERTIES).setMessage("Property: " + propertyName).build().buildException();
+    }
+  }
 
 }

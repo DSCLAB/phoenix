@@ -28,35 +28,38 @@ import org.apache.phoenix.schema.tuple.Tuple;
  * @since 1.2
  */
 public class OffsetResultIterator extends DelegateResultIterator {
-    private int rowCount;
-    private int offset;
 
-    public OffsetResultIterator(ResultIterator delegate, Integer offset) {
-        super(delegate);
-        this.offset = offset == null ? -1 : offset;
-    }
+  private int rowCount;
+  private int offset;
 
-    @Override
-    public Tuple next() throws SQLException {
-        while (rowCount < offset) {
-            if (super.next() == null) { return null; }
-            rowCount++;
-        }
-        return super.next();
-    }
+  public OffsetResultIterator(ResultIterator delegate, Integer offset) {
+    super(delegate);
+    this.offset = offset == null ? -1 : offset;
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {
-        super.explain(planSteps);
-        planSteps.add("CLIENT OFFSET " + offset);
+  @Override
+  public Tuple next() throws SQLException {
+    while (rowCount < offset) {
+      if (super.next() == null) {
+        return null;
+      }
+      rowCount++;
     }
+    return super.next();
+  }
 
-    @Override
-    public String toString() {
-        return "OffsetResultIterator [rowCount=" + rowCount + ", offset=" + offset + "]";
-    }
+  @Override
+  public void explain(List<String> planSteps) {
+    super.explain(planSteps);
+    planSteps.add("CLIENT OFFSET " + offset);
+  }
 
-    public Integer getRemainingOffset() {
-        return (offset - rowCount) > 0 ? (offset - rowCount) : 0;
-    }
+  @Override
+  public String toString() {
+    return "OffsetResultIterator [rowCount=" + rowCount + ", offset=" + offset + "]";
+  }
+
+  public Integer getRemainingOffset() {
+    return (offset - rowCount) > 0 ? (offset - rowCount) : 0;
+  }
 }

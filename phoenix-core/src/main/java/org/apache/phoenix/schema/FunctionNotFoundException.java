@@ -22,31 +22,32 @@ import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
 public class FunctionNotFoundException extends MetaDataEntityNotFoundException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.FUNCTION_UNDEFINED;
-    private final String functionName;
-    private final long timestamp;
 
-    public FunctionNotFoundException(FunctionNotFoundException e, long timestamp) {
-        this(e.functionName, timestamp);
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.FUNCTION_UNDEFINED;
+  private final String functionName;
+  private final long timestamp;
 
-    public FunctionNotFoundException(String functionName) {
-        this(functionName, HConstants.LATEST_TIMESTAMP);
-    }
-    
-    public FunctionNotFoundException(String functionName, long timestamp) {
-        super(new SQLExceptionInfo.Builder(code).setFunctionName(functionName).build().toString(),
-                code.getSQLState(), code.getErrorCode(), null);
-        this.functionName = functionName;
-        this.timestamp = timestamp;
-    }
+  public FunctionNotFoundException(FunctionNotFoundException e, long timestamp) {
+    this(e.functionName, timestamp);
+  }
 
-    public String getFunctionName() {
-        return functionName;
-    }
+  public FunctionNotFoundException(String functionName) {
+    this(functionName, HConstants.LATEST_TIMESTAMP);
+  }
 
-    public long getTimeStamp() {
-        return timestamp;
-    }
+  public FunctionNotFoundException(String functionName, long timestamp) {
+    super(new SQLExceptionInfo.Builder(code).setFunctionName(functionName).build().toString(),
+            code.getSQLState(), code.getErrorCode(), null);
+    this.functionName = functionName;
+    this.timestamp = timestamp;
+  }
+
+  public String getFunctionName() {
+    return functionName;
+  }
+
+  public long getTimeStamp() {
+    return timestamp;
+  }
 }

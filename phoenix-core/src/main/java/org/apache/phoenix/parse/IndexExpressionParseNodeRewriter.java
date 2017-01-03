@@ -30,45 +30,45 @@ import org.apache.phoenix.util.IndexUtil;
 import com.google.common.collect.Maps;
 
 /**
- * Used to replace parse nodes in a SelectStatement that match expressions that are present in an indexed with the
- * corresponding {@link ColumnParseNode}
+ * Used to replace parse nodes in a SelectStatement that match expressions that
+ * are present in an indexed with the corresponding {@link ColumnParseNode}
  */
 public class IndexExpressionParseNodeRewriter extends ParseNodeRewriter {
 
-    private final Map<ParseNode, ParseNode> indexedParseNodeToColumnParseNodeMap;
-    
-    public IndexExpressionParseNodeRewriter(PTable index, String alias, PhoenixConnection connection, Map<String, UDFParseNode> udfParseNodes) throws SQLException {
-        indexedParseNodeToColumnParseNodeMap = Maps.newHashMapWithExpectedSize(index.getColumns().size());
-        NamedTableNode tableNode = NamedTableNode.create(alias,
-                TableName.create(index.getParentSchemaName().getString(), index.getParentTableName().getString()),
-                Collections.<ColumnDef> emptyList());
-        ColumnResolver dataResolver = FromCompiler.getResolver(tableNode, connection, udfParseNodes);
-        StatementContext context = new StatementContext(new PhoenixStatement(connection), dataResolver);
-        IndexStatementRewriter rewriter = new IndexStatementRewriter(dataResolver, null, true);
-        ExpressionCompiler expressionCompiler = new ExpressionCompiler(context);
-        int indexPosOffset = (index.getBucketNum() == null ? 0 : 1) + (index.isMultiTenant() ? 1 : 0) + (index.getViewIndexId() == null ? 0 : 1);
-        List<PColumn> pkColumns = index.getPKColumns();
-		for (int i=indexPosOffset; i<pkColumns.size(); ++i) {
-        	PColumn column = pkColumns.get(i);
-        	String expressionStr = IndexUtil.getIndexColumnExpressionStr(column);
-            ParseNode expressionParseNode  = SQLParser.parseCondition(expressionStr);
-            String colName = "\"" + column.getName().getString() + "\"";
-            Expression dataExpression = expressionParseNode.accept(expressionCompiler);
-            PDataType expressionDataType = dataExpression.getDataType();
-            ParseNode indexedParseNode = expressionParseNode.accept(rewriter);
-            PDataType indexColType = IndexUtil.getIndexColumnDataType(dataExpression.isNullable(), expressionDataType);
-            ParseNode columnParseNode = new ColumnParseNode(alias!=null ? TableName.create(null, alias) : null, colName, null);
-            if ( indexColType != expressionDataType) {
-                columnParseNode = NODE_FACTORY.cast(columnParseNode, expressionDataType, null, null);
-            }
-            indexedParseNodeToColumnParseNodeMap.put(indexedParseNode, columnParseNode);
-        }
-    }
+  private final Map<ParseNode, ParseNode> indexedParseNodeToColumnParseNodeMap;
 
-    @Override
-    protected ParseNode leaveCompoundNode(CompoundParseNode node, List<ParseNode> children, CompoundNodeFactory factory) {
-        return indexedParseNodeToColumnParseNodeMap.containsKey(node) ? indexedParseNodeToColumnParseNodeMap.get(node)
-                : super.leaveCompoundNode(node, children, factory);
+  public IndexExpressionParseNodeRewriter(PTable index, String alias, PhoenixConnection connection, Map<String, UDFParseNode> udfParseNodes) throws SQLException {
+    indexedParseNodeToColumnParseNodeMap = Maps.newHashMapWithExpectedSize(index.getColumns().size());
+    NamedTableNode tableNode = NamedTableNode.create(alias,
+            TableName.create(index.getParentSchemaName().getString(), index.getParentTableName().getString()),
+            Collections.<ColumnDef>emptyList());
+    ColumnResolver dataResolver = FromCompiler.getResolver(tableNode, connection, udfParseNodes);
+    StatementContext context = new StatementContext(new PhoenixStatement(connection), dataResolver);
+    IndexStatementRewriter rewriter = new IndexStatementRewriter(dataResolver, null, true);
+    ExpressionCompiler expressionCompiler = new ExpressionCompiler(context);
+    int indexPosOffset = (index.getBucketNum() == null ? 0 : 1) + (index.isMultiTenant() ? 1 : 0) + (index.getViewIndexId() == null ? 0 : 1);
+    List<PColumn> pkColumns = index.getPKColumns();
+    for (int i = indexPosOffset; i < pkColumns.size(); ++i) {
+      PColumn column = pkColumns.get(i);
+      String expressionStr = IndexUtil.getIndexColumnExpressionStr(column);
+      ParseNode expressionParseNode = SQLParser.parseCondition(expressionStr);
+      String colName = "\"" + column.getName().getString() + "\"";
+      Expression dataExpression = expressionParseNode.accept(expressionCompiler);
+      PDataType expressionDataType = dataExpression.getDataType();
+      ParseNode indexedParseNode = expressionParseNode.accept(rewriter);
+      PDataType indexColType = IndexUtil.getIndexColumnDataType(dataExpression.isNullable(), expressionDataType);
+      ParseNode columnParseNode = new ColumnParseNode(alias != null ? TableName.create(null, alias) : null, colName, null);
+      if (indexColType != expressionDataType) {
+        columnParseNode = NODE_FACTORY.cast(columnParseNode, expressionDataType, null, null);
+      }
+      indexedParseNodeToColumnParseNodeMap.put(indexedParseNode, columnParseNode);
     }
+  }
+
+  @Override
+  protected ParseNode leaveCompoundNode(CompoundParseNode node, List<ParseNode> children, CompoundNodeFactory factory) {
+    return indexedParseNodeToColumnParseNodeMap.containsKey(node) ? indexedParseNodeToColumnParseNodeMap.get(node)
+            : super.leaveCompoundNode(node, children, factory);
+  }
 
 }

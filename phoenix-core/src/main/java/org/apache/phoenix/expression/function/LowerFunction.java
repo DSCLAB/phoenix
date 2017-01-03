@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression.function;
 
 import java.sql.SQLException;
@@ -29,50 +28,51 @@ import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.schema.types.PVarchar;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-@FunctionParseNode.BuiltInFunction(name=LowerFunction.NAME,  args={
-        @FunctionParseNode.Argument(allowedTypes={PVarchar.class})} )
+@FunctionParseNode.BuiltInFunction(name = LowerFunction.NAME, args = {
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class})})
 public class LowerFunction extends ScalarFunction {
-    public static final String NAME = "LOWER";
 
-    public LowerFunction() {
+  public static final String NAME = "LOWER";
+
+  public LowerFunction() {
+  }
+
+  public LowerFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!getStrExpression().evaluate(tuple, ptr)) {
+      return false;
     }
 
-    public LowerFunction(List<Expression> children) throws SQLException {
-        super(children);
+    String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getStrExpression().getSortOrder());
+
+    if (sourceStr == null) {
+      return true;
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!getStrExpression().evaluate(tuple, ptr)) {
-            return false;
-        }
+    ptr.set(PVarchar.INSTANCE.toBytes(sourceStr.toLowerCase()));
+    return true;
+  }
 
-        String sourceStr = (String) PVarchar.INSTANCE.toObject(ptr, getStrExpression().getSortOrder());
+  @Override
+  public PDataType getDataType() {
+    return getStrExpression().getDataType();
+  }
 
-        if (sourceStr == null) {
-            return true;
-        }
+  @Override
+  public boolean isNullable() {
+    return getStrExpression().isNullable();
+  }
 
-        ptr.set(PVarchar.INSTANCE.toBytes(sourceStr.toLowerCase()));
-        return true;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return getStrExpression().getDataType();
-    }
-
-    @Override
-    public boolean isNullable() {
-        return getStrExpression().isNullable();
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    private Expression getStrExpression() {
-        return children.get(0);
-    }
+  private Expression getStrExpression() {
+    return children.get(0);
+  }
 }

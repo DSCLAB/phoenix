@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.configuration;
 
 import java.util.List;
@@ -24,14 +23,15 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType
 public class DataOverride {
-	private List<Column> column;
 
-	public List<Column> getColumn() {
-		return column;
-	}
+  private List<Column> column;
 
-    @SuppressWarnings("unused")
-    public void setColumn(List<Column> column) {
-		this.column = column;
-	}
+  public List<Column> getColumn() {
+    return column;
+  }
+
+  @SuppressWarnings("unused")
+  public void setColumn(List<Column> column) {
+    this.column = column;
+  }
 }

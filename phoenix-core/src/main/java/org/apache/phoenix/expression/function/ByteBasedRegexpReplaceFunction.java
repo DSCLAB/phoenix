@@ -26,16 +26,16 @@ import org.joni.Option;
 
 public class ByteBasedRegexpReplaceFunction extends RegexpReplaceFunction {
 
-    public ByteBasedRegexpReplaceFunction() {
-    }
+  public ByteBasedRegexpReplaceFunction() {
+  }
 
-    public ByteBasedRegexpReplaceFunction(List<Expression> children) {
-        super(children);
-    }
+  public ByteBasedRegexpReplaceFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    protected AbstractBasePattern compilePatternSpec(String value) {
-        return new JONIPattern(value, Option.MULTILINE);
-    }
+  @Override
+  protected AbstractBasePattern compilePatternSpec(String value) {
+    return new JONIPattern(value, Option.MULTILINE);
+  }
 
 }

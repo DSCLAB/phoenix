@@ -52,134 +52,134 @@ import org.slf4j.LoggerFactory;
 public class PhoenixIndexImportDirectMapper extends
         Mapper<NullWritable, PhoenixIndexDBWritable, ImmutableBytesWritable, IntWritable> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportDirectMapper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportDirectMapper.class);
 
-    private final PhoenixIndexDBWritable indxWritable = new PhoenixIndexDBWritable();
+  private final PhoenixIndexDBWritable indxWritable = new PhoenixIndexDBWritable();
 
-    private List<ColumnInfo> indxTblColumnMetadata;
+  private List<ColumnInfo> indxTblColumnMetadata;
 
-    private Connection connection;
+  private Connection connection;
 
-    private PreparedStatement pStatement;
+  private PreparedStatement pStatement;
 
-    private DirectHTableWriter writer;
+  private DirectHTableWriter writer;
 
-    private int batchSize;
+  private int batchSize;
 
-    private MutationState mutationState;
+  private MutationState mutationState;
 
-    @Override
-    protected void setup(final Context context) throws IOException, InterruptedException {
-        super.setup(context);
-        final Configuration configuration = context.getConfiguration();
-        writer = new DirectHTableWriter(configuration);
+  @Override
+  protected void setup(final Context context) throws IOException, InterruptedException {
+    super.setup(context);
+    final Configuration configuration = context.getConfiguration();
+    writer = new DirectHTableWriter(configuration);
 
+    try {
+      indxTblColumnMetadata
+              = PhoenixConfigurationUtil.getUpsertColumnMetadataList(configuration);
+      indxWritable.setColumnMetadata(indxTblColumnMetadata);
+
+      final Properties overrideProps = new Properties();
+      String scn = configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE);
+      String txScnValue = configuration.get(PhoenixConfigurationUtil.TX_SCN_VALUE);
+      if (txScnValue == null) {
+        overrideProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, scn);
+      }
+      connection = ConnectionUtil.getOutputConnection(configuration, overrideProps);
+      connection.setAutoCommit(false);
+      // Get BatchSize
+      ConnectionQueryServices services = ((PhoenixConnection) connection).getQueryServices();
+      int maxSize
+              = services.getProps().getInt(QueryServices.MAX_MUTATION_SIZE_ATTRIB,
+                      QueryServicesOptions.DEFAULT_MAX_MUTATION_SIZE);
+      batchSize = Math.min(((PhoenixConnection) connection).getMutateBatchSize(), maxSize);
+      LOG.info("Mutation Batch Size = " + batchSize);
+
+      final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+      this.pStatement = connection.prepareStatement(upsertQuery);
+
+    } catch (SQLException e) {
+      throw new RuntimeException(e.getMessage());
+    }
+  }
+
+  @Override
+  protected void map(NullWritable key, PhoenixIndexDBWritable record, Context context)
+          throws IOException, InterruptedException {
+
+    context.getCounter(PhoenixJobCounters.INPUT_RECORDS).increment(1);
+
+    try {
+      final List<Object> values = record.getValues();
+      indxWritable.setValues(values);
+      indxWritable.write(this.pStatement);
+      this.pStatement.execute();
+
+      final PhoenixConnection pconn = connection.unwrap(PhoenixConnection.class);
+      MutationState currentMutationState = pconn.getMutationState();
+      if (mutationState == null) {
+        mutationState = currentMutationState;
+        return;
+      }
+      // Keep accumulating Mutations till batch size
+      mutationState.join(currentMutationState);
+
+      // Write Mutation Batch
+      if (context.getCounter(PhoenixJobCounters.INPUT_RECORDS).getValue() % batchSize == 0) {
+        writeBatch(mutationState, context);
+        mutationState = null;
+      }
+
+      // Make sure progress is reported to Application Master.
+      context.progress();
+    } catch (SQLException e) {
+      LOG.error(" Error {}  while read/write of a record ", e.getMessage());
+      context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void writeBatch(MutationState mutationState, Context context) throws IOException,
+          SQLException, InterruptedException {
+    final Iterator<Pair<byte[], List<Mutation>>> iterator = mutationState.toMutations(true, null);
+    while (iterator.hasNext()) {
+      Pair<byte[], List<Mutation>> mutationPair = iterator.next();
+
+      writer.write(mutationPair.getSecond());
+      context.getCounter(PhoenixJobCounters.OUTPUT_RECORDS).increment(
+              mutationPair.getSecond().size());
+    }
+    connection.rollback();
+  }
+
+  @Override
+  protected void cleanup(Context context) throws IOException, InterruptedException {
+    try {
+      // Write the last & final Mutation Batch
+      if (mutationState != null) {
+        writeBatch(mutationState, context);
+      }
+      // We are writing some dummy key-value as map output here so that we commit only one
+      // output to reducer.
+      context.write(new ImmutableBytesWritable(UUID.randomUUID().toString().getBytes()),
+              new IntWritable(0));
+      super.cleanup(context);
+    } catch (SQLException e) {
+      LOG.error(" Error {}  while read/write of a record ", e.getMessage());
+      context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
+      throw new RuntimeException(e);
+    } finally {
+      if (connection != null) {
         try {
-            indxTblColumnMetadata =
-                    PhoenixConfigurationUtil.getUpsertColumnMetadataList(configuration);
-            indxWritable.setColumnMetadata(indxTblColumnMetadata);
-
-            final Properties overrideProps = new Properties();
-            String scn = configuration.get(PhoenixConfigurationUtil.CURRENT_SCN_VALUE);
-            String txScnValue = configuration.get(PhoenixConfigurationUtil.TX_SCN_VALUE);
-            if(txScnValue==null) {
-                overrideProps.put(PhoenixRuntime.CURRENT_SCN_ATTRIB, scn);
-            }
-            connection = ConnectionUtil.getOutputConnection(configuration, overrideProps);
-            connection.setAutoCommit(false);
-            // Get BatchSize
-            ConnectionQueryServices services = ((PhoenixConnection) connection).getQueryServices();
-            int maxSize =
-                    services.getProps().getInt(QueryServices.MAX_MUTATION_SIZE_ATTRIB,
-                        QueryServicesOptions.DEFAULT_MAX_MUTATION_SIZE);
-            batchSize = Math.min(((PhoenixConnection) connection).getMutateBatchSize(), maxSize);
-            LOG.info("Mutation Batch Size = " + batchSize);
-
-            final String upsertQuery = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-            this.pStatement = connection.prepareStatement(upsertQuery);
-
+          connection.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e.getMessage());
+          LOG.error("Error {} while closing connection in the PhoenixIndexMapper class ",
+                  e.getMessage());
         }
+      }
+      if (writer != null) {
+        writer.close();
+      }
     }
-
-    @Override
-    protected void map(NullWritable key, PhoenixIndexDBWritable record, Context context)
-            throws IOException, InterruptedException {
-
-        context.getCounter(PhoenixJobCounters.INPUT_RECORDS).increment(1);
-
-        try {
-            final List<Object> values = record.getValues();
-            indxWritable.setValues(values);
-            indxWritable.write(this.pStatement);
-            this.pStatement.execute();
-
-            final PhoenixConnection pconn = connection.unwrap(PhoenixConnection.class);
-            MutationState currentMutationState = pconn.getMutationState();
-            if (mutationState == null) {
-                mutationState = currentMutationState;
-                return;
-            }
-            // Keep accumulating Mutations till batch size
-            mutationState.join(currentMutationState);
-
-            // Write Mutation Batch
-            if (context.getCounter(PhoenixJobCounters.INPUT_RECORDS).getValue() % batchSize == 0) {
-                writeBatch(mutationState, context);
-                mutationState = null;
-            }
-
-            // Make sure progress is reported to Application Master.
-            context.progress();
-        } catch (SQLException e) {
-            LOG.error(" Error {}  while read/write of a record ", e.getMessage());
-            context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void writeBatch(MutationState mutationState, Context context) throws IOException,
-            SQLException, InterruptedException {
-        final Iterator<Pair<byte[], List<Mutation>>> iterator = mutationState.toMutations(true, null);
-        while (iterator.hasNext()) {
-            Pair<byte[], List<Mutation>> mutationPair = iterator.next();
-
-            writer.write(mutationPair.getSecond());
-            context.getCounter(PhoenixJobCounters.OUTPUT_RECORDS).increment(
-                mutationPair.getSecond().size());
-        }
-        connection.rollback();
-    }
-
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        try {
-            // Write the last & final Mutation Batch
-            if (mutationState != null) {
-                writeBatch(mutationState, context);
-            }
-            // We are writing some dummy key-value as map output here so that we commit only one
-            // output to reducer.
-            context.write(new ImmutableBytesWritable(UUID.randomUUID().toString().getBytes()),
-                new IntWritable(0));
-            super.cleanup(context);
-        } catch (SQLException e) {
-            LOG.error(" Error {}  while read/write of a record ", e.getMessage());
-            context.getCounter(PhoenixJobCounters.FAILED_RECORDS).increment(1);
-            throw new RuntimeException(e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    LOG.error("Error {} while closing connection in the PhoenixIndexMapper class ",
-                        e.getMessage());
-                }
-            }
-            if (writer != null) {
-                writer.close();
-            }
-        }
-    }
+  }
 }

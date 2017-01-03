@@ -20,14 +20,15 @@ package org.apache.phoenix.parse;
 import java.util.Collections;
 
 /**
- * 
+ *
  * Abstract node representing an expression that has a single child in SQL
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class UnaryParseNode extends CompoundParseNode {
-    UnaryParseNode(ParseNode expr) {
-        super(Collections.singletonList(expr));
-    }
+
+  UnaryParseNode(ParseNode expr) {
+    super(Collections.singletonList(expr));
+  }
 }

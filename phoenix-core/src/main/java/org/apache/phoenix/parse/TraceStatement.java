@@ -21,29 +21,29 @@ import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 
 public class TraceStatement implements BindableStatement {
 
-    private final boolean traceOn;
-    private final double samplingRate;
+  private final boolean traceOn;
+  private final double samplingRate;
 
-    public TraceStatement(boolean isOn, double samplingRate) {
-        this.traceOn = isOn;
-        this.samplingRate = samplingRate;
-    }
+  public TraceStatement(boolean isOn, double samplingRate) {
+    this.traceOn = isOn;
+    this.samplingRate = samplingRate;
+  }
 
-    @Override
-    public int getBindCount() {
-        return 0;
-    }
+  @Override
+  public int getBindCount() {
+    return 0;
+  }
 
-    @Override
-    public Operation getOperation() {
-        return Operation.QUERY;
-    }
+  @Override
+  public Operation getOperation() {
+    return Operation.QUERY;
+  }
 
-    public boolean isTraceOn() {
-        return traceOn;
-    }
+  public boolean isTraceOn() {
+    return traceOn;
+  }
 
-    public double getSamplingRate() {
-        return samplingRate;
-    }
+  public double getSamplingRate() {
+    return samplingRate;
+  }
 }

@@ -21,30 +21,30 @@ import java.util.List;
 
 import org.apache.phoenix.schema.types.PDataType;
 
-
 abstract public class BaseAddSubtractExpression extends ArithmeticExpression {
-    public BaseAddSubtractExpression() {
-    }
 
-    public BaseAddSubtractExpression(List<Expression> children) {
-        super(children);
-    }
+  public BaseAddSubtractExpression() {
+  }
 
-    protected static Integer getPrecision(Integer lp, Integer rp, Integer ls, Integer rs) {
-        if (ls == null || rs == null) {
-            return PDataType.MAX_PRECISION;
-        }
-        int val = getScale(lp, rp, ls, rs) + Math.max(lp - ls, rp - rs) + 1;
-        return Math.min(PDataType.MAX_PRECISION, val);
-    }
+  public BaseAddSubtractExpression(List<Expression> children) {
+    super(children);
+  }
 
-    protected static Integer getScale(Integer lp, Integer rp, Integer ls, Integer rs) {
-        // If we are adding a decimal with scale and precision to a decimal
-        // with no precision nor scale, the scale system does not apply.
-        if (ls == null || rs == null) {
-            return null;
-        }
-        int val = Math.max(ls, rs);
-        return Math.min(PDataType.MAX_PRECISION, val);
+  protected static Integer getPrecision(Integer lp, Integer rp, Integer ls, Integer rs) {
+    if (ls == null || rs == null) {
+      return PDataType.MAX_PRECISION;
     }
+    int val = getScale(lp, rp, ls, rs) + Math.max(lp - ls, rp - rs) + 1;
+    return Math.min(PDataType.MAX_PRECISION, val);
+  }
+
+  protected static Integer getScale(Integer lp, Integer rp, Integer ls, Integer rs) {
+    // If we are adding a decimal with scale and precision to a decimal
+    // with no precision nor scale, the scale system does not apply.
+    if (ls == null || rs == null) {
+      return null;
+    }
+    int val = Math.max(ls, rs);
+    return Math.min(PDataType.MAX_PRECISION, val);
+  }
 }

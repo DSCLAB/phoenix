@@ -68,7 +68,7 @@ public class PVarbinary extends PBinaryBase {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length, PDataType actualType,
-      SortOrder sortOrder, Integer maxLength, Integer scale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale) {
     if (length == 0) {
       return null;
     }
@@ -112,10 +112,10 @@ public class PVarbinary extends PBinaryBase {
 
   @Override
   public boolean isSizeCompatible(ImmutableBytesWritable ptr, Object value, PDataType srcType,
-      SortOrder sortOrder, Integer maxLength, Integer scale,
-      Integer desiredMaxLength, Integer desiredScale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale,
+          Integer desiredMaxLength, Integer desiredScale) {
     if (ptr.getLength() != 0 && srcType.equals(PBinary.INSTANCE) && maxLength != null
-        && desiredMaxLength != null) {
+            && desiredMaxLength != null) {
       return maxLength <= desiredMaxLength;
     }
     return true;
@@ -151,11 +151,11 @@ public class PVarbinary extends PBinaryBase {
     StringBuilder buf = new StringBuilder();
     buf.append('[');
     if (length > 0) {
-        for (int i = o; i < length; i++) {
-          buf.append(0xFF & b[i]);
-          buf.append(',');
-        }
-        buf.setLength(buf.length()-1);
+      for (int i = o; i < length; i++) {
+        buf.append(0xFF & b[i]);
+        buf.append(',');
+      }
+      buf.setLength(buf.length() - 1);
     }
     buf.append(']');
     return buf.toString();
@@ -163,9 +163,9 @@ public class PVarbinary extends PBinaryBase {
 
   @Override
   public String toStringLiteral(Object o, Format formatter) {
-      return toStringLiteral((byte[])o, 0, ((byte[]) o).length, formatter);
+    return toStringLiteral((byte[]) o, 0, ((byte[]) o).length, formatter);
   }
-  
+
   @Override
   public Object getSampleValue(Integer maxLength, Integer arrayLength) {
     int length = maxLength != null && maxLength > 0 ? maxLength : 1;

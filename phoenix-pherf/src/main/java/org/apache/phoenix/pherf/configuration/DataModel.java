@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.configuration;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -26,49 +25,50 @@ import java.util.List;
 
 @XmlRootElement(name = "datamodel")
 public class DataModel {
-    private String name;
-    private List<Scenario> scenarios;
-    private List<Column> dataMappingColumns;
 
-    public DataModel() {
+  private String name;
+  private List<Scenario> scenarios;
+  private List<Column> dataMappingColumns;
+
+  public DataModel() {
+  }
+
+  public List<Scenario> getScenarios() {
+    return scenarios;
+  }
+
+  @XmlElementWrapper(name = "datamapping")
+  @XmlElement(name = "column")
+  public void setDataMappingColumns(List<Column> dataMappingColumns) {
+    this.dataMappingColumns = dataMappingColumns;
+  }
+
+  public List<Column> getDataMappingColumns() {
+    return dataMappingColumns;
+  }
+
+  @XmlElementWrapper(name = "scenarios")
+  @XmlElement(name = "scenario")
+  public void setScenarios(List<Scenario> scenarios) {
+    this.scenarios = scenarios;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @XmlAttribute()
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder stringBuilder = new StringBuilder();
+    for (Scenario scenario : getScenarios()) {
+      stringBuilder.append("Scenario: " + scenario.getName());
+      stringBuilder.append("[" + scenario + "]");
     }
-
-    public List<Scenario> getScenarios() {
-        return scenarios;
-    }
-
-    @XmlElementWrapper(name = "datamapping")
-    @XmlElement(name = "column")
-    public void setDataMappingColumns(List<Column> dataMappingColumns) {
-        this.dataMappingColumns = dataMappingColumns;
-    }
-
-    public List<Column> getDataMappingColumns() {
-        return dataMappingColumns;
-    }
-
-    @XmlElementWrapper(name = "scenarios")
-    @XmlElement(name = "scenario")
-    public void setScenarios(List<Scenario> scenarios) {
-        this.scenarios = scenarios;
-    }
-
-	public String getName() {
-		return name;
-	}
-
-	@XmlAttribute()
-	public void setName(String name) {
-		this.name = name;
-	}
-
-    @Override
-    public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (Scenario scenario : getScenarios()) {
-            stringBuilder.append("Scenario: " + scenario.getName());
-            stringBuilder.append("[" + scenario + "]");
-        }
-        return stringBuilder.toString();
-    }
+    return stringBuilder.toString();
+  }
 }

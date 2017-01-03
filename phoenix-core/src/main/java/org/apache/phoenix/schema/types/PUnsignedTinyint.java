@@ -95,7 +95,7 @@ public class PUnsignedTinyint extends PWholeNumber<Byte> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Byte v = (Byte) PTinyint.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeNumber(v);
     return v;
@@ -104,13 +104,13 @@ public class PUnsignedTinyint extends PWholeNumber<Byte> {
   @Override
   public boolean isCoercibleTo(PDataType targetType) {
     return targetType.equals(this) || PUnsignedSmallint.INSTANCE.isCoercibleTo(targetType)
-        || PTinyint.INSTANCE.isCoercibleTo(targetType);
+            || PTinyint.INSTANCE.isCoercibleTo(targetType);
   }
 
   @Override
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     return super.isCoercibleTo(targetType, value) || PTinyint.INSTANCE
-        .isCoercibleTo(targetType, value);
+            .isCoercibleTo(targetType, value);
   }
 
   @Override

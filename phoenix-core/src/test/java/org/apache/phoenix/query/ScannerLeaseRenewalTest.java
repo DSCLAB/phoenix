@@ -37,96 +37,96 @@ import org.apache.phoenix.util.PropertiesUtil;
 import org.junit.Test;
 
 public class ScannerLeaseRenewalTest extends BaseConnectionlessQueryTest {
-    
-    @Test
-    public void testRenewLeaseTaskBehavior() throws Exception {
-        // add connection to the queue
-        PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
-        LinkedBlockingQueue<WeakReference<PhoenixConnection>> connectionsQueue = new LinkedBlockingQueue<>();
-        connectionsQueue.add(new WeakReference<PhoenixConnection>(pconn));
-        
-        // create a scanner and add it to the queue
-        int numLeaseRenewals = 4;
-        int skipRenewLeaseCount = 2;
-        RenewLeaseOnlyTableIterator itr = new RenewLeaseOnlyTableIterator(numLeaseRenewals, skipRenewLeaseCount, -1);
-        LinkedBlockingQueue<WeakReference<TableResultIterator>> scannerQueue = pconn.getScanners();
-        scannerQueue.add(new WeakReference<TableResultIterator>(itr));
-        
-        RenewLeaseTask task = new RenewLeaseTask(connectionsQueue);
-        assertTrue(connectionsQueue.size() == 1);
-        assertTrue(scannerQueue.size() == 1);
-        
-        task.run();
-        assertTrue(connectionsQueue.size() == 1); 
-        assertTrue(scannerQueue.size() == 1); // lease renewed
-        assertEquals(RENEWED, itr.getLastRenewLeaseStatus());
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 1);
-        assertTrue(connectionsQueue.size() == 1); // renew lease skipped but scanner still in the queue
-        assertEquals(THRESHOLD_NOT_REACHED, itr.getLastRenewLeaseStatus());
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 1);
-        assertTrue(connectionsQueue.size() == 1);
-        assertEquals(RENEWED, itr.getLastRenewLeaseStatus()); // lease renewed
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 1);
-        assertTrue(connectionsQueue.size() == 1);
-        assertEquals(RENEWED, itr.getLastRenewLeaseStatus()); // lease renewed
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 0);
-        assertTrue(connectionsQueue.size() == 1);
-        assertEquals(CLOSED, itr.getLastRenewLeaseStatus()); // scanner closed and removed from the queue
-        
-        pconn.close();
-        task.run();
-        assertTrue(scannerQueue.size() == 0);
-        assertTrue("Closing the connection should have removed it from the queue", connectionsQueue.size() == 0);
-    }
-    
-    @Test
-    public void testRenewLeaseTaskBehaviorOnError() throws Exception {
-        // add connection to the queue
-        PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
-        LinkedBlockingQueue<WeakReference<PhoenixConnection>> connectionsQueue = new LinkedBlockingQueue<>();
-        connectionsQueue.add(new WeakReference<PhoenixConnection>(pconn));
-        
-        // create a scanner and add it to the queue
-        int numLeaseRenewals = 4;
-        int thresholdNotReachedCount = 2;
-        int leaseNotRenewedCount = 3;
-        RenewLeaseOnlyTableIterator itr = new RenewLeaseOnlyTableIterator(numLeaseRenewals, thresholdNotReachedCount, leaseNotRenewedCount);
-        LinkedBlockingQueue<WeakReference<TableResultIterator>> scannerQueue = pconn.getScanners();
-        scannerQueue.add(new WeakReference<TableResultIterator>(itr));
-        
-        RenewLeaseTask task = new RenewLeaseTask(connectionsQueue);
-        assertTrue(connectionsQueue.size() == 1);
-        assertTrue(scannerQueue.size() == 1);
-        
-        task.run();
-        assertTrue(connectionsQueue.size() == 1); 
-        assertTrue(scannerQueue.size() == 1); // lease renewed
-        assertEquals(RENEWED, itr.getLastRenewLeaseStatus());
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 1);
-        assertTrue(connectionsQueue.size() == 1); // renew lease skipped but scanner still in the queue
-        assertEquals(THRESHOLD_NOT_REACHED, itr.getLastRenewLeaseStatus());
-        
-        task.run();
-        assertTrue(scannerQueue.size() == 0);
-        assertTrue(connectionsQueue.size() == 1);
-        // Lease not renewed due to error or some other reason.
-        // In this case we don't call renew lease on the scanner anymore.
-        assertEquals(NOT_RENEWED, itr.getLastRenewLeaseStatus());
-        
-        pconn.close();
-        task.run();
-        assertTrue(scannerQueue.size() == 0);
-        assertTrue("Closing the connection should have removed it from the queue", connectionsQueue.size() == 0);
-    }
-    
+
+  @Test
+  public void testRenewLeaseTaskBehavior() throws Exception {
+    // add connection to the queue
+    PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
+    LinkedBlockingQueue<WeakReference<PhoenixConnection>> connectionsQueue = new LinkedBlockingQueue<>();
+    connectionsQueue.add(new WeakReference<PhoenixConnection>(pconn));
+
+    // create a scanner and add it to the queue
+    int numLeaseRenewals = 4;
+    int skipRenewLeaseCount = 2;
+    RenewLeaseOnlyTableIterator itr = new RenewLeaseOnlyTableIterator(numLeaseRenewals, skipRenewLeaseCount, -1);
+    LinkedBlockingQueue<WeakReference<TableResultIterator>> scannerQueue = pconn.getScanners();
+    scannerQueue.add(new WeakReference<TableResultIterator>(itr));
+
+    RenewLeaseTask task = new RenewLeaseTask(connectionsQueue);
+    assertTrue(connectionsQueue.size() == 1);
+    assertTrue(scannerQueue.size() == 1);
+
+    task.run();
+    assertTrue(connectionsQueue.size() == 1);
+    assertTrue(scannerQueue.size() == 1); // lease renewed
+    assertEquals(RENEWED, itr.getLastRenewLeaseStatus());
+
+    task.run();
+    assertTrue(scannerQueue.size() == 1);
+    assertTrue(connectionsQueue.size() == 1); // renew lease skipped but scanner still in the queue
+    assertEquals(THRESHOLD_NOT_REACHED, itr.getLastRenewLeaseStatus());
+
+    task.run();
+    assertTrue(scannerQueue.size() == 1);
+    assertTrue(connectionsQueue.size() == 1);
+    assertEquals(RENEWED, itr.getLastRenewLeaseStatus()); // lease renewed
+
+    task.run();
+    assertTrue(scannerQueue.size() == 1);
+    assertTrue(connectionsQueue.size() == 1);
+    assertEquals(RENEWED, itr.getLastRenewLeaseStatus()); // lease renewed
+
+    task.run();
+    assertTrue(scannerQueue.size() == 0);
+    assertTrue(connectionsQueue.size() == 1);
+    assertEquals(CLOSED, itr.getLastRenewLeaseStatus()); // scanner closed and removed from the queue
+
+    pconn.close();
+    task.run();
+    assertTrue(scannerQueue.size() == 0);
+    assertTrue("Closing the connection should have removed it from the queue", connectionsQueue.size() == 0);
+  }
+
+  @Test
+  public void testRenewLeaseTaskBehaviorOnError() throws Exception {
+    // add connection to the queue
+    PhoenixConnection pconn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TEST_PROPERTIES)).unwrap(PhoenixConnection.class);
+    LinkedBlockingQueue<WeakReference<PhoenixConnection>> connectionsQueue = new LinkedBlockingQueue<>();
+    connectionsQueue.add(new WeakReference<PhoenixConnection>(pconn));
+
+    // create a scanner and add it to the queue
+    int numLeaseRenewals = 4;
+    int thresholdNotReachedCount = 2;
+    int leaseNotRenewedCount = 3;
+    RenewLeaseOnlyTableIterator itr = new RenewLeaseOnlyTableIterator(numLeaseRenewals, thresholdNotReachedCount, leaseNotRenewedCount);
+    LinkedBlockingQueue<WeakReference<TableResultIterator>> scannerQueue = pconn.getScanners();
+    scannerQueue.add(new WeakReference<TableResultIterator>(itr));
+
+    RenewLeaseTask task = new RenewLeaseTask(connectionsQueue);
+    assertTrue(connectionsQueue.size() == 1);
+    assertTrue(scannerQueue.size() == 1);
+
+    task.run();
+    assertTrue(connectionsQueue.size() == 1);
+    assertTrue(scannerQueue.size() == 1); // lease renewed
+    assertEquals(RENEWED, itr.getLastRenewLeaseStatus());
+
+    task.run();
+    assertTrue(scannerQueue.size() == 1);
+    assertTrue(connectionsQueue.size() == 1); // renew lease skipped but scanner still in the queue
+    assertEquals(THRESHOLD_NOT_REACHED, itr.getLastRenewLeaseStatus());
+
+    task.run();
+    assertTrue(scannerQueue.size() == 0);
+    assertTrue(connectionsQueue.size() == 1);
+    // Lease not renewed due to error or some other reason.
+    // In this case we don't call renew lease on the scanner anymore.
+    assertEquals(NOT_RENEWED, itr.getLastRenewLeaseStatus());
+
+    pconn.close();
+    task.run();
+    assertTrue(scannerQueue.size() == 0);
+    assertTrue("Closing the connection should have removed it from the queue", connectionsQueue.size() == 0);
+  }
+
 }

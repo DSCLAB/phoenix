@@ -28,39 +28,40 @@ import org.joda.time.DateTime;
 import org.joda.time.chrono.ISOChronology;
 
 /**
- * 
- * Base class for functions that use joda time. 
- * Used primarily by FLOOR , ROUND and CEIL on the time units WEEK,MONTH and YEAR. 
+ *
+ * Base class for functions that use joda time. Used primarily by FLOOR , ROUND
+ * and CEIL on the time units WEEK,MONTH and YEAR.
  */
-public abstract class RoundJodaDateExpression extends RoundDateExpression{
+public abstract class RoundJodaDateExpression extends RoundDateExpression {
 
-    public RoundJodaDateExpression(){}
-    
-    public RoundJodaDateExpression(List<Expression> children) {
-       super(children);
-    }
+  public RoundJodaDateExpression() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (children.get(0).evaluate(tuple, ptr)) {
-            if (ptr.getLength() == 0) {
-                return true; // child evaluated to null
-            }
-            PDataType dataType = getDataType();
-            long time = dataType.getCodec().decodeLong(ptr, children.get(0).getSortOrder());
-            DateTime dt = new DateTime(time,ISOChronology.getInstanceUTC());
-            long value = roundDateTime(dt);
-            Date d = new Date(value);
-            byte[] byteValue = dataType.toBytes(d);
-            ptr.set(byteValue);
-            return true;
-        }
-        return false;
+  public RoundJodaDateExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (children.get(0).evaluate(tuple, ptr)) {
+      if (ptr.getLength() == 0) {
+        return true; // child evaluated to null
+      }
+      PDataType dataType = getDataType();
+      long time = dataType.getCodec().decodeLong(ptr, children.get(0).getSortOrder());
+      DateTime dt = new DateTime(time, ISOChronology.getInstanceUTC());
+      long value = roundDateTime(dt);
+      Date d = new Date(value);
+      byte[] byteValue = dataType.toBytes(d);
+      ptr.set(byteValue);
+      return true;
     }
-    
-    /**
-     * @param dateTime
-     * @return Time in millis.
-     */
-    public abstract long roundDateTime(DateTime dateTime);
+    return false;
+  }
+
+  /**
+   * @param dateTime
+   * @return Time in millis.
+   */
+  public abstract long roundDateTime(DateTime dateTime);
 }

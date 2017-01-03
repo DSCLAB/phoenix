@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hbase.regionserver.wal;
 
 import org.apache.hadoop.conf.Configuration;
@@ -25,8 +24,8 @@ import org.apache.phoenix.hbase.index.util.IndexManagementUtil;
 import org.apache.phoenix.util.ConfigUtil;
 
 /**
- * Do the WAL Replay test but with the WALEditCodec, rather than an {@link IndexedHLogReader}, but
- * still with compression
+ * Do the WAL Replay test but with the WALEditCodec, rather than an
+ * {@link IndexedHLogReader}, but still with compression
  */
 public class WALReplayWithIndexWritesAndUncompressedWALInHBase_094_9_IT extends WALReplayWithIndexWritesAndCompressedWALIT {
 

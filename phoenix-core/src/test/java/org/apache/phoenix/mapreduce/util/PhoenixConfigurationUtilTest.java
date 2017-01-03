@@ -36,237 +36,239 @@ import org.junit.Test;
  * Test for {@link PhoenixConfigurationUtil}
  */
 public class PhoenixConfigurationUtilTest extends BaseConnectionlessQueryTest {
-    private static final String ORIGINAL_CLUSTER_QUORUM = "myzookeeperhost";
-    private static final String OVERRIDE_CLUSTER_QUORUM = "myoverridezookeeperhost";
-    
-    @Test
-    /**
-     * This test reproduces the bug filed in PHOENIX-2310. 
-     * 
-     * When invoking PhoenixConfigurationUtil.getUpsertStatement(),
-     * if upserting into a Phoenix View and the View DDL had recently been issued such that MetdataClient cache had
-     * been updated as a result of the create table versus from data in SYSTEM.CATALOG, the Upsert statement
-     * would contain the Object.toString() classname + hashcode instead of the correct cf.column_name representation
-     * which would cause the calling Pig script to fail.
-     */
-    public void testUpsertStatementOnNewViewWithReferencedCols() throws Exception {
-        
-        // Arrange
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
 
-        try {
-            final String tableName = "TEST_TABLE_WITH_VIEW";
-            final String viewName = "TEST_VIEW";
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            String viewDdl = "CREATE VIEW "+ viewName + 
-                    "  AS SELECT * FROM " + tableName + "\n";
-            conn.createStatement().execute(viewDdl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setOutputTableName(configuration, viewName);
-            PhoenixConfigurationUtil.setPhysicalTableName(configuration, viewName);
-            PhoenixConfigurationUtil.setUpsertColumnNames(configuration, new String[] {"A_STRING", "A_BINARY", "COL1"});
-            
-            // Act
-            final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-            
-            // Assert
-            final String expectedUpsertStatement = "UPSERT  INTO " + viewName + " (\"A_STRING\", \"A_BINARY\", \"0\".\"COL1\") VALUES (?, ?, ?)"; 
-            assertEquals(expectedUpsertStatement, upserStatement);
-        } finally {
-            conn.close();
-        }
-     }
-    
-    @Test
-    public void testUpsertStatementOnNewTableWithReferencedCols() throws Exception {
-        
-        // Arrange
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+  private static final String ORIGINAL_CLUSTER_QUORUM = "myzookeeperhost";
+  private static final String OVERRIDE_CLUSTER_QUORUM = "myoverridezookeeperhost";
 
-        try {
-            final String tableName = "TEST_TABLE_WITH_REF_COLS";
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setOutputTableName(configuration, tableName);
-            PhoenixConfigurationUtil.setPhysicalTableName(configuration, tableName);
-            PhoenixConfigurationUtil.setUpsertColumnNames(configuration, new String[] {"A_STRING", "A_BINARY", "COL1"});
-            
-            // Act
-            final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-            
-            // Assert
-            final String expectedUpsertStatement = "UPSERT  INTO " + tableName + " (\"A_STRING\", \"A_BINARY\", \"0\".\"COL1\") VALUES (?, ?, ?)"; 
-            assertEquals(expectedUpsertStatement, upserStatement);
-        } finally {
-            conn.close();
-        }
-     }
+  @Test
+  /**
+   * This test reproduces the bug filed in PHOENIX-2310.
+   *
+   * When invoking PhoenixConfigurationUtil.getUpsertStatement(), if upserting
+   * into a Phoenix View and the View DDL had recently been issued such that
+   * MetdataClient cache had been updated as a result of the create table versus
+   * from data in SYSTEM.CATALOG, the Upsert statement would contain the
+   * Object.toString() classname + hashcode instead of the correct
+   * cf.column_name representation which would cause the calling Pig script to
+   * fail.
+   */
+  public void testUpsertStatementOnNewViewWithReferencedCols() throws Exception {
 
-    
-    @Test
-    public void testUpsertStatement() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
-        final String tableName = "TEST_TABLE";
-        try {
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setOutputTableName(configuration, tableName);
-            PhoenixConfigurationUtil.setPhysicalTableName(configuration, tableName);
-            final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
-            final String expectedUpsertStatement = "UPSERT INTO " + tableName + " VALUES (?, ?, ?)"; 
-            assertEquals(expectedUpsertStatement, upserStatement);
-        } finally {
-            conn.close();
-        }
-     }
+    // Arrange
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
 
-    @Test
-    public void testSelectStatement() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
-        final String tableName = "TEST_TABLE";
-        try {
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
-            final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
-            final String expectedSelectStatement = "SELECT \"A_STRING\",\"A_BINARY\",\"0\".\"COL1\" FROM " + tableName ; 
-            assertEquals(expectedSelectStatement, selectStatement);
-        } finally {
-            conn.close();
-        }
+    try {
+      final String tableName = "TEST_TABLE_WITH_VIEW";
+      final String viewName = "TEST_VIEW";
+      String ddl = "CREATE TABLE " + tableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      String viewDdl = "CREATE VIEW " + viewName
+              + "  AS SELECT * FROM " + tableName + "\n";
+      conn.createStatement().execute(viewDdl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setOutputTableName(configuration, viewName);
+      PhoenixConfigurationUtil.setPhysicalTableName(configuration, viewName);
+      PhoenixConfigurationUtil.setUpsertColumnNames(configuration, new String[]{"A_STRING", "A_BINARY", "COL1"});
+
+      // Act
+      final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+
+      // Assert
+      final String expectedUpsertStatement = "UPSERT  INTO " + viewName + " (\"A_STRING\", \"A_BINARY\", \"0\".\"COL1\") VALUES (?, ?, ?)";
+      assertEquals(expectedUpsertStatement, upserStatement);
+    } finally {
+      conn.close();
     }
-    
-    @Test
-    public void testSelectStatementWithSchema() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
-        final String tableName = "TEST_TABLE";
-        final String schemaName = SchemaUtil.getEscapedArgument("schema");
-        final String fullTableName = SchemaUtil.getTableName(schemaName, tableName);
-        try {
-            String ddl = "CREATE TABLE "+ fullTableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setInputTableName(configuration, fullTableName);
-            final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
-            final String expectedSelectStatement = "SELECT \"A_STRING\",\"A_BINARY\",\"0\".\"COL1\" FROM " + fullTableName; 
-            assertEquals(expectedSelectStatement, selectStatement);
-        } finally {
-            conn.close();
-        }
-    }
-    
-    @Test
-    public void testSelectStatementForSpecificColumns() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
-        final String tableName = "TEST_TABLE";
-        try {
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (a_string varchar not null, a_binary varbinary not null, col1 integer" +
-                    "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
-            PhoenixConfigurationUtil.setSelectColumnNames(configuration, new String[]{"A_BINARY"});
-            final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
-            final String expectedSelectStatement = "SELECT \"A_BINARY\" FROM " + tableName ; 
-            assertEquals(expectedSelectStatement, selectStatement);
-        } finally {
-            conn.close();
-        }
-    }
-    
-    @Test
-    public void testSelectStatementForArrayTypes() throws Exception {
-        Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
-        final String tableName = "TEST_TABLE";
-        try {
-            String ddl = "CREATE TABLE "+ tableName + 
-                    "  (ID BIGINT NOT NULL PRIMARY KEY, VCARRAY VARCHAR[])\n";
-            conn.createStatement().execute(ddl);
-            final Configuration configuration = new Configuration ();
-            configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
-            PhoenixConfigurationUtil.setSelectColumnNames(configuration,new String[]{"ID","VCARRAY"});
-            PhoenixConfigurationUtil.setSchemaType(configuration, SchemaType.QUERY);
-            PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
-            final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
-            final String expectedSelectStatement = "SELECT \"ID\",\"0\".\"VCARRAY\" FROM " + tableName ; 
-            assertEquals(expectedSelectStatement, selectStatement);
-        } finally {
-            conn.close();
-        }
-    }
-    
-    @Test
-    public void testInputClusterOverride() throws Exception {
-        final Configuration configuration = new Configuration();
-        configuration.set(HConstants.ZOOKEEPER_QUORUM, ORIGINAL_CLUSTER_QUORUM);
-        String zkQuorum = PhoenixConfigurationUtil.getInputCluster(configuration);
-        assertEquals(zkQuorum, ORIGINAL_CLUSTER_QUORUM);
+  }
 
-        configuration.set(PhoenixConfigurationUtil.MAPREDUCE_INPUT_CLUSTER_QUORUM,
+  @Test
+  public void testUpsertStatementOnNewTableWithReferencedCols() throws Exception {
+
+    // Arrange
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+
+    try {
+      final String tableName = "TEST_TABLE_WITH_REF_COLS";
+      String ddl = "CREATE TABLE " + tableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setOutputTableName(configuration, tableName);
+      PhoenixConfigurationUtil.setPhysicalTableName(configuration, tableName);
+      PhoenixConfigurationUtil.setUpsertColumnNames(configuration, new String[]{"A_STRING", "A_BINARY", "COL1"});
+
+      // Act
+      final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+
+      // Assert
+      final String expectedUpsertStatement = "UPSERT  INTO " + tableName + " (\"A_STRING\", \"A_BINARY\", \"0\".\"COL1\") VALUES (?, ?, ?)";
+      assertEquals(expectedUpsertStatement, upserStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testUpsertStatement() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+    final String tableName = "TEST_TABLE";
+    try {
+      String ddl = "CREATE TABLE " + tableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setOutputTableName(configuration, tableName);
+      PhoenixConfigurationUtil.setPhysicalTableName(configuration, tableName);
+      final String upserStatement = PhoenixConfigurationUtil.getUpsertStatement(configuration);
+      final String expectedUpsertStatement = "UPSERT INTO " + tableName + " VALUES (?, ?, ?)";
+      assertEquals(expectedUpsertStatement, upserStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testSelectStatement() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+    final String tableName = "TEST_TABLE";
+    try {
+      String ddl = "CREATE TABLE " + tableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
+      final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
+      final String expectedSelectStatement = "SELECT \"A_STRING\",\"A_BINARY\",\"0\".\"COL1\" FROM " + tableName;
+      assertEquals(expectedSelectStatement, selectStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testSelectStatementWithSchema() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+    final String tableName = "TEST_TABLE";
+    final String schemaName = SchemaUtil.getEscapedArgument("schema");
+    final String fullTableName = SchemaUtil.getTableName(schemaName, tableName);
+    try {
+      String ddl = "CREATE TABLE " + fullTableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setInputTableName(configuration, fullTableName);
+      final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
+      final String expectedSelectStatement = "SELECT \"A_STRING\",\"A_BINARY\",\"0\".\"COL1\" FROM " + fullTableName;
+      assertEquals(expectedSelectStatement, selectStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testSelectStatementForSpecificColumns() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+    final String tableName = "TEST_TABLE";
+    try {
+      String ddl = "CREATE TABLE " + tableName
+              + "  (a_string varchar not null, a_binary varbinary not null, col1 integer"
+              + "  CONSTRAINT pk PRIMARY KEY (a_string, a_binary))\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
+      PhoenixConfigurationUtil.setSelectColumnNames(configuration, new String[]{"A_BINARY"});
+      final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
+      final String expectedSelectStatement = "SELECT \"A_BINARY\" FROM " + tableName;
+      assertEquals(expectedSelectStatement, selectStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testSelectStatementForArrayTypes() throws Exception {
+    Connection conn = DriverManager.getConnection(getUrl(), PropertiesUtil.deepCopy(TestUtil.TEST_PROPERTIES));
+    final String tableName = "TEST_TABLE";
+    try {
+      String ddl = "CREATE TABLE " + tableName
+              + "  (ID BIGINT NOT NULL PRIMARY KEY, VCARRAY VARCHAR[])\n";
+      conn.createStatement().execute(ddl);
+      final Configuration configuration = new Configuration();
+      configuration.set(HConstants.ZOOKEEPER_QUORUM, getUrl());
+      PhoenixConfigurationUtil.setSelectColumnNames(configuration, new String[]{"ID", "VCARRAY"});
+      PhoenixConfigurationUtil.setSchemaType(configuration, SchemaType.QUERY);
+      PhoenixConfigurationUtil.setInputTableName(configuration, tableName);
+      final String selectStatement = PhoenixConfigurationUtil.getSelectStatement(configuration);
+      final String expectedSelectStatement = "SELECT \"ID\",\"0\".\"VCARRAY\" FROM " + tableName;
+      assertEquals(expectedSelectStatement, selectStatement);
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testInputClusterOverride() throws Exception {
+    final Configuration configuration = new Configuration();
+    configuration.set(HConstants.ZOOKEEPER_QUORUM, ORIGINAL_CLUSTER_QUORUM);
+    String zkQuorum = PhoenixConfigurationUtil.getInputCluster(configuration);
+    assertEquals(zkQuorum, ORIGINAL_CLUSTER_QUORUM);
+
+    configuration.set(PhoenixConfigurationUtil.MAPREDUCE_INPUT_CLUSTER_QUORUM,
             OVERRIDE_CLUSTER_QUORUM);
-        String zkQuorumOverride = PhoenixConfigurationUtil.getInputCluster(configuration);
-        assertEquals(zkQuorumOverride, OVERRIDE_CLUSTER_QUORUM);
+    String zkQuorumOverride = PhoenixConfigurationUtil.getInputCluster(configuration);
+    assertEquals(zkQuorumOverride, OVERRIDE_CLUSTER_QUORUM);
 
-        final Configuration configuration2 = new Configuration();
-        PhoenixConfigurationUtil.setInputCluster(configuration2, OVERRIDE_CLUSTER_QUORUM);
-        String zkQuorumOverride2 =
-                PhoenixConfigurationUtil.getInputCluster(configuration2);
-        assertEquals(zkQuorumOverride2, OVERRIDE_CLUSTER_QUORUM);
+    final Configuration configuration2 = new Configuration();
+    PhoenixConfigurationUtil.setInputCluster(configuration2, OVERRIDE_CLUSTER_QUORUM);
+    String zkQuorumOverride2
+            = PhoenixConfigurationUtil.getInputCluster(configuration2);
+    assertEquals(zkQuorumOverride2, OVERRIDE_CLUSTER_QUORUM);
 
-        final Job job = Job.getInstance();
-        PhoenixMapReduceUtil.setInputCluster(job, OVERRIDE_CLUSTER_QUORUM);
-        Configuration configuration3 = job.getConfiguration();
-        String zkQuorumOverride3 =
-                PhoenixConfigurationUtil.getInputCluster(configuration3);
-        assertEquals(zkQuorumOverride3, OVERRIDE_CLUSTER_QUORUM);
+    final Job job = Job.getInstance();
+    PhoenixMapReduceUtil.setInputCluster(job, OVERRIDE_CLUSTER_QUORUM);
+    Configuration configuration3 = job.getConfiguration();
+    String zkQuorumOverride3
+            = PhoenixConfigurationUtil.getInputCluster(configuration3);
+    assertEquals(zkQuorumOverride3, OVERRIDE_CLUSTER_QUORUM);
 
-    }
+  }
 
-    @Test
-    public void testOutputClusterOverride() throws Exception {
-        final Configuration configuration = new Configuration();
-        configuration.set(HConstants.ZOOKEEPER_QUORUM, ORIGINAL_CLUSTER_QUORUM);
-        String zkQuorum = PhoenixConfigurationUtil.getOutputCluster(configuration);
-        assertEquals(zkQuorum, ORIGINAL_CLUSTER_QUORUM);
+  @Test
+  public void testOutputClusterOverride() throws Exception {
+    final Configuration configuration = new Configuration();
+    configuration.set(HConstants.ZOOKEEPER_QUORUM, ORIGINAL_CLUSTER_QUORUM);
+    String zkQuorum = PhoenixConfigurationUtil.getOutputCluster(configuration);
+    assertEquals(zkQuorum, ORIGINAL_CLUSTER_QUORUM);
 
-        configuration.set(PhoenixConfigurationUtil.MAPREDUCE_OUTPUT_CLUSTER_QUORUM,
+    configuration.set(PhoenixConfigurationUtil.MAPREDUCE_OUTPUT_CLUSTER_QUORUM,
             OVERRIDE_CLUSTER_QUORUM);
-        String zkQuorumOverride = PhoenixConfigurationUtil.getOutputCluster(configuration);
-        assertEquals(zkQuorumOverride, OVERRIDE_CLUSTER_QUORUM);
+    String zkQuorumOverride = PhoenixConfigurationUtil.getOutputCluster(configuration);
+    assertEquals(zkQuorumOverride, OVERRIDE_CLUSTER_QUORUM);
 
-        final Configuration configuration2 = new Configuration();
-        PhoenixConfigurationUtil.setOutputCluster(configuration2, OVERRIDE_CLUSTER_QUORUM);
-        String zkQuorumOverride2 =
-                PhoenixConfigurationUtil.getOutputCluster(configuration2);
-        assertEquals(zkQuorumOverride2, OVERRIDE_CLUSTER_QUORUM);
+    final Configuration configuration2 = new Configuration();
+    PhoenixConfigurationUtil.setOutputCluster(configuration2, OVERRIDE_CLUSTER_QUORUM);
+    String zkQuorumOverride2
+            = PhoenixConfigurationUtil.getOutputCluster(configuration2);
+    assertEquals(zkQuorumOverride2, OVERRIDE_CLUSTER_QUORUM);
 
-        final Job job = Job.getInstance();
-        PhoenixMapReduceUtil.setOutputCluster(job, OVERRIDE_CLUSTER_QUORUM);
-        Configuration configuration3 = job.getConfiguration();
-        String zkQuorumOverride3 =
-                PhoenixConfigurationUtil.getOutputCluster(configuration3);
-        assertEquals(zkQuorumOverride3, OVERRIDE_CLUSTER_QUORUM);
+    final Job job = Job.getInstance();
+    PhoenixMapReduceUtil.setOutputCluster(job, OVERRIDE_CLUSTER_QUORUM);
+    Configuration configuration3 = job.getConfiguration();
+    String zkQuorumOverride3
+            = PhoenixConfigurationUtil.getOutputCluster(configuration3);
+    assertEquals(zkQuorumOverride3, OVERRIDE_CLUSTER_QUORUM);
 
-    }
+  }
 }

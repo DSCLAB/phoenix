@@ -11,21 +11,22 @@
 package org.apache.phoenix.schema;
 
 public class SequenceInfo {
-    public long sequenceValue;
-    public final long incrementBy;
-    public final long minValue;
-    public final long maxValue;
-    public final long cacheSize;
-    public final boolean cycle;
-    public boolean limitReached;
 
-    public SequenceInfo(long sequenceValue, long incrementBy, long minValue, long maxValue, long cacheSize, boolean cycle) {
-        this.sequenceValue = sequenceValue;
-        this.incrementBy = incrementBy;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        this.cacheSize = cacheSize;
-        this.cycle = cycle;
-        this.limitReached = false;
-    }
+  public long sequenceValue;
+  public final long incrementBy;
+  public final long minValue;
+  public final long maxValue;
+  public final long cacheSize;
+  public final boolean cycle;
+  public boolean limitReached;
+
+  public SequenceInfo(long sequenceValue, long incrementBy, long minValue, long maxValue, long cacheSize, boolean cycle) {
+    this.sequenceValue = sequenceValue;
+    this.incrementBy = incrementBy;
+    this.minValue = minValue;
+    this.maxValue = maxValue;
+    this.cacheSize = cacheSize;
+    this.cycle = cycle;
+    this.limitReached = false;
+  }
 }

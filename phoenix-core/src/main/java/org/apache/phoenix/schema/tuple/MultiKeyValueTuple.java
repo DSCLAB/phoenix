@@ -24,60 +24,63 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.phoenix.hbase.index.util.GenericKeyValueBuilder;
 import org.apache.phoenix.util.KeyValueUtil;
 
-
 public class MultiKeyValueTuple extends BaseTuple {
-    private List<Cell> values;
-    
-    public MultiKeyValueTuple(List<Cell> values) {
-        setKeyValues(values);
-    }
-    
-    public MultiKeyValueTuple() {
-    }
 
-    /** Caller must not modify the list that is passed here */
-    public void setKeyValues(List<Cell> values) {
-        this.values = values;
-    }
-    
-    @Override
-    public void getKey(ImmutableBytesWritable ptr) {
-        Cell value = values.get(0);
-        ptr.set(value.getRowArray(), value.getRowOffset(), value.getRowLength());
-    }
+  private List<Cell> values;
 
-    @Override
-    public boolean isImmutable() {
-        return true;
-    }
+  public MultiKeyValueTuple(List<Cell> values) {
+    setKeyValues(values);
+  }
 
-    @Override
-    public Cell getValue(byte[] family, byte[] qualifier) {
-        return KeyValueUtil.getColumnLatest(GenericKeyValueBuilder.INSTANCE, values, family, qualifier);
-    }
+  public MultiKeyValueTuple() {
+  }
 
-    @Override
-    public String toString() {
-        return values.toString();
-    }
+  /**
+   * Caller must not modify the list that is passed here
+   */
+  public void setKeyValues(List<Cell> values) {
+    this.values = values;
+  }
 
-    @Override
-    public int size() {
-        return values.size();
-    }
+  @Override
+  public void getKey(ImmutableBytesWritable ptr) {
+    Cell value = values.get(0);
+    ptr.set(value.getRowArray(), value.getRowOffset(), value.getRowLength());
+  }
 
-    @Override
-    public Cell getValue(int index) {
-        return values.get(index);
-    }
+  @Override
+  public boolean isImmutable() {
+    return true;
+  }
 
-    @Override
-    public boolean getValue(byte[] family, byte[] qualifier,
-            ImmutableBytesWritable ptr) {
-        Cell kv = getValue(family, qualifier);
-        if (kv == null)
-            return false;
-        ptr.set(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
-        return true;
+  @Override
+  public Cell getValue(byte[] family, byte[] qualifier) {
+    return KeyValueUtil.getColumnLatest(GenericKeyValueBuilder.INSTANCE, values, family, qualifier);
+  }
+
+  @Override
+  public String toString() {
+    return values.toString();
+  }
+
+  @Override
+  public int size() {
+    return values.size();
+  }
+
+  @Override
+  public Cell getValue(int index) {
+    return values.get(index);
+  }
+
+  @Override
+  public boolean getValue(byte[] family, byte[] qualifier,
+          ImmutableBytesWritable ptr) {
+    Cell kv = getValue(family, qualifier);
+    if (kv == null) {
+      return false;
     }
+    ptr.set(kv.getValueArray(), kv.getValueOffset(), kv.getValueLength());
+    return true;
+  }
 }

@@ -20,21 +20,23 @@ package org.apache.phoenix.iterate;
 import org.apache.phoenix.expression.aggregator.Aggregator;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * 
- * Interface for scanners that either do aggregation
- * or delegate to scanners that do aggregation.
  *
- * 
+ * Interface for scanners that either do aggregation or delegate to scanners
+ * that do aggregation.
+ *
+ *
  * @since 0.1
  */
 public interface AggregatingResultIterator extends ResultIterator {
-    /**
-     * Provides a means of re-aggregating a result row. For
-     * scanners that need to look ahead (i.e. {@link org.apache.phoenix.iterate.OrderedAggregatingResultIterator}
-     * @param result the row to re-aggregate
-     * @return Aggregator[] results
-     */
-    Aggregator[] aggregate(Tuple result);
+
+  /**
+   * Provides a means of re-aggregating a result row. For scanners that need to
+   * look ahead (i.e.
+   * {@link org.apache.phoenix.iterate.OrderedAggregatingResultIterator}
+   *
+   * @param result the row to re-aggregate
+   * @return Aggregator[] results
+   */
+  Aggregator[] aggregate(Tuple result);
 }

@@ -35,44 +35,45 @@ import org.apache.phoenix.memory.MemoryManager.MemoryChunk;
 import org.apache.phoenix.util.TransactionUtil;
 
 public class IndexMetaDataCacheFactory implements ServerCacheFactory {
-    public IndexMetaDataCacheFactory() {
+
+  public IndexMetaDataCacheFactory() {
+  }
+
+  @Override
+  public void readFields(DataInput arg0) throws IOException {
+  }
+
+  @Override
+  public void write(DataOutput arg0) throws IOException {
+  }
+
+  @Override
+  public Closeable newCache(ImmutableBytesWritable cachePtr, byte[] txState, final MemoryChunk chunk) throws SQLException {
+    // just use the standard keyvalue builder - this doesn't really need to be fast
+    final List<IndexMaintainer> maintainers
+            = IndexMaintainer.deserialize(cachePtr, GenericKeyValueBuilder.INSTANCE);
+    final Transaction txn;
+    try {
+      txn = txState.length != 0 ? MutationState.decodeTransaction(txState) : null;
+    } catch (IOException e) {
+      throw new SQLException(e);
     }
+    return new IndexMetaDataCache() {
 
-    @Override
-    public void readFields(DataInput arg0) throws IOException {
-    }
+      @Override
+      public void close() throws IOException {
+        chunk.close();
+      }
 
-    @Override
-    public void write(DataOutput arg0) throws IOException {
-    }
+      @Override
+      public List<IndexMaintainer> getIndexMaintainers() {
+        return maintainers;
+      }
 
-    @Override
-    public Closeable newCache (ImmutableBytesWritable cachePtr, byte[] txState, final MemoryChunk chunk) throws SQLException {
-        // just use the standard keyvalue builder - this doesn't really need to be fast
-        final List<IndexMaintainer> maintainers = 
-                IndexMaintainer.deserialize(cachePtr, GenericKeyValueBuilder.INSTANCE);
-        final Transaction txn;
-        try {
-            txn = txState.length!=0 ? MutationState.decodeTransaction(txState) : null;
-        } catch (IOException e) {
-            throw new SQLException(e);
-        }
-        return new IndexMetaDataCache() {
-
-            @Override
-            public void close() throws IOException {
-                chunk.close();
-            }
-
-            @Override
-            public List<IndexMaintainer> getIndexMaintainers() {
-                return maintainers;
-            }
-
-            @Override
-            public Transaction getTransaction() {
-                return txn;
-            }
-        };
-    }
+      @Override
+      public Transaction getTransaction() {
+        return txn;
+      }
+    };
+  }
 }

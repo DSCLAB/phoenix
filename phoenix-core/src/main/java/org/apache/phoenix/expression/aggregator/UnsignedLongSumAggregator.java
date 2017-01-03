@@ -22,22 +22,22 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * 
- * Aggregator that sums unsigned long values
- * TODO: create these classes dynamically based on the type passed through
  *
- * 
+ * Aggregator that sums unsigned long values TODO: create these classes
+ * dynamically based on the type passed through
+ *
+ *
  * @since 0.12
  */
 public class UnsignedLongSumAggregator extends NumberSumAggregator {
-    
-    public UnsignedLongSumAggregator(SortOrder sortOrder) {
-        super(sortOrder);
-    }
-    
-    @Override
-    protected PDataType getInputDataType() {
-        return PUnsignedLong.INSTANCE;
-    }
+
+  public UnsignedLongSumAggregator(SortOrder sortOrder) {
+    super(sortOrder);
+  }
+
+  @Override
+  protected PDataType getInputDataType() {
+    return PUnsignedLong.INSTANCE;
+  }
 
 }

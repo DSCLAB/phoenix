@@ -22,8 +22,9 @@ import java.sql.SQLException;
 import org.apache.phoenix.execute.MutationState;
 import org.apache.phoenix.schema.TableRef;
 
-
 public interface MutationPlan extends StatementPlan {
-    public MutationState execute() throws SQLException;
-    public TableRef getTargetRef();
+
+  public MutationState execute() throws SQLException;
+
+  public TableRef getTargetRef();
 }

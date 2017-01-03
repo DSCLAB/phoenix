@@ -58,17 +58,17 @@ public class TestParalleWriterIndexCommitter {
   private final byte[] row = Bytes.toBytes("row");
 
   @Test
-  public void testCorrectlyCleansUpResources() throws Exception{
+  public void testCorrectlyCleansUpResources() throws Exception {
     ExecutorService exec = Executors.newFixedThreadPool(1);
     FakeTableFactory factory = new FakeTableFactory(
-        Collections.<ImmutableBytesPtr, HTableInterface> emptyMap());
+            Collections.<ImmutableBytesPtr, HTableInterface>emptyMap());
     ParallelWriterIndexCommitter writer = new ParallelWriterIndexCommitter(VersionInfo.getVersion());
     Abortable mockAbort = Mockito.mock(Abortable.class);
     Stoppable mockStop = Mockito.mock(Stoppable.class);
-    RegionCoprocessorEnvironment e =Mockito.mock(RegionCoprocessorEnvironment.class);
-    Configuration conf =new Configuration();
+    RegionCoprocessorEnvironment e = Mockito.mock(RegionCoprocessorEnvironment.class);
+    Configuration conf = new Configuration();
     Mockito.when(e.getConfiguration()).thenReturn(conf);
-    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String,Object>());
+    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String, Object>());
     // create a simple writer
     writer.setup(factory, exec, mockAbort, mockStop, 1, e);
     // stop the writer
@@ -78,31 +78,31 @@ public class TestParalleWriterIndexCommitter {
     Mockito.verifyZeroInteractions(mockAbort, mockStop);
   }
 
-  @SuppressWarnings({ "unchecked", "deprecation" })
+  @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   public void testSynchronouslyCompletesAllWrites() throws Exception {
     LOG.info("Starting " + test.getTableNameString());
     LOG.info("Current thread is interrupted: " + Thread.interrupted());
     Abortable abort = new StubAbortable();
-    RegionCoprocessorEnvironment e =Mockito.mock(RegionCoprocessorEnvironment.class);
-    Configuration conf =new Configuration();
+    RegionCoprocessorEnvironment e = Mockito.mock(RegionCoprocessorEnvironment.class);
+    Configuration conf = new Configuration();
     Mockito.when(e.getConfiguration()).thenReturn(conf);
-    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String,Object>());
+    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String, Object>());
     Stoppable stop = Mockito.mock(Stoppable.class);
     ExecutorService exec = Executors.newFixedThreadPool(1);
-    Map<ImmutableBytesPtr, HTableInterface> tables =
-        new HashMap<ImmutableBytesPtr, HTableInterface>();
+    Map<ImmutableBytesPtr, HTableInterface> tables
+            = new HashMap<ImmutableBytesPtr, HTableInterface>();
     FakeTableFactory factory = new FakeTableFactory(tables);
 
     ImmutableBytesPtr tableName = new ImmutableBytesPtr(this.test.getTableName());
     Put m = new Put(row);
     m.add(Bytes.toBytes("family"), Bytes.toBytes("qual"), null);
-    Multimap<HTableInterfaceReference, Mutation> indexUpdates =
-        ArrayListMultimap.<HTableInterfaceReference, Mutation> create();
+    Multimap<HTableInterfaceReference, Mutation> indexUpdates
+            = ArrayListMultimap.<HTableInterfaceReference, Mutation>create();
     indexUpdates.put(new HTableInterfaceReference(tableName), m);
 
     HTableInterface table = Mockito.mock(HTableInterface.class);
-    final boolean[] completed = new boolean[] { false };
+    final boolean[] completed = new boolean[]{false};
     Mockito.when(table.batch(Mockito.anyList())).thenAnswer(new Answer<Void>() {
 
       @Override
@@ -121,7 +121,7 @@ public class TestParalleWriterIndexCommitter {
     writer.setup(factory, exec, abort, stop, 1, e);
     writer.write(indexUpdates, true);
     assertTrue("Writer returned before the table batch completed! Likely a race condition tripped",
-      completed[0]);
+            completed[0]);
     writer.stop(this.test.getTableNameString() + " finished");
     assertTrue("Factory didn't get shutdown after writer#stop!", factory.shutdown);
     assertTrue("ExectorService isn't terminated after writer#stop!", exec.isShutdown());

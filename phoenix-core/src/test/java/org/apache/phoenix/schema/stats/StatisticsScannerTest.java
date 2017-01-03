@@ -42,103 +42,103 @@ import org.junit.Test;
  */
 public class StatisticsScannerTest {
 
-    private Region region;
-    private RegionServerServices rsServices;
-    private StatisticsWriter statsWriter;
-    private StatisticsScannerCallable callable;
-    private StatisticsCollectionRunTracker runTracker;
-    private StatisticsScanner mockScanner;
-    private StatisticsCollector tracker;
-    private InternalScanner delegate;
-    private HRegionInfo regionInfo;
+  private Region region;
+  private RegionServerServices rsServices;
+  private StatisticsWriter statsWriter;
+  private StatisticsScannerCallable callable;
+  private StatisticsCollectionRunTracker runTracker;
+  private StatisticsScanner mockScanner;
+  private StatisticsCollector tracker;
+  private InternalScanner delegate;
+  private HRegionInfo regionInfo;
 
-    private Configuration config;
+  private Configuration config;
 
-    @Before
-    public void setupMocks() throws Exception {
-        this.config = new Configuration(false);
+  @Before
+  public void setupMocks() throws Exception {
+    this.config = new Configuration(false);
 
-        // Create all of the mocks
-        this.region = mock(Region.class);
-        this.rsServices = mock(RegionServerServices.class);
-        this.statsWriter = mock(StatisticsWriter.class);
-        this.callable = mock(StatisticsScannerCallable.class);
-        this.runTracker = mock(StatisticsCollectionRunTracker.class);
-        this.mockScanner = mock(StatisticsScanner.class);
-        this.tracker = mock(StatisticsCollector.class);
-        this.delegate = mock(InternalScanner.class);
-        this.regionInfo = mock(HRegionInfo.class);
+    // Create all of the mocks
+    this.region = mock(Region.class);
+    this.rsServices = mock(RegionServerServices.class);
+    this.statsWriter = mock(StatisticsWriter.class);
+    this.callable = mock(StatisticsScannerCallable.class);
+    this.runTracker = mock(StatisticsCollectionRunTracker.class);
+    this.mockScanner = mock(StatisticsScanner.class);
+    this.tracker = mock(StatisticsCollector.class);
+    this.delegate = mock(InternalScanner.class);
+    this.regionInfo = mock(HRegionInfo.class);
 
-        // Wire up the mocks to the mock StatisticsScanner
-        when(mockScanner.getStatisticsWriter()).thenReturn(statsWriter);
-        when(mockScanner.getRegionServerServices()).thenReturn(rsServices);
-        when(mockScanner.createCallable()).thenReturn(callable);
-        when(mockScanner.getStatsCollectionRunTracker(any(Configuration.class))).thenReturn(runTracker);
-        when(mockScanner.getRegion()).thenReturn(region);
-        when(mockScanner.getConfig()).thenReturn(config);
-        when(mockScanner.getTracker()).thenReturn(tracker);
-        when(mockScanner.getDelegate()).thenReturn(delegate);
+    // Wire up the mocks to the mock StatisticsScanner
+    when(mockScanner.getStatisticsWriter()).thenReturn(statsWriter);
+    when(mockScanner.getRegionServerServices()).thenReturn(rsServices);
+    when(mockScanner.createCallable()).thenReturn(callable);
+    when(mockScanner.getStatsCollectionRunTracker(any(Configuration.class))).thenReturn(runTracker);
+    when(mockScanner.getRegion()).thenReturn(region);
+    when(mockScanner.getConfig()).thenReturn(config);
+    when(mockScanner.getTracker()).thenReturn(tracker);
+    when(mockScanner.getDelegate()).thenReturn(delegate);
 
-        // Wire up the HRegionInfo mock to the Region mock
-        when(region.getRegionInfo()).thenReturn(regionInfo);
+    // Wire up the HRegionInfo mock to the Region mock
+    when(region.getRegionInfo()).thenReturn(regionInfo);
 
-        // Always call close() on the mock StatisticsScanner
-        doCallRealMethod().when(mockScanner).close();
-    }
+    // Always call close() on the mock StatisticsScanner
+    doCallRealMethod().when(mockScanner).close();
+  }
 
-    @Test
-    public void testCheckRegionServerStoppingOnClose() throws Exception {
-        when(rsServices.isStopping()).thenReturn(true);
-        when(rsServices.isStopped()).thenReturn(false);
+  @Test
+  public void testCheckRegionServerStoppingOnClose() throws Exception {
+    when(rsServices.isStopping()).thenReturn(true);
+    when(rsServices.isStopped()).thenReturn(false);
 
-        mockScanner.close();
+    mockScanner.close();
 
-        verify(rsServices).isStopping();
-        verify(callable, never()).call();
-        verify(runTracker, never()).runTask(callable);
-    }
+    verify(rsServices).isStopping();
+    verify(callable, never()).call();
+    verify(runTracker, never()).runTask(callable);
+  }
 
-    @Test
-    public void testCheckRegionServerStoppedOnClose() throws Exception {
-        when(rsServices.isStopping()).thenReturn(false);
-        when(rsServices.isStopped()).thenReturn(true);
+  @Test
+  public void testCheckRegionServerStoppedOnClose() throws Exception {
+    when(rsServices.isStopping()).thenReturn(false);
+    when(rsServices.isStopped()).thenReturn(true);
 
-        mockScanner.close();
+    mockScanner.close();
 
-        verify(rsServices).isStopping();
-        verify(rsServices).isStopped();
-        verify(callable, never()).call();
-        verify(runTracker, never()).runTask(callable);
-    }
+    verify(rsServices).isStopping();
+    verify(rsServices).isStopped();
+    verify(callable, never()).call();
+    verify(runTracker, never()).runTask(callable);
+  }
 
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testCheckRegionServerStoppingOnException() throws Exception {
-        StatisticsScannerCallable realCallable = mockScanner.new StatisticsScannerCallable();
-        doThrow(new IOException()).when(statsWriter).deleteStats(any(Region.class), any(StatisticsCollector.class),
-                any(ImmutableBytesPtr.class), any(List.class));
-        when(rsServices.isStopping()).thenReturn(true);
-        when(rsServices.isStopped()).thenReturn(false);
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testCheckRegionServerStoppingOnException() throws Exception {
+    StatisticsScannerCallable realCallable = mockScanner.new StatisticsScannerCallable();
+    doThrow(new IOException()).when(statsWriter).deleteStats(any(Region.class), any(StatisticsCollector.class),
+            any(ImmutableBytesPtr.class), any(List.class));
+    when(rsServices.isStopping()).thenReturn(true);
+    when(rsServices.isStopped()).thenReturn(false);
 
-        // Should not throw an exception
-        realCallable.call();
+    // Should not throw an exception
+    realCallable.call();
 
-        verify(rsServices).isStopping();
-    }
+    verify(rsServices).isStopping();
+  }
 
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testCheckRegionServerStoppedOnException() throws Exception {
-        StatisticsScannerCallable realCallable = mockScanner.new StatisticsScannerCallable();
-        doThrow(new IOException()).when(statsWriter).deleteStats(any(Region.class), any(StatisticsCollector.class),
-                any(ImmutableBytesPtr.class), any(List.class));
-        when(rsServices.isStopping()).thenReturn(false);
-        when(rsServices.isStopped()).thenReturn(true);
+  @SuppressWarnings("unchecked")
+  @Test
+  public void testCheckRegionServerStoppedOnException() throws Exception {
+    StatisticsScannerCallable realCallable = mockScanner.new StatisticsScannerCallable();
+    doThrow(new IOException()).when(statsWriter).deleteStats(any(Region.class), any(StatisticsCollector.class),
+            any(ImmutableBytesPtr.class), any(List.class));
+    when(rsServices.isStopping()).thenReturn(false);
+    when(rsServices.isStopped()).thenReturn(true);
 
-        // Should not throw an exception
-        realCallable.call();
+    // Should not throw an exception
+    realCallable.call();
 
-        verify(rsServices).isStopping();
-        verify(rsServices).isStopped();
-    }
+    verify(rsServices).isStopping();
+    verify(rsServices).isStopped();
+  }
 }

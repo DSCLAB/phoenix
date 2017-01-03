@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.result.file.ResultFileDetails;
@@ -26,34 +25,36 @@ import java.util.List;
  * Common container for Pherf results.
  */
 public class Result {
-    private final List<ResultValue> resultValues;
 
-    // Placeholder for future work
-    private final ResultFileDetails type;
-    private final String header;
+  private final List<ResultValue> resultValues;
 
-    /**
-     * @param type          {@link org.apache.phoenix.pherf.result.file.ResultFileDetails} Currently unused, but gives metadata about the
-     *                      contents of the result.
-     * @param header        Used for CSV, otherwise pass null. For CSV pass comma separated string of header fields.
-     * @param messageValues List<{@link ResultValue} All fields combined represent the data
-     *                      for a row to be written.
-     */
-    public Result(ResultFileDetails type, String header, List<ResultValue> messageValues) {
-        this.resultValues = messageValues;
-        this.header = header;
-        this.type = type;
-    }
+  // Placeholder for future work
+  private final ResultFileDetails type;
+  private final String header;
 
-    public List<ResultValue> getResultValues() {
-        return resultValues;
-    }
+  /**
+   * @param type {@link org.apache.phoenix.pherf.result.file.ResultFileDetails}
+   * Currently unused, but gives metadata about the contents of the result.
+   * @param header Used for CSV, otherwise pass null. For CSV pass comma
+   * separated string of header fields.
+   * @param messageValues List<{@link ResultValue} All fields combined represent
+   * the data for a row to be written.
+   */
+  public Result(ResultFileDetails type, String header, List<ResultValue> messageValues) {
+    this.resultValues = messageValues;
+    this.header = header;
+    this.type = type;
+  }
 
-    public String getHeader() {
-        return header;
-    }
+  public List<ResultValue> getResultValues() {
+    return resultValues;
+  }
 
-    public ResultFileDetails getType() {
-        return type;
-    }
+  public String getHeader() {
+    return header;
+  }
+
+  public ResultFileDetails getType() {
+    return type;
+  }
 }

@@ -46,97 +46,124 @@ import org.apache.phoenix.schema.SequenceKey;
 import org.apache.phoenix.schema.stats.PTableStats;
 import org.apache.tephra.TransactionSystemClient;
 
-
 public interface ConnectionQueryServices extends QueryServices, MetaDataMutated {
-    public static final int INITIAL_META_DATA_TABLE_CAPACITY = 100;
 
-    /**
-     * Get (and create if necessary) a child QueryService for a given tenantId.
-     * The QueryService will be cached for the lifetime of the parent QueryService
-     * @param tenantId the organization ID
-     * @return the child QueryService
-     */
-    public ConnectionQueryServices getChildQueryServices(ImmutableBytesWritable tenantId);
+  public static final int INITIAL_META_DATA_TABLE_CAPACITY = 100;
 
-    /**
-     * Get an HTableInterface by the given name. It is the callers
-     * responsibility to close the returned HTableInterface.
-     * @param tableName the name of the HTable
-     * @return the HTableInterface
-     * @throws SQLException 
-     */
-    public HTableInterface getTable(byte[] tableName) throws SQLException;
+  /**
+   * Get (and create if necessary) a child QueryService for a given tenantId.
+   * The QueryService will be cached for the lifetime of the parent QueryService
+   *
+   * @param tenantId the organization ID
+   * @return the child QueryService
+   */
+  public ConnectionQueryServices getChildQueryServices(ImmutableBytesWritable tenantId);
 
-    public HTableDescriptor getTableDescriptor(byte[] tableName) throws SQLException;
+  /**
+   * Get an HTableInterface by the given name. It is the callers responsibility
+   * to close the returned HTableInterface.
+   *
+   * @param tableName the name of the HTable
+   * @return the HTableInterface
+   * @throws SQLException
+   */
+  public HTableInterface getTable(byte[] tableName) throws SQLException;
 
-    public HRegionLocation getTableRegionLocation(byte[] tableName, byte[] row) throws SQLException;
-    public List<HRegionLocation> getAllTableRegions(byte[] tableName) throws SQLException;
+  public HTableDescriptor getTableDescriptor(byte[] tableName) throws SQLException;
 
-    public PhoenixConnection connect(String url, Properties info) throws SQLException;
+  public HRegionLocation getTableRegionLocation(byte[] tableName, byte[] row) throws SQLException;
 
-    public MetaDataMutationResult getTable(PName tenantId, byte[] schemaName, byte[] tableName, long tableTimestamp, long clientTimetamp) throws SQLException;
-    public MetaDataMutationResult getFunctions(PName tenantId, List<Pair<byte[], Long>> functionNameAndTimeStampPairs, long clientTimestamp) throws SQLException;
+  public List<HRegionLocation> getAllTableRegions(byte[] tableName) throws SQLException;
 
-    public MetaDataMutationResult createTable(List<Mutation> tableMetaData, byte[] tableName, PTableType tableType,
-            Map<String, Object> tableProps, List<Pair<byte[], Map<String, Object>>> families, byte[][] splits,
-            boolean isNamespaceMapped) throws SQLException;
-    public MetaDataMutationResult dropTable(List<Mutation> tableMetadata, PTableType tableType, boolean cascade) throws SQLException;
-    public MetaDataMutationResult dropFunction(List<Mutation> tableMetadata, boolean ifExists) throws SQLException;
-    public MetaDataMutationResult addColumn(List<Mutation> tableMetaData, PTable table, Map<String, List<Pair<String,Object>>> properties, Set<String> colFamiliesForPColumnsToBeAdded) throws SQLException;
-    public MetaDataMutationResult dropColumn(List<Mutation> tableMetadata, PTableType tableType) throws SQLException;
-    public MetaDataMutationResult updateIndexState(List<Mutation> tableMetadata, String parentTableName) throws SQLException;
-    public MutationState updateData(MutationPlan plan) throws SQLException;
+  public PhoenixConnection connect(String url, Properties info) throws SQLException;
 
-    public void init(String url, Properties props) throws SQLException;
+  public MetaDataMutationResult getTable(PName tenantId, byte[] schemaName, byte[] tableName, long tableTimestamp, long clientTimetamp) throws SQLException;
 
-    public int getLowestClusterHBaseVersion();
-    public HBaseAdmin getAdmin() throws SQLException;
+  public MetaDataMutationResult getFunctions(PName tenantId, List<Pair<byte[], Long>> functionNameAndTimeStampPairs, long clientTimestamp) throws SQLException;
 
-    void clearTableRegionCache(byte[] tableName) throws SQLException;
+  public MetaDataMutationResult createTable(List<Mutation> tableMetaData, byte[] tableName, PTableType tableType,
+          Map<String, Object> tableProps, List<Pair<byte[], Map<String, Object>>> families, byte[][] splits,
+          boolean isNamespaceMapped) throws SQLException;
 
-    boolean hasIndexWALCodec();
-    
-    long createSequence(String tenantId, String schemaName, String sequenceName, long startWith, long incrementBy, long cacheSize, long minValue, long maxValue, boolean cycle, long timestamp) throws SQLException;
-    long dropSequence(String tenantId, String schemaName, String sequenceName, long timestamp) throws SQLException;
-    void validateSequences(List<SequenceAllocation> sequenceAllocations, long timestamp, long[] values, SQLException[] exceptions, Sequence.ValueOp action) throws SQLException;
-    void incrementSequences(List<SequenceAllocation> sequenceAllocation, long timestamp, long[] values, SQLException[] exceptions) throws SQLException;
-    long currentSequenceValue(SequenceKey sequenceKey, long timestamp) throws SQLException;
-    void returnSequences(List<SequenceKey> sequenceKeys, long timestamp, SQLException[] exceptions) throws SQLException;
+  public MetaDataMutationResult dropTable(List<Mutation> tableMetadata, PTableType tableType, boolean cascade) throws SQLException;
 
-    MetaDataMutationResult createFunction(List<Mutation> functionData, PFunction function, boolean temporary) throws SQLException;
-    void addConnection(PhoenixConnection connection) throws SQLException;
-    void removeConnection(PhoenixConnection connection) throws SQLException;
+  public MetaDataMutationResult dropFunction(List<Mutation> tableMetadata, boolean ifExists) throws SQLException;
 
-    /**
-     * @return the {@link KeyValueBuilder} that is valid for the locally installed version of HBase.
-     */
-    public KeyValueBuilder getKeyValueBuilder();
-    
-    public enum Feature {LOCAL_INDEX, RENEW_LEASE};
-    public boolean supportsFeature(Feature feature);
-    
-    public String getUserName();
-    public void clearTableFromCache(final byte[] tenantId, final byte[] schemaName, final byte[] tableName, long clientTS) throws SQLException;
+  public MetaDataMutationResult addColumn(List<Mutation> tableMetaData, PTable table, Map<String, List<Pair<String, Object>>> properties, Set<String> colFamiliesForPColumnsToBeAdded) throws SQLException;
 
-    public PTableStats getTableStats(byte[] physicalName, long clientTimeStamp) throws SQLException;
-    
-    public long clearCache() throws SQLException;
-    public int getSequenceSaltBuckets();
+  public MetaDataMutationResult dropColumn(List<Mutation> tableMetadata, PTableType tableType) throws SQLException;
 
-    TransactionSystemClient getTransactionSystemClient();
-    public long getRenewLeaseThresholdMilliSeconds();
-    public boolean isRenewingLeasesEnabled();
+  public MetaDataMutationResult updateIndexState(List<Mutation> tableMetadata, String parentTableName) throws SQLException;
 
-    public MetaDataMutationResult createSchema(List<Mutation> schemaMutations, String schemaName) throws SQLException;
+  public MutationState updateData(MutationPlan plan) throws SQLException;
 
-    MetaDataMutationResult getSchema(String schemaName, long clientTimestamp) throws SQLException;
+  public void init(String url, Properties props) throws SQLException;
 
-    public MetaDataMutationResult dropSchema(List<Mutation> schemaMetaData, String schemaName) throws SQLException;
+  public int getLowestClusterHBaseVersion();
 
-    /**
-     * Removes cache {@link PTableStats} for the table with the given name. If no cached stats are present, this does nothing.
-     *
-     * @param tableName The table to remove stats for
-     */
-    void invalidateStats(ImmutableBytesPtr tableName);
+  public HBaseAdmin getAdmin() throws SQLException;
+
+  void clearTableRegionCache(byte[] tableName) throws SQLException;
+
+  boolean hasIndexWALCodec();
+
+  long createSequence(String tenantId, String schemaName, String sequenceName, long startWith, long incrementBy, long cacheSize, long minValue, long maxValue, boolean cycle, long timestamp) throws SQLException;
+
+  long dropSequence(String tenantId, String schemaName, String sequenceName, long timestamp) throws SQLException;
+
+  void validateSequences(List<SequenceAllocation> sequenceAllocations, long timestamp, long[] values, SQLException[] exceptions, Sequence.ValueOp action) throws SQLException;
+
+  void incrementSequences(List<SequenceAllocation> sequenceAllocation, long timestamp, long[] values, SQLException[] exceptions) throws SQLException;
+
+  long currentSequenceValue(SequenceKey sequenceKey, long timestamp) throws SQLException;
+
+  void returnSequences(List<SequenceKey> sequenceKeys, long timestamp, SQLException[] exceptions) throws SQLException;
+
+  MetaDataMutationResult createFunction(List<Mutation> functionData, PFunction function, boolean temporary) throws SQLException;
+
+  void addConnection(PhoenixConnection connection) throws SQLException;
+
+  void removeConnection(PhoenixConnection connection) throws SQLException;
+
+  /**
+   * @return the {@link KeyValueBuilder} that is valid for the locally installed
+   * version of HBase.
+   */
+  public KeyValueBuilder getKeyValueBuilder();
+
+  public enum Feature {
+    LOCAL_INDEX, RENEW_LEASE
+  };
+
+  public boolean supportsFeature(Feature feature);
+
+  public String getUserName();
+
+  public void clearTableFromCache(final byte[] tenantId, final byte[] schemaName, final byte[] tableName, long clientTS) throws SQLException;
+
+  public PTableStats getTableStats(byte[] physicalName, long clientTimeStamp) throws SQLException;
+
+  public long clearCache() throws SQLException;
+
+  public int getSequenceSaltBuckets();
+
+  TransactionSystemClient getTransactionSystemClient();
+
+  public long getRenewLeaseThresholdMilliSeconds();
+
+  public boolean isRenewingLeasesEnabled();
+
+  public MetaDataMutationResult createSchema(List<Mutation> schemaMutations, String schemaName) throws SQLException;
+
+  MetaDataMutationResult getSchema(String schemaName, long clientTimestamp) throws SQLException;
+
+  public MetaDataMutationResult dropSchema(List<Mutation> schemaMetaData, String schemaName) throws SQLException;
+
+  /**
+   * Removes cache {@link PTableStats} for the table with the given name. If no
+   * cached stats are present, this does nothing.
+   *
+   * @param tableName The table to remove stats for
+   */
+  void invalidateStats(ImmutableBytesPtr tableName);
 }

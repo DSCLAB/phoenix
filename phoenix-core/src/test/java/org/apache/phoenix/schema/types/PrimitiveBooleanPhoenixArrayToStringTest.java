@@ -12,45 +12,45 @@ package org.apache.phoenix.schema.types;
 
 public class PrimitiveBooleanPhoenixArrayToStringTest extends BasePhoenixArrayToStringTest {
 
-    @Override
-    protected PDataType getBaseType() {
-        return PBoolean.INSTANCE;
-    }
+  @Override
+  protected PDataType getBaseType() {
+    return PBoolean.INSTANCE;
+  }
 
-    @Override
-    protected String getNullString() {
-        // primitive arrays don't use null
-        return "false";
-    }
+  @Override
+  protected String getNullString() {
+    // primitive arrays don't use null
+    return "false";
+  }
 
-    @Override
-    protected Object getElement1() {
-        return true;
-    }
+  @Override
+  protected Object getElement1() {
+    return true;
+  }
 
-    @Override
-    protected String getString1() {
-        return "true";
-    }
+  @Override
+  protected String getString1() {
+    return "true";
+  }
 
-    @Override
-    protected Object getElement2() {
-        return false;
-    }
+  @Override
+  protected Object getElement2() {
+    return false;
+  }
 
-    @Override
-    protected String getString2() {
-        return "false";
-    }
+  @Override
+  protected String getString2() {
+    return "false";
+  }
 
-    @Override
-    protected Object getElement3() {
-        return getElement1();
-    }
+  @Override
+  protected Object getElement3() {
+    return getElement1();
+  }
 
-    @Override
-    protected String getString3() {
-        return getString1();
-    }
+  @Override
+  protected String getString3() {
+    return getString1();
+  }
 
 }

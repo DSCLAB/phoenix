@@ -24,18 +24,18 @@ import org.apache.phoenix.schema.SortOrder;
 
 /**
  * Client side Aggregator for STDDEV_SAMP aggregations for DECIMAL data type.
- * 
- * 
+ *
+ *
  * @since 1.2.1
  */
 public class DecimalStddevSampAggregator extends BaseDecimalStddevAggregator {
 
-    public DecimalStddevSampAggregator(List<Expression> exps, SortOrder sortOrder) {
-        super(exps, sortOrder);
-    }
+  public DecimalStddevSampAggregator(List<Expression> exps, SortOrder sortOrder) {
+    super(exps, sortOrder);
+  }
 
-    @Override
-    protected long getDataPointsCount() {
-        return totalCount - 1;
-    }
+  @Override
+  protected long getDataPointsCount() {
+    return totalCount - 1;
+  }
 }

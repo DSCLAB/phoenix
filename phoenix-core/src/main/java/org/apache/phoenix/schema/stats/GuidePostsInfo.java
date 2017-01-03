@@ -22,81 +22,79 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.phoenix.util.ByteUtil;
+
 /**
- *  A class that holds the guidePosts of a region and also allows combining the 
- *  guidePosts of different regions when the GuidePostsInfo is formed for a table.
+ * A class that holds the guidePosts of a region and also allows combining the
+ * guidePosts of different regions when the GuidePostsInfo is formed for a
+ * table.
  */
 public class GuidePostsInfo {
 
-    /**
-     * the total number of guidePosts for the table combining all the guidePosts per region per cf.
-     */
-    private ImmutableBytesWritable guidePosts;
+  /**
+   * the total number of guidePosts for the table combining all the guidePosts
+   * per region per cf.
+   */
+  private ImmutableBytesWritable guidePosts;
 
-    /**
-     * Maximum length of a guidePost collected
-     */
-    private int maxLength;
-    
-    public final static GuidePostsInfo NO_GUIDEPOST = new GuidePostsInfo(new ArrayList<Long>(),
-            new ImmutableBytesWritable(ByteUtil.EMPTY_BYTE_ARRAY), new ArrayList<Long>(), 0, 0);
+  /**
+   * Maximum length of a guidePost collected
+   */
+  private int maxLength;
 
-    public int getMaxLength() {
-        return maxLength;
-    }
+  public final static GuidePostsInfo NO_GUIDEPOST = new GuidePostsInfo(new ArrayList<Long>(),
+          new ImmutableBytesWritable(ByteUtil.EMPTY_BYTE_ARRAY), new ArrayList<Long>(), 0, 0);
 
-    /**
-     * Number of guidePosts
-     */
-    private int guidePostsCount;
+  public int getMaxLength() {
+    return maxLength;
+  }
 
-    /**
-     * The rowCounts of each guidePost traversed
-     */
-    private List<Long> rowCounts;
+  /**
+   * Number of guidePosts
+   */
+  private int guidePostsCount;
 
-    /**
-     * The bytecounts of each guidePost traversed
-     */
-    private List<Long> byteCounts;
+  /**
+   * The rowCounts of each guidePost traversed
+   */
+  private List<Long> rowCounts;
 
-    public List<Long> getRowCounts() {
-        return rowCounts;
-    }
+  /**
+   * The bytecounts of each guidePost traversed
+   */
+  private List<Long> byteCounts;
 
-    public List<Long> getByteCounts() {
-        return byteCounts;
-    }
+  public List<Long> getRowCounts() {
+    return rowCounts;
+  }
 
-    /**
-     * Constructor that creates GuidePostsInfo per region
-     * 
-     * @param byteCounts
-     *            The bytecounts of each guidePost traversed
-     * @param guidePosts
-     *            Prefix byte encoded guidePosts
-     * @param rowCounts
-     *            The rowCounts of each guidePost traversed
-     * @param maxLength
-     *            Maximum length of a guidePost collected
-     * @param guidePostsCount
-     *            Number of guidePosts
-     */
-    public GuidePostsInfo(List<Long> byteCounts, ImmutableBytesWritable guidePosts, List<Long> rowCounts, int maxLength,
-            int guidePostsCount) {
-        this.guidePosts = new ImmutableBytesWritable(guidePosts);
-        this.maxLength = maxLength;
-        this.guidePostsCount = guidePostsCount;
-        this.rowCounts = rowCounts;
-        this.byteCounts = byteCounts;
-    }
-    
-    public ImmutableBytesWritable getGuidePosts() {
-        return guidePosts;
-    }
+  public List<Long> getByteCounts() {
+    return byteCounts;
+  }
 
-    public int getGuidePostsCount() {
-        return guidePostsCount;
-    }
+  /**
+   * Constructor that creates GuidePostsInfo per region
+   *
+   * @param byteCounts The bytecounts of each guidePost traversed
+   * @param guidePosts Prefix byte encoded guidePosts
+   * @param rowCounts The rowCounts of each guidePost traversed
+   * @param maxLength Maximum length of a guidePost collected
+   * @param guidePostsCount Number of guidePosts
+   */
+  public GuidePostsInfo(List<Long> byteCounts, ImmutableBytesWritable guidePosts, List<Long> rowCounts, int maxLength,
+          int guidePostsCount) {
+    this.guidePosts = new ImmutableBytesWritable(guidePosts);
+    this.maxLength = maxLength;
+    this.guidePostsCount = guidePostsCount;
+    this.rowCounts = rowCounts;
+    this.byteCounts = byteCounts;
+  }
+
+  public ImmutableBytesWritable getGuidePosts() {
+    return guidePosts;
+  }
+
+  public int getGuidePostsCount() {
+    return guidePostsCount;
+  }
 
 }

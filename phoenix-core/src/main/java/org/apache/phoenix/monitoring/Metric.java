@@ -21,48 +21,48 @@ package org.apache.phoenix.monitoring;
  * Interface that represents phoenix-internal metric.
  */
 public interface Metric {
-    /**
-     * @return Name of the metric
-     */
-    public String getName();
 
-    /**
-     * @return Description of the metric
-     */
-    public String getDescription();
+  /**
+   * @return Name of the metric
+   */
+  public String getName();
 
-    /**
-     * @return Current value of the metric
-     */
-    public long getValue();
+  /**
+   * @return Description of the metric
+   */
+  public String getDescription();
 
-    /**
-     * Change the metric by the specified amount
-     * 
-     * @param delta
-     *            amount by which the metric value should be changed
-     */
-    public void change(long delta);
+  /**
+   * @return Current value of the metric
+   */
+  public long getValue();
 
-    /**
-     * Increase the value of metric by 1
-     */
-    public void increment();
-    
-    /**
-     * Decrease the value of metric by 1
-     */
-    public void decrement();
-    
-    /**
-     * @return String that represents the current state of the metric. Typically used for logging or reporting purposes.
-     */
-    public String getCurrentMetricState();
-    
-    /**
-     * Reset the metric
-     */
-    public void reset();
+  /**
+   * Change the metric by the specified amount
+   *
+   * @param delta amount by which the metric value should be changed
+   */
+  public void change(long delta);
+
+  /**
+   * Increase the value of metric by 1
+   */
+  public void increment();
+
+  /**
+   * Decrease the value of metric by 1
+   */
+  public void decrement();
+
+  /**
+   * @return String that represents the current state of the metric. Typically
+   * used for logging or reporting purposes.
+   */
+  public String getCurrentMetricState();
+
+  /**
+   * Reset the metric
+   */
+  public void reset();
 
 }
-

@@ -21,44 +21,45 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
 public class DelegateTuple implements Tuple {
-    private final Tuple delegate;
-    
-    public DelegateTuple(Tuple delegate) {
-        this.delegate = delegate;
-    }
-    
-    @Override
-    public int size() {
-        return delegate.size();
-    }
 
-    @Override
-    public boolean isImmutable() {
-        return delegate.isImmutable();
-    }
+  private final Tuple delegate;
 
-    @Override
-    public void getKey(ImmutableBytesWritable ptr) {
-        delegate.getKey(ptr);
-    }
+  public DelegateTuple(Tuple delegate) {
+    this.delegate = delegate;
+  }
 
-    @Override
-    public Cell getValue(int index) {
-        return delegate.getValue(index);
-    }
+  @Override
+  public int size() {
+    return delegate.size();
+  }
 
-    @Override
-    public Cell getValue(byte[] family, byte[] qualifier) {
-        return delegate.getValue(family, qualifier);
-    }
+  @Override
+  public boolean isImmutable() {
+    return delegate.isImmutable();
+  }
 
-    @Override
-    public boolean getValue(byte[] family, byte[] qualifier, ImmutableBytesWritable ptr) {
-        return delegate.getValue(family, qualifier, ptr);
-    }
+  @Override
+  public void getKey(ImmutableBytesWritable ptr) {
+    delegate.getKey(ptr);
+  }
 
-    @Override
-    public long getSequenceValue(int index) {
-        return delegate.getSequenceValue(index);
-    }
+  @Override
+  public Cell getValue(int index) {
+    return delegate.getValue(index);
+  }
+
+  @Override
+  public Cell getValue(byte[] family, byte[] qualifier) {
+    return delegate.getValue(family, qualifier);
+  }
+
+  @Override
+  public boolean getValue(byte[] family, byte[] qualifier, ImmutableBytesWritable ptr) {
+    return delegate.getValue(family, qualifier, ptr);
+  }
+
+  @Override
+  public long getSequenceValue(int index) {
+    return delegate.getSequenceValue(index);
+  }
 }

@@ -18,9 +18,9 @@
 package org.apache.phoenix.schema.stats;
 
 public enum StatisticsCollectionScope {
-    COLUMNS, INDEX, ALL;
+  COLUMNS, INDEX, ALL;
 
-    public static StatisticsCollectionScope getDefault() {
-        return ALL;
-    }
+  public static StatisticsCollectionScope getDefault() {
+    return ALL;
+  }
 }

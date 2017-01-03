@@ -23,46 +23,45 @@ import static org.apache.phoenix.monitoring.MetricType.TASK_EXECUTION_TIME;
 import static org.apache.phoenix.monitoring.MetricType.TASK_QUEUE_WAIT_TIME;
 import static org.apache.phoenix.monitoring.MetricType.TASK_REJECTED_COUNTER;
 
-
 /**
- * Class to encapsulate the various metrics associated with submitting and executing a task to the phoenix client
- * thread pool.
+ * Class to encapsulate the various metrics associated with submitting and
+ * executing a task to the phoenix client thread pool.
  */
 public class TaskExecutionMetricsHolder {
 
-    private final CombinableMetric taskQueueWaitTime;
-    private final CombinableMetric taskEndToEndTime;
-    private final CombinableMetric taskExecutionTime;
-    private final CombinableMetric numTasks;
-    private final CombinableMetric numRejectedTasks;
-    public static final TaskExecutionMetricsHolder NO_OP_INSTANCE = new TaskExecutionMetricsHolder(new ReadMetricQueue(false), "");
-    
-    public TaskExecutionMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
-        taskQueueWaitTime = readMetrics.allotMetric(TASK_QUEUE_WAIT_TIME, tableName);
-        taskEndToEndTime = readMetrics.allotMetric(TASK_END_TO_END_TIME, tableName);
-        taskExecutionTime = readMetrics.allotMetric(TASK_EXECUTION_TIME, tableName);
-        numTasks = readMetrics.allotMetric(TASK_EXECUTED_COUNTER, tableName);
-        numRejectedTasks = readMetrics.allotMetric(TASK_REJECTED_COUNTER, tableName);
-    }
+  private final CombinableMetric taskQueueWaitTime;
+  private final CombinableMetric taskEndToEndTime;
+  private final CombinableMetric taskExecutionTime;
+  private final CombinableMetric numTasks;
+  private final CombinableMetric numRejectedTasks;
+  public static final TaskExecutionMetricsHolder NO_OP_INSTANCE = new TaskExecutionMetricsHolder(new ReadMetricQueue(false), "");
 
-    public CombinableMetric getTaskQueueWaitTime() {
-        return taskQueueWaitTime;
-    }
+  public TaskExecutionMetricsHolder(ReadMetricQueue readMetrics, String tableName) {
+    taskQueueWaitTime = readMetrics.allotMetric(TASK_QUEUE_WAIT_TIME, tableName);
+    taskEndToEndTime = readMetrics.allotMetric(TASK_END_TO_END_TIME, tableName);
+    taskExecutionTime = readMetrics.allotMetric(TASK_EXECUTION_TIME, tableName);
+    numTasks = readMetrics.allotMetric(TASK_EXECUTED_COUNTER, tableName);
+    numRejectedTasks = readMetrics.allotMetric(TASK_REJECTED_COUNTER, tableName);
+  }
 
-    public CombinableMetric getTaskEndToEndTime() {
-        return taskEndToEndTime;
-    }
+  public CombinableMetric getTaskQueueWaitTime() {
+    return taskQueueWaitTime;
+  }
 
-    public CombinableMetric getTaskExecutionTime() {
-        return taskExecutionTime;
-    }
+  public CombinableMetric getTaskEndToEndTime() {
+    return taskEndToEndTime;
+  }
 
-    public CombinableMetric getNumTasks() {
-        return numTasks;
-    }
+  public CombinableMetric getTaskExecutionTime() {
+    return taskExecutionTime;
+  }
 
-    public CombinableMetric getNumRejectedTasks() {
-        return numRejectedTasks;
-    }
+  public CombinableMetric getNumTasks() {
+    return numTasks;
+  }
+
+  public CombinableMetric getNumRejectedTasks() {
+    return numRejectedTasks;
+  }
 
 }

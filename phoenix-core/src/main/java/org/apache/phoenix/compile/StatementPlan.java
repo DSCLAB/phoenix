@@ -24,15 +24,18 @@ import java.util.Set;
 import org.apache.phoenix.jdbc.PhoenixStatement.Operation;
 import org.apache.phoenix.schema.TableRef;
 
-
 public interface StatementPlan {
-    StatementContext getContext();
-    /**
-     * Returns the ParameterMetaData for the statement
-     */
-    ParameterMetaData getParameterMetaData();
-    
-    ExplainPlan getExplainPlan() throws SQLException;
-    public Set<TableRef> getSourceRefs();
-    Operation getOperation();
+
+  StatementContext getContext();
+
+  /**
+   * Returns the ParameterMetaData for the statement
+   */
+  ParameterMetaData getParameterMetaData();
+
+  ExplainPlan getExplainPlan() throws SQLException;
+
+  public Set<TableRef> getSourceRefs();
+
+  Operation getOperation();
 }

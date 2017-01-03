@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.expression;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,84 +31,85 @@ import org.apache.phoenix.schema.SortOrder;
  * A container for a column that appears in ORDER BY clause.
  */
 public class OrderByExpression implements Writable {
-    private Expression expression;
-    private boolean isNullsLast;
-    private boolean isAscending;
-    
-    public OrderByExpression() {
-    }
-    
-    public OrderByExpression(Expression expression, boolean isNullsLast, boolean isAcending) {
-        checkNotNull(expression);
-        this.expression = expression;
-        this.isNullsLast = isNullsLast;
-        this.isAscending = isAcending;
-    }
 
-    public Expression getExpression() {
-        return expression;
-    }
-    
-    public boolean isNullsLast() {
-        return isNullsLast;
-    }
-    
-    public boolean isAscending() {
-        return isAscending;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o != null && this.getClass() == o.getClass()) {
-            OrderByExpression that = (OrderByExpression)o;
-            return isNullsLast == that.isNullsLast
-                && isAscending == that.isAscending
-                && expression.equals(that.expression);
-        }
-        return false;
-    }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (isNullsLast ? 0 : 1);
-        result = prime * result + (isAscending ? 0 : 1);
-        result = prime * result + expression.hashCode();
-        return result;
-    }
-    
-    @Override
-    public String toString() {
-        Expression e = this.getExpression();
-        boolean isNullsLast = this.isNullsLast;
-        boolean isAscending = this.isAscending;
-        // Flip back here based on sort order, as the compiler
-        // flips this, but we want to display the original back
-        // to the user.
-        if (e.getSortOrder() == SortOrder.DESC) {
-            isAscending = !isAscending;
-        }
-        return e + (isAscending ? "" : " DESC") + (isNullsLast ? " NULLS LAST" : "");
-    }
-    
-    @Override
-    public void readFields(DataInput input) throws IOException {
-        this.isNullsLast = input.readBoolean();
-        this.isAscending = input.readBoolean();
-        expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
-        expression.readFields(input);
-    }
+  private Expression expression;
+  private boolean isNullsLast;
+  private boolean isAscending;
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        output.writeBoolean(isNullsLast);
-        output.writeBoolean(isAscending);
-        WritableUtils.writeVInt(output, ExpressionType.valueOf(expression).ordinal());
-        expression.write(output);
+  public OrderByExpression() {
+  }
+
+  public OrderByExpression(Expression expression, boolean isNullsLast, boolean isAcending) {
+    checkNotNull(expression);
+    this.expression = expression;
+    this.isNullsLast = isNullsLast;
+    this.isAscending = isAcending;
+  }
+
+  public Expression getExpression() {
+    return expression;
+  }
+
+  public boolean isNullsLast() {
+    return isNullsLast;
+  }
+
+  public boolean isAscending() {
+    return isAscending;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o != null && this.getClass() == o.getClass()) {
+      OrderByExpression that = (OrderByExpression) o;
+      return isNullsLast == that.isNullsLast
+              && isAscending == that.isAscending
+              && expression.equals(that.expression);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + (isNullsLast ? 0 : 1);
+    result = prime * result + (isAscending ? 0 : 1);
+    result = prime * result + expression.hashCode();
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    Expression e = this.getExpression();
+    boolean isNullsLast = this.isNullsLast;
+    boolean isAscending = this.isAscending;
+    // Flip back here based on sort order, as the compiler
+    // flips this, but we want to display the original back
+    // to the user.
+    if (e.getSortOrder() == SortOrder.DESC) {
+      isAscending = !isAscending;
+    }
+    return e + (isAscending ? "" : " DESC") + (isNullsLast ? " NULLS LAST" : "");
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    this.isNullsLast = input.readBoolean();
+    this.isAscending = input.readBoolean();
+    expression = ExpressionType.values()[WritableUtils.readVInt(input)].newInstance();
+    expression.readFields(input);
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    output.writeBoolean(isNullsLast);
+    output.writeBoolean(isAscending);
+    WritableUtils.writeVInt(output, ExpressionType.valueOf(expression).ordinal());
+    expression.write(output);
+  }
 
 }

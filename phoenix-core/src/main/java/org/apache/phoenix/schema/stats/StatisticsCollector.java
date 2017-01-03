@@ -30,42 +30,47 @@ import org.apache.hadoop.hbase.regionserver.Store;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * Statistics tracker that helps to collect stats like min key, max key and guideposts.
+ * Statistics tracker that helps to collect stats like min key, max key and
+ * guideposts.
  */
 public interface StatisticsCollector extends Closeable {
 
-    /** Constant used if no max timestamp is available */
-    long NO_TIMESTAMP = -1;
+  /**
+   * Constant used if no max timestamp is available
+   */
+  long NO_TIMESTAMP = -1;
 
-    /**
-     * Returns the maximum timestamp of all cells encountered while collecting statistics.
-     */
-    long getMaxTimeStamp();
+  /**
+   * Returns the maximum timestamp of all cells encountered while collecting
+   * statistics.
+   */
+  long getMaxTimeStamp();
 
-    /**
-     * Write the collected statistics for the given region.
-     */
-    void updateStatistic(Region region);
+  /**
+   * Write the collected statistics for the given region.
+   */
+  void updateStatistic(Region region);
 
-    /**
-     * Collect statistics for the given list of cells. This method can be called multiple times
-     * during collection of statistics.
-     */
-    void collectStatistics(List<Cell> results);
+  /**
+   * Collect statistics for the given list of cells. This method can be called
+   * multiple times during collection of statistics.
+   */
+  void collectStatistics(List<Cell> results);
 
-    /**
-     * Wrap a compaction scanner with a scanner that will collect statistics using this instance.
-     */
-    InternalScanner createCompactionScanner(RegionCoprocessorEnvironment env, Store store,
-            InternalScanner delegate) throws IOException;
+  /**
+   * Wrap a compaction scanner with a scanner that will collect statistics using
+   * this instance.
+   */
+  InternalScanner createCompactionScanner(RegionCoprocessorEnvironment env, Store store,
+          InternalScanner delegate) throws IOException;
 
-    /**
-     * Clear all statistics information that has been collected.
-     */
-    void clear();
+  /**
+   * Clear all statistics information that has been collected.
+   */
+  void clear();
 
-    /**
-     * Retrieve the calculated guide post info for the given column family.
-     */
-    GuidePostsInfo getGuidePosts(ImmutableBytesPtr fam);
+  /**
+   * Retrieve the calculated guide post info for the given column family.
+   */
+  GuidePostsInfo getGuidePosts(ImmutableBytesPtr fam);
 }

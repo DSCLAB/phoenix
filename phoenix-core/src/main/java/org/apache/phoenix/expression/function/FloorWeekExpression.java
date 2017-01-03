@@ -23,21 +23,21 @@ import org.apache.phoenix.expression.Expression;
 import org.joda.time.DateTime;
 
 /**
- * Floor function that rounds up the {@link DateTime} to start of week. 
+ * Floor function that rounds up the {@link DateTime} to start of week.
  */
 public class FloorWeekExpression extends RoundJodaDateExpression {
 
-    public FloorWeekExpression() {
-        super();
-    }
+  public FloorWeekExpression() {
+    super();
+  }
 
-    public FloorWeekExpression(List<Expression> children) {
-        super(children);
-    }
+  public FloorWeekExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public long roundDateTime(DateTime datetime) {
-        return datetime.weekOfWeekyear().roundFloorCopy().getMillis();
-    }
+  @Override
+  public long roundDateTime(DateTime datetime) {
+    return datetime.weekOfWeekyear().roundFloorCopy().getMillis();
+  }
 
 }

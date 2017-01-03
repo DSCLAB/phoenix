@@ -30,30 +30,32 @@ import org.apache.phoenix.schema.types.PDataTypeFactory;
 import javax.annotation.Nullable;
 
 /**
- * Exception thrown when we try to use use an argument that has the wrong type. 
- * 
- * 
+ * Exception thrown when we try to use use an argument that has the wrong type.
+ *
+ *
  * @since 1.0
  */
 public class ArgumentTypeMismatchException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.TYPE_MISMATCH;
 
-    public ArgumentTypeMismatchException(PDataType expected, PDataType actual, String location) {
-        super(new SQLExceptionInfo.Builder(code).setMessage("expected: " + expected + " but was: " + actual + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.TYPE_MISMATCH;
 
-    public ArgumentTypeMismatchException(Class<? extends PDataType>[] expecteds, PDataType actual, String location) {
-        this(Arrays.toString(Collections2.transform(Arrays.asList(expecteds),
+  public ArgumentTypeMismatchException(PDataType expected, PDataType actual, String location) {
+    super(new SQLExceptionInfo.Builder(code).setMessage("expected: " + expected + " but was: " + actual + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
+  }
+
+  public ArgumentTypeMismatchException(Class<? extends PDataType>[] expecteds, PDataType actual, String location) {
+    this(Arrays.toString(Collections2.transform(Arrays.asList(expecteds),
             new Function<Class<? extends PDataType>, PDataType>() {
-              @Nullable @Override
-              public PDataType apply(@Nullable Class<? extends PDataType> input) {
-                return PDataTypeFactory.getInstance().instanceFromClass(input);
-              }
-            }).toArray()), actual.toString(), location);
-    }
+      @Nullable
+      @Override
+      public PDataType apply(@Nullable Class<? extends PDataType> input) {
+        return PDataTypeFactory.getInstance().instanceFromClass(input);
+      }
+    }).toArray()), actual.toString(), location);
+  }
 
-    public ArgumentTypeMismatchException(String expected, String actual, String location) {
-        super(new SQLExceptionInfo.Builder(code).setMessage("expected: " + expected + " but was: " + actual + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
-    }
+  public ArgumentTypeMismatchException(String expected, String actual, String location) {
+    super(new SQLExceptionInfo.Builder(code).setMessage("expected: " + expected + " but was: " + actual + " at " + location).build().toString(), code.getSQLState(), code.getErrorCode());
+  }
 }

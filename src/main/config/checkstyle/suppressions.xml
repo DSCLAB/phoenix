@@ -29,7 +29,7 @@ limitations under the License.
   <suppress checks=".*" files="release.properties"/>
 
   <!-- This file triggers https://github.com/checkstyle/checkstyle/issues/92,
-       through no fault of its own. -->
+  through no fault of its own. -->
   <suppress checks=".*" files="SqlSimpleParser.java"/>
 
   <!-- Don't complain about field names such as cust_id -->

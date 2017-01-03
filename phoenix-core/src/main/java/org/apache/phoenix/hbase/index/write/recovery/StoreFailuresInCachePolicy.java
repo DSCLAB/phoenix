@@ -34,8 +34,8 @@ import org.apache.phoenix.hbase.index.write.KillServerOnFailurePolicy;
 /**
  * Tracks any failed writes in The {@link PerRegionIndexWriteCache}, given a
  * {@link MultiIndexWriteFailureException} (which is thrown from the
- * {@link TrackingParallelWriterIndexCommitter}. Any other exception failure causes the a server
- * abort via the usual {@link KillServerOnFailurePolicy}.
+ * {@link TrackingParallelWriterIndexCommitter}. Any other exception failure
+ * causes the a server abort via the usual {@link KillServerOnFailurePolicy}.
  */
 public class StoreFailuresInCachePolicy implements IndexFailurePolicy {
 
@@ -64,13 +64,12 @@ public class StoreFailuresInCachePolicy implements IndexFailurePolicy {
     if (!(cause instanceof MultiIndexWriteFailureException)) {
       delegate.handleFailure(attempted, cause);
     }
-    List<HTableInterfaceReference> failedTables =
-        ((MultiIndexWriteFailureException) cause).getFailedTables();
+    List<HTableInterfaceReference> failedTables
+            = ((MultiIndexWriteFailureException) cause).getFailedTables();
     for (HTableInterfaceReference table : failedTables) {
       cache.addEdits(this.region, table, attempted.get(table));
     }
   }
-
 
   @Override
   public void stop(String why) {

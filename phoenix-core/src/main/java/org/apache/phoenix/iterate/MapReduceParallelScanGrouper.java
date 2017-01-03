@@ -27,19 +27,20 @@ import org.apache.phoenix.compile.QueryPlan;
  * scan crosses region boundaries
  */
 public class MapReduceParallelScanGrouper implements ParallelScanGrouper {
-	
-	private static final MapReduceParallelScanGrouper INSTANCE = new MapReduceParallelScanGrouper();
 
-    public static MapReduceParallelScanGrouper getInstance() {
-        return INSTANCE;
-    }
-    
-    private MapReduceParallelScanGrouper() {}
+  private static final MapReduceParallelScanGrouper INSTANCE = new MapReduceParallelScanGrouper();
 
-	@Override
-	public boolean shouldStartNewScan(QueryPlan plan, List<Scan> scans,
-			byte[] startKey, boolean crossedRegionBoundary) {
-		return !plan.isRowKeyOrdered() || crossedRegionBoundary;
-	}
+  public static MapReduceParallelScanGrouper getInstance() {
+    return INSTANCE;
+  }
+
+  private MapReduceParallelScanGrouper() {
+  }
+
+  @Override
+  public boolean shouldStartNewScan(QueryPlan plan, List<Scan> scans,
+          byte[] startKey, boolean crossedRegionBoundary) {
+    return !plan.isRowKeyOrdered() || crossedRegionBoundary;
+  }
 
 }

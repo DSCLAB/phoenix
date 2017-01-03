@@ -24,52 +24,52 @@ import java.util.List;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * Fully materialized comparable result iterator backed by the result iterator provided with
- * comparator. No copy is made of the backing results iterator.
+ * Fully materialized comparable result iterator backed by the result iterator
+ * provided with comparator. No copy is made of the backing results iterator.
  */
 public class MaterializedComparableResultIterator
         implements PeekingResultIterator, Comparable<MaterializedComparableResultIterator> {
 
-    private PeekingResultIterator delegate;
-    private Comparator<? super Tuple> comparator;
-    private Tuple current;
+  private PeekingResultIterator delegate;
+  private Comparator<? super Tuple> comparator;
+  private Tuple current;
 
-    public Tuple getCurrent() {
-        return current;
-    }
+  public Tuple getCurrent() {
+    return current;
+  }
 
-    public MaterializedComparableResultIterator(PeekingResultIterator delegate,
-            Comparator<? super Tuple> c) throws SQLException {
-        this.delegate = delegate;
-        this.comparator = c;
-        this.current = delegate.peek();
-    }
+  public MaterializedComparableResultIterator(PeekingResultIterator delegate,
+          Comparator<? super Tuple> c) throws SQLException {
+    this.delegate = delegate;
+    this.comparator = c;
+    this.current = delegate.peek();
+  }
 
-    @Override
-    public Tuple next() throws SQLException {
-        Tuple next = delegate.next();
-        this.current = delegate.peek();
-        return next;
-    }
+  @Override
+  public Tuple next() throws SQLException {
+    Tuple next = delegate.next();
+    this.current = delegate.peek();
+    return next;
+  }
 
-    @Override
-    public Tuple peek() throws SQLException {
-        return delegate.peek();
-    }
+  @Override
+  public Tuple peek() throws SQLException {
+    return delegate.peek();
+  }
 
-    @Override
-    public void close() throws SQLException {
-        delegate.close();
-    }
+  @Override
+  public void close() throws SQLException {
+    delegate.close();
+  }
 
-    @Override
-    public int compareTo(MaterializedComparableResultIterator o) {
-        return comparator.compare(this.getCurrent(), o.getCurrent());
+  @Override
+  public int compareTo(MaterializedComparableResultIterator o) {
+    return comparator.compare(this.getCurrent(), o.getCurrent());
 
-    }
+  }
 
-    @Override
-    public void explain(List<String> planSteps) {
-        delegate.explain(planSteps);
-    }
+  @Override
+  public void explain(List<String> planSteps) {
+    delegate.explain(planSteps);
+  }
 }

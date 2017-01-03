@@ -38,42 +38,42 @@ import static org.mockito.Mockito.verify;
 
 public class CsvUpsertExecutorTest extends AbstractUpsertExecutorTest<CSVRecord, String> {
 
-    private static final String ARRAY_SEP = ":";
+  private static final String ARRAY_SEP = ":";
 
-    private UpsertExecutor<CSVRecord, String> upsertExecutor;
+  private UpsertExecutor<CSVRecord, String> upsertExecutor;
 
-    @Override
-    public UpsertExecutor<CSVRecord, String> getUpsertExecutor() {
-        return upsertExecutor;
+  @Override
+  public UpsertExecutor<CSVRecord, String> getUpsertExecutor() {
+    return upsertExecutor;
+  }
+
+  @Override
+  public CSVRecord createRecord(Object... columnValues) throws IOException {
+    for (int i = 0; i < columnValues.length; i++) {
+      if (columnValues[i] == null) {
+        // Joiner.join throws on nulls, replace with empty string.
+        columnValues[i] = "";
+      }
+      if (columnValues[i] instanceof List) {
+        columnValues[i] = Joiner.on(ARRAY_SEP).join((List<?>) columnValues[i]);
+      }
     }
+    String inputRecord = Joiner.on(',').join(columnValues);
+    return Iterables.getFirst(CSVParser.parse(inputRecord, CSVFormat.DEFAULT), null);
+  }
 
-    @Override
-    public CSVRecord createRecord(Object... columnValues) throws IOException {
-        for (int i = 0; i < columnValues.length; i++) {
-            if (columnValues[i] == null) {
-                // Joiner.join throws on nulls, replace with empty string.
-                columnValues[i] = "";
-            }
-            if (columnValues[i] instanceof List) {
-                columnValues[i] = Joiner.on(ARRAY_SEP).join((List<?>) columnValues[i]);
-            }
-        }
-        String inputRecord = Joiner.on(',').join(columnValues);
-        return Iterables.getFirst(CSVParser.parse(inputRecord, CSVFormat.DEFAULT), null);
-    }
+  @Before
+  public void setUp() throws SQLException {
+    super.setUp();
+    upsertExecutor = new CsvUpsertExecutor(conn, columnInfoList, preparedStatement,
+            upsertListener, ARRAY_SEP);
+  }
 
-    @Before
-    public void setUp() throws SQLException {
-        super.setUp();
-        upsertExecutor = new CsvUpsertExecutor(conn, columnInfoList, preparedStatement,
-                upsertListener, ARRAY_SEP);
-    }
+  @Test
+  public void testExecute_InvalidBoolean() throws Exception {
+    CSVRecord csvRecordWithInvalidType = createRecord("123,NameValue,42,1:2:3,NotABoolean");
+    upsertExecutor.execute(ImmutableList.of(csvRecordWithInvalidType));
 
-    @Test
-    public void testExecute_InvalidBoolean() throws Exception {
-        CSVRecord csvRecordWithInvalidType = createRecord("123,NameValue,42,1:2:3,NotABoolean");
-        upsertExecutor.execute(ImmutableList.of(csvRecordWithInvalidType));
-
-        verify(upsertListener).errorOnRecord(eq(csvRecordWithInvalidType), any(Throwable.class));
-    }
+    verify(upsertListener).errorOnRecord(eq(csvRecordWithInvalidType), any(Throwable.class));
+  }
 }

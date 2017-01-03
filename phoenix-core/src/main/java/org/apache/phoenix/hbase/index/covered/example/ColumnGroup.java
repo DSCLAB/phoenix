@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.covered.example;
 
 import java.util.ArrayList;
@@ -24,9 +23,9 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-
 /**
- * A collection of {@link CoveredColumn}s that should be included in a covered index.
+ * A collection of {@link CoveredColumn}s that should be included in a covered
+ * index.
  */
 public class ColumnGroup implements Iterable<CoveredColumn> {
 
@@ -46,7 +45,9 @@ public class ColumnGroup implements Iterable<CoveredColumn> {
   }
 
   /**
-   * Check to see if any {@link CoveredColumn} in <tt>this</tt> matches the given family
+   * Check to see if any {@link CoveredColumn} in <tt>this</tt> matches the
+   * given family
+   *
    * @param family to check
    * @return <tt>true</tt> if any column covers the family
    */
@@ -62,9 +63,10 @@ public class ColumnGroup implements Iterable<CoveredColumn> {
 
   /**
    * Check to see if any column matches the family/qualifier pair
+   *
    * @param family family to match against
-   * @param qualifier qualifier to match, can be <tt>null</tt>, in which case we match all
-   *          qualifiers
+   * @param qualifier qualifier to match, can be <tt>null</tt>, in which case we
+   * match all qualifiers
    * @return <tt>true</tt> if any column matches, <tt>false</tt> otherwise
    */
   public boolean matches(byte[] family, byte[] qualifier) {
@@ -73,8 +75,8 @@ public class ColumnGroup implements Iterable<CoveredColumn> {
     for (CoveredColumn column : columns) {
       if (column.matchesFamily(fam)) {
         // check the qualifier
-          if (column.matchesQualifier(qualifier)) {
-            return true;
+        if (column.matchesQualifier(qualifier)) {
+          return true;
         }
       }
     }

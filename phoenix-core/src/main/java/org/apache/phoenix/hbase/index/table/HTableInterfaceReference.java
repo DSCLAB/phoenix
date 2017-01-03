@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.phoenix.hbase.index.table;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -23,13 +22,12 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 
 /**
- * Reference to an HTableInterface. Currently, its pretty simple in that it is just a wrapper around
- * the table name.
+ * Reference to an HTableInterface. Currently, its pretty simple in that it is
+ * just a wrapper around the table name.
  */
 public class HTableInterfaceReference {
 
   private ImmutableBytesPtr tableName;
-
 
   public HTableInterfaceReference(ImmutableBytesPtr tableName) {
     this.tableName = tableName;
@@ -40,21 +38,27 @@ public class HTableInterfaceReference {
   }
 
   public String getTableName() {
-    return Bytes.toString(this.tableName.get(),this.tableName.getOffset(), this.tableName.getLength());
+    return Bytes.toString(this.tableName.get(), this.tableName.getOffset(), this.tableName.getLength());
   }
 
   @Override
   public int hashCode() {
-      return tableName.hashCode();
+    return tableName.hashCode();
   }
 
   @Override
   public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (obj == null) return false;
-      if (getClass() != obj.getClass()) return false;
-      HTableInterfaceReference other = (HTableInterfaceReference)obj;
-      return tableName.equals(other.tableName);
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    HTableInterfaceReference other = (HTableInterfaceReference) obj;
+    return tableName.equals(other.tableName);
   }
 
   @Override

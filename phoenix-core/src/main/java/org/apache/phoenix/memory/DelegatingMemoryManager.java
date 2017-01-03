@@ -18,42 +18,42 @@
 package org.apache.phoenix.memory;
 
 /**
- * 
+ *
  * Memory manager that delegates through to another memory manager.
- * 
- * 
+ *
+ *
  * @since 0.1
  */
 public class DelegatingMemoryManager implements MemoryManager {
-    private final MemoryManager parent;
-    
-    public DelegatingMemoryManager(MemoryManager globalMemoryManager){
-        this.parent = globalMemoryManager;
-    }
-    
-    @Override
-    public long getAvailableMemory() {
-        return parent.getAvailableMemory();
-    }
 
-    @Override
-    public long getMaxMemory() {
-        return parent.getMaxMemory();
-    }
+  private final MemoryManager parent;
 
-    @Override
-    public MemoryChunk allocate(long minBytes, long reqBytes) {
-        return parent.allocate(minBytes, reqBytes);
-    }
+  public DelegatingMemoryManager(MemoryManager globalMemoryManager) {
+    this.parent = globalMemoryManager;
+  }
 
+  @Override
+  public long getAvailableMemory() {
+    return parent.getAvailableMemory();
+  }
 
-    @Override
-    public MemoryChunk allocate(long nBytes) {
-        return allocate(nBytes, nBytes);
-    }
+  @Override
+  public long getMaxMemory() {
+    return parent.getMaxMemory();
+  }
 
-    public MemoryManager getParent() {
-        return parent;
-    }
+  @Override
+  public MemoryChunk allocate(long minBytes, long reqBytes) {
+    return parent.allocate(minBytes, reqBytes);
+  }
+
+  @Override
+  public MemoryChunk allocate(long nBytes) {
+    return allocate(nBytes, nBytes);
+  }
+
+  public MemoryManager getParent() {
+    return parent;
+  }
 
 }

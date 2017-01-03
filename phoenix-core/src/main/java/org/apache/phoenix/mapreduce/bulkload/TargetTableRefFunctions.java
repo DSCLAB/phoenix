@@ -27,87 +27,87 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
-  * Utility functions to get/put json.
-  *
-  */
+ * Utility functions to get/put json.
+ *
+ */
 public class TargetTableRefFunctions {
 
-     public static Function<TargetTableRef,String> TO_JSON =  new Function<TargetTableRef,String>() {
+  public static Function<TargetTableRef, String> TO_JSON = new Function<TargetTableRef, String>() {
 
-         @Override
-         public String apply(TargetTableRef input) {
-             try {
-                 ObjectMapper mapper = new ObjectMapper();
-                 return mapper.writeValueAsString(input);
-             } catch (IOException e) {
-                 throw new RuntimeException(e);
-             }
+    @Override
+    public String apply(TargetTableRef input) {
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(input);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
 
-         }
-     };
+    }
+  };
 
-     public static Function<String,TargetTableRef> FROM_JSON =  new Function<String,TargetTableRef>() {
+  public static Function<String, TargetTableRef> FROM_JSON = new Function<String, TargetTableRef>() {
 
-         @Override
-         public TargetTableRef apply(String json) {
-             try {
-                 ObjectMapper mapper = new ObjectMapper();
-                 return mapper.readValue(json, TargetTableRef.class);
-             } catch (IOException e) {
-                 throw new RuntimeException(e);
-             }
+    @Override
+    public TargetTableRef apply(String json) {
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, TargetTableRef.class);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
 
-         }
-     };
+    }
+  };
 
-     public static Function<List<TargetTableRef>,String> NAMES_TO_JSON =  new Function<List<TargetTableRef>,String>() {
+  public static Function<List<TargetTableRef>, String> NAMES_TO_JSON = new Function<List<TargetTableRef>, String>() {
 
-         @Override
-         public String apply(List<TargetTableRef> input) {
-             try {
-                 List<String> tableNames = Lists.newArrayListWithCapacity(input.size());
-                 for(TargetTableRef table : input) {
-                     tableNames.add(table.getPhysicalName());
-                 }
-                 ObjectMapper mapper = new ObjectMapper();
-                 return mapper.writeValueAsString(tableNames);
-             } catch (IOException e) {
-                 throw new RuntimeException(e);
-             }
-
-         }
-     };
-
-    public static Function<List<TargetTableRef>,String> LOGICAL_NAMES_TO_JSON =  new Function<List<TargetTableRef>,String>() {
-
-        @Override
-        public String apply(List<TargetTableRef> input) {
-            try {
-                List<String> tableNames = Lists.newArrayListWithCapacity(input.size());
-                for(TargetTableRef table : input) {
-                    tableNames.add(table.getLogicalName());
-                }
-                ObjectMapper mapper = new ObjectMapper();
-                return mapper.writeValueAsString(tableNames);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
+    @Override
+    public String apply(List<TargetTableRef> input) {
+      try {
+        List<String> tableNames = Lists.newArrayListWithCapacity(input.size());
+        for (TargetTableRef table : input) {
+          tableNames.add(table.getPhysicalName());
         }
-    };
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(tableNames);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
 
-    public static Function<String,List<String>> NAMES_FROM_JSON =  new Function<String,List<String>>() {
+    }
+  };
 
-         @SuppressWarnings("unchecked")
-         @Override
-         public List<String> apply(String json) {
-             try {
-                 ObjectMapper mapper = new ObjectMapper();
-                 return mapper.readValue(json, ArrayList.class);
-             } catch (IOException e) {
-                 throw new RuntimeException(e);
-             }
+  public static Function<List<TargetTableRef>, String> LOGICAL_NAMES_TO_JSON = new Function<List<TargetTableRef>, String>() {
 
-         }
-     };
+    @Override
+    public String apply(List<TargetTableRef> input) {
+      try {
+        List<String> tableNames = Lists.newArrayListWithCapacity(input.size());
+        for (TargetTableRef table : input) {
+          tableNames.add(table.getLogicalName());
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(tableNames);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+    }
+  };
+
+  public static Function<String, List<String>> NAMES_FROM_JSON = new Function<String, List<String>>() {
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<String> apply(String json) {
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, ArrayList.class);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+    }
+  };
 }

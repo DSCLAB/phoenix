@@ -33,42 +33,47 @@ import org.apache.phoenix.schema.types.PBoolean;
 import org.apache.phoenix.schema.types.PDataType;
 
 /**
- * 
- * PERCENT_RANK(<expression>[,<expression>]) WITHIN GROUP (ORDER BY <expression>[,<expression>] ASC/DESC) aggregate function
  *
- * 
+ * PERCENT_RANK(<expression>[,<expression>]) WITHIN GROUP (ORDER BY
+ * <expression>[,<expression>] ASC/DESC) aggregate function
+ *
+ *
  * @since 1.2.1
  */
-@BuiltInFunction(name = PercentRankAggregateFunction.NAME, args = { @Argument(),
-        @Argument(allowedTypes = { PBoolean.class }, isConstant = true), @Argument(isConstant = true) })
+@BuiltInFunction(name = PercentRankAggregateFunction.NAME, args = {
+  @Argument()
+  ,
+        @Argument(allowedTypes = {PBoolean.class}, isConstant = true)
+  , @Argument(isConstant = true)})
 public class PercentRankAggregateFunction extends DistinctValueWithCountAggregateFunction {
-    public static final String NAME = "PERCENT_RANK";
 
-    public PercentRankAggregateFunction() {
+  public static final String NAME = "PERCENT_RANK";
 
-    }
+  public PercentRankAggregateFunction() {
 
-    public PercentRankAggregateFunction(List<Expression> childern) {
-        super(childern);
-    }
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        return new DistinctValueWithCountServerAggregator(conf);
-    }
+  public PercentRankAggregateFunction(List<Expression> childern) {
+    super(childern);
+  }
 
-    @Override
-    public DistinctValueWithCountClientAggregator newClientAggregator() {
-        return new PercentRankClientAggregator(children, getAggregatorExpression().getSortOrder());
-    }
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    return new DistinctValueWithCountServerAggregator(conf);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public DistinctValueWithCountClientAggregator newClientAggregator() {
+    return new PercentRankClientAggregator(children, getAggregatorExpression().getSortOrder());
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PDecimal.INSTANCE;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public PDataType getDataType() {
+    return PDecimal.INSTANCE;
+  }
 }

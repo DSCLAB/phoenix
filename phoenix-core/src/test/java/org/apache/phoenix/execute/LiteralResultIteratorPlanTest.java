@@ -66,127 +66,123 @@ import com.google.common.collect.Lists;
 
 public class LiteralResultIteratorPlanTest {
 
-    private static final StatementContext CONTEXT;
+  private static final StatementContext CONTEXT;
 
-    static {
-        try {
-            PhoenixConnection connection = DriverManager
-                    .getConnection(JDBC_PROTOCOL + JDBC_PROTOCOL_SEPARATOR + CONNECTIONLESS)
-                    .unwrap(PhoenixConnection.class);
-            PhoenixStatement stmt = new PhoenixStatement(connection);
-            ColumnResolver resolver = FromCompiler.getResolverForQuery(SelectStatement.SELECT_ONE, connection);
-            CONTEXT = new StatementContext(stmt, resolver, new Scan(), new SequenceManager(stmt));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+  static {
+    try {
+      PhoenixConnection connection = DriverManager
+              .getConnection(JDBC_PROTOCOL + JDBC_PROTOCOL_SEPARATOR + CONNECTIONLESS)
+              .unwrap(PhoenixConnection.class);
+      PhoenixStatement stmt = new PhoenixStatement(connection);
+      ColumnResolver resolver = FromCompiler.getResolverForQuery(SelectStatement.SELECT_ONE, connection);
+      CONTEXT = new StatementContext(stmt, resolver, new Scan(), new SequenceManager(stmt));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static final Object[][] RELATION = new Object[][]{
+    {"2", 20},
+    {"2", 40},
+    {"5", 50},
+    {"6", 60},
+    {"5", 100},
+    {"1", 10},
+    {"3", 30},};
+  PTable table = createProjectedTableFromLiterals(RELATION[0]).getTable();
+
+  @Test
+  public void testLiteralResultIteratorPlanWithOffset() throws SQLException {
+    Object[][] expected = new Object[][]{
+      {"2", 40},
+      {"5", 50},
+      {"6", 60},
+      {"5", 100},
+      {"1", 10},
+      {"3", 30},};
+    testLiteralResultIteratorPlan(expected, 1, null);
+  }
+
+  @Test
+  public void testLiteralResultIteratorPlanWithLimit() throws SQLException {
+    Object[][] expected = new Object[][]{
+      {"2", 20},
+      {"2", 40},
+      {"5", 50},
+      {"6", 60},};
+    testLiteralResultIteratorPlan(expected, null, 4);
+  }
+
+  @Test
+  public void testLiteralResultIteratorPlanWithLimitAndOffset() throws SQLException {
+    Object[][] expected = new Object[][]{
+      {"5", 50},
+      {"6", 60},
+      {"5", 100},
+      {"1", 10},};
+    testLiteralResultIteratorPlan(expected, 2, 4);
+  }
+
+  private void testLiteralResultIteratorPlan(Object[][] expectedResult, Integer offset, Integer limit)
+          throws SQLException {
+
+    QueryPlan plan = newLiteralResultIterationPlan(offset, limit);
+    ResultIterator iter = plan.iterator();
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    for (Object[] row : expectedResult) {
+      Tuple next = iter.next();
+      assertNotNull(next);
+      for (int i = 0; i < row.length; i++) {
+        PColumn column = table.getColumns().get(i);
+        boolean eval = new ProjectedColumnExpression(column, table, column.getName().getString()).evaluate(next,
+                ptr);
+        Object o = eval ? column.getDataType().toObject(ptr) : null;
+        assertEquals(row[i], o);
+      }
+    }
+    assertNull(iter.next());
+  }
+
+  private QueryPlan newLiteralResultIterationPlan(Integer offset, Integer limit) {
+    List<Tuple> tuples = Lists.newArrayList();
+
+    Tuple baseTuple = new SingleKeyValueTuple(KeyValue.LOWESTKEY);
+    for (Object[] row : RELATION) {
+      Expression[] exprs = new Expression[row.length];
+      for (int i = 0; i < row.length; i++) {
+        exprs[i] = LiteralExpression.newConstant(row[i]);
+      }
+      TupleProjector projector = new TupleProjector(exprs);
+      tuples.add(projector.projectResults(baseTuple));
     }
 
-    private static final Object[][] RELATION = new Object[][] {
-        {"2", 20},
-        {"2", 40},
-        {"5", 50},
-        {"6", 60},
-        {"5", 100},
-        {"1", 10},
-        {"3", 30},
- };
-    PTable table = createProjectedTableFromLiterals(RELATION[0]).getTable();
+    return new LiteralResultIterationPlan(tuples, CONTEXT, SelectStatement.SELECT_ONE, TableRef.EMPTY_TABLE_REF,
+            RowProjector.EMPTY_PROJECTOR, limit, offset, OrderBy.EMPTY_ORDER_BY, null);
+  }
 
-    @Test
-    public void testLiteralResultIteratorPlanWithOffset() throws SQLException {
-        Object[][] expected = new Object[][] {
-            {"2", 40},
-            {"5", 50},
-            {"6", 60},
-            {"5", 100},
-            {"1", 10},
-            {"3", 30},
-        };
-        testLiteralResultIteratorPlan(expected, 1, null);
+  private TableRef createProjectedTableFromLiterals(Object[] row) {
+    List<PColumn> columns = Lists.<PColumn>newArrayList();
+    for (int i = 0; i < row.length; i++) {
+      String name = ParseNodeFactory.createTempAlias();
+      Expression expr = LiteralExpression.newConstant(row[i]);
+      columns.add(new PColumnImpl(PNameFactory.newName(name),
+              PNameFactory.newName(TupleProjector.VALUE_COLUMN_FAMILY), expr.getDataType(), expr.getMaxLength(),
+              expr.getScale(), expr.isNullable(), i, expr.getSortOrder(), null, null, false, name, false, false));
     }
+    try {
+      PTable pTable = PTableImpl.makePTable(null, PName.EMPTY_NAME, PName.EMPTY_NAME, PTableType.SUBQUERY, null,
+              MetaDataProtocol.MIN_TABLE_TIMESTAMP, PTable.INITIAL_SEQ_NUM, null, null, columns, null, null,
+              Collections.<PTable>emptyList(), false, Collections.<PName>emptyList(), null, null, false, false,
+              false, null, null, null, true, false, 0, 0L, false, null, false);
+      TableRef sourceTable = new TableRef(pTable);
+      List<ColumnRef> sourceColumnRefs = Lists.<ColumnRef>newArrayList();
+      for (PColumn column : sourceTable.getTable().getColumns()) {
+        sourceColumnRefs.add(new ColumnRef(sourceTable, column.getPosition()));
+      }
 
-    @Test
-    public void testLiteralResultIteratorPlanWithLimit() throws SQLException {
-        Object[][] expected = new Object[][] {
-            {"2", 20},
-            {"2", 40},
-            {"5", 50},
-            {"6", 60},
-        };
-        testLiteralResultIteratorPlan(expected, null, 4);
+      return new TableRef(TupleProjectionCompiler.createProjectedTable(sourceTable, sourceColumnRefs, false));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
-
-    @Test
-    public void testLiteralResultIteratorPlanWithLimitAndOffset() throws SQLException {
-        Object[][] expected = new Object[][] {
-            {"5", 50},
-            {"6", 60},
-            {"5", 100},
-            {"1", 10},
-            };
-        testLiteralResultIteratorPlan(expected, 2, 4);
-    }
-
-    private void testLiteralResultIteratorPlan(Object[][] expectedResult, Integer offset, Integer limit)
-            throws SQLException {
-
-        QueryPlan plan = newLiteralResultIterationPlan(offset, limit);
-        ResultIterator iter = plan.iterator();
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        for (Object[] row : expectedResult) {
-            Tuple next = iter.next();
-            assertNotNull(next);
-            for (int i = 0; i < row.length; i++) {
-                PColumn column = table.getColumns().get(i);
-                boolean eval = new ProjectedColumnExpression(column, table, column.getName().getString()).evaluate(next,
-                        ptr);
-                Object o = eval ? column.getDataType().toObject(ptr) : null;
-                assertEquals(row[i], o);
-            }
-        }
-        assertNull(iter.next());
-    }
-
-    private QueryPlan newLiteralResultIterationPlan(Integer offset, Integer limit) {
-        List<Tuple> tuples = Lists.newArrayList();
-
-        Tuple baseTuple = new SingleKeyValueTuple(KeyValue.LOWESTKEY);
-        for (Object[] row : RELATION) {
-            Expression[] exprs = new Expression[row.length];
-            for (int i = 0; i < row.length; i++) {
-                exprs[i] = LiteralExpression.newConstant(row[i]);
-            }
-            TupleProjector projector = new TupleProjector(exprs);
-            tuples.add(projector.projectResults(baseTuple));
-        }
-
-        return new LiteralResultIterationPlan(tuples, CONTEXT, SelectStatement.SELECT_ONE, TableRef.EMPTY_TABLE_REF,
-                RowProjector.EMPTY_PROJECTOR, limit, offset, OrderBy.EMPTY_ORDER_BY, null);
-    }
-
-    private TableRef createProjectedTableFromLiterals(Object[] row) {
-        List<PColumn> columns = Lists.<PColumn> newArrayList();
-        for (int i = 0; i < row.length; i++) {
-            String name = ParseNodeFactory.createTempAlias();
-            Expression expr = LiteralExpression.newConstant(row[i]);
-            columns.add(new PColumnImpl(PNameFactory.newName(name),
-                    PNameFactory.newName(TupleProjector.VALUE_COLUMN_FAMILY), expr.getDataType(), expr.getMaxLength(),
-                    expr.getScale(), expr.isNullable(), i, expr.getSortOrder(), null, null, false, name, false, false));
-        }
-        try {
-            PTable pTable = PTableImpl.makePTable(null, PName.EMPTY_NAME, PName.EMPTY_NAME, PTableType.SUBQUERY, null,
-                    MetaDataProtocol.MIN_TABLE_TIMESTAMP, PTable.INITIAL_SEQ_NUM, null, null, columns, null, null,
-                    Collections.<PTable> emptyList(), false, Collections.<PName> emptyList(), null, null, false, false,
-                    false, null, null, null, true, false, 0, 0L, false, null, false);
-            TableRef sourceTable = new TableRef(pTable);
-            List<ColumnRef> sourceColumnRefs = Lists.<ColumnRef> newArrayList();
-            for (PColumn column : sourceTable.getTable().getColumns()) {
-                sourceColumnRefs.add(new ColumnRef(sourceTable, column.getPosition()));
-            }
-
-            return new TableRef(TupleProjectionCompiler.createProjectedTable(sourceTable, sourceColumnRefs, false));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+  }
 }

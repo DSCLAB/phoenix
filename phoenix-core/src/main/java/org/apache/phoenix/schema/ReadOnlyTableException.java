@@ -23,33 +23,35 @@ import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
 /**
- * 
- * Exception thrown when an attempt is made to modify or write to a read-only table.
  *
- * 
+ * Exception thrown when an attempt is made to modify or write to a read-only
+ * table.
+ *
+ *
  * @since 0.1
  */
 public class ReadOnlyTableException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.READ_ONLY_TABLE;
 
-    public ReadOnlyTableException(String schemaName, String tableName) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).toString(),
-                code.getSQLState(), code.getErrorCode());
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.READ_ONLY_TABLE;
 
-    public ReadOnlyTableException(String message, String schemaName, String tableName) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setMessage(message).toString(),
-                code.getSQLState(), code.getErrorCode());
-    }
+  public ReadOnlyTableException(String schemaName, String tableName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).toString(),
+            code.getSQLState(), code.getErrorCode());
+  }
 
-    public ReadOnlyTableException(String message, String schemaName, String tableName, Throwable cause) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setRootCause(cause).setMessage(message).toString(),
-                code.getSQLState(), code.getErrorCode(), cause);
-    }
+  public ReadOnlyTableException(String message, String schemaName, String tableName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setMessage(message).toString(),
+            code.getSQLState(), code.getErrorCode());
+  }
 
-    public ReadOnlyTableException(String message, String schemaName, String tableName, String familyName) {
-        super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setFamilyName(familyName).setMessage(message).toString(),
-                code.getSQLState(), code.getErrorCode());
-    }
+  public ReadOnlyTableException(String message, String schemaName, String tableName, Throwable cause) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setRootCause(cause).setMessage(message).toString(),
+            code.getSQLState(), code.getErrorCode(), cause);
+  }
+
+  public ReadOnlyTableException(String message, String schemaName, String tableName, String familyName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(tableName).setFamilyName(familyName).setMessage(message).toString(),
+            code.getSQLState(), code.getErrorCode());
+  }
 }

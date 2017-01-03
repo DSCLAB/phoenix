@@ -22,6 +22,7 @@ package org.apache.phoenix.util;
  * Default implementation of an environment edge.
  */
 public class DefaultEnvironmentEdge implements EnvironmentEdge {
+
   /**
    * {@inheritDoc}
    * <p/>

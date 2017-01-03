@@ -24,20 +24,21 @@ import org.apache.flume.Context;
 import org.apache.flume.Event;
 
 public class CustomSerializer extends BaseEventSerializer {
-    @Override
-    public void doConfigure(Context context) {
 
-    }
+  @Override
+  public void doConfigure(Context context) {
 
-    @Override
-    public void doInitialize() throws SQLException {
+  }
 
-    }
+  @Override
+  public void doInitialize() throws SQLException {
 
-    @Override
-    public void upsertEvents(List<Event> events) throws SQLException {
-        // Just execute a sample UPSERT
-        connection.createStatement().execute("UPSERT INTO FLUME_TEST_EXTENDED(ID, COUNTS) VALUES(1, 1)");
-        connection.commit();
-    }
+  }
+
+  @Override
+  public void upsertEvents(List<Event> events) throws SQLException {
+    // Just execute a sample UPSERT
+    connection.createStatement().execute("UPSERT INTO FLUME_TEST_EXTENDED(ID, COUNTS) VALUES(1, 1)");
+    connection.commit();
+  }
 }

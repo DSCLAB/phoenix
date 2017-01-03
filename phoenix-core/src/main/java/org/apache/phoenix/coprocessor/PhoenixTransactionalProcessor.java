@@ -21,8 +21,8 @@ import org.apache.tephra.hbase.coprocessor.TransactionProcessor;
 
 public class PhoenixTransactionalProcessor extends DelegateRegionObserver {
 
-    public PhoenixTransactionalProcessor() {
-        super(new TransactionProcessor());
-    }
+  public PhoenixTransactionalProcessor() {
+    super(new TransactionProcessor());
+  }
 
 }

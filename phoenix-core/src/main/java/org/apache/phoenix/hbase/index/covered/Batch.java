@@ -39,7 +39,7 @@ public class Batch {
     this.timestamp = ts;
   }
 
-  public void add(KeyValue kv){
+  public void add(KeyValue kv) {
     if (pointDeleteCode != kv.getType()) {
       allPointDeletes = false;
     }

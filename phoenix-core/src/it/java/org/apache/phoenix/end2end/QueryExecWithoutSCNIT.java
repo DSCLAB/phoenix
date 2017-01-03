@@ -31,26 +31,26 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-
 public class QueryExecWithoutSCNIT extends BaseHBaseManagedTimeIT {
-    @Test
-    public void testScanNoSCN() throws Exception {
-        long ts = System.currentTimeMillis();
-        String tenantId = getOrganizationId();
-        initATableValues(tenantId, getDefaultSplits(tenantId), null, ts, getUrl());
-        String query = "SELECT a_string, b_string FROM aTable WHERE organization_id=? and a_integer = 5";
-        Properties props = new Properties(); // Test with no CurrentSCN property set
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {
-            PreparedStatement statement = conn.prepareStatement(query);
-            statement.setString(1, tenantId);
-            ResultSet rs = statement.executeQuery();
-            assertTrue (rs.next());
-            assertEquals(rs.getString(1), B_VALUE);
-            assertEquals(rs.getString("B_string"), C_VALUE);
-            assertFalse(rs.next());
-        } finally {
-            conn.close();
-        }
+
+  @Test
+  public void testScanNoSCN() throws Exception {
+    long ts = System.currentTimeMillis();
+    String tenantId = getOrganizationId();
+    initATableValues(tenantId, getDefaultSplits(tenantId), null, ts, getUrl());
+    String query = "SELECT a_string, b_string FROM aTable WHERE organization_id=? and a_integer = 5";
+    Properties props = new Properties(); // Test with no CurrentSCN property set
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      PreparedStatement statement = conn.prepareStatement(query);
+      statement.setString(1, tenantId);
+      ResultSet rs = statement.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(rs.getString(1), B_VALUE);
+      assertEquals(rs.getString("B_string"), C_VALUE);
+      assertFalse(rs.next());
+    } finally {
+      conn.close();
     }
+  }
 }

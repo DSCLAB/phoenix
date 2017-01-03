@@ -26,30 +26,31 @@ import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDouble;
 
-@BuiltInFunction(name = LnFunction.NAME, args = { @Argument(allowedTypes = { PDouble.class, PDecimal.class }) })
+@BuiltInFunction(name = LnFunction.NAME, args = {
+  @Argument(allowedTypes = {PDouble.class, PDecimal.class})})
 public class LnFunction extends JavaMathOneArgumentFunction {
 
-    public static final String NAME = "LN";
+  public static final String NAME = "LN";
 
-    public LnFunction() {
-    }
+  public LnFunction() {
+  }
 
-    public LnFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public LnFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    protected double compute(double firstArg) {
-        return Math.log(firstArg);
-    }
+  @Override
+  protected double compute(double firstArg) {
+    return Math.log(firstArg);
+  }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES;
+  }
 }

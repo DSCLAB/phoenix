@@ -53,477 +53,481 @@ import com.google.common.collect.Maps;
 
 @RunWith(Parameterized.class)
 public class MutableRollbackIT extends BaseHBaseManagedTimeIT {
-	
-	private final boolean localIndex;
-	private String tableName1;
-    private String indexName1;
-    private String fullTableName1;
-    private String tableName2;
-    private String indexName2;
-    private String fullTableName2;
 
-	public MutableRollbackIT(boolean localIndex) {
-		this.localIndex = localIndex;
-		this.tableName1 = TestUtil.DEFAULT_DATA_TABLE_NAME + "_1_";
-        this.indexName1 = "IDX1";
-        this.fullTableName1 = SchemaUtil.getTableName(TestUtil.DEFAULT_SCHEMA_NAME, tableName1);
-        this.tableName2 = TestUtil.DEFAULT_DATA_TABLE_NAME + "_2_";
-        this.indexName2 = "IDX2";
-        this.fullTableName2 = SchemaUtil.getTableName(TestUtil.DEFAULT_SCHEMA_NAME, tableName2);
-	}
-	
-	@BeforeClass
-    @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
-    public static void doSetup() throws Exception {
-        Map<String,String> props = Maps.newHashMapWithExpectedSize(2);
-        props.put(QueryServices.DEFAULT_TABLE_ISTRANSACTIONAL_ATTRIB, Boolean.toString(true));
-        props.put(QueryServices.TRANSACTIONS_ENABLED, Boolean.toString(true));
-        setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
-    }
-	
-	@Parameters(name="localIndex = {0}")
-    public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {     
-                 false, true  
-           });
-    }
-	
-    public void testRollbackOfUncommittedExistingKeyValueIndexUpdate() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
-            stmt.execute("CREATE TABLE " + fullTableName2 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR) IMMUTABLE_ROWS=true");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName1 + " ON " + fullTableName1 + " (v1) INCLUDE(v2)");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName2 + " ON " + fullTableName2 + " (v1) INCLUDE(v2)");
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'a')");
-            conn.commit();
-            
-            //assert rows exists in fullTableName1
-            ResultSet rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert rows exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'b')");
-            stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
-            
-            //assert new covered column value 
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("b", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert new covered column value 
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("b", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert rows exists in fullTableName2
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
-            assertTrue(rs.next());
-            assertEquals("a", rs.getString(1));
-            assertEquals("b", rs.getString(2));
-            assertEquals("c", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert rows exists in " + fullTableName2 + " index table
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertTrue(rs.next());
-            assertEquals("a", rs.getString(1));
-            assertEquals("b", rs.getString(2));
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            
-            //assert original row exists in fullTableName1
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert original row exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
-            stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
-            conn.commit();
+  private final boolean localIndex;
+  private String tableName1;
+  private String indexName1;
+  private String fullTableName1;
+  private String tableName2;
+  private String indexName2;
+  private String fullTableName2;
 
-            assertDataAndIndexRows(stmt);
-            stmt.executeUpdate("delete from " + fullTableName1 + " where  k='x'");
-            stmt.executeUpdate("delete from " + fullTableName2 + " where  v1='b'");
-            
-            //assert no rows exists in fullTableName1
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
-            assertFalse(rs.next());
-            //assert no rows exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertFalse(rs.next());
+  public MutableRollbackIT(boolean localIndex) {
+    this.localIndex = localIndex;
+    this.tableName1 = TestUtil.DEFAULT_DATA_TABLE_NAME + "_1_";
+    this.indexName1 = "IDX1";
+    this.fullTableName1 = SchemaUtil.getTableName(TestUtil.DEFAULT_SCHEMA_NAME, tableName1);
+    this.tableName2 = TestUtil.DEFAULT_DATA_TABLE_NAME + "_2_";
+    this.indexName2 = "IDX2";
+    this.fullTableName2 = SchemaUtil.getTableName(TestUtil.DEFAULT_SCHEMA_NAME, tableName2);
+  }
 
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            assertDataAndIndexRows(stmt);
-        } finally {
-            conn.close();
-        }
-    }
+  @BeforeClass
+  @Shadower(classBeingShadowed = BaseHBaseManagedTimeIT.class)
+  public static void doSetup() throws Exception {
+    Map<String, String> props = Maps.newHashMapWithExpectedSize(2);
+    props.put(QueryServices.DEFAULT_TABLE_ISTRANSACTIONAL_ATTRIB, Boolean.toString(true));
+    props.put(QueryServices.TRANSACTIONS_ENABLED, Boolean.toString(true));
+    setUpTestDriver(new ReadOnlyProps(props.entrySet().iterator()));
+  }
 
-	@Test
-    public void testRollbackOfUncommittedExistingRowKeyIndexUpdate() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
-            stmt.execute("CREATE TABLE " + fullTableName2 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR) IMMUTABLE_ROWS=true");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName1 + " ON " + fullTableName1 + " (v1, k)");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName2 + " ON " + fullTableName2 + " (v1, k)");
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'a')");
-            conn.commit();
-            
-            //assert rows exists in " + fullTableName1 + " 
-            ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert rows exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertFalse(rs.next());
-            
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
-            stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
-            
-            assertDataAndIndexRows(stmt);
-            
-            conn.rollback();
-            
-            //assert original row exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert original row exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("y", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
-            stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
-            conn.commit();
+  @Parameters(name = "localIndex = {0}")
+  public static Collection<Boolean> data() {
+    return Arrays.asList(new Boolean[]{
+      false, true
+    });
+  }
 
-            assertDataAndIndexRows(stmt);
-            stmt.executeUpdate("delete from " + fullTableName1 + " where  k='x'");
-            stmt.executeUpdate("delete from " + fullTableName2 + " where  v1='b'");
-            
-            //assert no rows exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertFalse(rs.next());
-            //assert no rows exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1);
-            assertFalse(rs.next());
+  public void testRollbackOfUncommittedExistingKeyValueIndexUpdate() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    try {
+      Statement stmt = conn.createStatement();
+      stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
+      stmt.execute("CREATE TABLE " + fullTableName2 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR) IMMUTABLE_ROWS=true");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName1 + " ON " + fullTableName1 + " (v1) INCLUDE(v2)");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName2 + " ON " + fullTableName2 + " (v1) INCLUDE(v2)");
 
-            //assert no rows exists in fullTableName2
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
-            assertFalse(rs.next());
-            //assert no rows exists in indexName2
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            assertDataAndIndexRows(stmt);
-            PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
-            if(localIndex) {
-                dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
-                dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName2);
-            }
-        } finally {
-            conn.close();
-        }
-    }
-	
-    private void assertDataAndIndexRows(Statement stmt) throws SQLException, IOException {
-        ResultSet rs;
-        //assert new covered row key value exists in fullTableName1
-        rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
-        assertTrue(rs.next());
-        assertEquals("x", rs.getString(1));
-        assertEquals("z", rs.getString(2));
-        assertEquals("a", rs.getString(3));
-        assertFalse(rs.next());
-        
-        //assert new covered row key value exists in indexName1
-        rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
-        assertTrue(rs.next());
-        assertEquals("x", rs.getString(1));
-        assertEquals("z", rs.getString(2));
-        assertEquals("a", rs.getString(3));
-        assertFalse(rs.next());
-        
-        //assert rows exists in fullTableName2
-        rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
-        assertTrue(rs.next());
-        assertEquals("a", rs.getString(1));
-        assertEquals("b", rs.getString(2));
-        assertEquals("c", rs.getString(3));
-        assertFalse(rs.next());
-        
-        //assert rows exists in " + fullTableName2 + " index table
-        rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName2);
-        assertTrue(rs.next());
-        assertEquals("a", rs.getString(1));
-        assertEquals("b", rs.getString(2));
-        assertFalse(rs.next());
-    }
-    
-    @Test
-    public void testMultiRollbackOfUncommittedExistingRowKeyIndexUpdate() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName1 + " ON " + fullTableName1 + " (v1, k)");
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'yyyy', 'a')");
-            conn.commit();
-            
-            //assert rows exists in " + fullTableName1 + " 
-            ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert rows exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'zzz', 'a')");
-            
-            //assert new covered row key value exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("zzz", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert new covered row key value exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("zzz", rs.getString(2));
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            
-            //assert original row exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert original row exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'zz', 'a')");
-            
-            //assert new covered row key value exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("zz", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert new covered row key value exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("zz", rs.getString(2));
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            
-            //assert original row exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert original row exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("yyyy", rs.getString(2));
-            assertFalse(rs.next());
-            PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
-            if(localIndex) dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
-        } finally {
-            conn.close();
-        }
-    }
-    
-    @Test
-    public void testCheckpointAndRollback() throws Exception {
-        Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        conn.setAutoCommit(false);
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
-            stmt.execute("CREATE "+(localIndex? " LOCAL " : "")+"INDEX " + indexName1 + " ON " + fullTableName1 + " (v1)");
-            stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'a', 'a')");
-            conn.commit();
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + "(k,v1) SELECT k,v1||'a' FROM " + fullTableName1);
-            ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("aa", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("aa", rs.getString(2));
-            assertFalse(rs.next());
-            
-            stmt.executeUpdate("upsert into " + fullTableName1 + "(k,v1) SELECT k,v1||'a' FROM " + fullTableName1);
-            
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("aaa", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("aaa", rs.getString(2));
-            assertFalse(rs.next());
-            
-            conn.rollback();
-            
-            //assert original row exists in fullTableName1
-            rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("a", rs.getString(2));
-            assertEquals("a", rs.getString(3));
-            assertFalse(rs.next());
-            
-            //assert original row exists in indexName1
-            rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
-            assertTrue(rs.next());
-            assertEquals("x", rs.getString(1));
-            assertEquals("a", rs.getString(2));
-            assertFalse(rs.next());
-            PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
-            if(localIndex) dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
-        } finally {
-            conn.close();
-        }
-    }
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'a')");
+      conn.commit();
 
-    private void dropTable(HBaseAdmin admin, Connection conn, String tableName) throws SQLException, IOException {
-        conn.createStatement().execute("DROP TABLE IF EXISTS "+ tableName);
-        if(admin.tableExists(tableName)) {
-            admin.disableTable(TableName.valueOf(tableName));
-            admin.deleteTable(TableName.valueOf(tableName));
-        } 
+      //assert rows exists in fullTableName1
+      ResultSet rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert rows exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'b')");
+      stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
+
+      //assert new covered column value 
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("b", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert new covered column value 
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("b", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert rows exists in fullTableName2
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
+      assertTrue(rs.next());
+      assertEquals("a", rs.getString(1));
+      assertEquals("b", rs.getString(2));
+      assertEquals("c", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert rows exists in " + fullTableName2 + " index table
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertTrue(rs.next());
+      assertEquals("a", rs.getString(1));
+      assertEquals("b", rs.getString(2));
+      assertFalse(rs.next());
+
+      conn.rollback();
+
+      //assert original row exists in fullTableName1
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert original row exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
+      stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
+      conn.commit();
+
+      assertDataAndIndexRows(stmt);
+      stmt.executeUpdate("delete from " + fullTableName1 + " where  k='x'");
+      stmt.executeUpdate("delete from " + fullTableName2 + " where  v1='b'");
+
+      //assert no rows exists in fullTableName1
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
+      assertFalse(rs.next());
+      //assert no rows exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      conn.rollback();
+      assertDataAndIndexRows(stmt);
+    } finally {
+      conn.close();
     }
+  }
+
+  @Test
+  public void testRollbackOfUncommittedExistingRowKeyIndexUpdate() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    try {
+      Statement stmt = conn.createStatement();
+      stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
+      stmt.execute("CREATE TABLE " + fullTableName2 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR) IMMUTABLE_ROWS=true");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName1 + " ON " + fullTableName1 + " (v1, k)");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName2 + " ON " + fullTableName2 + " (v1, k)");
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'y', 'a')");
+      conn.commit();
+
+      //assert rows exists in " + fullTableName1 + " 
+      ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert rows exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
+      stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
+
+      assertDataAndIndexRows(stmt);
+
+      conn.rollback();
+
+      //assert original row exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert original row exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("y", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'z', 'a')");
+      stmt.executeUpdate("upsert into " + fullTableName2 + " values('a', 'b', 'c')");
+      conn.commit();
+
+      assertDataAndIndexRows(stmt);
+      stmt.executeUpdate("delete from " + fullTableName1 + " where  k='x'");
+      stmt.executeUpdate("delete from " + fullTableName2 + " where  v1='b'");
+
+      //assert no rows exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertFalse(rs.next());
+      //assert no rows exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1);
+      assertFalse(rs.next());
+
+      //assert no rows exists in fullTableName2
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName2);
+      assertFalse(rs.next());
+      //assert no rows exists in indexName2
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName2 + ")*/ k, v1 from " + fullTableName2);
+      assertFalse(rs.next());
+
+      conn.rollback();
+      assertDataAndIndexRows(stmt);
+      PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
+      if (localIndex) {
+        dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
+        dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName2);
+      }
+    } finally {
+      conn.close();
+    }
+  }
+
+  private void assertDataAndIndexRows(Statement stmt) throws SQLException, IOException {
+    ResultSet rs;
+    //assert new covered row key value exists in fullTableName1
+    rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName1);
+    assertTrue(rs.next());
+    assertEquals("x", rs.getString(1));
+    assertEquals("z", rs.getString(2));
+    assertEquals("a", rs.getString(3));
+    assertFalse(rs.next());
+
+    //assert new covered row key value exists in indexName1
+    rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1, v2 from " + fullTableName1);
+    assertTrue(rs.next());
+    assertEquals("x", rs.getString(1));
+    assertEquals("z", rs.getString(2));
+    assertEquals("a", rs.getString(3));
+    assertFalse(rs.next());
+
+    //assert rows exists in fullTableName2
+    rs = stmt.executeQuery("select /*+ NO_INDEX */ k, v1, v2 from " + fullTableName2);
+    assertTrue(rs.next());
+    assertEquals("a", rs.getString(1));
+    assertEquals("b", rs.getString(2));
+    assertEquals("c", rs.getString(3));
+    assertFalse(rs.next());
+
+    //assert rows exists in " + fullTableName2 + " index table
+    rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName2);
+    assertTrue(rs.next());
+    assertEquals("a", rs.getString(1));
+    assertEquals("b", rs.getString(2));
+    assertFalse(rs.next());
+  }
+
+  @Test
+  public void testMultiRollbackOfUncommittedExistingRowKeyIndexUpdate() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    try {
+      Statement stmt = conn.createStatement();
+      stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName1 + " ON " + fullTableName1 + " (v1, k)");
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'yyyy', 'a')");
+      conn.commit();
+
+      //assert rows exists in " + fullTableName1 + " 
+      ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert rows exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'zzz', 'a')");
+
+      //assert new covered row key value exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("zzz", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert new covered row key value exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("zzz", rs.getString(2));
+      assertFalse(rs.next());
+
+      conn.rollback();
+
+      //assert original row exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert original row exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'zz', 'a')");
+
+      //assert new covered row key value exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("zz", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert new covered row key value exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("zz", rs.getString(2));
+      assertFalse(rs.next());
+
+      conn.rollback();
+
+      //assert original row exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert original row exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("yyyy", rs.getString(2));
+      assertFalse(rs.next());
+      PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
+      if (localIndex) {
+        dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
+      }
+    } finally {
+      conn.close();
+    }
+  }
+
+  @Test
+  public void testCheckpointAndRollback() throws Exception {
+    Properties props = PropertiesUtil.deepCopy(TEST_PROPERTIES);
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    conn.setAutoCommit(false);
+    try {
+      Statement stmt = conn.createStatement();
+      stmt.execute("CREATE TABLE " + fullTableName1 + "(k VARCHAR PRIMARY KEY, v1 VARCHAR, v2 VARCHAR)");
+      stmt.execute("CREATE " + (localIndex ? " LOCAL " : "") + "INDEX " + indexName1 + " ON " + fullTableName1 + " (v1)");
+      stmt.executeUpdate("upsert into " + fullTableName1 + " values('x', 'a', 'a')");
+      conn.commit();
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + "(k,v1) SELECT k,v1||'a' FROM " + fullTableName1);
+      ResultSet rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("aa", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("aa", rs.getString(2));
+      assertFalse(rs.next());
+
+      stmt.executeUpdate("upsert into " + fullTableName1 + "(k,v1) SELECT k,v1||'a' FROM " + fullTableName1);
+
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("aaa", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("aaa", rs.getString(2));
+      assertFalse(rs.next());
+
+      conn.rollback();
+
+      //assert original row exists in fullTableName1
+      rs = stmt.executeQuery("select k, v1, v2 from " + fullTableName1);
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("a", rs.getString(2));
+      assertEquals("a", rs.getString(3));
+      assertFalse(rs.next());
+
+      //assert original row exists in indexName1
+      rs = stmt.executeQuery("select /*+ INDEX(" + indexName1 + ")*/ k, v1 from " + fullTableName1 + " ORDER BY v1");
+      assertTrue(rs.next());
+      assertEquals("x", rs.getString(1));
+      assertEquals("a", rs.getString(2));
+      assertFalse(rs.next());
+      PhoenixConnection phoenixConn = conn.unwrap(PhoenixConnection.class);
+      if (localIndex) {
+        dropTable(phoenixConn.getQueryServices().getAdmin(), conn, fullTableName1);
+      }
+    } finally {
+      conn.close();
+    }
+  }
+
+  private void dropTable(HBaseAdmin admin, Connection conn, String tableName) throws SQLException, IOException {
+    conn.createStatement().execute("DROP TABLE IF EXISTS " + tableName);
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(TableName.valueOf(tableName));
+      admin.deleteTable(TableName.valueOf(tableName));
+    }
+  }
 
 }

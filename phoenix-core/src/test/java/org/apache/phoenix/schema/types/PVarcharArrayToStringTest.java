@@ -17,55 +17,55 @@ import org.junit.Test;
  */
 public class PVarcharArrayToStringTest extends BasePhoenixArrayToStringTest {
 
-    @Test
-    public void testUnicodeString() {
-        helpTestToString(
+  @Test
+  public void testUnicodeString() {
+    helpTestToString(
             getBaseType(), //
-            new String[] { "a" + "\u00ea" + "\u00f1" + "b", "c" + "\u00a0" + "\u00ff" + "d" },
+            new String[]{"a" + "\u00ea" + "\u00f1" + "b", "c" + "\u00a0" + "\u00ff" + "d"},
             "['aêñb', 'c ÿd']");
-    }
+  }
 
-    @Test
-    public void testStringWithSeparators() {
-        helpTestToString(
+  @Test
+  public void testStringWithSeparators() {
+    helpTestToString(
             getBaseType(), //
-            new String[] { "a,b,c", "d\"e\"f\"", "'g'h'i'" },
+            new String[]{"a,b,c", "d\"e\"f\"", "'g'h'i'"},
             "['a,b,c', 'd\"e\"f\"', '''g''h''i''']");
-    }
+  }
 
-    @Override
-    protected PVarchar getBaseType() {
-        return PVarchar.INSTANCE;
-    }
+  @Override
+  protected PVarchar getBaseType() {
+    return PVarchar.INSTANCE;
+  }
 
-    @Override
-    protected String getString1() {
-        return "'string1'";
-    }
+  @Override
+  protected String getString1() {
+    return "'string1'";
+  }
 
-    @Override
-    protected String getElement1() {
-        return "string1";
-    }
+  @Override
+  protected String getElement1() {
+    return "string1";
+  }
 
-    @Override
-    protected String getString2() {
-        return "'string2'";
-    }
+  @Override
+  protected String getString2() {
+    return "'string2'";
+  }
 
-    @Override
-    protected String getElement2() {
-        return "string2";
-    }
+  @Override
+  protected String getElement2() {
+    return "string2";
+  }
 
-    @Override
-    protected String getString3() {
-        return "'string3'";
-    }
+  @Override
+  protected String getString3() {
+    return "'string3'";
+  }
 
-    @Override
-    protected String getElement3() {
-        return "string3";
-    }
+  @Override
+  protected String getElement3() {
+    return "string3";
+  }
 
 }

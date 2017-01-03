@@ -74,7 +74,7 @@ public class PUnsignedDouble extends PRealNumber<PDouble> {
       throw newIllegalDataException(this + " may not be null");
     }
     return this.getCodec().encodeDouble(((Number) object).doubleValue(),
-        bytes, offset);
+            bytes, offset);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class PUnsignedDouble extends PRealNumber<PDouble> {
       Double d = Double.parseDouble(value);
       if (d.doubleValue() < 0) {
         throw newIllegalDataException("Value may not be negative("
-            + d + ")");
+                + d + ")");
       }
       return d;
     } catch (NumberFormatException e) {
@@ -103,7 +103,7 @@ public class PUnsignedDouble extends PRealNumber<PDouble> {
 
   @Override
   public Object toObject(byte[] b, int o, int l, PDataType actualType, SortOrder sortOrder,
-      Integer maxLength, Integer scale) {
+          Integer maxLength, Integer scale) {
     Double v = (Double) PDouble.INSTANCE.toObject(b, o, l, actualType, sortOrder);
     throwIfNonNegativeNumber(v);
     return v;
@@ -112,7 +112,7 @@ public class PUnsignedDouble extends PRealNumber<PDouble> {
   @Override
   public boolean isCoercibleTo(PDataType targetType, Object value) {
     return super.isCoercibleTo(targetType, value) || PDouble.INSTANCE
-        .isCoercibleTo(targetType, value);
+            .isCoercibleTo(targetType, value);
   }
 
   @Override

@@ -27,65 +27,68 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.*;
 
 @FunctionParseNode.BuiltInFunction(name = StringToArrayFunction.NAME, args = {
-        @FunctionParseNode.Argument(allowedTypes = {PVarchar.class, PChar.class}),
-        @FunctionParseNode.Argument(allowedTypes = {PVarchar.class, PChar.class}),
+  @FunctionParseNode.Argument(allowedTypes = {PVarchar.class, PChar.class})
+  ,
+        @FunctionParseNode.Argument(allowedTypes = {PVarchar.class, PChar.class})
+  ,
         @FunctionParseNode.Argument(allowedTypes = {PVarchar.class, PChar.class}, defaultValue = "null")})
 public class StringToArrayFunction extends ScalarFunction {
-    public static final String NAME = "STRING_TO_ARRAY";
 
-    public StringToArrayFunction() {
+  public static final String NAME = "STRING_TO_ARRAY";
+
+  public StringToArrayFunction() {
+  }
+
+  public StringToArrayFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression delimiterExpr = children.get(1);
+    String delimiter;
+    if (!delimiterExpr.evaluate(tuple, ptr)) {
+      return false;
+    } else if (ptr.getLength() == 0) {
+      delimiter = "";
+    } else {
+      delimiter = (String) delimiterExpr.getDataType().toObject(ptr, delimiterExpr.getSortOrder(), delimiterExpr.getMaxLength(), delimiterExpr.getScale());
     }
 
-    public StringToArrayFunction(List<Expression> children) {
-        super(children);
+    Expression stringExpr = children.get(0);
+    if (!stringExpr.evaluate(tuple, ptr)) {
+      return false;
+    } else if (ptr.getLength() == 0) {
+      return true;
+    }
+    String string = (String) stringExpr.getDataType().toObject(ptr, stringExpr.getSortOrder(), stringExpr.getMaxLength(), stringExpr.getScale());
+
+    Expression nullExpr = children.get(2);
+    String nullString = null;
+    if (nullExpr.evaluate(tuple, ptr) && ptr.getLength() != 0) {
+      nullString = (String) nullExpr.getDataType().toObject(ptr, nullExpr.getSortOrder(), nullExpr.getMaxLength(), nullExpr.getScale());
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression delimiterExpr = children.get(1);
-        String delimiter;
-        if (!delimiterExpr.evaluate(tuple, ptr)) {
-            return false;
-        } else if (ptr.getLength() == 0) {
-            delimiter = "";
-        } else {
-            delimiter = (String) delimiterExpr.getDataType().toObject(ptr, delimiterExpr.getSortOrder(), delimiterExpr.getMaxLength(), delimiterExpr.getScale());
-        }
+    return PArrayDataType.stringToArray(ptr, string, delimiter, nullString, getSortOrder());
+  }
 
-        Expression stringExpr = children.get(0);
-        if (!stringExpr.evaluate(tuple, ptr)) {
-            return false;
-        } else if (ptr.getLength() == 0) {
-            return true;
-        }
-        String string = (String) stringExpr.getDataType().toObject(ptr, stringExpr.getSortOrder(), stringExpr.getMaxLength(), stringExpr.getScale());
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-        Expression nullExpr = children.get(2);
-        String nullString = null;
-        if (nullExpr.evaluate(tuple, ptr) && ptr.getLength() != 0) {
-            nullString = (String) nullExpr.getDataType().toObject(ptr, nullExpr.getSortOrder(), nullExpr.getMaxLength(), nullExpr.getScale());
-        }
+  @Override
+  public Integer getMaxLength() {
+    return null;
+  }
 
-        return PArrayDataType.stringToArray(ptr, string, delimiter, nullString, getSortOrder());
-    }
+  @Override
+  public PDataType getDataType() {
+    return PVarcharArray.INSTANCE;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-    public Integer getMaxLength() {
-        return null;
-    }
-
-    @Override
-    public PDataType getDataType() {
-        return PVarcharArray.INSTANCE;
-    }
-
-    @Override
-    public SortOrder getSortOrder() {
-        return children.get(0).getSortOrder();
-    }
+  @Override
+  public SortOrder getSortOrder() {
+    return children.get(0).getSortOrder();
+  }
 }

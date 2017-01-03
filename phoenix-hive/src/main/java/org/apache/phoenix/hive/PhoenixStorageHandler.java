@@ -49,164 +49,154 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * This class manages all the Phoenix/Hive table initial configurations and SerDe Election
+ * This class manages all the Phoenix/Hive table initial configurations and
+ * SerDe Election
  */
 @SuppressWarnings("deprecation")
 public class PhoenixStorageHandler extends DefaultStorageHandler implements
         HiveStoragePredicateHandler, InputEstimator {
 
-    private static final Log LOG = LogFactory.getLog(PhoenixStorageHandler.class);
+  private static final Log LOG = LogFactory.getLog(PhoenixStorageHandler.class);
 
-    public PhoenixStorageHandler() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("PhoenixStorageHandler created");
-        }
+  public PhoenixStorageHandler() {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("PhoenixStorageHandler created");
+    }
+  }
+
+  @Override
+  public HiveMetaHook getMetaHook() {
+    return new PhoenixMetaHook();
+  }
+
+  @SuppressWarnings("rawtypes")
+  @Override
+  public Class<? extends OutputFormat> getOutputFormatClass() {
+    return PhoenixOutputFormat.class;
+  }
+
+  @Override
+  public void configureInputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+    configureJobProperties(tableDesc, jobProperties);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Configuring input job for table : " + tableDesc.getTableName());
     }
 
-    @Override
-    public HiveMetaHook getMetaHook() {
-        return new PhoenixMetaHook();
+    // initialization efficiency. Inform to SerDe about in/out work.
+    tableDesc.getProperties().setProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK,
+            PhoenixStorageHandlerConstants.IN_WORK);
+  }
+
+  @Override
+  public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+    configureJobProperties(tableDesc, jobProperties);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Configuring output job for  table : " + tableDesc.getTableName());
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Class<? extends OutputFormat> getOutputFormatClass() {
-        return PhoenixOutputFormat.class;
+    // initialization efficiency. Inform to SerDe about in/out work.
+    tableDesc.getProperties().setProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK,
+            PhoenixStorageHandlerConstants.OUT_WORK);
+  }
+
+  @Override
+  public void configureTableJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+    configureJobProperties(tableDesc, jobProperties);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  protected void configureJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
+    Properties tableProperties = tableDesc.getProperties();
+
+    String inputFormatClassName
+            = tableProperties.getProperty(PhoenixStorageHandlerConstants.HBASE_INPUT_FORMAT_CLASS);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(PhoenixStorageHandlerConstants.HBASE_INPUT_FORMAT_CLASS + " is "
+              + inputFormatClassName);
     }
 
-    @Override
-    public void configureInputJobProperties(TableDesc tableDesc, Map<String, String>
-            jobProperties) {
-        configureJobProperties(tableDesc, jobProperties);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Configuring input job for table : " + tableDesc.getTableName());
-        }
-
-        // initialization efficiency. Inform to SerDe about in/out work.
-        tableDesc.getProperties().setProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK,
-                PhoenixStorageHandlerConstants.IN_WORK);
+    Class<?> inputFormatClass;
+    try {
+      if (inputFormatClassName != null) {
+        inputFormatClass = JavaUtils.loadClass(inputFormatClassName);
+      } else {
+        inputFormatClass = PhoenixInputFormat.class;
+      }
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+      throw new RuntimeException(e);
     }
 
-    @Override
-    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String>
-            jobProperties) {
-        configureJobProperties(tableDesc, jobProperties);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Configuring output job for  table : " + tableDesc.getTableName());
-        }
-
-        // initialization efficiency. Inform to SerDe about in/out work.
-        tableDesc.getProperties().setProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK,
-                PhoenixStorageHandlerConstants.OUT_WORK);
+    if (inputFormatClass != null) {
+      tableDesc.setInputFileFormatClass((Class<? extends InputFormat>) inputFormatClass);
     }
 
-    @Override
-    public void configureTableJobProperties(TableDesc tableDesc, Map<String, String>
-            jobProperties) {
-        configureJobProperties(tableDesc, jobProperties);
+    String tableName = tableProperties.getProperty(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME);
+    if (tableName == null) {
+      tableName = tableDesc.getTableName();
+      tableProperties.setProperty(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME,
+              tableName);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void configureJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
-        Properties tableProperties = tableDesc.getProperties();
+    jobProperties.put(PhoenixConfigurationUtil.INPUT_TABLE_NAME, tableName);
+    jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM, tableProperties
+            .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM,
+                    PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_QUORUM));
+    jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_PORT, tableProperties
+            .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_PORT, String.valueOf(PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_PORT)));
+    jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT, tableProperties
+            .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT,
+                    PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_PARENT));
 
-        String inputFormatClassName =
-                tableProperties.getProperty(PhoenixStorageHandlerConstants
-                        .HBASE_INPUT_FORMAT_CLASS);
+    jobProperties.put(hive_metastoreConstants.META_TABLE_STORAGE, this.getClass().getName());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(PhoenixStorageHandlerConstants.HBASE_INPUT_FORMAT_CLASS + " is " +
-                    inputFormatClassName);
-        }
+    // set configuration when direct work with HBase.
+    jobProperties.put(HConstants.ZOOKEEPER_QUORUM, jobProperties.get(PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM));
+    jobProperties.put(HConstants.ZOOKEEPER_CLIENT_PORT, jobProperties.get(PhoenixStorageHandlerConstants.ZOOKEEPER_PORT));
+    jobProperties.put(HConstants.ZOOKEEPER_ZNODE_PARENT, jobProperties.get(PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT));
+  }
 
-        Class<?> inputFormatClass;
-        try {
-            if (inputFormatClassName != null) {
-                inputFormatClass = JavaUtils.loadClass(inputFormatClassName);
-            } else {
-                inputFormatClass = PhoenixInputFormat.class;
-            }
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
+  @Override
+  public Class<? extends SerDe> getSerDeClass() {
+    return PhoenixSerDe.class;
+  }
 
-        if (inputFormatClass != null) {
-            tableDesc.setInputFileFormatClass((Class<? extends InputFormat>) inputFormatClass);
-        }
+  @Override
+  public DecomposedPredicate decomposePredicate(JobConf jobConf, Deserializer deserializer,
+          ExprNodeDesc predicate) {
+    PhoenixSerDe phoenixSerDe = (PhoenixSerDe) deserializer;
+    String tableName = phoenixSerDe.getTableProperties().getProperty(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME);
+    String predicateKey = PhoenixStorageHandlerUtil.getTableKeyOfSession(jobConf, tableName);
 
-        String tableName = tableProperties.getProperty(PhoenixStorageHandlerConstants
-                .PHOENIX_TABLE_NAME);
-        if (tableName == null) {
-            tableName = tableDesc.getTableName();
-            tableProperties.setProperty(PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME,
-                    tableName);
-        }
-
-        jobProperties.put(PhoenixConfigurationUtil.INPUT_TABLE_NAME, tableName);
-        jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM, tableProperties
-                .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM,
-                        PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_QUORUM));
-        jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_PORT, tableProperties
-                .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_PORT, String.valueOf
-                        (PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_PORT)));
-        jobProperties.put(PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT, tableProperties
-                .getProperty(PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT,
-                        PhoenixStorageHandlerConstants.DEFAULT_ZOOKEEPER_PARENT));
-
-        jobProperties.put(hive_metastoreConstants.META_TABLE_STORAGE, this.getClass().getName());
-
-        // set configuration when direct work with HBase.
-        jobProperties.put(HConstants.ZOOKEEPER_QUORUM, jobProperties.get
-                (PhoenixStorageHandlerConstants.ZOOKEEPER_QUORUM));
-        jobProperties.put(HConstants.ZOOKEEPER_CLIENT_PORT, jobProperties.get
-                (PhoenixStorageHandlerConstants.ZOOKEEPER_PORT));
-        jobProperties.put(HConstants.ZOOKEEPER_ZNODE_PARENT, jobProperties.get
-                (PhoenixStorageHandlerConstants.ZOOKEEPER_PARENT));
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Decomposing predicate with predicateKey : " + predicateKey);
     }
 
-    @Override
-    public Class<? extends SerDe> getSerDeClass() {
-        return PhoenixSerDe.class;
+    List<String> columnNameList = phoenixSerDe.getSerdeParams().getColumnNames();
+    PhoenixPredicateDecomposer predicateDecomposer = PhoenixPredicateDecomposerManager
+            .createPredicateDecomposer(predicateKey, columnNameList);
+
+    return predicateDecomposer.decomposePredicate(predicate);
+  }
+
+  @Override
+  public Estimation estimate(JobConf job, TableScanOperator ts, long remaining) throws
+          HiveException {
+    String hiveTableName = ts.getConf().getTableMetadata().getTableName();
+    int reducerCount = job.getInt(hiveTableName + PhoenixStorageHandlerConstants.PHOENIX_REDUCER_NUMBER, 1);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Estimating input size for table: " + hiveTableName + " with reducer count "
+              + reducerCount + ". Remaining : " + remaining);
     }
 
-    @Override
-    public DecomposedPredicate decomposePredicate(JobConf jobConf, Deserializer deserializer,
-                                                  ExprNodeDesc predicate) {
-        PhoenixSerDe phoenixSerDe = (PhoenixSerDe) deserializer;
-        String tableName = phoenixSerDe.getTableProperties().getProperty
-                (PhoenixStorageHandlerConstants.PHOENIX_TABLE_NAME);
-        String predicateKey = PhoenixStorageHandlerUtil.getTableKeyOfSession(jobConf, tableName);
+    long bytesPerReducer = job.getLong(HiveConf.ConfVars.BYTESPERREDUCER.varname,
+            Long.parseLong(HiveConf.ConfVars.BYTESPERREDUCER.getDefaultValue()));
+    long totalLength = reducerCount * bytesPerReducer;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Decomposing predicate with predicateKey : " + predicateKey);
-        }
-
-        List<String> columnNameList = phoenixSerDe.getSerdeParams().getColumnNames();
-        PhoenixPredicateDecomposer predicateDecomposer = PhoenixPredicateDecomposerManager
-                .createPredicateDecomposer(predicateKey, columnNameList);
-
-        return predicateDecomposer.decomposePredicate(predicate);
-    }
-
-    @Override
-    public Estimation estimate(JobConf job, TableScanOperator ts, long remaining) throws
-            HiveException {
-        String hiveTableName = ts.getConf().getTableMetadata().getTableName();
-        int reducerCount = job.getInt(hiveTableName + PhoenixStorageHandlerConstants
-                .PHOENIX_REDUCER_NUMBER, 1);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Estimating input size for table: " + hiveTableName + " with reducer count " +
-                    reducerCount + ". Remaining : " + remaining);
-        }
-
-        long bytesPerReducer = job.getLong(HiveConf.ConfVars.BYTESPERREDUCER.varname,
-                Long.parseLong(HiveConf.ConfVars.BYTESPERREDUCER.getDefaultValue()));
-        long totalLength = reducerCount * bytesPerReducer;
-
-        return new Estimation(0, totalLength);
-    }
+    return new Estimation(0, totalLength);
+  }
 }

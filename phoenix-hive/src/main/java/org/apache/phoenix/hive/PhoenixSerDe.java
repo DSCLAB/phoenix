@@ -48,112 +48,108 @@ import java.util.Properties;
  */
 public class PhoenixSerDe extends AbstractSerDe {
 
-    public static final Log LOG = LogFactory.getLog(PhoenixSerDe.class);
+  public static final Log LOG = LogFactory.getLog(PhoenixSerDe.class);
 
-    private PhoenixSerializer serializer;
-    private ObjectInspector objectInspector;
+  private PhoenixSerializer serializer;
+  private ObjectInspector objectInspector;
 
-    private LazySerDeParameters serdeParams;
-    private PhoenixRow row;
+  private LazySerDeParameters serdeParams;
+  private PhoenixRow row;
 
-    private Properties tableProperties;
+  private Properties tableProperties;
 
-    /**
-     * @throws SerDeException
-     */
-    public PhoenixSerDe() throws SerDeException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("PhoenixSerDe created");
-        }
+  /**
+   * @throws SerDeException
+   */
+  public PhoenixSerDe() throws SerDeException {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("PhoenixSerDe created");
+    }
+  }
+
+  @Override
+  public void initialize(Configuration conf, Properties tbl) throws SerDeException {
+    tableProperties = tbl;
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("SerDe initialize : " + tbl.getProperty("name"));
     }
 
-    @Override
-    public void initialize(Configuration conf, Properties tbl) throws SerDeException {
-        tableProperties = tbl;
+    serdeParams = new LazySerDeParameters(conf, tbl, getClass().getName());
+    objectInspector = createLazyPhoenixInspector(conf, tbl);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("SerDe initialize : " + tbl.getProperty("name"));
-        }
-
-        serdeParams = new LazySerDeParameters(conf, tbl, getClass().getName());
-        objectInspector = createLazyPhoenixInspector(conf, tbl);
-
-        String inOutWork = tbl.getProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK);
-        if (inOutWork == null) {
-            return;
-        }
-
-        serializer = new PhoenixSerializer(conf, tbl);
-        row = new PhoenixRow(Lists.transform(serdeParams.getColumnNames(), new Function<String,
-                String>() {
-
-            @Override
-            public String apply(String input) {
-                return input.toUpperCase();
-            }
-        }));
+    String inOutWork = tbl.getProperty(PhoenixStorageHandlerConstants.IN_OUT_WORK);
+    if (inOutWork == null) {
+      return;
     }
 
-    @Override
-    public Object deserialize(Writable result) throws SerDeException {
-        if (!(result instanceof PhoenixResultWritable)) {
-            throw new SerDeException(result.getClass().getName() + ": expects " +
-                    "PhoenixResultWritable!");
-        }
+    serializer = new PhoenixSerializer(conf, tbl);
+    row = new PhoenixRow(Lists.transform(serdeParams.getColumnNames(), new Function<String, String>() {
 
-        return row.setResultRowMap(((PhoenixResultWritable) result).getResultMap());
+      @Override
+      public String apply(String input) {
+        return input.toUpperCase();
+      }
+    }));
+  }
+
+  @Override
+  public Object deserialize(Writable result) throws SerDeException {
+    if (!(result instanceof PhoenixResultWritable)) {
+      throw new SerDeException(result.getClass().getName() + ": expects "
+              + "PhoenixResultWritable!");
     }
 
-    @Override
-    public Class<? extends Writable> getSerializedClass() {
-        return PhoenixResultWritable.class;
+    return row.setResultRowMap(((PhoenixResultWritable) result).getResultMap());
+  }
+
+  @Override
+  public Class<? extends Writable> getSerializedClass() {
+    return PhoenixResultWritable.class;
+  }
+
+  @Override
+  public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
+    try {
+      return serializer.serialize(obj, objInspector, DmlType.NONE);
+    } catch (Exception e) {
+      throw new SerDeException(e);
+    }
+  }
+
+  @Override
+  public SerDeStats getSerDeStats() {
+    // no support for statistics
+    return null;
+  }
+
+  public Properties getTableProperties() {
+    return tableProperties;
+  }
+
+  public LazySerDeParameters getSerdeParams() {
+    return serdeParams;
+  }
+
+  @Override
+  public ObjectInspector getObjectInspector() throws SerDeException {
+    return objectInspector;
+  }
+
+  private ObjectInspector createLazyPhoenixInspector(Configuration conf, Properties tbl) throws
+          SerDeException {
+    List<String> columnNameList = Arrays.asList(tbl.getProperty(serdeConstants.LIST_COLUMNS)
+            .split(PhoenixStorageHandlerConstants.COMMA));
+    List<TypeInfo> columnTypeList = TypeInfoUtils.getTypeInfosFromTypeString(tbl.getProperty(serdeConstants.LIST_COLUMN_TYPES));
+
+    List<ObjectInspector> columnObjectInspectors = Lists.newArrayListWithExpectedSize(columnTypeList.size());
+
+    for (TypeInfo typeInfo : columnTypeList) {
+      columnObjectInspectors.add(PhoenixObjectInspectorFactory.createObjectInspector(typeInfo, serdeParams));
     }
 
-    @Override
-    public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
-        try {
-            return serializer.serialize(obj, objInspector, DmlType.NONE);
-        } catch (Exception e) {
-            throw new SerDeException(e);
-        }
-    }
-
-    @Override
-    public SerDeStats getSerDeStats() {
-        // no support for statistics
-        return null;
-    }
-
-    public Properties getTableProperties() {
-        return tableProperties;
-    }
-
-    public LazySerDeParameters getSerdeParams() {
-        return serdeParams;
-    }
-
-    @Override
-    public ObjectInspector getObjectInspector() throws SerDeException {
-        return objectInspector;
-    }
-
-    private ObjectInspector createLazyPhoenixInspector(Configuration conf, Properties tbl) throws
-            SerDeException {
-        List<String> columnNameList = Arrays.asList(tbl.getProperty(serdeConstants.LIST_COLUMNS)
-                .split(PhoenixStorageHandlerConstants.COMMA));
-        List<TypeInfo> columnTypeList = TypeInfoUtils.getTypeInfosFromTypeString(tbl.getProperty
-                (serdeConstants.LIST_COLUMN_TYPES));
-
-        List<ObjectInspector> columnObjectInspectors = Lists.newArrayListWithExpectedSize
-                (columnTypeList.size());
-
-        for (TypeInfo typeInfo : columnTypeList) {
-            columnObjectInspectors.add(PhoenixObjectInspectorFactory.createObjectInspector
-                    (typeInfo, serdeParams));
-        }
-
-        return LazyObjectInspectorFactory.getLazySimpleStructObjectInspector(columnNameList,
-                columnObjectInspectors, null, serdeParams.getSeparators()[0], serdeParams,
-                ObjectInspectorOptions.JAVA);
-    }
+    return LazyObjectInspectorFactory.getLazySimpleStructObjectInspector(columnNameList,
+            columnObjectInspectors, null, serdeParams.getSeparators()[0], serdeParams,
+            ObjectInspectorOptions.JAVA);
+  }
 }

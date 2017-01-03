@@ -30,92 +30,94 @@ import java.util.Map;
 import org.apache.phoenix.monitoring.CombinableMetric.NoOpRequestMetric;
 
 /**
- * Class that represents the overall metrics associated with a query being executed by the phoenix.
+ * Class that represents the overall metrics associated with a query being
+ * executed by the phoenix.
  */
 public class OverAllQueryMetrics {
-    private final MetricsStopWatch queryWatch;
-    private final MetricsStopWatch resultSetWatch;
-    private final CombinableMetric numParallelScans;
-    private final CombinableMetric wallClockTimeMS;
-    private final CombinableMetric resultSetTimeMS;
-    private final CombinableMetric queryTimedOut;
-    private final CombinableMetric queryFailed;
-    private final CombinableMetric cacheRefreshedDueToSplits;
 
-    public OverAllQueryMetrics(boolean isMetricsEnabled) {
-        queryWatch = new MetricsStopWatch(isMetricsEnabled);
-        resultSetWatch = new MetricsStopWatch(isMetricsEnabled);
-        numParallelScans = isMetricsEnabled ? new CombinableMetricImpl(NUM_PARALLEL_SCANS) : NoOpRequestMetric.INSTANCE;
-        wallClockTimeMS = isMetricsEnabled ? new CombinableMetricImpl(WALL_CLOCK_TIME_MS) : NoOpRequestMetric.INSTANCE;
-        resultSetTimeMS = isMetricsEnabled ? new CombinableMetricImpl(RESULT_SET_TIME_MS) : NoOpRequestMetric.INSTANCE;
-        queryTimedOut = isMetricsEnabled ? new CombinableMetricImpl(QUERY_TIMEOUT_COUNTER) : NoOpRequestMetric.INSTANCE;
-        queryFailed = isMetricsEnabled ? new CombinableMetricImpl(QUERY_FAILED_COUNTER) : NoOpRequestMetric.INSTANCE;
-        cacheRefreshedDueToSplits = isMetricsEnabled ? new CombinableMetricImpl(CACHE_REFRESH_SPLITS_COUNTER)
-                : NoOpRequestMetric.INSTANCE;
-    }
+  private final MetricsStopWatch queryWatch;
+  private final MetricsStopWatch resultSetWatch;
+  private final CombinableMetric numParallelScans;
+  private final CombinableMetric wallClockTimeMS;
+  private final CombinableMetric resultSetTimeMS;
+  private final CombinableMetric queryTimedOut;
+  private final CombinableMetric queryFailed;
+  private final CombinableMetric cacheRefreshedDueToSplits;
 
-    public void updateNumParallelScans(long numParallelScans) {
-        this.numParallelScans.change(numParallelScans);
-    }
+  public OverAllQueryMetrics(boolean isMetricsEnabled) {
+    queryWatch = new MetricsStopWatch(isMetricsEnabled);
+    resultSetWatch = new MetricsStopWatch(isMetricsEnabled);
+    numParallelScans = isMetricsEnabled ? new CombinableMetricImpl(NUM_PARALLEL_SCANS) : NoOpRequestMetric.INSTANCE;
+    wallClockTimeMS = isMetricsEnabled ? new CombinableMetricImpl(WALL_CLOCK_TIME_MS) : NoOpRequestMetric.INSTANCE;
+    resultSetTimeMS = isMetricsEnabled ? new CombinableMetricImpl(RESULT_SET_TIME_MS) : NoOpRequestMetric.INSTANCE;
+    queryTimedOut = isMetricsEnabled ? new CombinableMetricImpl(QUERY_TIMEOUT_COUNTER) : NoOpRequestMetric.INSTANCE;
+    queryFailed = isMetricsEnabled ? new CombinableMetricImpl(QUERY_FAILED_COUNTER) : NoOpRequestMetric.INSTANCE;
+    cacheRefreshedDueToSplits = isMetricsEnabled ? new CombinableMetricImpl(CACHE_REFRESH_SPLITS_COUNTER)
+            : NoOpRequestMetric.INSTANCE;
+  }
 
-    public void queryTimedOut() {
-        queryTimedOut.increment();
-    }
+  public void updateNumParallelScans(long numParallelScans) {
+    this.numParallelScans.change(numParallelScans);
+  }
 
-    public void queryFailed() {
-        queryFailed.increment();
-    }
+  public void queryTimedOut() {
+    queryTimedOut.increment();
+  }
 
-    public void cacheRefreshedDueToSplits() {
-        cacheRefreshedDueToSplits.increment();
-    }
+  public void queryFailed() {
+    queryFailed.increment();
+  }
 
-    public void startQuery() {
-        queryWatch.start();
-    }
+  public void cacheRefreshedDueToSplits() {
+    cacheRefreshedDueToSplits.increment();
+  }
 
-    public void endQuery() {
-        queryWatch.stop();
-        wallClockTimeMS.change(queryWatch.getElapsedTimeInMs());
-    }
+  public void startQuery() {
+    queryWatch.start();
+  }
 
-    public void startResultSetWatch() {
-        resultSetWatch.start();
-    }
+  public void endQuery() {
+    queryWatch.stop();
+    wallClockTimeMS.change(queryWatch.getElapsedTimeInMs());
+  }
 
-    public void stopResultSetWatch() {
-        resultSetWatch.stop();
-        resultSetTimeMS.change(resultSetWatch.getElapsedTimeInMs());
-    }
+  public void startResultSetWatch() {
+    resultSetWatch.start();
+  }
 
-    public Map<String, Long> publish() {
-        Map<String, Long> metricsForPublish = new HashMap<>();
-        metricsForPublish.put(numParallelScans.getName(), numParallelScans.getValue());
-        metricsForPublish.put(wallClockTimeMS.getName(), wallClockTimeMS.getValue());
-        metricsForPublish.put(resultSetTimeMS.getName(), resultSetTimeMS.getValue());
-        metricsForPublish.put(queryTimedOut.getName(), queryTimedOut.getValue());
-        metricsForPublish.put(queryFailed.getName(), queryFailed.getValue());
-        metricsForPublish.put(cacheRefreshedDueToSplits.getName(), cacheRefreshedDueToSplits.getValue());
-        return metricsForPublish;
-    }
+  public void stopResultSetWatch() {
+    resultSetWatch.stop();
+    resultSetTimeMS.change(resultSetWatch.getElapsedTimeInMs());
+  }
 
-    public void reset() {
-        numParallelScans.reset();
-        wallClockTimeMS.reset();
-        resultSetTimeMS.reset();
-        queryTimedOut.reset();
-        queryFailed.reset();
-        cacheRefreshedDueToSplits.reset();
-        queryWatch.stop();
-        resultSetWatch.stop();
-    }
+  public Map<String, Long> publish() {
+    Map<String, Long> metricsForPublish = new HashMap<>();
+    metricsForPublish.put(numParallelScans.getName(), numParallelScans.getValue());
+    metricsForPublish.put(wallClockTimeMS.getName(), wallClockTimeMS.getValue());
+    metricsForPublish.put(resultSetTimeMS.getName(), resultSetTimeMS.getValue());
+    metricsForPublish.put(queryTimedOut.getName(), queryTimedOut.getValue());
+    metricsForPublish.put(queryFailed.getName(), queryFailed.getValue());
+    metricsForPublish.put(cacheRefreshedDueToSplits.getName(), cacheRefreshedDueToSplits.getValue());
+    return metricsForPublish;
+  }
 
-    public OverAllQueryMetrics combine(OverAllQueryMetrics metric) {
-        cacheRefreshedDueToSplits.combine(metric.cacheRefreshedDueToSplits);
-        queryFailed.combine(metric.queryFailed);
-        queryTimedOut.combine(metric.queryTimedOut);
-        numParallelScans.combine(metric.numParallelScans);
-        return this;
-    }
+  public void reset() {
+    numParallelScans.reset();
+    wallClockTimeMS.reset();
+    resultSetTimeMS.reset();
+    queryTimedOut.reset();
+    queryFailed.reset();
+    cacheRefreshedDueToSplits.reset();
+    queryWatch.stop();
+    resultSetWatch.stop();
+  }
+
+  public OverAllQueryMetrics combine(OverAllQueryMetrics metric) {
+    cacheRefreshedDueToSplits.combine(metric.cacheRefreshedDueToSplits);
+    queryFailed.combine(metric.queryFailed);
+    queryTimedOut.combine(metric.queryTimedOut);
+    numParallelScans.combine(metric.numParallelScans);
+    return this;
+  }
 
 }

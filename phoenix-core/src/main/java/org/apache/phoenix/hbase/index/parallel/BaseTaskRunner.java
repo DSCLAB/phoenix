@@ -33,11 +33,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * {@link TaskRunner} that just manages the underlying thread pool. On called to
- * {@link #stop(String)}, the thread pool is shutdown immediately - all pending tasks are cancelled
- * and running tasks receive and interrupt.
+ * {@link #stop(String)}, the thread pool is shutdown immediately - all pending
+ * tasks are cancelled and running tasks receive and interrupt.
  * <p>
- * If we find a failure the failure is propagated to the {@link TaskBatch} so any {@link Task} that
- * is interested can kill itself as well.
+ * If we find a failure the failure is propagated to the {@link TaskBatch} so
+ * any {@link Task} that is interested can kill itself as well.
  */
 public abstract class BaseTaskRunner implements TaskRunner {
 
@@ -51,7 +51,7 @@ public abstract class BaseTaskRunner implements TaskRunner {
 
   @Override
   public <R> List<R> submit(TaskBatch<R> tasks) throws CancellationException, ExecutionException,
-      InterruptedException {
+          InterruptedException {
     // submit each task to the pool and queue it up to be watched
     List<ListenableFuture<R>> futures = new ArrayList<ListenableFuture<R>>(tasks.size());
     for (Task<R> task : tasks.getTasks()) {
@@ -82,16 +82,18 @@ public abstract class BaseTaskRunner implements TaskRunner {
   }
 
   /**
-   * Build a ListenableFuture for the tasks. Implementing classes can determine return behaviors on
-   * the given tasks
+   * Build a ListenableFuture for the tasks. Implementing classes can determine
+   * return behaviors on the given tasks
+   *
    * @param futures to wait on
-   * @return a single {@link ListenableFuture} that completes based on the passes tasks.
+   * @return a single {@link ListenableFuture} that completes based on the
+   * passes tasks.
    */
   protected abstract <R> ListenableFuture<List<R>> submitTasks(List<ListenableFuture<R>> futures);
 
   @Override
   public <R> List<R> submitUninterruptible(TaskBatch<R> tasks) throws EarlyExitFailure,
-      ExecutionException {
+          ExecutionException {
     boolean interrupted = false;
     try {
       while (!this.isStopped()) {

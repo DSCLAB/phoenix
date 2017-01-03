@@ -65,7 +65,7 @@ public class PhoenixMetaFactoryImpl extends Configured implements PhoenixMetaFac
         url = args.get(0);
       } else {
         throw new RuntimeException(
-            "0 or 1 argument expected. Received " + Arrays.toString(args.toArray()));
+                "0 or 1 argument expected. Received " + Arrays.toString(args.toArray()));
       }
       // TODO: what about -D configs passed in from cli? How do they get pushed down?
       return new JdbcMeta(url, info);

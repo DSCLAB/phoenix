@@ -30,76 +30,76 @@ import java.util.List;
  */
 public class PhoenixListObjectInspector implements ListObjectInspector {
 
-    private ObjectInspector listElementObjectInspector;
-    private byte separator;
-    private LazyObjectInspectorParameters lazyParams;
+  private ObjectInspector listElementObjectInspector;
+  private byte separator;
+  private LazyObjectInspectorParameters lazyParams;
 
-    public PhoenixListObjectInspector(ObjectInspector listElementObjectInspector,
-                                      byte separator, LazyObjectInspectorParameters lazyParams) {
-        this.listElementObjectInspector = listElementObjectInspector;
-        this.separator = separator;
-        this.lazyParams = lazyParams;
+  public PhoenixListObjectInspector(ObjectInspector listElementObjectInspector,
+          byte separator, LazyObjectInspectorParameters lazyParams) {
+    this.listElementObjectInspector = listElementObjectInspector;
+    this.separator = separator;
+    this.lazyParams = lazyParams;
+  }
+
+  @Override
+  public String getTypeName() {
+    return org.apache.hadoop.hive.serde.serdeConstants.LIST_TYPE_NAME + "<"
+            + listElementObjectInspector.getTypeName() + ">";
+  }
+
+  @Override
+  public Category getCategory() {
+    return Category.LIST;
+  }
+
+  @Override
+  public ObjectInspector getListElementObjectInspector() {
+    return listElementObjectInspector;
+  }
+
+  @Override
+  public Object getListElement(Object data, int index) {
+    if (data == null) {
+      return null;
     }
 
-    @Override
-    public String getTypeName() {
-        return org.apache.hadoop.hive.serde.serdeConstants.LIST_TYPE_NAME + "<" +
-                listElementObjectInspector.getTypeName() + ">";
+    PhoenixArray array = (PhoenixArray) data;
+
+    return array.getElement(index);
+  }
+
+  @Override
+  public int getListLength(Object data) {
+    if (data == null) {
+      return -1;
     }
 
-    @Override
-    public Category getCategory() {
-        return Category.LIST;
+    PhoenixArray array = (PhoenixArray) data;
+    return array.getDimensions();
+  }
+
+  @Override
+  public List<?> getList(Object data) {
+    if (data == null) {
+      return null;
     }
 
-    @Override
-    public ObjectInspector getListElementObjectInspector() {
-        return listElementObjectInspector;
+    PhoenixArray array = (PhoenixArray) data;
+    int valueLength = array.getDimensions();
+    List<Object> valueList = Lists.newArrayListWithExpectedSize(valueLength);
+
+    for (int i = 0; i < valueLength; i++) {
+      valueList.add(array.getElement(i));
     }
 
-    @Override
-    public Object getListElement(Object data, int index) {
-        if (data == null) {
-            return null;
-        }
+    return valueList;
+  }
 
-        PhoenixArray array = (PhoenixArray) data;
+  public byte getSeparator() {
+    return separator;
+  }
 
-        return array.getElement(index);
-    }
-
-    @Override
-    public int getListLength(Object data) {
-        if (data == null) {
-            return -1;
-        }
-
-        PhoenixArray array = (PhoenixArray) data;
-        return array.getDimensions();
-    }
-
-    @Override
-    public List<?> getList(Object data) {
-        if (data == null) {
-            return null;
-        }
-
-        PhoenixArray array = (PhoenixArray) data;
-        int valueLength = array.getDimensions();
-        List<Object> valueList = Lists.newArrayListWithExpectedSize(valueLength);
-
-        for (int i = 0; i < valueLength; i++) {
-            valueList.add(array.getElement(i));
-        }
-
-        return valueList;
-    }
-
-    public byte getSeparator() {
-        return separator;
-    }
-
-    public LazyObjectInspectorParameters getLazyParams() {
-        return lazyParams;
-    }
+  public LazyObjectInspectorParameters getLazyParams() {
+    return lazyParams;
+  }
 }

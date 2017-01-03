@@ -23,22 +23,22 @@ import org.apache.phoenix.expression.Expression;
 import org.joda.time.DateTime;
 
 /**
- * 
- * Ceil function that rounds up the {@link DateTime} to next month. 
+ *
+ * Ceil function that rounds up the {@link DateTime} to next month.
  */
 public class CeilMonthExpression extends RoundJodaDateExpression {
 
-    public CeilMonthExpression() {
-        super();
-    }
+  public CeilMonthExpression() {
+    super();
+  }
 
-    public CeilMonthExpression(List<Expression> children) {
-        super(children);
-    }
+  public CeilMonthExpression(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    public long roundDateTime(DateTime dateTime) {
-        return dateTime.monthOfYear().roundCeilingCopy().getMillis();
-    }
+  @Override
+  public long roundDateTime(DateTime dateTime) {
+    return dateTime.monthOfYear().roundCeilingCopy().getMillis();
+  }
 
 }

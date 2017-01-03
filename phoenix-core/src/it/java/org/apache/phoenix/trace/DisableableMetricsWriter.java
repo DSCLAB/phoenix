@@ -31,54 +31,58 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DisableableMetricsWriter implements MetricsSink {
 
-    private static final Log LOG = LogFactory.getLog(DisableableMetricsWriter.class);
-    private PhoenixMetricsSink writer;
-    private AtomicBoolean disabled = new AtomicBoolean(false);
+  private static final Log LOG = LogFactory.getLog(DisableableMetricsWriter.class);
+  private PhoenixMetricsSink writer;
+  private AtomicBoolean disabled = new AtomicBoolean(false);
 
-    public DisableableMetricsWriter(PhoenixMetricsSink writer) {
-        this.writer = writer;
+  public DisableableMetricsWriter(PhoenixMetricsSink writer) {
+    this.writer = writer;
+  }
+
+  @Override
+  public void init(SubsetConfiguration config) {
+    if (this.disabled.get()) {
+      return;
     }
+    writer.init(config);
+  }
 
-    @Override
-    public void init(SubsetConfiguration config) {
-        if (this.disabled.get()) return;
-        writer.init(config);
+  @Override
+  public void flush() {
+    if (this.disabled.get()) {
+      clear();
+      return;
     }
+    writer.flush();
 
-    @Override
-    public void flush() {
-        if (this.disabled.get()) {
-            clear();
-            return;
-        }
-        writer.flush();
+  }
 
+  @Override
+  public void putMetrics(MetricsRecord record) {
+    if (this.disabled.get()) {
+      return;
     }
+    writer.putMetrics(record);
+  }
 
-    @Override
-    public void putMetrics(MetricsRecord record) {
-        if (this.disabled.get()) return;
-        writer.putMetrics(record);
-    }
+  public void disable() {
+    this.disabled.set(true);
+  }
 
-    public void disable() {
-        this.disabled.set(true);
-    }
+  public void enable() {
+    this.disabled.set(false);
+  }
 
-    public void enable() {
-        this.disabled.set(false);
+  public void clear() {
+    // clear any pending writes
+    try {
+      writer.clearForTesting();
+    } catch (SQLException e) {
+      LOG.error("Couldn't clear the delgate writer when flush called and disabled", e);
     }
+  }
 
-    public void clear() {
-        // clear any pending writes
-        try {
-            writer.clearForTesting();
-        } catch (SQLException e) {
-            LOG.error("Couldn't clear the delgate writer when flush called and disabled", e);
-        }
-    }
-
-    public PhoenixMetricsSink getDelegate() {
-        return this.writer;
-    }
+  public PhoenixMetricsSink getDelegate() {
+    return this.writer;
+  }
 }

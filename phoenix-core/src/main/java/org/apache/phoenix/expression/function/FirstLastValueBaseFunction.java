@@ -29,34 +29,34 @@ import org.apache.phoenix.schema.tuple.Tuple;
  */
 abstract public class FirstLastValueBaseFunction extends DelegateConstantToCountAggregateFunction {
 
-    public static String NAME = null;
+  public static String NAME = null;
 
-    public FirstLastValueBaseFunction() {
-    }
+  public FirstLastValueBaseFunction() {
+  }
 
-    public FirstLastValueBaseFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
+  public FirstLastValueBaseFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        boolean wasEvaluated = super.evaluate(tuple, ptr);
-        if (!wasEvaluated) {
-            return false;
-        }
-        if (isConstantExpression()) {
-            getAggregatorExpression().evaluate(tuple, ptr);
-        }
-        return true;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    boolean wasEvaluated = super.evaluate(tuple, ptr);
+    if (!wasEvaluated) {
+      return false;
     }
+    if (isConstantExpression()) {
+      getAggregatorExpression().evaluate(tuple, ptr);
+    }
+    return true;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return children.get(2).getDataType();
-    }
+  @Override
+  public PDataType getDataType() {
+    return children.get(2).getDataType();
+  }
 }

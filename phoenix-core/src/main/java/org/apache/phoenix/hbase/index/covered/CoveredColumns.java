@@ -33,7 +33,7 @@ public class CoveredColumns {
   Set<ColumnReference> columns = new HashSet<ColumnReference>();
 
   public Collection<? extends ColumnReference> findNonCoveredColumns(
-      Collection<? extends ColumnReference> columns2) {
+          Collection<? extends ColumnReference> columns2) {
     List<ColumnReference> uncovered = new ArrayList<ColumnReference>();
     for (ColumnReference column : columns2) {
       if (!columns.contains(column)) {

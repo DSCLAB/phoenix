@@ -28,37 +28,36 @@ import java.util.Map;
  */
 public class PhoenixRow implements StructObject {
 
-    private List<String> columnList;
-    private Map<String, Object> resultRowMap;
+  private List<String> columnList;
+  private Map<String, Object> resultRowMap;
 
-    public PhoenixRow(List<String> columnList) {
-        this.columnList = columnList;
-    }
+  public PhoenixRow(List<String> columnList) {
+    this.columnList = columnList;
+  }
 
-    public PhoenixRow setResultRowMap(Map<String, Object> resultRowMap) {
-        this.resultRowMap = resultRowMap;
-        return this;
-    }
+  public PhoenixRow setResultRowMap(Map<String, Object> resultRowMap) {
+    this.resultRowMap = resultRowMap;
+    return this;
+  }
 
-    /* (non-Javadoc)
+  /* (non-Javadoc)
      * @see org.apache.hadoop.hive.serde2.StructObject#getField(int)
-     */
-    @Override
-    public Object getField(int fieldID) {
-        return resultRowMap.get(columnList.get(fieldID));
-    }
+   */
+  @Override
+  public Object getField(int fieldID) {
+    return resultRowMap.get(columnList.get(fieldID));
+  }
 
-    /* (non-Javadoc)
+  /* (non-Javadoc)
      * @see org.apache.hadoop.hive.serde2.StructObject#getFieldsAsList()
-     */
-    @Override
-    public List<Object> getFieldsAsList() {
-        return Lists.newArrayList(resultRowMap.values());
-    }
+   */
+  @Override
+  public List<Object> getFieldsAsList() {
+    return Lists.newArrayList(resultRowMap.values());
+  }
 
-
-    @Override
-    public String toString() {
-        return resultRowMap.toString();
-    }
+  @Override
+  public String toString() {
+    return resultRowMap.toString();
+  }
 }

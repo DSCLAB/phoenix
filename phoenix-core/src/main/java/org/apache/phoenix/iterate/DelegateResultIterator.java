@@ -22,31 +22,31 @@ import java.util.List;
 
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 public class DelegateResultIterator implements ResultIterator {
-    private final ResultIterator delegate;
-    
-    public DelegateResultIterator(ResultIterator delegate) {
-        this.delegate = delegate;
-    }
-    
-    protected ResultIterator getDelegate() {
-    	return delegate;
-    }
-    
-    @Override
-    public void close() throws SQLException {
-        delegate.close();
-    }
 
-    @Override
-    public Tuple next() throws SQLException {
-        return delegate.next();
-    }
+  private final ResultIterator delegate;
 
-    @Override
-    public void explain(List<String> planSteps) {
-        delegate.explain(planSteps);
-    }
+  public DelegateResultIterator(ResultIterator delegate) {
+    this.delegate = delegate;
+  }
+
+  protected ResultIterator getDelegate() {
+    return delegate;
+  }
+
+  @Override
+  public void close() throws SQLException {
+    delegate.close();
+  }
+
+  @Override
+  public Tuple next() throws SQLException {
+    return delegate.next();
+  }
+
+  @Override
+  public void explain(List<String> planSteps) {
+    delegate.explain(planSteps);
+  }
 
 }

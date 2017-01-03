@@ -14,24 +14,25 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class DeterminismTest {
-	@Test
-    public void testCombine() {
-		// combining a determinism enum with ALWAYS should always return the
-		// other determinism
-		assertEquals("Unexpected result ", Determinism.PER_ROW,
-				Determinism.ALWAYS.combine(Determinism.PER_ROW));
-		assertEquals("Unexpected result ", Determinism.PER_STATEMENT,
-				Determinism.ALWAYS.combine(Determinism.PER_STATEMENT));
-		assertEquals("Unexpected result ", Determinism.PER_STATEMENT,
-				Determinism.PER_STATEMENT.combine(Determinism.ALWAYS));
-		assertEquals("Unexpected result ", Determinism.PER_ROW,
-				Determinism.PER_ROW.combine(Determinism.ALWAYS));
-		
-		// combining PER_STATEMENT and PER_ROW should return PER_ROW
-		assertEquals("Unexpected result ", Determinism.PER_ROW,
-				Determinism.PER_STATEMENT.combine(Determinism.PER_ROW));
-		assertEquals("Unexpected result ", Determinism.PER_ROW,
-				Determinism.PER_ROW.combine(Determinism.PER_STATEMENT));
 
-	}
+  @Test
+  public void testCombine() {
+    // combining a determinism enum with ALWAYS should always return the
+    // other determinism
+    assertEquals("Unexpected result ", Determinism.PER_ROW,
+            Determinism.ALWAYS.combine(Determinism.PER_ROW));
+    assertEquals("Unexpected result ", Determinism.PER_STATEMENT,
+            Determinism.ALWAYS.combine(Determinism.PER_STATEMENT));
+    assertEquals("Unexpected result ", Determinism.PER_STATEMENT,
+            Determinism.PER_STATEMENT.combine(Determinism.ALWAYS));
+    assertEquals("Unexpected result ", Determinism.PER_ROW,
+            Determinism.PER_ROW.combine(Determinism.ALWAYS));
+
+    // combining PER_STATEMENT and PER_ROW should return PER_ROW
+    assertEquals("Unexpected result ", Determinism.PER_ROW,
+            Determinism.PER_STATEMENT.combine(Determinism.PER_ROW));
+    assertEquals("Unexpected result ", Determinism.PER_ROW,
+            Determinism.PER_ROW.combine(Determinism.PER_STATEMENT));
+
+  }
 }

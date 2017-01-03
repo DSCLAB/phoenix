@@ -28,48 +28,50 @@ import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.PDataType;
 
 public class CorrelateVariableFieldAccessExpression extends BaseTerminalExpression {
-    private final RuntimeContext runtimeContext;
-    private final String variableId;
-    private final Expression fieldAccessExpression;
-    
-    public CorrelateVariableFieldAccessExpression(RuntimeContext context, String variableId, Expression fieldAccessExpression) {
-        super();
-        this.runtimeContext = context;
-        this.variableId = variableId;
-        this.fieldAccessExpression = fieldAccessExpression;
+
+  private final RuntimeContext runtimeContext;
+  private final String variableId;
+  private final Expression fieldAccessExpression;
+
+  public CorrelateVariableFieldAccessExpression(RuntimeContext context, String variableId, Expression fieldAccessExpression) {
+    super();
+    this.runtimeContext = context;
+    this.variableId = variableId;
+    this.fieldAccessExpression = fieldAccessExpression;
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Tuple variable = runtimeContext.getCorrelateVariableValue(variableId);
+    if (variable == null) {
+      throw new RuntimeException("Variable '" + variableId + "' not set.");
     }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Tuple variable = runtimeContext.getCorrelateVariableValue(variableId);
-        if (variable == null)
-            throw new RuntimeException("Variable '" + variableId + "' not set.");
-        
-        return fieldAccessExpression.evaluate(variable, ptr);
-    }
+    return fieldAccessExpression.evaluate(variable, ptr);
+  }
 
-    @Override
-    public <T> T accept(ExpressionVisitor<T> visitor) {
-        return visitor.visit(this);
-    }
+  @Override
+  public <T> T accept(ExpressionVisitor<T> visitor) {
+    return visitor.visit(this);
+  }
 
-    @Override
-    public void write(DataOutput output) throws IOException {
-        ImmutableBytesWritable ptr = new ImmutableBytesWritable();
-        boolean success = evaluate(null, ptr);
-        Object value = success ? getDataType().toObject(ptr) : null;
-        try {
-            LiteralExpression expr = LiteralExpression.newConstant(value, getDataType());
-            expr.write(output);
-        } catch (SQLException e) {
-            throw new IOException(e);
-        }
+  @Override
+  public void write(DataOutput output) throws IOException {
+    ImmutableBytesWritable ptr = new ImmutableBytesWritable();
+    boolean success = evaluate(null, ptr);
+    Object value = success ? getDataType().toObject(ptr) : null;
+    try {
+      LiteralExpression expr = LiteralExpression.newConstant(value, getDataType());
+      expr.write(output);
+    } catch (SQLException e) {
+      throw new IOException(e);
     }
-    
-    @SuppressWarnings("rawtypes")
-    @Override
-    public PDataType getDataType() {
-        return this.fieldAccessExpression.getDataType();
-    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  @Override
+  public PDataType getDataType() {
+    return this.fieldAccessExpression.getDataType();
+  }
 
 }

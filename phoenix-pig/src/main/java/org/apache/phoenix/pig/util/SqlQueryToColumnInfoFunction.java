@@ -35,48 +35,48 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public final class SqlQueryToColumnInfoFunction implements Function<String,List<ColumnInfo>> {
-    
-    private static final Log LOG = LogFactory.getLog(SqlQueryToColumnInfoFunction.class);
-    private final Configuration configuration;
+public final class SqlQueryToColumnInfoFunction implements Function<String, List<ColumnInfo>> {
 
-    public SqlQueryToColumnInfoFunction(final Configuration configuration) {
-        this.configuration = configuration;
-    }
+  private static final Log LOG = LogFactory.getLog(SqlQueryToColumnInfoFunction.class);
+  private final Configuration configuration;
 
-    @Override
-    public List<ColumnInfo> apply(String sqlQuery) {
-        Preconditions.checkNotNull(sqlQuery);
-        Connection connection = null;
-        List<ColumnInfo> columnInfos = null;
-        try {
-            connection = ConnectionUtil.getInputConnection(this.configuration);
-            final Statement  statement = connection.createStatement();
-            final PhoenixStatement pstmt = statement.unwrap(PhoenixStatement.class);
-            final QueryPlan queryPlan = pstmt.compileQuery(sqlQuery);
-            final List<? extends ColumnProjector> projectedColumns = queryPlan.getProjector().getColumnProjectors();
-            columnInfos = Lists.newArrayListWithCapacity(projectedColumns.size());
-            columnInfos = Lists.transform(projectedColumns, new Function<ColumnProjector,ColumnInfo>() {
-                @Override
-                public ColumnInfo apply(final ColumnProjector columnProjector) {
-                    return new ColumnInfo(columnProjector.getName(), columnProjector.getExpression().getDataType().getSqlType());
-                }
-                
-            });
-       } catch (SQLException e) {
-            LOG.error(String.format(" Error [%s] parsing SELECT query [%s] ",e.getMessage(),sqlQuery));
-            throw new RuntimeException(e);
-        } finally {
-            if(connection != null) {
-                try {
-                    connection.close();
-                } catch(SQLException sqle) {
-                    LOG.error("Error closing connection!!");
-                    throw new RuntimeException(sqle);
-                }
-            }
+  public SqlQueryToColumnInfoFunction(final Configuration configuration) {
+    this.configuration = configuration;
+  }
+
+  @Override
+  public List<ColumnInfo> apply(String sqlQuery) {
+    Preconditions.checkNotNull(sqlQuery);
+    Connection connection = null;
+    List<ColumnInfo> columnInfos = null;
+    try {
+      connection = ConnectionUtil.getInputConnection(this.configuration);
+      final Statement statement = connection.createStatement();
+      final PhoenixStatement pstmt = statement.unwrap(PhoenixStatement.class);
+      final QueryPlan queryPlan = pstmt.compileQuery(sqlQuery);
+      final List<? extends ColumnProjector> projectedColumns = queryPlan.getProjector().getColumnProjectors();
+      columnInfos = Lists.newArrayListWithCapacity(projectedColumns.size());
+      columnInfos = Lists.transform(projectedColumns, new Function<ColumnProjector, ColumnInfo>() {
+        @Override
+        public ColumnInfo apply(final ColumnProjector columnProjector) {
+          return new ColumnInfo(columnProjector.getName(), columnProjector.getExpression().getDataType().getSqlType());
         }
-        return columnInfos;
+
+      });
+    } catch (SQLException e) {
+      LOG.error(String.format(" Error [%s] parsing SELECT query [%s] ", e.getMessage(), sqlQuery));
+      throw new RuntimeException(e);
+    } finally {
+      if (connection != null) {
+        try {
+          connection.close();
+        } catch (SQLException sqle) {
+          LOG.error("Error closing connection!!");
+          throw new RuntimeException(sqle);
+        }
+      }
     }
+    return columnInfos;
+  }
 
 }

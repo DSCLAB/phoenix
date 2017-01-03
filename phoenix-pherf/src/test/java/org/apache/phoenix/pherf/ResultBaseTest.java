@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf;
 
 import org.apache.phoenix.pherf.result.ResultUtil;
@@ -25,23 +24,25 @@ import org.junit.BeforeClass;
 import java.util.Properties;
 
 public class ResultBaseTest {
-    private static PherfConstants constants;
-    private static boolean isSetUpDone = false;
-    private static Properties properties;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        if (isSetUpDone) {
-            return;
-        }
+  private static PherfConstants constants;
+  private static boolean isSetUpDone = false;
+  private static Properties properties;
 
-        constants = PherfConstants.create();
-        properties = constants.getProperties(PherfConstants.PHERF_PROPERTIES, false);
-        new ResultUtil().ensureBaseDirExists(properties.getProperty("pherf.default.results.dir"));
-        isSetUpDone = true;
+  @BeforeClass
+  public static void setUp() throws Exception {
+    if (isSetUpDone) {
+      return;
     }
-    
-    @AfterClass public static void tearDown() throws Exception {
-    	new ResultUtil().deleteDir(properties.getProperty("pherf.default.results.dir"));
-    }
+
+    constants = PherfConstants.create();
+    properties = constants.getProperties(PherfConstants.PHERF_PROPERTIES, false);
+    new ResultUtil().ensureBaseDirExists(properties.getProperty("pherf.default.results.dir"));
+    isSetUpDone = true;
+  }
+
+  @AfterClass
+  public static void tearDown() throws Exception {
+    new ResultUtil().deleteDir(properties.getProperty("pherf.default.results.dir"));
+  }
 }

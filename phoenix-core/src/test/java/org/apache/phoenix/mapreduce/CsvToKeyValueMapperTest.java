@@ -27,27 +27,27 @@ import static org.junit.Assert.assertTrue;
 
 public class CsvToKeyValueMapperTest {
 
-    @Test
-    public void testCsvLineParser() throws IOException {
-        CsvToKeyValueMapper.CsvLineParser lineParser =
-                new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
-        CSVRecord parsed = lineParser.parse("one;two");
+  @Test
+  public void testCsvLineParser() throws IOException {
+    CsvToKeyValueMapper.CsvLineParser lineParser
+            = new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
+    CSVRecord parsed = lineParser.parse("one;two");
 
-        assertEquals("one", parsed.get(0));
-        assertEquals("two", parsed.get(1));
-        assertTrue(parsed.isConsistent());
-        assertEquals(1, parsed.getRecordNumber());
-    }
+    assertEquals("one", parsed.get(0));
+    assertEquals("two", parsed.get(1));
+    assertTrue(parsed.isConsistent());
+    assertEquals(1, parsed.getRecordNumber());
+  }
 
-    @Test
-    public void testCsvLineParserWithQuoting() throws IOException {
-        CsvToKeyValueMapper.CsvLineParser lineParser =
-                new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
-        CSVRecord parsed = lineParser.parse("\"\\\"one\";\"\\;two\\\\\"");
+  @Test
+  public void testCsvLineParserWithQuoting() throws IOException {
+    CsvToKeyValueMapper.CsvLineParser lineParser
+            = new CsvToKeyValueMapper.CsvLineParser(';', '"', '\\');
+    CSVRecord parsed = lineParser.parse("\"\\\"one\";\"\\;two\\\\\"");
 
-        assertEquals("\"one", parsed.get(0));
-        assertEquals(";two\\", parsed.get(1));
-        assertTrue(parsed.isConsistent());
-        assertEquals(1, parsed.getRecordNumber());
-    }
+    assertEquals("\"one", parsed.get(0));
+    assertEquals(";two\\", parsed.get(1));
+    assertTrue(parsed.isConsistent());
+    assertEquals(1, parsed.getRecordNumber());
+  }
 }

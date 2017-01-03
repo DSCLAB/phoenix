@@ -26,30 +26,31 @@ import org.apache.phoenix.parse.FunctionParseNode.BuiltInFunction;
 import org.apache.phoenix.schema.types.PDecimal;
 import org.apache.phoenix.schema.types.PDouble;
 
-@BuiltInFunction(name = SqrtFunction.NAME, args = { @Argument(allowedTypes = { PDouble.class, PDecimal.class }) })
+@BuiltInFunction(name = SqrtFunction.NAME, args = {
+  @Argument(allowedTypes = {PDouble.class, PDecimal.class})})
 public class SqrtFunction extends JavaMathOneArgumentFunction {
 
-    public static final String NAME = "SQRT";
+  public static final String NAME = "SQRT";
 
-    public SqrtFunction() {
-    }
+  public SqrtFunction() {
+  }
 
-    public SqrtFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public SqrtFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    @Override
-    protected double compute(double firstArg) {
-        return Math.sqrt(firstArg);
-    }
+  @Override
+  protected double compute(double firstArg) {
+    return Math.sqrt(firstArg);
+  }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES;
+  }
 }

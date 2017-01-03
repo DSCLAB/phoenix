@@ -27,28 +27,29 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * A no-op {@link OutputCommitter}
  */
 public class PhoenixOutputCommitter extends OutputCommitter {
-    
-    public PhoenixOutputCommitter() {}
 
-    @Override
-    public void abortTask(TaskAttemptContext context) throws IOException {
-    }
+  public PhoenixOutputCommitter() {
+  }
 
-    @Override
-    public void commitTask(TaskAttemptContext context) throws IOException {
-    }
+  @Override
+  public void abortTask(TaskAttemptContext context) throws IOException {
+  }
 
-    @Override
-    public boolean needsTaskCommit(TaskAttemptContext context) throws IOException {
-        return true;
-    }
+  @Override
+  public void commitTask(TaskAttemptContext context) throws IOException {
+  }
 
-    @Override
-    public void setupJob(JobContext jobContext) throws IOException {        
-    }
+  @Override
+  public boolean needsTaskCommit(TaskAttemptContext context) throws IOException {
+    return true;
+  }
 
-    @Override
-    public void setupTask(TaskAttemptContext context) throws IOException {
-    }
+  @Override
+  public void setupJob(JobContext jobContext) throws IOException {
+  }
+
+  @Override
+  public void setupTask(TaskAttemptContext context) throws IOException {
+  }
 
 }

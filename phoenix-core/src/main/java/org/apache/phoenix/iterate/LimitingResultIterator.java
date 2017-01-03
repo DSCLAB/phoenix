@@ -23,39 +23,40 @@ import java.util.List;
 import org.apache.phoenix.schema.tuple.Tuple;
 
 /**
- * 
+ *
  * Iterates through tuples up to a limit
  *
- * 
+ *
  * @since 1.2
  */
 public class LimitingResultIterator extends DelegateResultIterator {
-    private int rowCount;
-    private final int limit;
-    
-    public LimitingResultIterator(ResultIterator delegate, int limit) {
-        super(delegate);
-        this.limit = limit;
-    }
 
-    @Override
-    public Tuple next() throws SQLException {
-        if (rowCount++ >= limit) {
-            close(); // Free resources early
-            return null;
-        }
-        return super.next();
-    }
+  private int rowCount;
+  private final int limit;
 
-    @Override
-    public void explain(List<String> planSteps) {
-        super.explain(planSteps);
-            planSteps.add("CLIENT " + limit + " ROW LIMIT");
-    }
+  public LimitingResultIterator(ResultIterator delegate, int limit) {
+    super(delegate);
+    this.limit = limit;
+  }
 
-	@Override
-	public String toString() {
-		return "LimitingResultIterator [rowCount=" + rowCount + ", limit="
-				+ limit + "]";
-	}
+  @Override
+  public Tuple next() throws SQLException {
+    if (rowCount++ >= limit) {
+      close(); // Free resources early
+      return null;
+    }
+    return super.next();
+  }
+
+  @Override
+  public void explain(List<String> planSteps) {
+    super.explain(planSteps);
+    planSteps.add("CLIENT " + limit + " ROW LIMIT");
+  }
+
+  @Override
+  public String toString() {
+    return "LimitingResultIterator [rowCount=" + rowCount + ", limit="
+            + limit + "]";
+  }
 }

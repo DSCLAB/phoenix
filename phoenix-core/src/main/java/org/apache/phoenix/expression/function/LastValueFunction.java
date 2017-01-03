@@ -29,43 +29,45 @@ import org.apache.phoenix.parse.LastValueAggregateParseNode;
 import org.apache.phoenix.schema.types.PBoolean;
 
 /**
- * Built-in function for LAST_VALUE(<expression>) WITHIN GROUP (ORDER BY <expression> ASC/DESC) aggregate
- * function
+ * Built-in function for LAST_VALUE(<expression>) WITHIN GROUP (ORDER BY
+ * <expression> ASC/DESC) aggregate function
  *
  */
 @FunctionParseNode.BuiltInFunction(name = LastValueFunction.NAME, nodeClass = LastValueAggregateParseNode.class, args = {
-    @FunctionParseNode.Argument(),
-    @FunctionParseNode.Argument(allowedTypes = { PBoolean.class}, isConstant = true),
+  @FunctionParseNode.Argument()
+  ,
+    @FunctionParseNode.Argument(allowedTypes = {PBoolean.class}, isConstant = true)
+  ,
     @FunctionParseNode.Argument()})
 public class LastValueFunction extends FirstLastValueBaseFunction {
 
-    public static final String NAME = "LAST_VALUE";
+  public static final String NAME = "LAST_VALUE";
 
-    public LastValueFunction() {
-    }
+  public LastValueFunction() {
+  }
 
-    public LastValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
+  public LastValueFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
 
-    @Override
-    public Aggregator newServerAggregator(Configuration conf) {
-        FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    FirstLastValueServerAggregator aggregator = new FirstLastValueServerAggregator();
 
-        //invert order for LAST_BY function cause it is inverted version of FIRST_BY
-        boolean order = !(Boolean) ((LiteralExpression) children.get(1)).getValue();
-        aggregator.init(children, order, 0);
+    //invert order for LAST_BY function cause it is inverted version of FIRST_BY
+    boolean order = !(Boolean) ((LiteralExpression) children.get(1)).getValue();
+    aggregator.init(children, order, 0);
 
-        return aggregator;
-    }
+    return aggregator;
+  }
 
-    @Override
-    public Aggregator newClientAggregator() {
+  @Override
+  public Aggregator newClientAggregator() {
 
-        FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
-        aggregator.init(0);
+    FirstLastValueBaseClientAggregator aggregator = new FirstLastValueBaseClientAggregator();
+    aggregator.init(0);
 
-        return aggregator;
-    }
+    return aggregator;
+  }
 
 }

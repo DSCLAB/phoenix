@@ -21,74 +21,74 @@ import org.apache.phoenix.schema.SortOrder;
 
 public class PUnsignedSmallintArray extends PArrayDataType<short[]> {
 
-    public static final PUnsignedSmallintArray INSTANCE = new PUnsignedSmallintArray();
+  public static final PUnsignedSmallintArray INSTANCE = new PUnsignedSmallintArray();
 
-    private PUnsignedSmallintArray() {
-        super("UNSIGNED_SMALLINT ARRAY",
-                PDataType.ARRAY_TYPE_BASE + PUnsignedSmallint.INSTANCE.getSqlType(), PhoenixArray.class,
-                null, 44);
+  private PUnsignedSmallintArray() {
+    super("UNSIGNED_SMALLINT ARRAY",
+            PDataType.ARRAY_TYPE_BASE + PUnsignedSmallint.INSTANCE.getSqlType(), PhoenixArray.class,
+            null, 44);
+  }
+
+  @Override
+  public boolean isArrayType() {
+    return true;
+  }
+
+  @Override
+  public boolean isFixedWidth() {
+    return false;
+  }
+
+  @Override
+  public int compareTo(Object lhs, Object rhs, PDataType rhsType) {
+    return compareTo(lhs, rhs);
+  }
+
+  @Override
+  public Integer getByteSize() {
+    return null;
+  }
+
+  @Override
+  public byte[] toBytes(Object object) {
+    return toBytes(object, SortOrder.ASC);
+  }
+
+  @Override
+  public byte[] toBytes(Object object, SortOrder sortOrder) {
+    return toBytes(object, PUnsignedSmallint.INSTANCE, sortOrder);
+  }
+
+  @Override
+  public Object toObject(byte[] bytes, int offset, int length,
+          PDataType actualType, SortOrder sortOrder, Integer maxLength,
+          Integer scale) {
+    return toObject(bytes, offset, length, PUnsignedSmallint.INSTANCE, sortOrder, maxLength,
+            scale, PUnsignedSmallint.INSTANCE);
+  }
+
+  @Override
+  public boolean isCoercibleTo(PDataType targetType) {
+    return isCoercibleTo(targetType, this);
+  }
+
+  @Override
+  public boolean isCoercibleTo(PDataType targetType, Object value) {
+    if (value == null) {
+      return true;
     }
-
-    @Override
-    public boolean isArrayType() {
-        return true;
-    }
-
-    @Override
-    public boolean isFixedWidth() {
+    PhoenixArray.PrimitiveShortPhoenixArray pArr = (PhoenixArray.PrimitiveShortPhoenixArray) value;
+    short[] shortArr = (short[]) pArr.array;
+    for (Object i : shortArr) {
+      if (!super.isCoercibleTo(PUnsignedSmallint.INSTANCE, i)) {
         return false;
+      }
     }
+    return true;
+  }
 
-    @Override
-    public int compareTo(Object lhs, Object rhs, PDataType rhsType) {
-        return compareTo(lhs, rhs);
-    }
-
-    @Override
-    public Integer getByteSize() {
-        return null;
-    }
-
-    @Override
-    public byte[] toBytes(Object object) {
-        return toBytes(object, SortOrder.ASC);
-    }
-
-    @Override
-    public byte[] toBytes(Object object, SortOrder sortOrder) {
-        return toBytes(object, PUnsignedSmallint.INSTANCE, sortOrder);
-    }
-
-    @Override
-    public Object toObject(byte[] bytes, int offset, int length,
-            PDataType actualType, SortOrder sortOrder, Integer maxLength,
-            Integer scale) {
-        return toObject(bytes, offset, length, PUnsignedSmallint.INSTANCE, sortOrder, maxLength,
-                scale, PUnsignedSmallint.INSTANCE);
-    }
-
-    @Override
-    public boolean isCoercibleTo(PDataType targetType) {
-        return isCoercibleTo(targetType, this);
-    }
-
-    @Override
-    public boolean isCoercibleTo(PDataType targetType, Object value) {
-        if (value == null) {
-            return true;
-        }
-        PhoenixArray.PrimitiveShortPhoenixArray pArr = (PhoenixArray.PrimitiveShortPhoenixArray) value;
-        short[] shortArr = (short[]) pArr.array;
-        for (Object i : shortArr) {
-            if (!super.isCoercibleTo(PUnsignedSmallint.INSTANCE, i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public Object getSampleValue(Integer maxLength, Integer arrayLength) {
-        return getSampleValue(PUnsignedSmallint.INSTANCE, arrayLength, maxLength);
-    }
+  @Override
+  public Object getSampleValue(Integer maxLength, Integer arrayLength) {
+    return getSampleValue(PUnsignedSmallint.INSTANCE, arrayLength, maxLength);
+  }
 }

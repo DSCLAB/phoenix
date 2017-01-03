@@ -31,45 +31,47 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 /**
- * MapReduce mapper that converts JSON input lines into KeyValues that can be written to HFiles.
+ * MapReduce mapper that converts JSON input lines into KeyValues that can be
+ * written to HFiles.
  * <p/>
- * KeyValues are produced by executing UPSERT statements on a Phoenix connection and then
- * extracting the created KeyValues and rolling back the statement execution before it is
- * committed to HBase.
+ * KeyValues are produced by executing UPSERT statements on a Phoenix connection
+ * and then extracting the created KeyValues and rolling back the statement
+ * execution before it is committed to HBase.
  */
 public class JsonToKeyValueMapper extends FormatToBytesWritableMapper<Map<?, ?>> {
 
-    private LineParser<Map<?, ?>> lineParser;
+  private LineParser<Map<?, ?>> lineParser;
+
+  @Override
+  protected LineParser<Map<?, ?>> getLineParser() {
+    return lineParser;
+  }
+
+  @Override
+  protected void setup(Context context) throws IOException, InterruptedException {
+    super.setup(context);
+    lineParser = new JsonLineParser();
+  }
+
+  @VisibleForTesting
+  @Override
+  protected UpsertExecutor<Map<?, ?>, ?> buildUpsertExecutor(Configuration conf) {
+    String tableName = conf.get(TABLE_NAME_CONFKEY);
+    Preconditions.checkNotNull(tableName, "table name is not configured");
+
+    List<ColumnInfo> columnInfoList = buildColumnInfoList(conf);
+
+    return new JsonUpsertExecutor(conn, tableName, columnInfoList, upsertListener);
+  }
+
+  @VisibleForTesting
+  static class JsonLineParser implements LineParser<Map<?, ?>> {
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    protected  LineParser<Map<?, ?>> getLineParser() {
-        return lineParser;
+    public Map<?, ?> parse(String input) throws IOException {
+      return mapper.readValue(input, Map.class);
     }
-
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        super.setup(context);
-        lineParser = new JsonLineParser();
-    }
-
-    @VisibleForTesting
-    @Override
-    protected UpsertExecutor<Map<?, ?>, ?> buildUpsertExecutor(Configuration conf) {
-        String tableName = conf.get(TABLE_NAME_CONFKEY);
-        Preconditions.checkNotNull(tableName, "table name is not configured");
-
-        List<ColumnInfo> columnInfoList = buildColumnInfoList(conf);
-
-        return new JsonUpsertExecutor(conn, tableName, columnInfoList, upsertListener);
-    }
-
-    @VisibleForTesting
-    static class JsonLineParser implements LineParser<Map<?, ?>> {
-        private final ObjectMapper mapper = new ObjectMapper();
-
-        @Override
-        public Map<?, ?> parse(String input) throws IOException {
-            return mapper.readValue(input, Map.class);
-        }
-    }
+  }
 }

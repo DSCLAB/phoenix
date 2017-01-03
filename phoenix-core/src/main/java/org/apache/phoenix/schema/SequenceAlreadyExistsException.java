@@ -21,26 +21,25 @@ import java.sql.SQLException;
 import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
-
 public class SequenceAlreadyExistsException extends SQLException {
-	private static final long serialVersionUID = 1L;
-	private static SQLExceptionCode code = SQLExceptionCode.SEQUENCE_ALREADY_EXIST;
-	private final String schemaName;
-	private final String sequenceName;
 
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.SEQUENCE_ALREADY_EXIST;
+  private final String schemaName;
+  private final String sequenceName;
 
-	public SequenceAlreadyExistsException(String schemaName, String sequenceName) {
-		super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(sequenceName).build().toString(),
-				code.getSQLState(), code.getErrorCode());        
-		this.schemaName = schemaName;
-		this.sequenceName = sequenceName;
-	}
+  public SequenceAlreadyExistsException(String schemaName, String sequenceName) {
+    super(new SQLExceptionInfo.Builder(code).setSchemaName(schemaName).setTableName(sequenceName).build().toString(),
+            code.getSQLState(), code.getErrorCode());
+    this.schemaName = schemaName;
+    this.sequenceName = sequenceName;
+  }
 
-	public String getSequenceName() {
-		return sequenceName;
-	}
+  public String getSequenceName() {
+    return sequenceName;
+  }
 
-	public String getSchemaName() {
-		return schemaName;
-	}
+  public String getSchemaName() {
+    return schemaName;
+  }
 }

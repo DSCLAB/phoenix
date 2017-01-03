@@ -25,9 +25,14 @@ import org.apache.phoenix.query.KeyRange;
 import org.apache.phoenix.util.SQLCloseable;
 
 public interface ResultIterators extends SQLCloseable {
-    public int size();
-    public List<KeyRange> getSplits();
-    public List<List<Scan>> getScans();
-    public void explain(List<String> planSteps);
-    public List<PeekingResultIterator> getIterators() throws SQLException;
+
+  public int size();
+
+  public List<KeyRange> getSplits();
+
+  public List<List<Scan>> getScans();
+
+  public void explain(List<String> planSteps);
+
+  public List<PeekingResultIterator> getIterators() throws SQLException;
 }

@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.workload;
 
 import java.util.Calendar;
@@ -30,68 +29,70 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class MultithreadedDiffer implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(MultiThreadedRunner.class);
-    private Thread t;
-    private Query query;
-    private ThreadTime threadTime;
-    private long numberOfExecutions;
-    private long executionDurationInMs;
-    private QueryVerifier queryVerifier = new QueryVerifier(true);
-    private static PhoenixUtil pUtil = PhoenixUtil.create();
 
-    private synchronized ThreadTime getThreadTime() {
-        return threadTime;
-    }
+  private static final Logger logger = LoggerFactory.getLogger(MultiThreadedRunner.class);
+  private Thread t;
+  private Query query;
+  private ThreadTime threadTime;
+  private long numberOfExecutions;
+  private long executionDurationInMs;
+  private QueryVerifier queryVerifier = new QueryVerifier(true);
+  private static PhoenixUtil pUtil = PhoenixUtil.create();
 
-    /**
-     * Query Verification
-     *
-     * @throws Exception
-     */
-    private void diffQuery() throws Exception {
-        Long start = System.currentTimeMillis();
-        Date startDate = Calendar.getInstance().getTime();
-        String newCSV = queryVerifier.exportCSV(query);
-        boolean verifyResult = queryVerifier.doDiff(query, newCSV);
-        String explainPlan = pUtil.getExplainPlan(query);
-        getThreadTime().getRunTimesInMs().add(new RunTime(
-                        verifyResult == true ? PherfConstants.DIFF_PASS : PherfConstants.DIFF_FAIL,
-                        explainPlan, startDate, -1L, (int) (System.currentTimeMillis() - start)));
-    }
+  private synchronized ThreadTime getThreadTime() {
+    return threadTime;
+  }
 
-    /**
-     * Multithreaded Differ
-     *
-     * @param threadName
-     * @param query
-     * @param threadName
-     * @param threadTime
-     * @param numberOfExecutions
-     * @param executionDurationInMs
-     */
-    MultithreadedDiffer(String threadName, Query query, ThreadTime threadTime,
-            long numberOfExecutions, long executionDurationInMs) {
-        this.query = query;
-        this.threadTime = threadTime;
-        this.numberOfExecutions = numberOfExecutions;
-        this.executionDurationInMs = executionDurationInMs;
-    }
+  /**
+   * Query Verification
+   *
+   * @throws Exception
+   */
+  private void diffQuery() throws Exception {
+    Long start = System.currentTimeMillis();
+    Date startDate = Calendar.getInstance().getTime();
+    String newCSV = queryVerifier.exportCSV(query);
+    boolean verifyResult = queryVerifier.doDiff(query, newCSV);
+    String explainPlan = pUtil.getExplainPlan(query);
+    getThreadTime().getRunTimesInMs().add(new RunTime(
+            verifyResult == true ? PherfConstants.DIFF_PASS : PherfConstants.DIFF_FAIL,
+            explainPlan, startDate, -1L, (int) (System.currentTimeMillis() - start)));
+  }
 
-    /**
-     * Executes verification runs for a minimum of number of execution or execution duration
-     */
-    public void run() {
-        logger.info("\n\nThread Starting " + t.getName() + " ; " + query.getStatement() + " for "
-                + numberOfExecutions + "times\n\n");
-        Long start = System.currentTimeMillis();
-        for (long i = numberOfExecutions; (i > 0 && ((System.currentTimeMillis() - start)
-                < executionDurationInMs)); i--) {
-            try {
-                diffQuery();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        logger.info("\n\nThread exiting." + t.getName() + "\n\n");
+  /**
+   * Multithreaded Differ
+   *
+   * @param threadName
+   * @param query
+   * @param threadName
+   * @param threadTime
+   * @param numberOfExecutions
+   * @param executionDurationInMs
+   */
+  MultithreadedDiffer(String threadName, Query query, ThreadTime threadTime,
+          long numberOfExecutions, long executionDurationInMs) {
+    this.query = query;
+    this.threadTime = threadTime;
+    this.numberOfExecutions = numberOfExecutions;
+    this.executionDurationInMs = executionDurationInMs;
+  }
+
+  /**
+   * Executes verification runs for a minimum of number of execution or
+   * execution duration
+   */
+  public void run() {
+    logger.info("\n\nThread Starting " + t.getName() + " ; " + query.getStatement() + " for "
+            + numberOfExecutions + "times\n\n");
+    Long start = System.currentTimeMillis();
+    for (long i = numberOfExecutions; (i > 0 && ((System.currentTimeMillis() - start)
+            < executionDurationInMs)); i--) {
+      try {
+        diffQuery();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
+    logger.info("\n\nThread exiting." + t.getName() + "\n\n");
+  }
 }

@@ -25,14 +25,14 @@ import org.apache.http.annotation.Immutable;
 import org.apache.phoenix.hbase.index.util.ImmutableBytesPtr;
 import org.apache.phoenix.schema.tuple.Tuple;
 
-
 /**
- * Encapsulate deserialized hash cache from bytes into Map.
- * The Map uses the row key as the key and the row as the value.
- * 
+ * Encapsulate deserialized hash cache from bytes into Map. The Map uses the row
+ * key as the key and the row as the value.
+ *
  * @since 0.1
  */
 @Immutable
 public interface HashCache extends Closeable {
-    public List<Tuple> get(ImmutableBytesPtr hashKey) throws IOException;
+
+  public List<Tuple> get(ImmutableBytesPtr hashKey) throws IOException;
 }

@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.schema;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -33,70 +32,73 @@ import java.sql.Connection;
 import java.util.Collection;
 
 public class SchemaReader {
-    private static final Logger logger = LoggerFactory.getLogger(SchemaReader.class);
-    private final PhoenixUtil pUtil;
-    private Collection<Path> resourceList;
-    private final String searchPattern;
-    private final ResourceList resourceUtil;
 
-    /**
-     * Used for testing search Pattern
-     * @param searchPattern {@link java.util.regex.Pattern} that matches a resource on the CP
-     * @throws Exception
-     */
-    public SchemaReader(final String searchPattern) throws Exception {
-        this(PhoenixUtil.create(), searchPattern);
+  private static final Logger logger = LoggerFactory.getLogger(SchemaReader.class);
+  private final PhoenixUtil pUtil;
+  private Collection<Path> resourceList;
+  private final String searchPattern;
+  private final ResourceList resourceUtil;
+
+  /**
+   * Used for testing search Pattern
+   *
+   * @param searchPattern {@link java.util.regex.Pattern} that matches a
+   * resource on the CP
+   * @throws Exception
+   */
+  public SchemaReader(final String searchPattern) throws Exception {
+    this(PhoenixUtil.create(), searchPattern);
+  }
+
+  public SchemaReader(PhoenixUtil util, final String searchPattern) throws Exception {
+    this.pUtil = util;
+    this.searchPattern = searchPattern;
+    this.resourceUtil = new ResourceList(PherfConstants.RESOURCE_DATAMODEL);
+    read();
+  }
+
+  public Collection<Path> getResourceList() {
+    return resourceList;
+  }
+
+  public void applySchema() throws Exception {
+    Connection connection = null;
+    try {
+      connection = pUtil.getConnection();
+      for (Path file : resourceList) {
+        logger.info("\nApplying schema to file: " + file);
+        pUtil.executeStatement(resourceToString(file), connection);
+      }
+    } finally {
+      if (connection != null) {
+        connection.close();
+      }
+    }
+  }
+
+  public String resourceToString(final Path file) throws Exception {
+    String fName = PherfConstants.RESOURCE_DATAMODEL + "/" + file.getFileName().toString();
+    BufferedReader br = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(fName)));
+    StringBuffer sb = new StringBuffer();
+
+    String line;
+    while ((line = br.readLine()) != null) {
+      sb.append(line);
     }
 
-    public SchemaReader(PhoenixUtil util, final String searchPattern) throws Exception {
-        this.pUtil = util;
-        this.searchPattern = searchPattern;
-        this.resourceUtil = new ResourceList(PherfConstants.RESOURCE_DATAMODEL);
-        read();
+    return sb.toString();
+  }
+
+  private void read() throws Exception {
+    logger.debug("Trying to match resource pattern: " + searchPattern);
+    System.out.println("Trying to match resource pattern: " + searchPattern);
+
+    resourceList = null;
+    resourceList = resourceUtil.getResourceList(searchPattern);
+    logger.info("File resourceList Loaded: " + resourceList);
+    System.out.println("File resourceList Loaded: " + resourceList);
+    if (resourceList.isEmpty()) {
+      throw new FileLoaderException("Could not load Schema Files");
     }
-
-    public Collection<Path> getResourceList() {
-        return resourceList;
-    }
-
-    public void applySchema() throws Exception {
-        Connection connection = null;
-        try {
-            connection = pUtil.getConnection();
-            for (Path file : resourceList) {
-                logger.info("\nApplying schema to file: " + file);
-                pUtil.executeStatement(resourceToString(file), connection);
-            }
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
-        }
-    }
-
-    public String resourceToString(final Path file) throws Exception {
-        String fName = PherfConstants.RESOURCE_DATAMODEL + "/" + file.getFileName().toString();
-        BufferedReader br = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(fName)));
-        StringBuffer sb = new StringBuffer();
-
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
-        }
-
-        return sb.toString();
-    }
-
-    private void read() throws Exception {
-        logger.debug("Trying to match resource pattern: " + searchPattern);
-        System.out.println("Trying to match resource pattern: " + searchPattern);
-
-        resourceList = null;
-        resourceList = resourceUtil.getResourceList(searchPattern);
-        logger.info("File resourceList Loaded: " + resourceList);
-        System.out.println("File resourceList Loaded: " + resourceList);
-        if (resourceList.isEmpty()) {
-            throw new FileLoaderException("Could not load Schema Files");
-        }
-    }
+  }
 }

@@ -20,10 +20,10 @@ package org.apache.phoenix.end2end;
 import org.apache.hadoop.hbase.HConstants;
 import org.junit.After;
 
-
 public class BaseOwnClusterHBaseManagedTimeIT extends BaseOwnClusterIT {
-    @After
-    public void cleanUpAfterTest() throws Exception {
-        deletePriorMetaData(HConstants.LATEST_TIMESTAMP, getUrl());
-    }
+
+  @After
+  public void cleanUpAfterTest() throws Exception {
+    deletePriorMetaData(HConstants.LATEST_TIMESTAMP, getUrl());
+  }
 }

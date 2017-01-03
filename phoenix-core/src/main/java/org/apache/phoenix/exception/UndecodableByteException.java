@@ -17,11 +17,10 @@
  */
 package org.apache.phoenix.exception;
 
-
 public class UndecodableByteException extends RuntimeException {
 
-    public UndecodableByteException(Byte b) {
-        super("Undecodable byte: " + b);
-    }
-    
+  public UndecodableByteException(Byte b) {
+    super("Undecodable byte: " + b);
+  }
+
 }

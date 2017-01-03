@@ -29,50 +29,50 @@ import org.apache.phoenix.parse.MaxAggregateParseNode;
 import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.types.PDataType;
 
-
-
 /**
  * Built-in function for finding MAX.
- * 
- * 
+ *
+ *
  * @since 0.1
  */
-@BuiltInFunction(name=MaxAggregateFunction.NAME, nodeClass=MaxAggregateParseNode.class, args= {@Argument()} )
+@BuiltInFunction(name = MaxAggregateFunction.NAME, nodeClass = MaxAggregateParseNode.class, args = {
+  @Argument()})
 public class MaxAggregateFunction extends MinAggregateFunction {
-    public static final String NAME = "MAX";
 
-    public MaxAggregateFunction() {
-    }
-    
-    public MaxAggregateFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
-        super(childExpressions, delegate);
-    }
+  public static final String NAME = "MAX";
 
-    @Override 
-    public Aggregator newServerAggregator(Configuration conf) {
-        Expression child = getAggregatorExpression();
-        final PDataType type = child.getDataType();
-        final Integer maxLength = child.getMaxLength();
-        return new MaxAggregator(child.getSortOrder()) {
-            @Override
-            public PDataType getDataType() {
-                return type;
-            }
+  public MaxAggregateFunction() {
+  }
 
-            @Override
-            public Integer getMaxLength() {
-                return maxLength;
-            }
-        };
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
-    @Override
-    public SortOrder getSortOrder() {
-       return getAggregatorExpression().getSortOrder(); 
-    }    
+  public MaxAggregateFunction(List<Expression> childExpressions, CountAggregateFunction delegate) {
+    super(childExpressions, delegate);
+  }
+
+  @Override
+  public Aggregator newServerAggregator(Configuration conf) {
+    Expression child = getAggregatorExpression();
+    final PDataType type = child.getDataType();
+    final Integer maxLength = child.getMaxLength();
+    return new MaxAggregator(child.getSortOrder()) {
+      @Override
+      public PDataType getDataType() {
+        return type;
+      }
+
+      @Override
+      public Integer getMaxLength() {
+        return maxLength;
+      }
+    };
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  @Override
+  public SortOrder getSortOrder() {
+    return getAggregatorExpression().getSortOrder();
+  }
 }

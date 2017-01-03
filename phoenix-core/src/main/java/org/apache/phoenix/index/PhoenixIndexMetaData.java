@@ -38,81 +38,87 @@ import org.apache.phoenix.util.ServerUtil;
 import org.apache.tephra.Transaction;
 
 public class PhoenixIndexMetaData implements IndexMetaData {
-    private final Map<String, byte[]> attributes;
-    private final IndexMetaDataCache indexMetaDataCache;
-    private final boolean ignoreNewerMutations;
-    private final boolean isImmutable;
-    
-    private static IndexMetaDataCache getIndexMetaData(RegionCoprocessorEnvironment env, Map<String, byte[]> attributes) throws IOException {
-        if (attributes == null) { return IndexMetaDataCache.EMPTY_INDEX_META_DATA_CACHE; }
-        byte[] uuid = attributes.get(PhoenixIndexCodec.INDEX_UUID);
-        if (uuid == null) { return IndexMetaDataCache.EMPTY_INDEX_META_DATA_CACHE; }
-        byte[] md = attributes.get(PhoenixIndexCodec.INDEX_MD);
-        byte[] txState = attributes.get(BaseScannerRegionObserver.TX_STATE);
-        if (md != null) {
-            final List<IndexMaintainer> indexMaintainers = IndexMaintainer.deserialize(md);
-            final Transaction txn = MutationState.decodeTransaction(txState);
-            return new IndexMetaDataCache() {
 
-                @Override
-                public void close() throws IOException {}
+  private final Map<String, byte[]> attributes;
+  private final IndexMetaDataCache indexMetaDataCache;
+  private final boolean ignoreNewerMutations;
+  private final boolean isImmutable;
 
-                @Override
-                public List<IndexMaintainer> getIndexMaintainers() {
-                    return indexMaintainers;
-                }
+  private static IndexMetaDataCache getIndexMetaData(RegionCoprocessorEnvironment env, Map<String, byte[]> attributes) throws IOException {
+    if (attributes == null) {
+      return IndexMetaDataCache.EMPTY_INDEX_META_DATA_CACHE;
+    }
+    byte[] uuid = attributes.get(PhoenixIndexCodec.INDEX_UUID);
+    if (uuid == null) {
+      return IndexMetaDataCache.EMPTY_INDEX_META_DATA_CACHE;
+    }
+    byte[] md = attributes.get(PhoenixIndexCodec.INDEX_MD);
+    byte[] txState = attributes.get(BaseScannerRegionObserver.TX_STATE);
+    if (md != null) {
+      final List<IndexMaintainer> indexMaintainers = IndexMaintainer.deserialize(md);
+      final Transaction txn = MutationState.decodeTransaction(txState);
+      return new IndexMetaDataCache() {
 
-                @Override
-                public Transaction getTransaction() {
-                    return txn;
-                }
-
-            };
-        } else {
-            byte[] tenantIdBytes = attributes.get(PhoenixRuntime.TENANT_ID_ATTRIB);
-            ImmutableBytesPtr tenantId = tenantIdBytes == null ? null : new ImmutableBytesPtr(tenantIdBytes);
-            TenantCache cache = GlobalCache.getTenantCache(env, tenantId);
-            IndexMetaDataCache indexCache = (IndexMetaDataCache)cache.getServerCache(new ImmutableBytesPtr(uuid));
-            if (indexCache == null) {
-                String msg = "key=" + ServerCacheClient.idToString(uuid) + " region=" + env.getRegion();
-                SQLException e = new SQLExceptionInfo.Builder(SQLExceptionCode.INDEX_METADATA_NOT_FOUND)
-                        .setMessage(msg).build().buildException();
-                ServerUtil.throwIOException("Index update failed", e); // will not return
-            }
-            return indexCache;
+        @Override
+        public void close() throws IOException {
         }
 
-    }
-
-    public PhoenixIndexMetaData(RegionCoprocessorEnvironment env, Map<String,byte[]> attributes) throws IOException {
-        this.indexMetaDataCache = getIndexMetaData(env, attributes);
-        boolean isImmutable = true;
-        for (IndexMaintainer maintainer : indexMetaDataCache.getIndexMaintainers()) {
-            isImmutable &= maintainer.isImmutableRows();
+        @Override
+        public List<IndexMaintainer> getIndexMaintainers() {
+          return indexMaintainers;
         }
-        this.isImmutable = isImmutable;
-        this.attributes = attributes;
-        this.ignoreNewerMutations = attributes.get(BaseScannerRegionObserver.IGNORE_NEWER_MUTATIONS) != null;
-    }
-    
-    public Transaction getTransaction() {
-        return indexMetaDataCache.getTransaction();
-    }
-    
-    public List<IndexMaintainer> getIndexMaintainers() {
-        return indexMetaDataCache.getIndexMaintainers();
+
+        @Override
+        public Transaction getTransaction() {
+          return txn;
+        }
+
+      };
+    } else {
+      byte[] tenantIdBytes = attributes.get(PhoenixRuntime.TENANT_ID_ATTRIB);
+      ImmutableBytesPtr tenantId = tenantIdBytes == null ? null : new ImmutableBytesPtr(tenantIdBytes);
+      TenantCache cache = GlobalCache.getTenantCache(env, tenantId);
+      IndexMetaDataCache indexCache = (IndexMetaDataCache) cache.getServerCache(new ImmutableBytesPtr(uuid));
+      if (indexCache == null) {
+        String msg = "key=" + ServerCacheClient.idToString(uuid) + " region=" + env.getRegion();
+        SQLException e = new SQLExceptionInfo.Builder(SQLExceptionCode.INDEX_METADATA_NOT_FOUND)
+                .setMessage(msg).build().buildException();
+        ServerUtil.throwIOException("Index update failed", e); // will not return
+      }
+      return indexCache;
     }
 
-    public Map<String, byte[]> getAttributes() {
-        return attributes;
-    }
-    
-    public boolean ignoreNewerMutations() {
-        return ignoreNewerMutations;
-    }
+  }
 
-    @Override
-    public boolean isImmutableRows() {
-        return isImmutable;
+  public PhoenixIndexMetaData(RegionCoprocessorEnvironment env, Map<String, byte[]> attributes) throws IOException {
+    this.indexMetaDataCache = getIndexMetaData(env, attributes);
+    boolean isImmutable = true;
+    for (IndexMaintainer maintainer : indexMetaDataCache.getIndexMaintainers()) {
+      isImmutable &= maintainer.isImmutableRows();
     }
+    this.isImmutable = isImmutable;
+    this.attributes = attributes;
+    this.ignoreNewerMutations = attributes.get(BaseScannerRegionObserver.IGNORE_NEWER_MUTATIONS) != null;
+  }
+
+  public Transaction getTransaction() {
+    return indexMetaDataCache.getTransaction();
+  }
+
+  public List<IndexMaintainer> getIndexMaintainers() {
+    return indexMetaDataCache.getIndexMaintainers();
+  }
+
+  public Map<String, byte[]> getAttributes() {
+    return attributes;
+  }
+
+  public boolean ignoreNewerMutations() {
+    return ignoreNewerMutations;
+  }
+
+  @Override
+  public boolean isImmutableRows() {
+    return isImmutable;
+  }
 }

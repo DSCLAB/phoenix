@@ -29,20 +29,18 @@ import org.apache.phoenix.schema.PTable;
  * Iterator factory that creates {@code MockTableResultIterator}
  */
 public class MockParallelIteratorFactory implements ParallelIteratorFactory {
-    private static final AtomicInteger counter = new AtomicInteger(1);
-    private PTable table;
-    
-    @Override
-    public PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan,
-            String physicalTableName, QueryPlan plan) throws SQLException {
-        return new MockResultIterator(String.valueOf(counter.incrementAndGet()), table);
-    }
-    
-    public void setTable(PTable table) {
-        this.table = table;
-    }
-    
+
+  private static final AtomicInteger counter = new AtomicInteger(1);
+  private PTable table;
+
+  @Override
+  public PeekingResultIterator newIterator(StatementContext context, ResultIterator scanner, Scan scan,
+          String physicalTableName, QueryPlan plan) throws SQLException {
+    return new MockResultIterator(String.valueOf(counter.incrementAndGet()), table);
+  }
+
+  public void setTable(PTable table) {
+    this.table = table;
+  }
+
 }
-
-    
-

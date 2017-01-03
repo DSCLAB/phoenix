@@ -23,28 +23,29 @@ import org.apache.phoenix.exception.SQLExceptionCode;
 import org.apache.phoenix.exception.SQLExceptionInfo;
 
 /**
- * 
- * Exception thrown when a column name is used without being qualified with an alias
- * and more than one table contains that column.
  *
- * 
+ * Exception thrown when a column name is used without being qualified with an
+ * alias and more than one table contains that column.
+ *
+ *
  * @since 0.1
  */
 public class AmbiguousColumnException extends SQLException {
-    private static final long serialVersionUID = 1L;
-    private static SQLExceptionCode code = SQLExceptionCode.AMBIGUOUS_COLUMN;
 
-    public AmbiguousColumnException() {
-        super(new SQLExceptionInfo.Builder(code).build().toString(), code.getSQLState(), code.getErrorCode());
-    }
+  private static final long serialVersionUID = 1L;
+  private static SQLExceptionCode code = SQLExceptionCode.AMBIGUOUS_COLUMN;
 
-    public AmbiguousColumnException(String columnName) {
-        super(new SQLExceptionInfo.Builder(code).setColumnName(columnName).build().toString(),
-                code.getSQLState(), code.getErrorCode());
-    }
+  public AmbiguousColumnException() {
+    super(new SQLExceptionInfo.Builder(code).build().toString(), code.getSQLState(), code.getErrorCode());
+  }
 
-    public AmbiguousColumnException(String columnName, Throwable cause) {
-        super(new SQLExceptionInfo.Builder(code).setColumnName(columnName).build().toString(),
-                code.getSQLState(), code.getErrorCode(), cause);
-    }
+  public AmbiguousColumnException(String columnName) {
+    super(new SQLExceptionInfo.Builder(code).setColumnName(columnName).build().toString(),
+            code.getSQLState(), code.getErrorCode());
+  }
+
+  public AmbiguousColumnException(String columnName, Throwable cause) {
+    super(new SQLExceptionInfo.Builder(code).setColumnName(columnName).build().toString(),
+            code.getSQLState(), code.getErrorCode(), cause);
+  }
 }

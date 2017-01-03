@@ -38,46 +38,46 @@ import org.junit.Test;
 
 public class CreateSchemaIT extends BaseClientManagedTimeIT {
 
-    @Test
-    public void testCreateSchema() throws Exception {
-        long ts = nextTimestamp();
-        Properties props = new Properties();
-        props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts));
-        props.setProperty(QueryServices.IS_NAMESPACE_MAPPING_ENABLED, Boolean.toString(true));
-        String ddl = "CREATE SCHEMA TEST_SCHEMA";
-        try (Connection conn = DriverManager.getConnection(getUrl(), props);
-                HBaseAdmin admin = conn.unwrap(PhoenixConnection.class).getQueryServices().getAdmin();) {
-            conn.createStatement().execute(ddl);
-            assertNotNull(admin.getNamespaceDescriptor("TEST_SCHEMA"));
-        }
-        props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts + 10));
-        try (Connection conn = DriverManager.getConnection(getUrl(), props);) {
-            conn.createStatement().execute(ddl);
-            fail();
-        } catch (SchemaAlreadyExistsException e) {
-            // expected
-        }
-        props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts - 20));
-        try (Connection conn = DriverManager.getConnection(getUrl(), props)) {
-            conn.createStatement().execute(ddl);
-            fail();
-        } catch (NewerSchemaAlreadyExistsException e) {
-            // expected
-        }
-        props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts + 50));
-        Connection conn = DriverManager.getConnection(getUrl(), props);
-        try {
-            conn.createStatement().execute("CREATE SCHEMA " + SchemaUtil.SCHEMA_FOR_DEFAULT_NAMESPACE);
-            fail();
-        } catch (SQLException e) {
-            assertEquals(SQLExceptionCode.SCHEMA_NOT_ALLOWED.getErrorCode(), e.getErrorCode());
-        }
-        try {
-            conn.createStatement().execute("CREATE SCHEMA " + SchemaUtil.HBASE_NAMESPACE);
-            fail();
-        } catch (SQLException e) {
-            assertEquals(SQLExceptionCode.SCHEMA_NOT_ALLOWED.getErrorCode(), e.getErrorCode());
-        }
-        conn.close();
+  @Test
+  public void testCreateSchema() throws Exception {
+    long ts = nextTimestamp();
+    Properties props = new Properties();
+    props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts));
+    props.setProperty(QueryServices.IS_NAMESPACE_MAPPING_ENABLED, Boolean.toString(true));
+    String ddl = "CREATE SCHEMA TEST_SCHEMA";
+    try (Connection conn = DriverManager.getConnection(getUrl(), props);
+            HBaseAdmin admin = conn.unwrap(PhoenixConnection.class).getQueryServices().getAdmin();) {
+      conn.createStatement().execute(ddl);
+      assertNotNull(admin.getNamespaceDescriptor("TEST_SCHEMA"));
     }
+    props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts + 10));
+    try (Connection conn = DriverManager.getConnection(getUrl(), props);) {
+      conn.createStatement().execute(ddl);
+      fail();
+    } catch (SchemaAlreadyExistsException e) {
+      // expected
+    }
+    props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts - 20));
+    try (Connection conn = DriverManager.getConnection(getUrl(), props)) {
+      conn.createStatement().execute(ddl);
+      fail();
+    } catch (NewerSchemaAlreadyExistsException e) {
+      // expected
+    }
+    props.setProperty(PhoenixRuntime.CURRENT_SCN_ATTRIB, Long.toString(ts + 50));
+    Connection conn = DriverManager.getConnection(getUrl(), props);
+    try {
+      conn.createStatement().execute("CREATE SCHEMA " + SchemaUtil.SCHEMA_FOR_DEFAULT_NAMESPACE);
+      fail();
+    } catch (SQLException e) {
+      assertEquals(SQLExceptionCode.SCHEMA_NOT_ALLOWED.getErrorCode(), e.getErrorCode());
+    }
+    try {
+      conn.createStatement().execute("CREATE SCHEMA " + SchemaUtil.HBASE_NAMESPACE);
+      fail();
+    } catch (SQLException e) {
+      assertEquals(SQLExceptionCode.SCHEMA_NOT_ALLOWED.getErrorCode(), e.getErrorCode());
+    }
+    conn.close();
+  }
 }

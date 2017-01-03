@@ -29,37 +29,38 @@ import org.apache.phoenix.parse.TableName;
 import org.apache.phoenix.util.IndexUtil;
 
 public class LocalIndexDataColumnRef extends ColumnRef {
-    final private int position;
-    final private Set<PColumn> columns;
-    private static final ParseNodeFactory FACTORY = new ParseNodeFactory();
 
-    public LocalIndexDataColumnRef(StatementContext context, String indexColumnName) throws MetaDataEntityNotFoundException, SQLException {
-        super(FromCompiler.getResolver(
+  final private int position;
+  final private Set<PColumn> columns;
+  private static final ParseNodeFactory FACTORY = new ParseNodeFactory();
+
+  public LocalIndexDataColumnRef(StatementContext context, String indexColumnName) throws MetaDataEntityNotFoundException, SQLException {
+    super(FromCompiler.getResolver(
             FACTORY.namedTable(null, TableName.create(context.getCurrentTable().getTable()
                     .getSchemaName().getString(), context.getCurrentTable().getTable()
-                    .getParentTableName().getString())), context.getConnection()).resolveTable(
+                            .getParentTableName().getString())), context.getConnection()).resolveTable(
             context.getCurrentTable().getTable().getSchemaName().getString(),
             context.getCurrentTable().getTable().getParentTableName().getString()), IndexUtil
-                .getDataColumnFamilyName(indexColumnName), IndexUtil
-                .getDataColumnName(indexColumnName));
-        position = context.getDataColumnPosition(this.getColumn());
-        columns = context.getDataColumns();
-    }
+            .getDataColumnFamilyName(indexColumnName), IndexUtil
+            .getDataColumnName(indexColumnName));
+    position = context.getDataColumnPosition(this.getColumn());
+    columns = context.getDataColumns();
+  }
 
-    protected LocalIndexDataColumnRef(LocalIndexDataColumnRef localIndexDataColumnRef, long timestamp) {
-        super(localIndexDataColumnRef, timestamp);
-        this.position = localIndexDataColumnRef.position;
-        this.columns = localIndexDataColumnRef.columns;
-    }
+  protected LocalIndexDataColumnRef(LocalIndexDataColumnRef localIndexDataColumnRef, long timestamp) {
+    super(localIndexDataColumnRef, timestamp);
+    this.position = localIndexDataColumnRef.position;
+    this.columns = localIndexDataColumnRef.columns;
+  }
 
-    @Override
-    public ColumnRef cloneAtTimestamp(long timestamp) {
-        return new LocalIndexDataColumnRef(this, timestamp);
-    }
+  @Override
+  public ColumnRef cloneAtTimestamp(long timestamp) {
+    return new LocalIndexDataColumnRef(this, timestamp);
+  }
 
-    @Override
-    public ColumnExpression newColumnExpression(boolean schemaNameCaseSensitive, boolean colNameCaseSensitive) {
-        String displayName = this.getTableRef().getColumnDisplayName(this, schemaNameCaseSensitive, colNameCaseSensitive);
-        return new ProjectedColumnExpression(this.getColumn(), columns, position, displayName);
-    }
+  @Override
+  public ColumnExpression newColumnExpression(boolean schemaNameCaseSensitive, boolean colNameCaseSensitive) {
+    String displayName = this.getTableRef().getColumnDisplayName(this, schemaNameCaseSensitive, colNameCaseSensitive);
+    return new ProjectedColumnExpression(this.getColumn(), columns, position, displayName);
+  }
 }

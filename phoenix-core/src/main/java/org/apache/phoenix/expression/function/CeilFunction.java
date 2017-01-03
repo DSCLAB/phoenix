@@ -29,33 +29,36 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.apache.phoenix.schema.types.PVarchar;
 
 /**
- * 
+ *
  * Base class for built-in CEIL function.
  *
- * 
+ *
  * @since 3.0.0
  */
 @BuiltInFunction(name = CeilFunction.NAME,
-                 nodeClass = CeilParseNode.class,
-                 args = {
-                        @Argument(allowedTypes={PTimestamp.class, PDecimal.class}),
-                        @Argument(allowedTypes={PVarchar.class, PInteger.class}, defaultValue = "null", isConstant=true),
-                        @Argument(allowedTypes={PInteger.class}, defaultValue="1", isConstant=true)
-                        } 
-                )
+        nodeClass = CeilParseNode.class,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class, PDecimal.class})
+          ,
+                        @Argument(allowedTypes = {PVarchar.class, PInteger.class}, defaultValue = "null", isConstant = true)
+          ,
+                        @Argument(allowedTypes = {PInteger.class}, defaultValue = "1", isConstant = true)
+        }
+)
 public abstract class CeilFunction extends ScalarFunction {
-    
-    public static final String NAME = "CEIL";
 
-    public CeilFunction() {}
-    
-    public CeilFunction(List<Expression> children) {
-        super(children);
-    }
-    
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
+  public static final String NAME = "CEIL";
+
+  public CeilFunction() {
+  }
+
+  public CeilFunction(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
 }

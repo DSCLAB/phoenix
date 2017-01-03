@@ -58,6 +58,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class TestIndexWriter {
+
   private static final Log LOG = LogFactory.getLog(TestIndexWriter.class);
   @Rule
   public TableName testName = new TableName();
@@ -80,21 +81,22 @@ public class TestIndexWriter {
   }
 
   /**
-   * With the move to using a pool of threads to write, we need to ensure that we still block until
-   * all index writes for a mutation/batch are completed.
+   * With the move to using a pool of threads to write, we need to ensure that
+   * we still block until all index writes for a mutation/batch are completed.
+   *
    * @throws Exception on failure
    */
-  @SuppressWarnings({ "unchecked", "deprecation" })
+  @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   public void testSynchronouslyCompletesAllWrites() throws Exception {
     LOG.info("Starting " + testName.getTableNameString());
     LOG.info("Current thread is interrupted: " + Thread.interrupted());
     Abortable abort = new StubAbortable();
     Stoppable stop = Mockito.mock(Stoppable.class);
-    RegionCoprocessorEnvironment e =Mockito.mock(RegionCoprocessorEnvironment.class);
-    Configuration conf =new Configuration();
+    RegionCoprocessorEnvironment e = Mockito.mock(RegionCoprocessorEnvironment.class);
+    Configuration conf = new Configuration();
     Mockito.when(e.getConfiguration()).thenReturn(conf);
-    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String,Object>());
+    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String, Object>());
     ExecutorService exec = Executors.newFixedThreadPool(1);
     Map<ImmutableBytesPtr, HTableInterface> tables = new HashMap<ImmutableBytesPtr, HTableInterface>();
     FakeTableFactory factory = new FakeTableFactory(tables);
@@ -103,10 +105,10 @@ public class TestIndexWriter {
     Put m = new Put(row);
     m.add(Bytes.toBytes("family"), Bytes.toBytes("qual"), null);
     Collection<Pair<Mutation, byte[]>> indexUpdates = Arrays.asList(new Pair<Mutation, byte[]>(m,
-        tableName));
+            tableName));
 
     HTableInterface table = Mockito.mock(HTableInterface.class);
-    final boolean[] completed = new boolean[] { false };
+    final boolean[] completed = new boolean[]{false};
     Mockito.when(table.batch(Mockito.anyList())).thenAnswer(new Answer<Void>() {
 
       @Override
@@ -128,23 +130,25 @@ public class TestIndexWriter {
     IndexWriter writer = new IndexWriter(committer, policy);
     writer.write(indexUpdates);
     assertTrue("Writer returned before the table batch completed! Likely a race condition tripped",
-      completed[0]);
+            completed[0]);
     writer.stop(this.testName.getTableNameString() + " finished");
     assertTrue("Factory didn't get shutdown after writer#stop!", factory.shutdown);
     assertTrue("ExectorService isn't terminated after writer#stop!", exec.isShutdown());
   }
 
   /**
-   * Index updates can potentially be queued up if there aren't enough writer threads. If a running
-   * index write fails, then we should early exit the pending indexupdate, when it comes up (if the
-   * pool isn't already shutdown).
+   * Index updates can potentially be queued up if there aren't enough writer
+   * threads. If a running index write fails, then we should early exit the
+   * pending indexupdate, when it comes up (if the pool isn't already shutdown).
    * <p>
-   * This test is a little bit racey - we could actually have the failure of the first task before
-   * the third task is even submitted. However, we should never see the third task attempt to make
-   * the batch write, so we should never see a failure here.
+   * This test is a little bit racey - we could actually have the failure of the
+   * first task before the third task is even submitted. However, we should
+   * never see the third task attempt to make the batch write, so we should
+   * never see a failure here.
+   *
    * @throws Exception on failure
    */
-  @SuppressWarnings({ "unchecked", "deprecation" })
+  @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   public void testFailureOnRunningUpdateAbortsPending() throws Exception {
     Abortable abort = new StubAbortable();
@@ -155,7 +159,7 @@ public class TestIndexWriter {
     FakeTableFactory factory = new FakeTableFactory(tables);
 
     // updates to two different tables
-    byte[] tableName = Bytes.add(this.testName.getTableName(), new byte[] { 1, 2, 3, 4 });
+    byte[] tableName = Bytes.add(this.testName.getTableName(), new byte[]{1, 2, 3, 4});
     Put m = new Put(row);
     m.add(Bytes.toBytes("family"), Bytes.toBytes("qual"), null);
     byte[] tableName2 = this.testName.getTableName();// this will sort after the first tablename
@@ -167,15 +171,15 @@ public class TestIndexWriter {
     // first table will fail
     HTableInterface table = Mockito.mock(HTableInterface.class);
     Mockito.when(table.batch(Mockito.anyList())).thenThrow(
-      new IOException("Intentional IOException for failed first write."));
+            new IOException("Intentional IOException for failed first write."));
     Mockito.when(table.getTableName()).thenReturn(tableName);
-    RegionCoprocessorEnvironment e =Mockito.mock(RegionCoprocessorEnvironment.class);
-    Configuration conf =new Configuration();
+    RegionCoprocessorEnvironment e = Mockito.mock(RegionCoprocessorEnvironment.class);
+    Configuration conf = new Configuration();
     Mockito.when(e.getConfiguration()).thenReturn(conf);
-    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String,Object>());
+    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String, Object>());
     // second table just blocks to make sure that the abort propagates to the third task
     final CountDownLatch waitOnAbortedLatch = new CountDownLatch(1);
-    final boolean[] failed = new boolean[] { false };
+    final boolean[] failed = new boolean[]{false};
     HTableInterface table2 = Mockito.mock(HTableInterface.class);
     Mockito.when(table2.getTableName()).thenReturn(tableName2);
     Mockito.when(table2.batch(Mockito.anyList())).thenAnswer(new Answer<Void>() {
@@ -189,7 +193,7 @@ public class TestIndexWriter {
       public Void answer(InvocationOnMock invocation) throws Throwable {
         failed[0] = true;
         throw new RuntimeException(
-            "Unexpected exception - second index table shouldn't have been written to");
+                "Unexpected exception - second index table shouldn't have been written to");
       }
     });
 
@@ -211,19 +215,20 @@ public class TestIndexWriter {
       waitOnAbortedLatch.countDown();
     }
     assertFalse(
-      "Third set of index writes never have been attempted - should have seen the abort before done!",
-      failed[0]);
+            "Third set of index writes never have been attempted - should have seen the abort before done!",
+            failed[0]);
     writer.stop(this.testName.getTableNameString() + " finished");
     assertTrue("Factory didn't get shutdown after writer#stop!", factory.shutdown);
     assertTrue("ExectorService isn't terminated after writer#stop!", exec.isShutdown());
   }
 
   /**
-   * Test that if we get an interruption to to the thread while doing a batch (e.g. via shutdown),
-   * that we correctly end the task
+   * Test that if we get an interruption to to the thread while doing a batch
+   * (e.g. via shutdown), that we correctly end the task
+   *
    * @throws Exception on failure
    */
-  @SuppressWarnings({ "unchecked", "deprecation" })
+  @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   public void testShutdownInterruptsAsExpected() throws Exception {
     Stoppable stop = Mockito.mock(Stoppable.class);
@@ -231,10 +236,10 @@ public class TestIndexWriter {
     // single thread factory so the older request gets queued
     ExecutorService exec = Executors.newFixedThreadPool(1);
     Map<ImmutableBytesPtr, HTableInterface> tables = new HashMap<ImmutableBytesPtr, HTableInterface>();
-    RegionCoprocessorEnvironment e =Mockito.mock(RegionCoprocessorEnvironment.class);
-    Configuration conf =new Configuration();
+    RegionCoprocessorEnvironment e = Mockito.mock(RegionCoprocessorEnvironment.class);
+    Configuration conf = new Configuration();
     Mockito.when(e.getConfiguration()).thenReturn(conf);
-    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String,Object>());
+    Mockito.when(e.getSharedData()).thenReturn(new ConcurrentHashMap<String, Object>());
     FakeTableFactory factory = new FakeTableFactory(tables);
 
     byte[] tableName = this.testName.getTableName();
@@ -250,7 +255,7 @@ public class TestIndexWriter {
         writeStartedLatch.countDown();
         // when we interrupt the thread for shutdown, we should see this throw an interrupt too
         try {
-        waitOnAbortedLatch.await();
+          waitOnAbortedLatch.await();
         } catch (InterruptedException e) {
           LOG.info("Correctly interrupted while writing!");
           throw e;
@@ -269,12 +274,12 @@ public class TestIndexWriter {
 
     // setup the writer
     ParallelWriterIndexCommitter committer = new ParallelWriterIndexCommitter(VersionInfo.getVersion());
-    committer.setup(factory, exec, abort, stop, 2, e );
+    committer.setup(factory, exec, abort, stop, 2, e);
     KillServerOnFailurePolicy policy = new KillServerOnFailurePolicy();
     policy.setup(stop, abort);
     final IndexWriter writer = new IndexWriter(committer, policy);
 
-    final boolean[] failedWrite = new boolean[] { false };
+    final boolean[] failedWrite = new boolean[]{false};
     Thread primaryWriter = new Thread() {
 
       @Override

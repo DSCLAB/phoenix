@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.configuration.Scenario;
@@ -25,24 +24,25 @@ import java.util.List;
 
 public class ScenarioResult extends Scenario {
 
-    private List<QuerySetResult> querySetResult = new ArrayList<>();
+  private List<QuerySetResult> querySetResult = new ArrayList<>();
 
-    public List<QuerySetResult> getQuerySetResult() {
-        return querySetResult;
-    }
+  public List<QuerySetResult> getQuerySetResult() {
+    return querySetResult;
+  }
 
-    @SuppressWarnings("unused") public void setQuerySetResult(List<QuerySetResult> querySetResult) {
-        this.querySetResult = querySetResult;
-    }
+  @SuppressWarnings("unused")
+  public void setQuerySetResult(List<QuerySetResult> querySetResult) {
+    this.querySetResult = querySetResult;
+  }
 
-    public ScenarioResult() {
-    }
+  public ScenarioResult() {
+  }
 
-    public ScenarioResult(Scenario scenario) {
-        this.setDataOverride(scenario.getDataOverride());
-        this.setPhoenixProperties(scenario.getPhoenixProperties());
-        this.setRowCount(scenario.getRowCount());
-        this.setTableName(scenario.getTableName());
-        this.setName(scenario.getName());
-    }
+  public ScenarioResult(Scenario scenario) {
+    this.setDataOverride(scenario.getDataOverride());
+    this.setPhoenixProperties(scenario.getPhoenixProperties());
+    this.setRowCount(scenario.getRowCount());
+    this.setTableName(scenario.getTableName());
+    this.setName(scenario.getName());
+  }
 }

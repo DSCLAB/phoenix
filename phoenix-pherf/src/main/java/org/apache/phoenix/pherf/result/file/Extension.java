@@ -15,23 +15,23 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result.file;
 
 public enum Extension {
-    CSV(".csv"),
-    XML(".xml"),
-    VISUALIZATION(".jpg"),
-    AGGREGATE_CSV("_aggregate" + CSV),
-    DETAILED_CSV("_detail" + CSV);
+  CSV(".csv"),
+  XML(".xml"),
+  VISUALIZATION(".jpg"),
+  AGGREGATE_CSV("_aggregate" + CSV),
+  DETAILED_CSV("_detail" + CSV);
 
-    private String extension;
+  private String extension;
 
-    private Extension(String extension) {
-        this.extension = extension;
-    }
+  private Extension(String extension) {
+    this.extension = extension;
+  }
 
-    @Override public String toString() {
-        return extension;
-    }
+  @Override
+  public String toString() {
+    return extension;
+  }
 }

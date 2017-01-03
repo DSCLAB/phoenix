@@ -20,21 +20,21 @@ package org.apache.phoenix.exception;
 import org.apache.phoenix.schema.IllegalDataException;
 import org.apache.phoenix.schema.types.PDataType;
 
-
 public class DataExceedsCapacityException extends IllegalDataException {
-    private static final long serialVersionUID = 1L;
 
-    public DataExceedsCapacityException(String message) {
-        super(new SQLExceptionInfo.Builder(
-                SQLExceptionCode.DATA_EXCEEDS_MAX_CAPACITY).setMessage(message).build().buildException());
-    }
-    
-    public DataExceedsCapacityException(PDataType type, Integer precision, Integer scale) {
-        super(new SQLExceptionInfo.Builder(SQLExceptionCode.DATA_EXCEEDS_MAX_CAPACITY).setMessage(getTypeDisplayString(type, precision, scale))
-                .build().buildException());
-    }
+  private static final long serialVersionUID = 1L;
 
-    private static String getTypeDisplayString(PDataType type, Integer precision, Integer scale) {
-        return type.toString() + "(" + precision + (scale == null ? "" : ("," + scale + ")"));
-    }
+  public DataExceedsCapacityException(String message) {
+    super(new SQLExceptionInfo.Builder(
+            SQLExceptionCode.DATA_EXCEEDS_MAX_CAPACITY).setMessage(message).build().buildException());
+  }
+
+  public DataExceedsCapacityException(PDataType type, Integer precision, Integer scale) {
+    super(new SQLExceptionInfo.Builder(SQLExceptionCode.DATA_EXCEEDS_MAX_CAPACITY).setMessage(getTypeDisplayString(type, precision, scale))
+            .build().buildException());
+  }
+
+  private static String getTypeDisplayString(PDataType type, Integer precision, Integer scale) {
+    return type.toString() + "(" + precision + (scale == null ? "" : ("," + scale + ")"));
+  }
 }

@@ -33,95 +33,102 @@ import org.apache.phoenix.schema.SortOrder;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.schema.types.PDataType;
 
-@BuiltInFunction(name = InvertFunction.NAME, args = { @Argument() })
+@BuiltInFunction(name = InvertFunction.NAME, args = {
+  @Argument()})
 public class InvertFunction extends ScalarFunction {
-    public static final String NAME = "INVERT";
 
-    public InvertFunction() throws SQLException {}
+  public static final String NAME = "INVERT";
 
-    public InvertFunction(List<Expression> children) throws SQLException {
-        super(children);
+  public InvertFunction() throws SQLException {
+  }
+
+  public InvertFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
+
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    if (!getChildExpression().evaluate(tuple, ptr)) {
+      return false;
     }
-
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        if (!getChildExpression().evaluate(tuple, ptr)) { return false; }
-        if (ptr.getLength() == 0) { return true; }
-        PDataType type = getDataType();
-        // FIXME: losing rowKeyOrderOptimizable here
-        type.coerceBytes(ptr, type, getChildExpression().getSortOrder(), getSortOrder());
-        return true;
+    if (ptr.getLength() == 0) {
+      return true;
     }
+    PDataType type = getDataType();
+    // FIXME: losing rowKeyOrderOptimizable here
+    type.coerceBytes(ptr, type, getChildExpression().getSortOrder(), getSortOrder());
+    return true;
+  }
 
-    @Override
-    public SortOrder getSortOrder() {
-        return getChildExpression().getSortOrder() == SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
-    }
+  @Override
+  public SortOrder getSortOrder() {
+    return getChildExpression().getSortOrder() == SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC;
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return getChildExpression().getDataType();
-    }
+  @Override
+  public PDataType getDataType() {
+    return getChildExpression().getDataType();
+  }
 
-    @Override
-    public Integer getMaxLength() {
-        return getChildExpression().getMaxLength();
-    }
+  @Override
+  public Integer getMaxLength() {
+    return getChildExpression().getMaxLength();
+  }
 
-    @Override
-    public boolean isNullable() {
-        return getChildExpression().isNullable();
-    }
+  @Override
+  public boolean isNullable() {
+    return getChildExpression().isNullable();
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 
-    /**
-     * INVERT may be optimized through
-     */
-    @Override
-    public int getKeyFormationTraversalIndex() {
-        return 0;
-    }
+  /**
+   * INVERT may be optimized through
+   */
+  @Override
+  public int getKeyFormationTraversalIndex() {
+    return 0;
+  }
 
-    /**
-     * Invert the childPart key range
-     */
-    @Override
-    public KeyPart newKeyPart(final KeyPart childPart) {
-        return new KeyPart() {
+  /**
+   * Invert the childPart key range
+   */
+  @Override
+  public KeyPart newKeyPart(final KeyPart childPart) {
+    return new KeyPart() {
 
-            @Override
-            public KeyRange getKeyRange(CompareOp op, Expression rhs) {
-                KeyRange range = childPart.getKeyRange(op, rhs);
-                return range.invert();
-            }
+      @Override
+      public KeyRange getKeyRange(CompareOp op, Expression rhs) {
+        KeyRange range = childPart.getKeyRange(op, rhs);
+        return range.invert();
+      }
 
-            @Override
-            public List<Expression> getExtractNodes() {
-                return childPart.getExtractNodes();
-            }
+      @Override
+      public List<Expression> getExtractNodes() {
+        return childPart.getExtractNodes();
+      }
 
-            @Override
-            public PColumn getColumn() {
-                return childPart.getColumn();
-            }
+      @Override
+      public PColumn getColumn() {
+        return childPart.getColumn();
+      }
 
-            @Override
-            public PTable getTable() {
-                return childPart.getTable();
-            }
-        };
-    }
+      @Override
+      public PTable getTable() {
+        return childPart.getTable();
+      }
+    };
+  }
 
-    @Override
-    public OrderPreserving preservesOrder() {
-        return OrderPreserving.YES;
-    }
+  @Override
+  public OrderPreserving preservesOrder() {
+    return OrderPreserving.YES;
+  }
 
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

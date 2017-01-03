@@ -24,45 +24,47 @@ import org.apache.phoenix.pherf.result.ResultUtil;
 import java.io.IOException;
 
 public abstract class CSVResultHandler extends DefaultResultHandler {
-    protected final ResultUtil util;
-    protected volatile CSVPrinter csvPrinter = null;
-    protected volatile boolean isClosed = true;
 
-    public CSVResultHandler() {
-        this.util = new ResultUtil();
+  protected final ResultUtil util;
+  protected volatile CSVPrinter csvPrinter = null;
+  protected volatile boolean isClosed = true;
+
+  public CSVResultHandler() {
+    this.util = new ResultUtil();
+  }
+
+  @Override
+  public synchronized void write(Result result) throws IOException {
+    csvPrinter.printRecord(result.getResultValues());
+    flush();
+  }
+
+  @Override
+  public synchronized void flush() throws IOException {
+    if (csvPrinter != null) {
+      csvPrinter.flush();
     }
+  }
 
-    @Override
-    public synchronized void write(Result result) throws IOException {
-        csvPrinter.printRecord(result.getResultValues());
-        flush();
+  @Override
+  public synchronized void close() throws IOException {
+    if (csvPrinter != null) {
+      csvPrinter.flush();
+      csvPrinter.close();
+      isClosed = true;
     }
+  }
 
-    @Override
-    public synchronized void flush() throws IOException {
-        if (csvPrinter != null) {
-            csvPrinter.flush();
-        }
-    }
+  @Override
+  public synchronized boolean isClosed() {
+    return isClosed;
+  }
 
-    @Override
-    public synchronized void close() throws IOException {
-        if (csvPrinter != null) {
-            csvPrinter.flush();
-            csvPrinter.close();
-            isClosed = true;
-        }
-    }
-
-    @Override
-    public synchronized boolean isClosed() {
-        return isClosed;
-    }
-
-    /**
-     * This method is meant to open the connection to the target CSV location
-     * @param header {@link String} Comma separated list of header values for CSV
-     * @throws IOException
-     */
-    protected abstract void open(String header) throws IOException;
+  /**
+   * This method is meant to open the connection to the target CSV location
+   *
+   * @param header {@link String} Comma separated list of header values for CSV
+   * @throws IOException
+   */
+  protected abstract void open(String header) throws IOException;
 }

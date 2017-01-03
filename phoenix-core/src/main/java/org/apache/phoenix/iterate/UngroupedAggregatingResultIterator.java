@@ -26,36 +26,36 @@ import org.apache.phoenix.schema.tuple.SingleKeyValueTuple;
 import org.apache.phoenix.schema.tuple.Tuple;
 import org.apache.phoenix.util.KeyValueUtil;
 
-
 public class UngroupedAggregatingResultIterator extends GroupedAggregatingResultIterator {
-    private boolean hasRows = false;
 
-    public UngroupedAggregatingResultIterator( PeekingResultIterator resultIterator, Aggregators aggregators) {
-        super(resultIterator, aggregators);
-    }
-    
-    @Override
-    public Tuple next() throws SQLException {
-        Tuple result = super.next();
-        // Ensure ungrouped aggregregation always returns a row, even if the underlying iterator doesn't.
-        if (result == null && !hasRows) {
-            // We should reset ClientAggregators here in case they are being reused in a new ResultIterator.
-            aggregators.reset(aggregators.getAggregators());
-            byte[] value = aggregators.toBytes(aggregators.getAggregators());
-            result = new SingleKeyValueTuple(
-                    KeyValueUtil.newKeyValue(UNGROUPED_AGG_ROW_KEY, 
-                            SINGLE_COLUMN_FAMILY, 
-                            SINGLE_COLUMN, 
-                            AGG_TIMESTAMP, 
-                            value));
-        }
-        hasRows = true;
-        return result;
-    }
+  private boolean hasRows = false;
 
-	@Override
-	public String toString() {
-		return "UngroupedAggregatingResultIterator [hasRows=" + hasRows
-				+ ", aggregators=" + aggregators + "]";
-	}
+  public UngroupedAggregatingResultIterator(PeekingResultIterator resultIterator, Aggregators aggregators) {
+    super(resultIterator, aggregators);
+  }
+
+  @Override
+  public Tuple next() throws SQLException {
+    Tuple result = super.next();
+    // Ensure ungrouped aggregregation always returns a row, even if the underlying iterator doesn't.
+    if (result == null && !hasRows) {
+      // We should reset ClientAggregators here in case they are being reused in a new ResultIterator.
+      aggregators.reset(aggregators.getAggregators());
+      byte[] value = aggregators.toBytes(aggregators.getAggregators());
+      result = new SingleKeyValueTuple(
+              KeyValueUtil.newKeyValue(UNGROUPED_AGG_ROW_KEY,
+                      SINGLE_COLUMN_FAMILY,
+                      SINGLE_COLUMN,
+                      AGG_TIMESTAMP,
+                      value));
+    }
+    hasRows = true;
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "UngroupedAggregatingResultIterator [hasRows=" + hasRows
+            + ", aggregators=" + aggregators + "]";
+  }
 }

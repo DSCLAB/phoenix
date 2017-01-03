@@ -38,17 +38,17 @@ public class PBinary extends PBinaryBase {
 
   @Override
   public byte[] pad(byte[] b, Integer maxLength, SortOrder sortOrder) {
-      if (b == null || b.length >= maxLength) {
-          return b;
-        }
-        byte[] newBytes = new byte[maxLength];
-        System.arraycopy(b, 0, newBytes, 0, b.length);
-        if (sortOrder == SortOrder.DESC) {
-            Arrays.fill(newBytes, b.length, maxLength, QueryConstants.DESC_SEPARATOR_BYTE);
-        }
-        return newBytes;
+    if (b == null || b.length >= maxLength) {
+      return b;
+    }
+    byte[] newBytes = new byte[maxLength];
+    System.arraycopy(b, 0, newBytes, 0, b.length);
+    if (sortOrder == SortOrder.DESC) {
+      Arrays.fill(newBytes, b.length, maxLength, QueryConstants.DESC_SEPARATOR_BYTE);
+    }
+    return newBytes;
   }
-  
+
   @Override
   public void pad(ImmutableBytesWritable ptr, Integer maxLength, SortOrder sortOrder) {
     if (ptr.getLength() >= maxLength) {
@@ -57,7 +57,7 @@ public class PBinary extends PBinaryBase {
     byte[] newBytes = new byte[maxLength];
     System.arraycopy(ptr.get(), ptr.getOffset(), newBytes, 0, ptr.getLength());
     if (sortOrder == SortOrder.DESC) {
-        Arrays.fill(newBytes, ptr.getLength(), maxLength, QueryConstants.DESC_SEPARATOR_BYTE);
+      Arrays.fill(newBytes, ptr.getLength(), maxLength, QueryConstants.DESC_SEPARATOR_BYTE);
     }
     ptr.set(newBytes);
   }
@@ -106,7 +106,7 @@ public class PBinary extends PBinaryBase {
 
   @Override
   public Object toObject(byte[] bytes, int offset, int length, PDataType actualType,
-      SortOrder sortOrder, Integer maxLength, Integer scale) {
+          SortOrder sortOrder, Integer maxLength, Integer scale) {
     if (!actualType.isCoercibleTo(this)) {
       throwConstraintViolationException(actualType, this);
     }
@@ -136,11 +136,10 @@ public class PBinary extends PBinaryBase {
 
   @Override
   public boolean isSizeCompatible(ImmutableBytesWritable ptr, Object value, PDataType srcType,
-      SortOrder sortOrder, Integer maxLength, Integer scale,
-      Integer desiredMaxLength, Integer desiredScale) {
-    if (ptr.getLength() != 0 && (
-        (srcType.equals(PVarbinary.INSTANCE) && ((String) value).length() != ptr.getLength()) ||
-            (maxLength != null && desiredMaxLength != null && maxLength > desiredMaxLength))) {
+          SortOrder sortOrder, Integer maxLength, Integer scale,
+          Integer desiredMaxLength, Integer desiredScale) {
+    if (ptr.getLength() != 0 && ((srcType.equals(PVarbinary.INSTANCE) && ((String) value).length() != ptr.getLength())
+            || (maxLength != null && desiredMaxLength != null && maxLength > desiredMaxLength))) {
       return false;
     }
     return true;
@@ -200,7 +199,7 @@ public class PBinary extends PBinaryBase {
 
   @Override
   public String toStringLiteral(Object o, Format formatter) {
-    return toStringLiteral((byte[])o, 0, ((byte[]) o).length, formatter);
+    return toStringLiteral((byte[]) o, 0, ((byte[]) o).length, formatter);
   }
 
   @Override

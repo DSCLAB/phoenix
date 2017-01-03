@@ -116,12 +116,13 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
   public void setup() throws Exception {
     this.state = setupTest(TestTable.getTableNameString());
   }
-    
+
   private interface TableStateVerifier {
 
     /**
-     * Verify that the state of the table is correct. Should fail the unit test if it isn't as
-     * expected.
+     * Verify that the state of the table is correct. Should fail the unit test
+     * if it isn't as expected.
+     *
      * @param state
      */
     public void verify(TableState state);
@@ -129,8 +130,8 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
   }
 
   /**
-   * {@link TableStateVerifier} that ensures the kvs returned from the table match the passed
-   * {@link KeyValue}s when querying on the given columns.
+   * {@link TableStateVerifier} that ensures the kvs returned from the table
+   * match the passed {@link KeyValue}s when querying on the given columns.
    */
   private class ListMatchingVerifier implements TableStateVerifier {
 
@@ -147,17 +148,17 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
     @Override
     public void verify(TableState state) {
       try {
-        Scanner kvs =
-            ((LocalTableState) state).getIndexedColumnsTableState(Arrays.asList(columns), false).getFirst();
+        Scanner kvs
+                = ((LocalTableState) state).getIndexedColumnsTableState(Arrays.asList(columns), false).getFirst();
 
         int count = 0;
         Cell kv;
         while ((kv = kvs.next()) != null) {
           Cell next = expectedKvs.get(count++);
           assertEquals(
-            msg + ": Unexpected kv in table state!\nexpected v1: "
-                + Bytes.toString(next.getValue()) + "\nactual v1:" + Bytes.toString(kv.getValue()),
-            next, kv);
+                  msg + ": Unexpected kv in table state!\nexpected v1: "
+                  + Bytes.toString(next.getValue()) + "\nactual v1:" + Bytes.toString(kv.getValue()),
+                  next, kv);
         }
 
         assertEquals(msg + ": Didn't find enough kvs in table state!", expectedKvs.size(), count);
@@ -185,14 +186,17 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
     private void verify(TableState state) {
       TableStateVerifier verifier = verifiers.poll();
-      if (verifier == null) return;
+      if (verifier == null) {
+        return;
+      }
       verifier.verify(state);
     }
   }
-  
+
   /**
-   * Test that we see the expected values in a {@link TableState} when doing single puts against a
-   * region.
+   * Test that we see the expected values in a {@link TableState} when doing
+   * single puts against a region.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -201,7 +205,7 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
     long ts = state.ts;
     Put p = new Put(row, ts);
     p.add(family, qual, Bytes.toBytes("v1"));
-    
+
     // get all the underlying kvs for the put
     final List<Cell> expectedKvs = new ArrayList<Cell>();
     final List<Cell> allKvs = new ArrayList<Cell>();
@@ -209,8 +213,8 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
     // setup the verifier for the data we expect to write
     // first call shouldn't have anything in the table
-    final ColumnReference familyRef =
-        new ColumnReference(EndToEndCoveredColumnsIndexBuilderIT.family, ColumnReference.ALL_QUALIFIERS);
+    final ColumnReference familyRef
+            = new ColumnReference(EndToEndCoveredColumnsIndexBuilderIT.family, ColumnReference.ALL_QUALIFIERS);
 
     VerifyingIndexCodec codec = state.codec;
     codec.verifiers.add(new ListMatchingVerifier("cleanup state 1", expectedKvs, familyRef));
@@ -230,7 +234,7 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
     allKvs.addAll(0, p.get(family, qual));
     codec.verifiers.add(new ListMatchingVerifier("cleanup state 2", expectedKvs, familyRef));
     codec.verifiers.add(new ListMatchingVerifier("put state 2", allKvs, familyRef));
-    
+
     // do the actual put
     primary.put(p);
     primary.flushCommits();
@@ -240,10 +244,12 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
   }
 
   /**
-   * Similar to {@link #testExpectedResultsInTableStateForSinglePut()}, but against batches of puts.
-   * Previous implementations managed batches by playing current state against each element in the
-   * batch, rather than combining all the per-row updates into a single mutation for the batch. This
-   * test ensures that we see the correct expected state.
+   * Similar to {@link #testExpectedResultsInTableStateForSinglePut()}, but
+   * against batches of puts. Previous implementations managed batches by
+   * playing current state against each element in the batch, rather than
+   * combining all the per-row updates into a single mutation for the batch.
+   * This test ensures that we see the correct expected state.
+   *
    * @throws Exception on failure
    */
   @Test
@@ -257,7 +263,6 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
     // setup all the verifiers we need. This is just the same as above, but will be called twice
     // since we need to iterate the batch.
-
     // get all the underlying kvs for the put
     final List<Cell> allKvs = new ArrayList<Cell>(2);
     allKvs.addAll(p2.getFamilyCellMap().get(family));
@@ -265,17 +270,17 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
     // setup the verifier for the data we expect to write
     // both puts should be put into a single batch
-    final ColumnReference familyRef =
-        new ColumnReference(EndToEndCoveredColumnsIndexBuilderIT.family, ColumnReference.ALL_QUALIFIERS);
+    final ColumnReference familyRef
+            = new ColumnReference(EndToEndCoveredColumnsIndexBuilderIT.family, ColumnReference.ALL_QUALIFIERS);
     VerifyingIndexCodec codec = state.codec;
     // no previous state in the table
     codec.verifiers.add(new ListMatchingVerifier("cleanup state 1", Collections
-        .<Cell> emptyList(), familyRef));
+            .<Cell>emptyList(), familyRef));
     codec.verifiers.add(new ListMatchingVerifier("put state 1", p1.getFamilyCellMap().get(family),
-        familyRef));
+            familyRef));
 
     codec.verifiers.add(new ListMatchingVerifier("cleanup state 2", p1.getFamilyCellMap().get(family),
-        familyRef));
+            familyRef));
     // kvs from both puts should be in the table now
     codec.verifiers.add(new ListMatchingVerifier("put state 2", allKvs, familyRef));
 
@@ -303,7 +308,7 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
     // just need to set the codec - we are going to set it later, but we need something here or the
     // initializer blows up.
     indexerOpts.put(NonTxIndexBuilder.CODEC_CLASS_NAME_KEY,
-      CoveredIndexCodecForTesting.class.getName());
+            CoveredIndexCodecForTesting.class.getName());
     Indexer.enableIndexing(desc, NonTxIndexBuilder.class, indexerOpts, Coprocessor.PRIORITY_USER);
 
     // create the table
@@ -313,10 +318,10 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
     // overwrite the codec so we can verify the current state
     Region region = UTIL.getMiniHBaseCluster().getRegions(tableNameBytes).get(0);
-    Indexer indexer =
-        (Indexer) region.getCoprocessorHost().findCoprocessor(Indexer.class.getName());
-    NonTxIndexBuilder builder =
-        (NonTxIndexBuilder) indexer.getBuilderForTesting();
+    Indexer indexer
+            = (Indexer) region.getCoprocessorHost().findCoprocessor(Indexer.class.getName());
+    NonTxIndexBuilder builder
+            = (NonTxIndexBuilder) indexer.getBuilderForTesting();
     VerifyingIndexCodec codec = new VerifyingIndexCodec();
     builder.setIndexCodecForTesting(codec);
 
@@ -336,6 +341,7 @@ public class EndToEndCoveredColumnsIndexBuilderIT {
 
   /**
    * Cleanup the test based on the passed state.
+   *
    * @param state
    */
   private void cleanup(TestState state) throws IOException {

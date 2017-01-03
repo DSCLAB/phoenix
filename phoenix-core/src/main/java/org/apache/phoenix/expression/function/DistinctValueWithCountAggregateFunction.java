@@ -29,20 +29,20 @@ import org.apache.phoenix.expression.aggregator.DistinctValueWithCountServerAggr
 
 public abstract class DistinctValueWithCountAggregateFunction extends SingleAggregateFunction {
 
-    public DistinctValueWithCountAggregateFunction() {
-    }
+  public DistinctValueWithCountAggregateFunction() {
+  }
 
-    public DistinctValueWithCountAggregateFunction(List<Expression> children) {
-        super(children);
-    }
+  public DistinctValueWithCountAggregateFunction(List<Expression> children) {
+    super(children);
+  }
 
-    @Override
-    abstract public DistinctValueWithCountClientAggregator newClientAggregator();
-    
-    @Override
-    public Aggregator newServerAggregator(Configuration config, ImmutableBytesWritable ptr) {
-        DistinctValueWithCountClientAggregator clientAgg = newClientAggregator();
-        clientAgg.aggregate(null, ptr);
-        return new DistinctValueWithCountServerAggregator(config, clientAgg);
-    }
+  @Override
+  abstract public DistinctValueWithCountClientAggregator newClientAggregator();
+
+  @Override
+  public Aggregator newServerAggregator(Configuration config, ImmutableBytesWritable ptr) {
+    DistinctValueWithCountClientAggregator clientAgg = newClientAggregator();
+    clientAgg.aggregate(null, ptr);
+    return new DistinctValueWithCountServerAggregator(config, clientAgg);
+  }
 }

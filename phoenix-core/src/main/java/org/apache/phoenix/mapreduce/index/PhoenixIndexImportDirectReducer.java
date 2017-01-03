@@ -30,31 +30,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Reducer class that does only one task and that is to update the index state of the table.
+ * Reducer class that does only one task and that is to update the index state
+ * of the table.
  */
 public class PhoenixIndexImportDirectReducer extends
         Reducer<ImmutableBytesWritable, IntWritable, NullWritable, NullWritable> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportDirectReducer.class);
-    private Configuration configuration;
+  private static final Logger LOG = LoggerFactory.getLogger(PhoenixIndexImportDirectReducer.class);
+  private Configuration configuration;
 
-    /**
-     * Called once at the start of the task.
-     */
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        configuration = context.getConfiguration();
-    }
+  /**
+   * Called once at the start of the task.
+   */
+  @Override
+  protected void setup(Context context) throws IOException, InterruptedException {
+    configuration = context.getConfiguration();
+  }
 
-    @Override
-    protected void reduce(ImmutableBytesWritable arg0, Iterable<IntWritable> arg1,
-            Reducer<ImmutableBytesWritable, IntWritable, NullWritable, NullWritable>.Context arg2)
-            throws IOException, InterruptedException {
-        try {
-            IndexToolUtil.updateIndexState(configuration, PIndexState.ACTIVE);
-        } catch (SQLException e) {
-            LOG.error(" Failed to update the status to Active");
-            throw new RuntimeException(e.getMessage());
-        }
+  @Override
+  protected void reduce(ImmutableBytesWritable arg0, Iterable<IntWritable> arg1,
+          Reducer<ImmutableBytesWritable, IntWritable, NullWritable, NullWritable>.Context arg2)
+          throws IOException, InterruptedException {
+    try {
+      IndexToolUtil.updateIndexState(configuration, PIndexState.ACTIVE);
+    } catch (SQLException e) {
+      LOG.error(" Failed to update the status to Active");
+      throw new RuntimeException(e.getMessage());
     }
+  }
 }

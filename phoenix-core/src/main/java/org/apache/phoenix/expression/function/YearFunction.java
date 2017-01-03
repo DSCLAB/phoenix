@@ -31,52 +31,54 @@ import org.apache.phoenix.schema.types.PTimestamp;
 import org.joda.time.DateTime;
 
 /**
- * 
+ *
  * Implementation of the Year() buildin. Input Date/Timestamp.
- * 
+ *
  */
-@BuiltInFunction(name=YearFunction.NAME, 
-args={@Argument(allowedTypes={PTimestamp.class})})
+@BuiltInFunction(name = YearFunction.NAME,
+        args = {
+          @Argument(allowedTypes = {PTimestamp.class})})
 public class YearFunction extends DateScalarFunction {
-    public static final String NAME = "YEAR";
 
-    public YearFunction() {
-    }
+  public static final String NAME = "YEAR";
 
-    public YearFunction(List<Expression> children) throws SQLException {
-        super(children);
-    }
+  public YearFunction() {
+  }
 
-    @Override
-    public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
-        Expression expression = getChildExpression();
-        if (!expression.evaluate(tuple, ptr)) {
-            return false;
-        }
-        if ( ptr.getLength() == 0) {
-            return true; //means null
-        }
-        long dateTime = inputCodec.decodeLong(ptr, expression.getSortOrder());
-        DateTime dt = new DateTime(dateTime);
-        int year = dt.getYear();
-        PDataType returnType = getDataType();
-        byte[] byteValue = new byte[returnType.getByteSize()];
-        returnType.getCodec().encodeInt(year, byteValue, 0);
-        ptr.set(byteValue);
-        return true;
-    }
+  public YearFunction(List<Expression> children) throws SQLException {
+    super(children);
+  }
 
-    @Override
-    public PDataType getDataType() {
-        return PInteger.INSTANCE;
+  @Override
+  public boolean evaluate(Tuple tuple, ImmutableBytesWritable ptr) {
+    Expression expression = getChildExpression();
+    if (!expression.evaluate(tuple, ptr)) {
+      return false;
     }
+    if (ptr.getLength() == 0) {
+      return true; //means null
+    }
+    long dateTime = inputCodec.decodeLong(ptr, expression.getSortOrder());
+    DateTime dt = new DateTime(dateTime);
+    int year = dt.getYear();
+    PDataType returnType = getDataType();
+    byte[] byteValue = new byte[returnType.getByteSize()];
+    returnType.getCodec().encodeInt(year, byteValue, 0);
+    ptr.set(byteValue);
+    return true;
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public PDataType getDataType() {
+    return PInteger.INSTANCE;
+  }
 
-    private Expression getChildExpression() {
-        return children.get(0);
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
+  private Expression getChildExpression() {
+    return children.get(0);
+  }
 }

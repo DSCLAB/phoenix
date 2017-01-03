@@ -26,39 +26,42 @@ import org.apache.phoenix.util.PhoenixContextExecutor;
 /**
  * Creates {@link Configuration} instances that contain HBase/Hadoop settings.
  *
- * 
+ *
  * @since 2.0
  */
 public interface ConfigurationFactory {
-    /**
-     * @return Configuration containing HBase/Hadoop settings
-     */
-    Configuration getConfiguration();
 
-    Configuration getConfiguration(Configuration conf);
+  /**
+   * @return Configuration containing HBase/Hadoop settings
+   */
+  Configuration getConfiguration();
 
-    /**
-     * Default implementation uses {@link org.apache.hadoop.hbase.HBaseConfiguration#create()}.
-     */
-    static class ConfigurationFactoryImpl implements ConfigurationFactory {
+  Configuration getConfiguration(Configuration conf);
+
+  /**
+   * Default implementation uses
+   * {@link org.apache.hadoop.hbase.HBaseConfiguration#create()}.
+   */
+  static class ConfigurationFactoryImpl implements ConfigurationFactory {
+
+    @Override
+    public Configuration getConfiguration() {
+      return PhoenixContextExecutor.callWithoutPropagation(new Callable<Configuration>() {
         @Override
-        public Configuration getConfiguration() {
-            return PhoenixContextExecutor.callWithoutPropagation(new Callable<Configuration>() {
-                @Override
-                public Configuration call() throws Exception {
-                    return HBaseConfiguration.create();
-                }
-            });
+        public Configuration call() throws Exception {
+          return HBaseConfiguration.create();
         }
-
-        @Override
-        public Configuration getConfiguration(final Configuration conf) {
-            return PhoenixContextExecutor.callWithoutPropagation(new Callable<Configuration>() {
-                @Override
-                public Configuration call() throws Exception {
-                    return HBaseConfiguration.create(conf);
-                }
-            });
-        }
+      });
     }
+
+    @Override
+    public Configuration getConfiguration(final Configuration conf) {
+      return PhoenixContextExecutor.callWithoutPropagation(new Callable<Configuration>() {
+        @Override
+        public Configuration call() throws Exception {
+          return HBaseConfiguration.create(conf);
+        }
+      });
+    }
+  }
 }

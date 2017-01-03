@@ -20,30 +20,32 @@ package org.apache.phoenix.schema;
 import org.apache.phoenix.schema.types.PDataType;
 
 public interface PDatum {
-    /**
-     * @return is this column nullable?
-     */
-    boolean isNullable();
 
-    /**
-     * @return data type of the column
-     */
-    PDataType getDataType();
+  /**
+   * @return is this column nullable?
+   */
+  boolean isNullable();
 
-    /**
-     * @return the actual length of the column. For decimal, it would be its precision. For char or
-     * varchar, it would be the maximum length as specified during schema definition.
-     */
-    Integer getMaxLength();
+  /**
+   * @return data type of the column
+   */
+  PDataType getDataType();
 
-    /**
-     * @return scale of a decimal number.
-     */
-    Integer getScale();
-    
-    /**
-     * @return The SortOrder for this column, never null
-     */
-    SortOrder getSortOrder();
-    
+  /**
+   * @return the actual length of the column. For decimal, it would be its
+   * precision. For char or varchar, it would be the maximum length as specified
+   * during schema definition.
+   */
+  Integer getMaxLength();
+
+  /**
+   * @return scale of a decimal number.
+   */
+  Integer getScale();
+
+  /**
+   * @return The SortOrder for this column, never null
+   */
+  SortOrder getSortOrder();
+
 }

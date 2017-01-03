@@ -37,41 +37,46 @@ import java.util.Map.Entry;
 import static org.apache.phoenix.metrics.MetricInfo.*;
 
 /**
- * Sink for request traces ({@link SpanReceiver}) that pushes writes to {@link MetricsSource} in a
- * format that we can more easily consume.
+ * Sink for request traces ({@link SpanReceiver}) that pushes writes to
+ * {@link MetricsSource} in a format that we can more easily consume.
  * <p>
  * <p>
- * Rather than write directly to a phoenix table, we drop it into the metrics queue so we can more
- * cleanly handle it asyncrhonously.Currently, {@link MilliSpan} submits the span in a synchronized
- * block to all the receivers, which could have a lot of overhead if we are submitting to multiple
- * receivers.
+ * Rather than write directly to a phoenix table, we drop it into the metrics
+ * queue so we can more cleanly handle it asyncrhonously.Currently,
+ * {@link MilliSpan} submits the span in a synchronized block to all the
+ * receivers, which could have a lot of overhead if we are submitting to
+ * multiple receivers.
  * <p>
  * The format of the generated metrics is this:
  * <ol>
- *   <li>All Metrics from the same span have the same name (allowing correlation in the sink)</li>
- *   <li>The description of the metric describes what it contains. For instance,
- *   <ul>
- *     <li>{@link MetricInfo#PARENT} is the id of the parent of this span. (Root span is
- *     {@link Span#ROOT_SPAN_ID}).</li>
- *     <li>{@value MetricInfo#START} is the start time of the span</li>
- *     <li>{@value MetricInfo#END} is the end time of the span</li>
- *   </ul></li>
- *   <li>Each span's messages are contained in a {@link MetricsTag} with the same name as above and a
- *   generic counter for the number of messages (to differentiate messages and provide timeline
- *   ordering).</li>
+ * <li>All Metrics from the same span have the same name (allowing correlation
+ * in the sink)</li>
+ * <li>The description of the metric describes what it contains. For instance,
+ * <ul>
+ * <li>{@link MetricInfo#PARENT} is the id of the parent of this span. (Root
+ * span is {@link Span#ROOT_SPAN_ID}).</li>
+ * <li>{@value MetricInfo#START} is the start time of the span</li>
+ * <li>{@value MetricInfo#END} is the end time of the span</li>
+ * </ul></li>
+ * <li>Each span's messages are contained in a {@link MetricsTag} with the same
+ * name as above and a generic counter for the number of messages (to
+ * differentiate messages and provide timeline ordering).</li>
  * </ol>
  * <p>
- * <i>So why even submit to metrics2 framework if we only have a single source?</i>
+ * <i>So why even submit to metrics2 framework if we only have a single
+ * source?</i>
  * <p>
- * This allows us to make the updates in batches. We might have spans that finish before other spans
- * (for instance in the same parent). By batching the updates we can lessen the overhead on the
- * client, which is also busy doing 'real' work. <br>
- * We could make our own queue and manage batching and filtering and dropping extra metrics, but
- * that starts to get complicated fast (its not as easy as it sounds) so we use metrics2 to abstract
- * out that pipeline and also provides us flexibility to dump metrics to other sources.
+ * This allows us to make the updates in batches. We might have spans that
+ * finish before other spans (for instance in the same parent). By batching the
+ * updates we can lessen the overhead on the client, which is also busy doing
+ * 'real' work. <br>
+ * We could make our own queue and manage batching and filtering and dropping
+ * extra metrics, but that starts to get complicated fast (its not as easy as it
+ * sounds) so we use metrics2 to abstract out that pipeline and also provides us
+ * flexibility to dump metrics to other sources.
  * <p>
- * This is a somewhat rough implementation - we do excessive locking for correctness,
- * rather than trying to make it fast, for the moment.
+ * This is a somewhat rough implementation - we do excessive locking for
+ * correctness, rather than trying to make it fast, for the moment.
  */
 public class TraceMetricSource implements SpanReceiver, MetricsSource {
 
@@ -102,17 +107,17 @@ public class TraceMetricSource implements SpanReceiver, MetricsSource {
     // add the tags to the span. They were written in order received so we mark them as such
     for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
       builder.add(new MetricsTag(Interns.info(TAG.traceName, Long.toString(ta.getTime())), ta
-          .getMessage()));
+              .getMessage()));
     }
 
     // add the annotations. We assume they are serialized as strings and integers, but that can
     // change in the future
     Map<byte[], byte[]> annotations = span.getKVAnnotations();
     for (Entry<byte[], byte[]> annotation : annotations.entrySet()) {
-      Pair<String, String> val =
-          TracingUtils.readAnnotation(annotation.getKey(), annotation.getValue());
+      Pair<String, String> val
+              = TracingUtils.readAnnotation(annotation.getKey(), annotation.getValue());
       builder.add(new MetricsTag(Interns.info(ANNOTATION.traceName, val.getFirst()), val
-          .getSecond()));
+              .getSecond()));
     }
 
     // add the span to the list we care about
@@ -128,13 +133,13 @@ public class TraceMetricSource implements SpanReceiver, MetricsSource {
     // runtime warning)
     MetricsRecordBuilder marker = collector.addRecord(TracingUtils.METRICS_MARKER_CONTEXT);
     marker.add(new MetricsTag(new MetricsInfoImpl("stat", "num spans"), Integer
-        .toString(spans.size())));
+            .toString(spans.size())));
 
     // actually convert the known spans into metric records as well
     synchronized (this) {
       for (Metric span : spans) {
         MetricsRecordBuilder builder = collector.addRecord(new MetricsInfoImpl(TracingUtils
-            .getTraceMetricName(span.id), span.desc));
+                .getTraceMetricName(span.id), span.desc));
         builder.setContext(TracingUtils.METRICS_CONTEXT);
         for (Pair<MetricsInfo, Long> metric : span.counters) {
           builder.addCounter(metric.getFirst(), metric.getSecond());

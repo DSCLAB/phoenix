@@ -24,23 +24,24 @@ import org.apache.phoenix.expression.Expression;
 import org.apache.phoenix.expression.function.ScalarFunction;
 
 public class ReplaceArrayFunctionExpressionVisitor extends CloneExpressionVisitor {
-    private Map<Expression, Expression> replacementMap;
 
-    public ReplaceArrayFunctionExpressionVisitor(Map<Expression, Expression> replacementMap) {
-        this.replacementMap = replacementMap;
-    }
+  private Map<Expression, Expression> replacementMap;
 
-    @Override
-    public boolean isCloneNode(Expression node, List<Expression> children) {
-        return !children.equals(node.getChildren());
-    }
+  public ReplaceArrayFunctionExpressionVisitor(Map<Expression, Expression> replacementMap) {
+    this.replacementMap = replacementMap;
+  }
 
-    @Override
-    public Expression visitLeave(ScalarFunction node, List<Expression> l) {
-        Expression replacement = replacementMap.get(node);
-        if (replacement != null) {
-            return replacement;
-        }
-        return super.visitLeave(node, l);
+  @Override
+  public boolean isCloneNode(Expression node, List<Expression> children) {
+    return !children.equals(node.getChildren());
+  }
+
+  @Override
+  public Expression visitLeave(ScalarFunction node, List<Expression> l) {
+    Expression replacement = replacementMap.get(node);
+    if (replacement != null) {
+      return replacement;
     }
+    return super.visitLeave(node, l);
+  }
 }

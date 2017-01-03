@@ -23,36 +23,36 @@ import java.util.List;
 import org.apache.phoenix.expression.visitor.ExpressionVisitor;
 import org.apache.phoenix.query.QueryConstants;
 
-
 /**
- * 
+ *
  * Subtract expression implementation
  *
- * 
+ *
  * @since 0.1
  */
 public abstract class SubtractExpression extends BaseAddSubtractExpression {
-    protected static final BigDecimal BD_MILLIS_IN_DAY = BigDecimal.valueOf(QueryConstants.MILLIS_IN_DAY);
 
-    public SubtractExpression() {
-    }
+  protected static final BigDecimal BD_MILLIS_IN_DAY = BigDecimal.valueOf(QueryConstants.MILLIS_IN_DAY);
 
-    public SubtractExpression(List<Expression> children) {
-        super(children);
-    }
+  public SubtractExpression() {
+  }
 
-    @Override
-    public final <T> T accept(ExpressionVisitor<T> visitor) {
-        List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
-        T t = visitor.visitLeave(this, l);
-        if (t == null) {
-            t = visitor.defaultReturn(this, l);
-        }
-        return t;
+  public SubtractExpression(List<Expression> children) {
+    super(children);
+  }
+
+  @Override
+  public final <T> T accept(ExpressionVisitor<T> visitor) {
+    List<T> l = acceptChildren(visitor, visitor.visitEnter(this));
+    T t = visitor.visitLeave(this, l);
+    if (t == null) {
+      t = visitor.defaultReturn(this, l);
     }
-    
-    @Override
-    public String getOperatorString() {
-        return " - ";
-    }
+    return t;
+  }
+
+  @Override
+  public String getOperatorString() {
+    return " - ";
+  }
 }

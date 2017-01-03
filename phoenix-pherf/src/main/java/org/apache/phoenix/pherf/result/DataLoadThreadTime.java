@@ -15,7 +15,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package org.apache.phoenix.pherf.result;
 
 import org.apache.phoenix.pherf.PherfConstants;
@@ -24,62 +23,64 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataLoadThreadTime {
-    private List<WriteThreadTime> threadTime = new ArrayList<WriteThreadTime>();
 
-    public List<WriteThreadTime> getThreadTime() {
-        return threadTime;
-    }
+  private List<WriteThreadTime> threadTime = new ArrayList<WriteThreadTime>();
 
-    public void add(String tableName, String threadName, long rowsUpserted,
-            long timeInMsPerMillionRows) {
-        threadTime.add(new WriteThreadTime(tableName, threadName, rowsUpserted,
-                timeInMsPerMillionRows));
-    }
+  public List<WriteThreadTime> getThreadTime() {
+    return threadTime;
+  }
 
-    public String getCsvTitle() {
-        return "TABLE_NAME,THREAD_NAME,ROWS_UPSERTED,TIME_IN_MS_PER_" + PherfConstants.LOG_PER_NROWS
-                + "_ROWS\n";
-    }
+  public void add(String tableName, String threadName, long rowsUpserted,
+          long timeInMsPerMillionRows) {
+    threadTime.add(new WriteThreadTime(tableName, threadName, rowsUpserted,
+            timeInMsPerMillionRows));
+  }
+
+  public String getCsvTitle() {
+    return "TABLE_NAME,THREAD_NAME,ROWS_UPSERTED,TIME_IN_MS_PER_" + PherfConstants.LOG_PER_NROWS
+            + "_ROWS\n";
+  }
 }
 
 class WriteThreadTime {
-    private String tableName;
-    private String threadName;
-    private long rowsUpserted;
-    private long timeInMsPerMillionRows;
 
-    public WriteThreadTime(String tableName, String threadName, long rowsUpserted,
-            long timeInMsPerMillionRows) {
-        this.tableName = tableName;
-        this.threadName = threadName;
-        this.rowsUpserted = rowsUpserted;
-        this.timeInMsPerMillionRows = timeInMsPerMillionRows;
-    }
+  private String tableName;
+  private String threadName;
+  private long rowsUpserted;
+  private long timeInMsPerMillionRows;
 
-    public String getTableName() {
-        return tableName;
-    }
+  public WriteThreadTime(String tableName, String threadName, long rowsUpserted,
+          long timeInMsPerMillionRows) {
+    this.tableName = tableName;
+    this.threadName = threadName;
+    this.rowsUpserted = rowsUpserted;
+    this.timeInMsPerMillionRows = timeInMsPerMillionRows;
+  }
 
-    public String getThreadName() {
-        return threadName;
-    }
+  public String getTableName() {
+    return tableName;
+  }
 
-    public long getTimeInMsPerMillionRows() {
-        return timeInMsPerMillionRows;
-    }
+  public String getThreadName() {
+    return threadName;
+  }
 
-    public List<ResultValue> getCsvRepresentation(ResultUtil util) {
-        List<ResultValue> rowValues = new ArrayList<>();
-        rowValues.add(new ResultValue(util.convertNull(getTableName())));
-        rowValues.add(new ResultValue(util.convertNull(getThreadName())));
-        rowValues.add(new ResultValue(util.convertNull(String.valueOf(getRowsUpserted()))));
-        rowValues.add(new ResultValue(
-                util.convertNull(String.valueOf(getTimeInMsPerMillionRows()))));
+  public long getTimeInMsPerMillionRows() {
+    return timeInMsPerMillionRows;
+  }
 
-        return rowValues;
-    }
+  public List<ResultValue> getCsvRepresentation(ResultUtil util) {
+    List<ResultValue> rowValues = new ArrayList<>();
+    rowValues.add(new ResultValue(util.convertNull(getTableName())));
+    rowValues.add(new ResultValue(util.convertNull(getThreadName())));
+    rowValues.add(new ResultValue(util.convertNull(String.valueOf(getRowsUpserted()))));
+    rowValues.add(new ResultValue(
+            util.convertNull(String.valueOf(getTimeInMsPerMillionRows()))));
 
-    public long getRowsUpserted() {
-        return rowsUpserted;
-    }
+    return rowValues;
+  }
+
+  public long getRowsUpserted() {
+    return rowsUpserted;
+  }
 }

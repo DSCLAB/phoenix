@@ -27,67 +27,66 @@ import org.apache.phoenix.schema.PTable.IndexType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
-
 public class CreateIndexStatement extends SingleTableStatement {
-    private final TableName indexTableName;
-    private final IndexKeyConstraint indexKeyConstraint;
-    private final List<ColumnName> includeColumns;
-    private final List<ParseNode> splitNodes;
-    private final ListMultimap<String,Pair<String,Object>> props;
-    private final boolean ifNotExists;
-    private final IndexType indexType;
-    private final boolean async;
-    private final Map<String, UDFParseNode> udfParseNodes;
 
-    public CreateIndexStatement(NamedNode indexTableName, NamedTableNode dataTable, 
-            IndexKeyConstraint indexKeyConstraint, List<ColumnName> includeColumns, List<ParseNode> splits,
-            ListMultimap<String,Pair<String,Object>> props, boolean ifNotExists, IndexType indexType, boolean async, int bindCount, Map<String, UDFParseNode> udfParseNodes) {
-        super(dataTable, bindCount);
-        this.indexTableName =TableName.create(dataTable.getName().getSchemaName(),indexTableName.getName());
-        this.indexKeyConstraint = indexKeyConstraint == null ? IndexKeyConstraint.EMPTY : indexKeyConstraint;
-        this.includeColumns = includeColumns == null ? Collections.<ColumnName>emptyList() : includeColumns;
-        this.splitNodes = splits == null ? Collections.<ParseNode>emptyList() : splits;
-        this.props = props == null ? ArrayListMultimap.<String,Pair<String,Object>>create() : props;
-        this.ifNotExists = ifNotExists;
-        this.indexType = indexType;
-        this.async = async;
-        this.udfParseNodes = udfParseNodes;
-    }
+  private final TableName indexTableName;
+  private final IndexKeyConstraint indexKeyConstraint;
+  private final List<ColumnName> includeColumns;
+  private final List<ParseNode> splitNodes;
+  private final ListMultimap<String, Pair<String, Object>> props;
+  private final boolean ifNotExists;
+  private final IndexType indexType;
+  private final boolean async;
+  private final Map<String, UDFParseNode> udfParseNodes;
 
-    public IndexKeyConstraint getIndexConstraint() {
-        return indexKeyConstraint;
-    }
+  public CreateIndexStatement(NamedNode indexTableName, NamedTableNode dataTable,
+          IndexKeyConstraint indexKeyConstraint, List<ColumnName> includeColumns, List<ParseNode> splits,
+          ListMultimap<String, Pair<String, Object>> props, boolean ifNotExists, IndexType indexType, boolean async, int bindCount, Map<String, UDFParseNode> udfParseNodes) {
+    super(dataTable, bindCount);
+    this.indexTableName = TableName.create(dataTable.getName().getSchemaName(), indexTableName.getName());
+    this.indexKeyConstraint = indexKeyConstraint == null ? IndexKeyConstraint.EMPTY : indexKeyConstraint;
+    this.includeColumns = includeColumns == null ? Collections.<ColumnName>emptyList() : includeColumns;
+    this.splitNodes = splits == null ? Collections.<ParseNode>emptyList() : splits;
+    this.props = props == null ? ArrayListMultimap.<String, Pair<String, Object>>create() : props;
+    this.ifNotExists = ifNotExists;
+    this.indexType = indexType;
+    this.async = async;
+    this.udfParseNodes = udfParseNodes;
+  }
 
-    public List<ColumnName> getIncludeColumns() {
-        return includeColumns;
-    }
+  public IndexKeyConstraint getIndexConstraint() {
+    return indexKeyConstraint;
+  }
 
-    public TableName getIndexTableName() {
-        return indexTableName;
-    }
+  public List<ColumnName> getIncludeColumns() {
+    return includeColumns;
+  }
 
-    public List<ParseNode> getSplitNodes() {
-        return splitNodes;
-    }
+  public TableName getIndexTableName() {
+    return indexTableName;
+  }
 
-    public ListMultimap<String,Pair<String,Object>> getProps() {
-        return props;
-    }
+  public List<ParseNode> getSplitNodes() {
+    return splitNodes;
+  }
 
-    public boolean ifNotExists() {
-        return ifNotExists;
-    }
+  public ListMultimap<String, Pair<String, Object>> getProps() {
+    return props;
+  }
 
+  public boolean ifNotExists() {
+    return ifNotExists;
+  }
 
-    public IndexType getIndexType() {
-        return indexType;
-    }
+  public IndexType getIndexType() {
+    return indexType;
+  }
 
-    public boolean isAsync() {
-        return async;
-    }
+  public boolean isAsync() {
+    return async;
+  }
 
-    public Map<String, UDFParseNode> getUdfParseNodes() {
-        return udfParseNodes;
-    }
+  public Map<String, UDFParseNode> getUdfParseNodes() {
+    return udfParseNodes;
+  }
 }

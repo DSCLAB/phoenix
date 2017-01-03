@@ -22,12 +22,12 @@ import org.apache.phoenix.schema.tuple.Tuple;
 
 public interface RuntimeContext {
 
-    public abstract void defineCorrelateVariable(String variableId, TableRef def);
+  public abstract void defineCorrelateVariable(String variableId, TableRef def);
 
-    public abstract TableRef getCorrelateVariableDef(String variableId);
+  public abstract TableRef getCorrelateVariableDef(String variableId);
 
-    public abstract void setCorrelateVariableValue(String variableId, Tuple value);
+  public abstract void setCorrelateVariableValue(String variableId, Tuple value);
 
-    public abstract Tuple getCorrelateVariableValue(String variableId);
+  public abstract Tuple getCorrelateVariableValue(String variableId);
 
 }

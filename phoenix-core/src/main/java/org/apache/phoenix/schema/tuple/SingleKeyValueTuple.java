@@ -21,89 +21,90 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 
-
 public class SingleKeyValueTuple extends BaseTuple {
-    private static final byte[] UNITIALIZED_KEY_BUFFER = new byte[0];
-    private Cell cell;
-    private ImmutableBytesWritable keyPtr = new ImmutableBytesWritable(UNITIALIZED_KEY_BUFFER);
-    
-    public SingleKeyValueTuple() {
-    }
-    
-    public SingleKeyValueTuple(Cell cell) {
-        if (cell == null) {
-            throw new NullPointerException();
-        }
-        setCell(cell);
-    }
-    
-    public boolean hasKey() {
-        return keyPtr.get() != UNITIALIZED_KEY_BUFFER;
-    }
-    
-    public void reset() {
-        this.cell = null;
-        keyPtr.set(UNITIALIZED_KEY_BUFFER);
-    }
-    
-    public void setCell(Cell cell) {
-        if (cell == null) {
-            throw new IllegalArgumentException();
-        }
-        this.cell = cell;
-        setKey(cell);
-    }
-    
-    public void setKey(ImmutableBytesWritable ptr) {
-        keyPtr.set(ptr.get(), ptr.getOffset(), ptr.getLength());
-    }
-    
-    public void setKey(Cell cell) {
-        if (cell == null) {
-            throw new IllegalArgumentException();
-        }
-        keyPtr.set(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
-    }
-    
-    @Override
-    public void getKey(ImmutableBytesWritable ptr) {
-        ptr.set(keyPtr.get(), keyPtr.getOffset(), keyPtr.getLength());
-    }
-    
-    @Override
-    public Cell getValue(byte[] cf, byte[] cq) {
-        return cell;
-    }
 
-    @Override
-    public boolean isImmutable() {
-        return true;
-    }
-    
-    @Override
-    public String toString() {
-        return "SingleKeyValueTuple[" + cell == null ? keyPtr.get() == UNITIALIZED_KEY_BUFFER ? "null" : Bytes.toStringBinary(keyPtr.get(),keyPtr.getOffset(),keyPtr.getLength()) : cell.toString() + "]";
-    }
+  private static final byte[] UNITIALIZED_KEY_BUFFER = new byte[0];
+  private Cell cell;
+  private ImmutableBytesWritable keyPtr = new ImmutableBytesWritable(UNITIALIZED_KEY_BUFFER);
 
-    @Override
-    public int size() {
-        return cell == null ? 0 : 1;
-    }
+  public SingleKeyValueTuple() {
+  }
 
-    @Override
-    public Cell getValue(int index) {
-        if (index != 0 || cell == null) {
-            throw new IndexOutOfBoundsException(Integer.toString(index));
-        }
-        return cell;
+  public SingleKeyValueTuple(Cell cell) {
+    if (cell == null) {
+      throw new NullPointerException();
     }
+    setCell(cell);
+  }
 
-    @Override
-    public boolean getValue(byte[] family, byte[] qualifier,
-            ImmutableBytesWritable ptr) {
-        if (cell == null)
-            return false;
-        ptr.set(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
-        return true;
+  public boolean hasKey() {
+    return keyPtr.get() != UNITIALIZED_KEY_BUFFER;
+  }
+
+  public void reset() {
+    this.cell = null;
+    keyPtr.set(UNITIALIZED_KEY_BUFFER);
+  }
+
+  public void setCell(Cell cell) {
+    if (cell == null) {
+      throw new IllegalArgumentException();
     }
+    this.cell = cell;
+    setKey(cell);
+  }
+
+  public void setKey(ImmutableBytesWritable ptr) {
+    keyPtr.set(ptr.get(), ptr.getOffset(), ptr.getLength());
+  }
+
+  public void setKey(Cell cell) {
+    if (cell == null) {
+      throw new IllegalArgumentException();
+    }
+    keyPtr.set(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
+  }
+
+  @Override
+  public void getKey(ImmutableBytesWritable ptr) {
+    ptr.set(keyPtr.get(), keyPtr.getOffset(), keyPtr.getLength());
+  }
+
+  @Override
+  public Cell getValue(byte[] cf, byte[] cq) {
+    return cell;
+  }
+
+  @Override
+  public boolean isImmutable() {
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "SingleKeyValueTuple[" + cell == null ? keyPtr.get() == UNITIALIZED_KEY_BUFFER ? "null" : Bytes.toStringBinary(keyPtr.get(), keyPtr.getOffset(), keyPtr.getLength()) : cell.toString() + "]";
+  }
+
+  @Override
+  public int size() {
+    return cell == null ? 0 : 1;
+  }
+
+  @Override
+  public Cell getValue(int index) {
+    if (index != 0 || cell == null) {
+      throw new IndexOutOfBoundsException(Integer.toString(index));
+    }
+    return cell;
+  }
+
+  @Override
+  public boolean getValue(byte[] family, byte[] qualifier,
+          ImmutableBytesWritable ptr) {
+    if (cell == null) {
+      return false;
+    }
+    ptr.set(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
+    return true;
+  }
 }

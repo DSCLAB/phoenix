@@ -1,0 +1,9 @@
+/target/
+/phoenix-core/target/
+/phoenix-flume/target/
+/phoenix-pig/target/
+/phoenix-server-client/target/
+/phoenix-server/target/
+/phoenix-pherf/target/
+/phoenix-spark/target/
+/phoenix-assembly/target/

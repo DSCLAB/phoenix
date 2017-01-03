@@ -66,10 +66,12 @@ public class NamespaceSchemaMappingIT extends BaseHBaseManagedTimeIT {
     String hbaseFullTableName = schemaName + ":" + tableName;
     HBaseAdmin admin = driver.getConnectionQueryServices(getUrl(), TestUtil.TEST_PROPERTIES).getAdmin();
     admin.createNamespace(NamespaceDescriptor.create(namespace).build());
-    admin.createTable(new HTableDescriptor(TableName.valueOf(namespace, tableName))
-            .addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES)));
-    admin.createTable(new HTableDescriptor(TableName.valueOf(phoenixFullTableName))
-            .addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES)));
+    HTableDescriptor t1 = new HTableDescriptor(TableName.valueOf(namespace, tableName));
+    t1.addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES));
+    admin.createTable(t1);
+    HTableDescriptor t2 = new HTableDescriptor(TableName.valueOf(phoenixFullTableName));
+    t1.addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES));
+    admin.createTable(t2);
 
     Put put = new Put(PVarchar.INSTANCE.toBytes(phoenixFullTableName));
     put.addColumn(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES, QueryConstants.EMPTY_COLUMN_BYTES,

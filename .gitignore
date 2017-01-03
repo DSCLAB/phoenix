@@ -7,3 +7,8 @@
 /phoenix-pherf/target/
 /phoenix-spark/target/
 /phoenix-assembly/target/
+/phoenix-queryserver-client/target/
+/phoenix-queryserver/target/
+/phoenix-hive/target/
+/phoenix-client/target/
+/phoenix-tracing-webapp/target/

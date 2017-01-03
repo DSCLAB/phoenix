@@ -163,8 +163,9 @@ public class UseSchemaIT extends BaseHBaseManagedTimeIT {
     Connection conn = DriverManager.getConnection(getUrl(), props);
     HBaseAdmin admin = driver.getConnectionQueryServices(getUrl(), TestUtil.TEST_PROPERTIES).getAdmin();
     admin.createNamespace(NamespaceDescriptor.create(schema).build());
-    admin.createTable(new HTableDescriptor(fullTablename)
-            .addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES)));
+    HTableDescriptor t = new HTableDescriptor(fullTablename);
+    t.addFamily(new HColumnDescriptor(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES));
+    admin.createTable(t);
     Put put = new Put(PVarchar.INSTANCE.toBytes(fullTablename));
     put.addColumn(QueryConstants.DEFAULT_COLUMN_FAMILY_BYTES, QueryConstants.EMPTY_COLUMN_BYTES,
             QueryConstants.EMPTY_COLUMN_VALUE_BYTES);

@@ -62,9 +62,12 @@ import org.apache.phoenix.util.PhoenixRuntime;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
 
 /**
  * Custom InputFormat to feed into Hive
@@ -110,7 +113,7 @@ public class PhoenixInputFormat<T extends DBWritable> implements InputFormat<Wri
       }
 
       query = PhoenixQueryBuilder.getInstance().buildQuery(jobConf, tableName,
-              ColumnProjectionUtils.getReadColumnNames(jobConf), conditionList);
+              getReadColumnNames(jobConf), conditionList);
     } else if (PhoenixStorageHandlerConstants.TEZ.equals(executionEngine)) {
       Map<String, String> columnTypeMap = PhoenixStorageHandlerUtil.createColumnTypeMap(jobConf);
       if (LOG.isDebugEnabled()) {
@@ -119,7 +122,7 @@ public class PhoenixInputFormat<T extends DBWritable> implements InputFormat<Wri
 
       String whereClause = jobConf.get(TableScanDesc.FILTER_TEXT_CONF_STR);
       query = PhoenixQueryBuilder.getInstance().buildQuery(jobConf, tableName,
-              ColumnProjectionUtils.getReadColumnNames(jobConf), whereClause, columnTypeMap);
+              getReadColumnNames(jobConf), whereClause, columnTypeMap);
     } else {
       throw new IOException(executionEngine + " execution engine unsupported yet.");
     }
@@ -129,6 +132,14 @@ public class PhoenixInputFormat<T extends DBWritable> implements InputFormat<Wri
     final List<InputSplit> splits = generateSplits(jobConf, queryPlan, allSplits, query);
 
     return splits.toArray(new InputSplit[splits.size()]);
+  }
+
+  public static List<String> getReadColumnNames(Configuration conf) {
+    String colNames = conf.get(READ_COLUMN_NAMES_CONF_STR, "");
+    if (colNames != null && !colNames.isEmpty()) {
+      return Arrays.asList(colNames.split(","));
+    }
+    return Collections.EMPTY_LIST;
   }
 
   private List<InputSplit> generateSplits(final JobConf jobConf, final QueryPlan qplan,

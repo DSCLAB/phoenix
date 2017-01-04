@@ -30,6 +30,6 @@ public class TracingTestUtil {
     }
 
     public static void unregisterSink(String name){
-        Metrics.initialize().unregisterSource(name);
+//        Metrics.initialize().unregisterSource(name);
     }
 }

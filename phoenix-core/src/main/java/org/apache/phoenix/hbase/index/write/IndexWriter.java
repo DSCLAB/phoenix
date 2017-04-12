@@ -65,7 +65,7 @@ public class IndexWriter implements Stoppable {
     Configuration conf = env.getConfiguration();
     try {
       IndexCommitter committer =
-          conf.getClass(INDEX_COMMITTER_CONF_KEY, ParallelWriterIndexCommitter.class,
+          conf.getClass(INDEX_COMMITTER_CONF_KEY, SimpleWriterIndexCommitter.class,
             IndexCommitter.class).newInstance();
       return committer;
     } catch (InstantiationException e) {

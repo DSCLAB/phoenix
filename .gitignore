@@ -1,0 +1,15 @@
+/target/
+/phoenix-core/target/
+/phoenix-flume/target/
+/phoenix-pig/target/
+/phoenix-server-client/target/
+/phoenix-server/target/
+/phoenix-pherf/target/
+/phoenix-spark/target/
+/phoenix-assembly/target/
+/phoenix-client/target/
+/phoenix-hive/target/
+/phoenix-kafka/target/
+/phoenix-queryserver-client/target/
+/phoenix-queryserver/target/
+/phoenix-tracing-webapp/target/
